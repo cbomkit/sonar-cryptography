@@ -48,6 +48,7 @@
         <!-- language parser versions -->
         <sonar.java.version>8.18.0.40025</sonar.java.version>
         <sonar.python.version>5.10.0.25429</sonar.python.version>
+        <sonar.go.version>1.32.0.5128</sonar.go.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
@@ -123,6 +124,11 @@
             <groupId>org.sonarsource.python</groupId>
             <artifactId>sonar-python-plugin</artifactId>
             <version>${sonar.python.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.sonarsource.go</groupId>
+            <artifactId>sonar-go-plugin</artifactId>
+            <version>${sonar.go.version}</version>
         </dependency>
 
         <!-- unit tests -->
