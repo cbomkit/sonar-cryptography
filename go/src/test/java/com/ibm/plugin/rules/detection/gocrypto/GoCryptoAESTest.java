@@ -24,9 +24,11 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
-import com.ibm.plugin.utils.GenerateAssertsHelper;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
@@ -40,21 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoAESTest extends TestBase {
 
-    /**
-     * Tests detection of aes.NewCipher() calls from crypto/aes package.
-     *
-     * <p>Note: This test requires Go AST parsing support which is not yet available in the test
-     * infrastructure. The GoVerifier currently only validates comment-based issue expectations but
-     * cannot trigger actual detection rules without a Go parser.
-     *
-     * <p>Once Go parser integration is available (similar to python-checks-testkit for Python),
-     * this test will verify:
-     *
-     * <ul>
-     *   <li>Detection store contains Algorithm "AES" with CipherContext
-     *   <li>Translation produces BlockCipher node with value "AES"
-     * </ul>
-     */
     @Test
     void test() {
         GoVerifier.verify("rules/detection/gocrypto/GoCryptoAESTestFile.go", this);
@@ -66,8 +53,6 @@ class GoCryptoAESTest extends TestBase {
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
 
-        GenerateAssertsHelper.generate(detectionStore, nodes);
-
         /*
          * Detection Store
          */
@@ -77,5 +62,28 @@ class GoCryptoAESTest extends TestBase {
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("AES");
+
+        /*
+         * Translation
+         */
+        assertThat(nodes).hasSize(1);
+
+        // BlockCipher
+        INode blockCipherNode = nodes.get(0);
+        assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
+        assertThat(blockCipherNode.getChildren()).hasSize(2);
+        assertThat(blockCipherNode.asString()).isEqualTo("AES");
+
+        // BlockSize under BlockCipher
+        INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
+        assertThat(blockSizeNode).isNotNull();
+        assertThat(blockSizeNode.getChildren()).isEmpty();
+        assertThat(blockSizeNode.asString()).isEqualTo("128");
+
+        // Oid under BlockCipher
+        INode oidNode = blockCipherNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1");
     }
 }
