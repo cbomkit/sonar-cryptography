@@ -31,6 +31,12 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
@@ -41,20 +47,12 @@ import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
  */
 public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
-    @Nonnull
-    private final DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore;
+    @Nonnull private final DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore;
 
     @Nonnull private final Handler<GoCheck, Tree, Symbol, GoScanContext> handler;
 
@@ -82,8 +80,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         }
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public Tree extractArgumentFromMethodCaller(
             @Nonnull Tree methodDefinition,
             @Nonnull Tree methodInvocation,
@@ -160,12 +157,9 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     public <O> void resolveMethodReturnValues(
             @Nonnull Class<O> clazz,
             @Nonnull Tree methodDefinition,
-            @Nonnull Parameter<Tree> parameter) {
-        // Go return value resolution is limited in the current API
-    }
+            @Nonnull Parameter<Tree> parameter) {}
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public <O> ResolvedValue<O, Tree> resolveEnumValue(
             @Nonnull Class<O> clazz,
             @Nonnull Tree enumClassDefinition,
@@ -256,17 +250,14 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull FunctionInvocationTree functionInvocation) {
 
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            MethodDetection<Tree> methodDetection =
-                    new MethodDetection<>(functionInvocation, null);
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(functionInvocation, null);
             detectionStore.onReceivingNewDetection(methodDetection);
             return;
         }
 
-        DetectionRule<Tree> detectionRule =
-                (DetectionRule<Tree>) detectionStore.getDetectionRule();
+        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
         if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection =
-                    new MethodDetection<>(functionInvocation, null);
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(functionInvocation, null);
             detectionStore.onReceivingNewDetection(methodDetection);
         }
 

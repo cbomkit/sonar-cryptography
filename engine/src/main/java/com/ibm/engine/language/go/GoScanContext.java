@@ -29,8 +29,8 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 /**
  * Go scan context wrapping the SonarQube Go CheckContext.
  *
- * <p>Note: In the Go API, reportIssue doesn't take a rule parameter since the rule is inferred
- * from the check that registered the handler. The rule parameter is ignored in this implementation.
+ * <p>Note: In the Go API, reportIssue doesn't take a rule parameter since the rule is inferred from
+ * the check that registered the handler. The rule parameter is ignored in this implementation.
  */
 public record GoScanContext(@Nonnull CheckContext checkContext)
         implements IScanContext<GoCheck, Tree> {

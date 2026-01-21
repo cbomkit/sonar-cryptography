@@ -197,9 +197,7 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
         };
     }
 
-    /**
-     * Creates an IType for a function argument based on its AST node.
-     */
+    /** Creates an IType for a function argument based on its AST node. */
     @Nonnull
     private IType createArgumentType(@Nonnull Tree argument, @Nonnull MatchContext matchContext) {
         if (argument instanceof IdentifierTree identifierTree) {
@@ -209,7 +207,8 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             }
         } else if (argument instanceof FunctionInvocationTree functionInvocation) {
             // For function call arguments, get the return type
-            Optional<IType> returnType = getMethodReturnTypeString(matchContext, functionInvocation);
+            Optional<IType> returnType =
+                    getMethodReturnTypeString(matchContext, functionInvocation);
             if (returnType.isPresent()) {
                 return returnType.get();
             }

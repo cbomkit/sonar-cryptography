@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
-import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.ParameterTree;
@@ -154,12 +153,16 @@ class GoDetectionEngineTest {
         IdentifierTree targetParam = mock(IdentifierTree.class);
         when(targetParam.name()).thenReturn("key");
 
-        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
+        Tree result =
+                engine.extractArgumentFromMethodCaller(
+                        functionDecl, functionInvocation, targetParam);
         assertThat(result).isSameAs(arg0);
 
         // Test second parameter
         when(targetParam.name()).thenReturn("plaintext");
-        result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
+        result =
+                engine.extractArgumentFromMethodCaller(
+                        functionDecl, functionInvocation, targetParam);
         assertThat(result).isSameAs(arg1);
     }
 
@@ -176,7 +179,9 @@ class GoDetectionEngineTest {
         IdentifierTree targetParam = mock(IdentifierTree.class);
         when(targetParam.name()).thenReturn("param");
 
-        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
+        Tree result =
+                engine.extractArgumentFromMethodCaller(
+                        functionDecl, functionInvocation, targetParam);
         assertThat(result).isNull();
     }
 
@@ -197,7 +202,9 @@ class GoDetectionEngineTest {
         IdentifierTree targetParam = mock(IdentifierTree.class);
         when(targetParam.name()).thenReturn("nonExistentParam");
 
-        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
+        Tree result =
+                engine.extractArgumentFromMethodCaller(
+                        functionDecl, functionInvocation, targetParam);
         assertThat(result).isNull();
     }
 

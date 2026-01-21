@@ -97,7 +97,8 @@ class GoLanguageTranslationTest {
         when(packageIdentifier.type()).thenReturn("");
 
         // Act
-        Optional<IType> type = translation.getInvokedObjectTypeString(matchContext, functionInvocation);
+        Optional<IType> type =
+                translation.getInvokedObjectTypeString(matchContext, functionInvocation);
 
         // Assert
         assertThat(type).isPresent();
@@ -119,7 +120,8 @@ class GoLanguageTranslationTest {
         when(packageIdentifier.type()).thenReturn("");
 
         // Act
-        Optional<IType> type = translation.getInvokedObjectTypeString(matchContext, functionInvocation);
+        Optional<IType> type =
+                translation.getInvokedObjectTypeString(matchContext, functionInvocation);
 
         // Assert
         assertThat(type).isPresent();
@@ -134,7 +136,8 @@ class GoLanguageTranslationTest {
         when(identifierTree.name()).thenReturn("myVariable");
 
         // Act
-        Optional<String> result = translation.resolveIdentifierAsString(matchContext, identifierTree);
+        Optional<String> result =
+                translation.resolveIdentifierAsString(matchContext, identifierTree);
 
         // Assert
         assertThat(result).isPresent().hasValue("myVariable");

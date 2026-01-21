@@ -85,12 +85,7 @@ public final class GoLanguageSupport
     @Nonnull
     @Override
     public IBaseMethodVisitorFactory<Tree, Symbol> getBaseMethodVisitorFactory() {
-        // Go uses a registration-based pattern rather than visitor pattern.
-        // Return a no-op visitor factory since the Go plugin handles tree traversal
-        // through its registration mechanism in GoCheck.initialize(InitContext).
-        return (traceSymbol, detectionEngine) -> method -> {
-            // No-op: Go detection is handled through the registration pattern
-        };
+        return GoBaseMethodVisitor::new;
     }
 
     @Nonnull
@@ -107,8 +102,7 @@ public final class GoLanguageSupport
         return Optional.empty();
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public MethodMatcher<Tree> createMethodMatcherBasedOn(@Nonnull Tree methodDefinition) {
         if (methodDefinition instanceof FunctionDeclarationTree functionDecl) {
             // Get the function name
@@ -146,8 +140,7 @@ public final class GoLanguageSupport
         return null;
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public EnumMatcher<Tree> createSimpleEnumMatcherFor(
             @Nonnull Tree enumIdentifier, @Nonnull MatchContext matchContext) {
         // Go uses const blocks instead of enums.
