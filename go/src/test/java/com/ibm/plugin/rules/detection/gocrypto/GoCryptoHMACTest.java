@@ -19,8 +19,6 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -29,14 +27,16 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.plugin.TestBase;
-import java.util.List;
-import javax.annotation.Nonnull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoHMACTest extends TestBase {
 
@@ -44,16 +44,8 @@ class GoCryptoHMACTest extends TestBase {
         super(GoCryptoHMAC.rules());
     }
 
-    /**
-     * Test HMAC detection.
-     *
-     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not include gc
-     * export data for crypto/hmac. The binary has embedded support for: crypto/aes, cipher, des,
-     * dsa, md5, rand, rc4, rsa, sha1, sha256, sha512, tls, x509. Packages crypto/hmac, elliptic,
-     * and ecdsa are NOT included. The detection rule code is correct.
-     */
+    /** Test HMAC detection. */
     @Test
-    @Disabled("sonar-go-to-slang binary lacks embedded gc export data for crypto/hmac")
     void test() {
         GoVerifier.verify("rules/detection/gocrypto/GoCryptoHMACTestFile.go", this);
     }

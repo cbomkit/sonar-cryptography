@@ -19,26 +19,7 @@
  */
 package org.sonar.go.testing;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.go.converter.GoConverter;
-import org.sonar.go.converter.GoParseCommand;
 import org.sonar.go.visitors.SymbolVisitor;
 import org.sonar.go.visitors.TreeContext;
 import org.sonar.go.visitors.TreeVisitor;
@@ -53,6 +34,24 @@ import org.sonar.plugins.go.api.checks.GoModFileData;
 import org.sonar.plugins.go.api.checks.InitContext;
 import org.sonar.plugins.go.api.checks.SecondaryLocation;
 import org.sonarsource.analyzer.commons.checks.verifier.SingleFileVerifier;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test verifier for Go checks. Adapted from SonarSource sonar-go GoVerifier.
@@ -74,11 +73,15 @@ import org.sonarsource.analyzer.commons.checks.verifier.SingleFileVerifier;
 public class GoVerifier {
     private static final Path BASE_DIR = Paths.get("src", "test", "files");
     public static final File CONVERTER_DIR = Paths.get("build", "test-tmp").toFile();
-    public static final GoConverter GO_CONVERTER_DEBUG_TYPE_CHECK =
-            new GoConverter(new GoParseCommand(CONVERTER_DIR, "-debug_type_check"));
+
+    public static final GoConverter GO_CONVERTER_DEBUG_TYPE_CHECK = createConverter();
 
     private GoVerifier() {
         // Utility class
+    }
+
+    private static GoConverter createConverter() {
+        return new GoConverter(new GoParseWithExistingBinaryCommand(CONVERTER_DIR, "-debug_type_check"));
     }
 
     /**
