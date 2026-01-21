@@ -22,13 +22,13 @@ package com.ibm.engine.language.go;
 import com.ibm.engine.detection.IBaseMethodVisitor;
 import com.ibm.engine.detection.IDetectionEngine;
 import com.ibm.engine.detection.TraceSymbol;
-import javax.annotation.Nonnull;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.visitors.TreeContext;
 import org.sonar.go.visitors.TreeVisitor;
-import org.sonar.plugins.go.api.FunctionDeclarationTree;
-import org.sonar.plugins.go.api.FunctionInvocationTree;
+import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 
 /**
  * Base method visitor for Go that uses TreeVisitor for AST traversal. Registers handlers for
@@ -47,20 +47,13 @@ public class GoBaseMethodVisitor extends TreeVisitor<TreeContext>
         this.traceSymbol = traceSymbol;
         this.detectionEngine = detectionEngine;
         this.context = new TreeContext();
-
-        // Register handler for function invocations
-        this.register(
-                FunctionInvocationTree.class,
-                (ctx, functionInvocation) -> {
-                    detectionEngine.run(traceSymbol, functionInvocation);
-                });
     }
 
     @Override
     public void visitMethodDefinition(@Nonnull Tree method) {
-        if (method instanceof FunctionDeclarationTree) {
+        if (method instanceof BlockTree blockTree) {
             // Scan the function body for function invocations
-            this.scan(context, method);
+            detectionEngine.run(traceSymbol, blockTree);
         }
     }
 }

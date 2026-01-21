@@ -29,6 +29,7 @@ import org.sonar.plugins.go.api.Tree;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Detection rules for Go's crypto/aes package.
@@ -37,6 +38,7 @@ import java.util.List;
  *
  * <ul>
  *   <li>aes.NewCipher(key) - creates a new AES cipher block
+ *   <li>cipher.NewGCM(block) - creates a GCM mode cipher (depending rule)
  * </ul>
  */
 @SuppressWarnings("java:S1192")
@@ -45,6 +47,20 @@ public final class GoCryptoAES {
     private GoCryptoAES() {
         // private
     }
+
+    // cipher.NewGCM(cipher cipher.Block) (cipher.AEAD, error)
+    // Returns a new GCM mode wrapper for the given cipher block
+    private static final IDetectionRule<Tree> NEW_GCM =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/cipher")
+                    .forMethods("NewGCM")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("GCM"))
+                    .withMethodParameter("cipher.Block")
+                    .buildForContext(
+                            new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER_MODE")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
 
     // aes.NewCipher(key []byte) (cipher.Block, error)
     // The key argument should be the AES key, either 16, 24, or 32 bytes
@@ -60,7 +76,7 @@ public final class GoCryptoAES {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
+                    .withDependingDetectionRules(List.of(NEW_GCM));
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {

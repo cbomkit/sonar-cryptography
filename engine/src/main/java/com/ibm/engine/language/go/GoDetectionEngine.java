@@ -34,6 +34,7 @@ import com.ibm.engine.rule.Parameter;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
+import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.HasSymbol;
@@ -42,6 +43,7 @@ import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.MemberSelectTree;
 import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
+import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
 import javax.annotation.Nonnull;
@@ -75,12 +77,28 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
     @Override
     public void run(@Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull Tree tree) {
-        if (tree instanceof FunctionInvocationTree functionInvocation) {
-            handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
-            if (detectionStore
-                    .getDetectionRule()
-                    .match(functionInvocation, handler.getLanguageSupport().translation())) {
-                this.analyseExpression(traceSymbol, functionInvocation);
+        if (tree instanceof BlockTree blockTree) {
+            for (Tree item : blockTree.statementOrExpressions()) {
+                if (item instanceof VariableDeclarationTree variableDeclarationTree) {
+                    for (Tree initializer : variableDeclarationTree.initializers()) {
+                        if (initializer instanceof FunctionInvocationTree functionInvocation) {
+                            handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
+                            if (detectionStore
+                                    .getDetectionRule()
+                                    .match(functionInvocation, handler.getLanguageSupport().translation())) {
+                                final List<IdentifierTree> identifierTrees = variableDeclarationTree.identifiers();
+                                this.analyseExpression(traceSymbol,
+                                        new FunctionInvocationWIthIdentifiersTree(
+                                                functionInvocation.metaData(),
+                                                functionInvocation.memberSelect(),
+                                                functionInvocation.arguments(),
+                                                functionInvocation.returnTypes(),
+                                                identifierTrees,
+                                                blockTree));
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -91,7 +109,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Tree methodInvocation,
             @Nonnull Tree methodParameterIdentifier) {
         if (methodDefinition instanceof FunctionDeclarationTree functionDecl
-                && methodInvocation instanceof FunctionInvocationTree functionInvocation
+                && methodInvocation instanceof FunctionInvocationWIthIdentifiersTree functionInvocation
                 && methodParameterIdentifier instanceof IdentifierTree paramIdentifier) {
 
             List<Tree> formalParameters = functionDecl.formalParameters();
@@ -379,6 +397,13 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             Symbol symbol = hasSymbol.symbol();
             if (symbol != null) {
                 return Optional.of(TraceSymbol.createFrom(symbol));
+            }
+        } else if (expression instanceof FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+            for (IdentifierTree identifierTree : functionInvocationWIthIdentifiersTree.getIdentifiers()) {
+               if (identifierTree.type().equals("error")) {
+                   continue;
+               }
+               return Optional.of(TraceSymbol.createFrom(identifierTree.symbol()));
             }
         }
         return Optional.empty();

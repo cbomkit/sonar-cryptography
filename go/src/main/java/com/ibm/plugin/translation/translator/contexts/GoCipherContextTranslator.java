@@ -31,11 +31,11 @@ import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
+import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.utils.DetectionLocation;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 public final class GoCipherContextTranslator implements IContextTranslation<Tree> {
 
@@ -49,6 +49,7 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
         if (value instanceof ValueAction<Tree>) {
             return switch (value.asString().toUpperCase().trim()) {
                 case "AES" -> Optional.of(new AES(detectionLocation));
+                case "GCM" -> Optional.of(new GCM(detectionLocation));
                 default -> Optional.empty();
             };
         } else if (value instanceof BlockSize<Tree> blockSize) {

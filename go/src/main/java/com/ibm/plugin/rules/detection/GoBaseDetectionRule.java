@@ -31,15 +31,16 @@ import com.ibm.plugin.translation.GoTranslationProcess;
 import com.ibm.plugin.translation.reorganizer.GoReorganizerRules;
 import com.ibm.rules.IReportableDetectionRule;
 import com.ibm.rules.issue.Issue;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.sonar.go.symbols.Symbol;
-import org.sonar.plugins.go.api.FunctionInvocationTree;
+import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.CheckContext;
 import org.sonar.plugins.go.api.checks.GoCheck;
 import org.sonar.plugins.go.api.checks.InitContext;
+
+import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base detection rule for Go cryptographic patterns. Uses the Go registration-based pattern via
@@ -72,18 +73,18 @@ public abstract class GoBaseDetectionRule
     @Override
     public void initialize(@Nonnull InitContext init) {
         // Register handler for function invocations
-        init.register(FunctionInvocationTree.class, this::analyzeFunction);
+        init.register(BlockTree.class, this::analyzeFunction);
     }
 
     private void analyzeFunction(
-            @Nonnull CheckContext ctx, @Nonnull FunctionInvocationTree functionInvocation) {
+            @Nonnull CheckContext ctx, @Nonnull Tree tree) {
         GoScanContext scanContext = new GoScanContext(ctx);
         detectionRules.forEach(
                 rule -> {
                     DetectionExecutive<GoCheck, Tree, Symbol, GoScanContext> detectionExecutive =
                             GoAggregator.getLanguageSupport()
                                     .createDetectionExecutive(
-                                            functionInvocation, rule, scanContext);
+                                            tree, rule, scanContext);
                     detectionExecutive.subscribe(this);
                     detectionExecutive.start();
                 });
