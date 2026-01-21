@@ -19,6 +19,8 @@
  */
 package com.ibm.engine.language.go;
 
+import static com.ibm.engine.detection.MethodMatcher.ANY;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.Handler;
@@ -31,9 +33,15 @@ import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.sonar.go.symbols.Symbol;
+import org.sonar.plugins.go.api.FunctionDeclarationTree;
+import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
@@ -42,9 +50,9 @@ import org.sonar.plugins.go.api.checks.GoCheck;
  * detection in Go source code.
  */
 public final class GoLanguageSupport
-        implements ILanguageSupport<GoCheck, Tree, Void, GoScanContext> {
+        implements ILanguageSupport<GoCheck, Tree, Symbol, GoScanContext> {
 
-    @Nonnull private final Handler<GoCheck, Tree, Void, GoScanContext> handler;
+    @Nonnull private final Handler<GoCheck, Tree, Symbol, GoScanContext> handler;
     @Nonnull private final GoLanguageTranslation translation;
 
     public GoLanguageSupport() {
@@ -60,7 +68,7 @@ public final class GoLanguageSupport
 
     @Nonnull
     @Override
-    public DetectionExecutive<GoCheck, Tree, Void, GoScanContext> createDetectionExecutive(
+    public DetectionExecutive<GoCheck, Tree, Symbol, GoScanContext> createDetectionExecutive(
             @Nonnull Tree tree,
             @Nonnull IDetectionRule<Tree> detectionRule,
             @Nonnull IScanContext<GoCheck, Tree> scanContext) {
@@ -69,14 +77,14 @@ public final class GoLanguageSupport
 
     @Nonnull
     @Override
-    public IDetectionEngine<Tree, Void> createDetectionEngineInstance(
-            @Nonnull DetectionStore<GoCheck, Tree, Void, GoScanContext> detectionStore) {
+    public IDetectionEngine<Tree, Symbol> createDetectionEngineInstance(
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore) {
         return new GoDetectionEngine(detectionStore, this.handler);
     }
 
     @Nonnull
     @Override
-    public IBaseMethodVisitorFactory<Tree, Void> getBaseMethodVisitorFactory() {
+    public IBaseMethodVisitorFactory<Tree, Symbol> getBaseMethodVisitorFactory() {
         // Go uses a registration-based pattern rather than visitor pattern.
         // Return a no-op visitor factory since the Go plugin handles tree traversal
         // through its registration mechanism in GoCheck.initialize(InitContext).
@@ -88,18 +96,53 @@ public final class GoLanguageSupport
     @Nonnull
     @Override
     public Optional<Tree> getEnclosingMethod(@Nonnull Tree expression) {
-        // Go API doesn't provide parent traversal through Tree nodes.
-        // The Go plugin API doesn't expose a way to navigate up the AST.
-        // For method scope tracking, we would need to track this during registration.
+        // Navigate up the tree to find the enclosing FunctionDeclarationTree
+        // Go Tree API provides children() but not parent(), so we need to track context
+        // during registration. For now, check if expression itself is a function declaration.
+        if (expression instanceof FunctionDeclarationTree) {
+            return Optional.of(expression);
+        }
+        // Without parent() access, we cannot navigate up. The Go plugin handles this
+        // through its registration pattern - handlers are registered for specific tree types.
         return Optional.empty();
     }
 
     @Nullable
     @Override
     public MethodMatcher<Tree> createMethodMatcherBasedOn(@Nonnull Tree methodDefinition) {
-        // Go function definitions in the current API don't provide enough
-        // type information to create a reliable method matcher.
-        // The Go plugin doesn't expose symbol information like Java does.
+        if (methodDefinition instanceof FunctionDeclarationTree functionDecl) {
+            // Get the function name
+            IdentifierTree nameTree = functionDecl.name();
+            if (nameTree == null) {
+                return null;
+            }
+            String functionName = nameTree.name();
+
+            // Get the invocation object name (package or receiver type)
+            String invocationObjectName = "";
+            String receiverType = functionDecl.receiverType();
+            if (receiverType != null && !receiverType.isEmpty()) {
+                // Method with receiver: type.Method()
+                invocationObjectName = receiverType;
+            } else {
+                // Package-level function: package.Function()
+                String packageName = nameTree.packageName();
+                if (packageName != null && !packageName.isEmpty()) {
+                    invocationObjectName = packageName;
+                }
+            }
+
+            // Get parameter types (Go is dynamically typed at the API level, so use ANY)
+            List<Tree> formalParameters = functionDecl.formalParameters();
+            LinkedList<String> parameterTypeList = new LinkedList<>();
+            if (formalParameters != null) {
+                String[] parameters =
+                        formalParameters.stream().map(param -> ANY).toArray(String[]::new);
+                parameterTypeList = new LinkedList<>(Arrays.asList(parameters));
+            }
+
+            return new MethodMatcher<>(invocationObjectName, functionName, parameterTypeList);
+        }
         return null;
     }
 
@@ -108,7 +151,8 @@ public final class GoLanguageSupport
     public EnumMatcher<Tree> createSimpleEnumMatcherFor(
             @Nonnull Tree enumIdentifier, @Nonnull MatchContext matchContext) {
         // Go uses const blocks instead of enums.
-        // The current API doesn't provide enum-like matching support.
-        return null;
+        Optional<String> enumIdentifierName =
+                translation().getEnumIdentifierName(matchContext, enumIdentifier);
+        return enumIdentifierName.<EnumMatcher<Tree>>map(EnumMatcher::new).orElse(null);
     }
 }

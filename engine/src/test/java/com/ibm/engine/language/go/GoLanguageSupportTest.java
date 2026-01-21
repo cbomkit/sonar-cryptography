@@ -23,9 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 import com.ibm.engine.detection.MatchContext;
+import com.ibm.engine.detection.MethodMatcher;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.sonar.plugins.go.api.FunctionDeclarationTree;
+import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.Tree;
 
 class GoLanguageSupportTest {
@@ -49,24 +53,74 @@ class GoLanguageSupportTest {
     }
 
     @Test
-    void shouldReturnEmptyForEnclosingMethod() {
-        // Go API doesn't provide parent traversal, so enclosing method lookup is not supported
+    void shouldReturnEmptyForEnclosingMethodWhenNotFunctionDeclaration() {
         Tree tree = mock(Tree.class);
         assertThat(support.getEnclosingMethod(tree)).isEmpty();
     }
 
     @Test
-    void shouldReturnNullForCreateMethodMatcher() {
-        // Go function definitions don't carry enough type information for method matching
+    void shouldReturnSelfForEnclosingMethodWhenFunctionDeclaration() {
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        assertThat(support.getEnclosingMethod(functionDecl)).isPresent();
+        assertThat(support.getEnclosingMethod(functionDecl).get()).isSameAs(functionDecl);
+    }
+
+    @Test
+    void shouldReturnNullForCreateMethodMatcherWhenNotFunctionDeclaration() {
         Tree tree = mock(Tree.class);
         assertThat(support.createMethodMatcherBasedOn(tree)).isNull();
     }
 
     @Test
-    void shouldReturnNullForEnumMatcher() {
-        // Go doesn't have enums in the same way as Java
+    void shouldCreateMethodMatcherFromFunctionDeclaration() {
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        IdentifierTree nameTree = mock(IdentifierTree.class);
+
+        when(functionDecl.name()).thenReturn(nameTree);
+        when(nameTree.name()).thenReturn("NewCipher");
+        when(nameTree.packageName()).thenReturn("crypto/aes");
+        when(functionDecl.receiverType()).thenReturn(null);
+        when(functionDecl.formalParameters()).thenReturn(List.of());
+
+        MethodMatcher<Tree> matcher = support.createMethodMatcherBasedOn(functionDecl);
+
+        assertThat(matcher).isNotNull();
+        assertThat(matcher.getMethodNamesSerializable()).containsExactly("NewCipher");
+        assertThat(matcher.getInvokedObjectTypeStringsSerializable()).containsExactly("crypto/aes");
+    }
+
+    @Test
+    void shouldCreateMethodMatcherWithReceiverType() {
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        IdentifierTree nameTree = mock(IdentifierTree.class);
+
+        when(functionDecl.name()).thenReturn(nameTree);
+        when(nameTree.name()).thenReturn("Encrypt");
+        when(functionDecl.receiverType()).thenReturn("Block");
+        when(functionDecl.formalParameters()).thenReturn(List.of());
+
+        MethodMatcher<Tree> matcher = support.createMethodMatcherBasedOn(functionDecl);
+
+        assertThat(matcher).isNotNull();
+        assertThat(matcher.getMethodNamesSerializable()).containsExactly("Encrypt");
+        assertThat(matcher.getInvokedObjectTypeStringsSerializable()).containsExactly("Block");
+    }
+
+    @Test
+    void shouldReturnNullForEnumMatcherWhenNotIdentifier() {
         Tree tree = mock(Tree.class);
         MatchContext matchContext = new MatchContext(false, false, Collections.emptyList());
         assertThat(support.createSimpleEnumMatcherFor(tree, matchContext)).isNull();
+    }
+
+    @Test
+    void shouldCreateEnumMatcherFromIdentifier() {
+        IdentifierTree identifier = mock(IdentifierTree.class);
+        when(identifier.name()).thenReturn("SHA256");
+        MatchContext matchContext = new MatchContext(false, false, Collections.emptyList());
+
+        var matcher = support.createSimpleEnumMatcherFor(identifier, matchContext);
+
+        assertThat(matcher).isNotNull();
     }
 }

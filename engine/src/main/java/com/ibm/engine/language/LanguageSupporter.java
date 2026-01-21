@@ -24,6 +24,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.language.java.JavaLanguageSupport;
 import com.ibm.engine.language.python.PythonLanguageSupport;
 import javax.annotation.Nonnull;
+import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 import org.sonar.plugins.java.api.JavaCheck;
@@ -58,7 +59,7 @@ public final class LanguageSupporter {
     }
 
     @Nonnull
-    public static ILanguageSupport<GoCheck, Tree, Void, GoScanContext> goLanguageSupporter() {
+    public static ILanguageSupport<GoCheck, Tree, Symbol, GoScanContext> goLanguageSupporter() {
         return new GoLanguageSupport();
     }
 }

@@ -26,7 +26,9 @@ import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
+import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.Tree;
@@ -34,44 +36,47 @@ import org.sonar.plugins.go.api.Tree;
 class GoDetectionEngineTest {
 
     @Test
-    void shouldReturnEmptyForAssignedSymbol() {
-        // Go doesn't expose symbols - test the static behavior
+    void shouldReturnEmptyForAssignedSymbolWhenNotHasSymbol() {
         GoDetectionEngine engine = createMinimalEngine();
         Tree tree = mock(Tree.class);
         assertThat(engine.getAssignedSymbol(tree)).isEmpty();
     }
 
     @Test
-    void shouldReturnEmptyForMethodInvocationParameterSymbol() {
-        // Go doesn't expose symbols
+    void shouldReturnSymbolForAssignedSymbolWhenHasSymbol() {
         GoDetectionEngine engine = createMinimalEngine();
-        FunctionInvocationTree tree = mock(FunctionInvocationTree.class);
+        // Create a mock that implements both Tree and HasSymbol
+        IdentifierTree identifierTree = mock(IdentifierTree.class);
+        // Use a real Symbol instance since Mockito can't mock it
+        Symbol symbol = new Symbol("testType");
+        when(identifierTree.symbol()).thenReturn(symbol);
+
+        var result = engine.getAssignedSymbol(identifierTree);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getSymbol()).isSameAs(symbol);
+    }
+
+    @Test
+    void shouldReturnEmptyForMethodInvocationParameterSymbolWhenNotFunctionInvocation() {
+        GoDetectionEngine engine = createMinimalEngine();
+        Tree tree = mock(Tree.class);
         assertThat(engine.getMethodInvocationParameterSymbol(tree, null)).isEmpty();
     }
 
     @Test
-    void shouldReturnEmptyForNewClassParameterSymbol() {
-        // Go doesn't have new class syntax
-        GoDetectionEngine engine = createMinimalEngine();
-        Tree tree = mock(Tree.class);
-        assertThat(engine.getNewClassParameterSymbol(tree, null)).isEmpty();
-    }
-
-    @Test
     void shouldReturnFalseForInvocationOnVariable() {
-        // Go doesn't expose symbols, so we can't track variable invocations
         GoDetectionEngine engine = createMinimalEngine();
         FunctionInvocationTree tree = mock(FunctionInvocationTree.class);
-        TraceSymbol<Void> traceSymbol = TraceSymbol.createStart();
+        TraceSymbol<Symbol> traceSymbol = TraceSymbol.createStart();
         assertThat(engine.isInvocationOnVariable(tree, traceSymbol)).isFalse();
     }
 
     @Test
     void shouldReturnFalseForInitForVariable() {
-        // Go doesn't have new class syntax
         GoDetectionEngine engine = createMinimalEngine();
         Tree tree = mock(Tree.class);
-        TraceSymbol<Void> traceSymbol = TraceSymbol.createStart();
+        TraceSymbol<Symbol> traceSymbol = TraceSymbol.createStart();
         assertThat(engine.isInitForVariable(tree, traceSymbol)).isFalse();
     }
 
@@ -116,7 +121,6 @@ class GoDetectionEngineTest {
 
     @Test
     void shouldReturnNullForEnumValue() {
-        // Go doesn't have enums
         GoDetectionEngine engine = createMinimalEngine();
         Tree tree = mock(Tree.class);
         assertThat(engine.resolveEnumValue(String.class, tree, null)).isNull();

@@ -37,7 +37,9 @@ import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
+import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.Tree;
@@ -46,16 +48,16 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
  */
-public final class GoDetectionEngine implements IDetectionEngine<Tree, Void> {
+public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
     @Nonnull
-    private final DetectionStore<GoCheck, Tree, Void, GoScanContext> detectionStore;
+    private final DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore;
 
-    @Nonnull private final Handler<GoCheck, Tree, Void, GoScanContext> handler;
+    @Nonnull private final Handler<GoCheck, Tree, Symbol, GoScanContext> handler;
 
     public GoDetectionEngine(
-            @Nonnull DetectionStore<GoCheck, Tree, Void, GoScanContext> detectionStore,
-            @Nonnull Handler<GoCheck, Tree, Void, GoScanContext> handler) {
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
+            @Nonnull Handler<GoCheck, Tree, Symbol, GoScanContext> handler) {
         this.detectionStore = detectionStore;
         this.handler = handler;
     }
@@ -66,7 +68,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Void> {
     }
 
     @Override
-    public void run(@Nonnull TraceSymbol<Void> traceSymbol, @Nonnull Tree tree) {
+    public void run(@Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull Tree tree) {
         if (tree instanceof FunctionInvocationTree functionInvocation) {
             handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
             if (detectionStore
@@ -158,37 +160,72 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Void> {
 
     @Nonnull
     @Override
-    public Optional<TraceSymbol<Void>> getAssignedSymbol(@Nonnull Tree expression) {
-        // Go API doesn't expose symbol information
+    public Optional<TraceSymbol<Symbol>> getAssignedSymbol(@Nonnull Tree expression) {
+        // Try to get symbol from expression if it implements HasSymbol
+        if (expression instanceof HasSymbol hasSymbol) {
+            Symbol symbol = hasSymbol.symbol();
+            if (symbol != null) {
+                return Optional.of(TraceSymbol.createFrom(symbol));
+            }
+        }
         return Optional.empty();
     }
 
     @Nonnull
     @Override
-    public Optional<TraceSymbol<Void>> getMethodInvocationParameterSymbol(
+    public Optional<TraceSymbol<Symbol>> getMethodInvocationParameterSymbol(
             @Nonnull Tree methodInvocation, @Nonnull Parameter<Tree> parameter) {
-        // Go API doesn't expose symbol information
+        if (methodInvocation instanceof FunctionInvocationTree functionInvocation) {
+            List<Tree> arguments = functionInvocation.arguments();
+            if (arguments != null
+                    && parameter.getIndex() >= 0
+                    && parameter.getIndex() < arguments.size()) {
+                Tree arg = arguments.get(parameter.getIndex());
+                if (arg instanceof HasSymbol hasSymbol) {
+                    Symbol symbol = hasSymbol.symbol();
+                    if (symbol != null) {
+                        return Optional.of(TraceSymbol.createFrom(symbol));
+                    }
+                }
+                return Optional.of(TraceSymbol.createWithStateNoSymbol());
+            }
+            return Optional.of(TraceSymbol.createWithStateDifferent());
+        }
         return Optional.empty();
     }
 
     @Nonnull
     @Override
-    public Optional<TraceSymbol<Void>> getNewClassParameterSymbol(
+    public Optional<TraceSymbol<Symbol>> getNewClassParameterSymbol(
             @Nonnull Tree newClass, @Nonnull Parameter<Tree> parameter) {
-        // Go doesn't have new class syntax
-        return Optional.empty();
+        // Go doesn't have new class syntax - function calls are used instead
+        // This is effectively the same as getMethodInvocationParameterSymbol
+        return getMethodInvocationParameterSymbol(newClass, parameter);
     }
 
     @Override
     public boolean isInvocationOnVariable(
-            Tree methodInvocation, @Nonnull TraceSymbol<Void> variableSymbol) {
-        // Go API doesn't expose symbol information for variable tracking
+            Tree methodInvocation, @Nonnull TraceSymbol<Symbol> variableSymbol) {
+        if (!variableSymbol.is(TraceSymbol.State.SYMBOL)) {
+            return false;
+        }
+        Symbol variable = variableSymbol.getSymbol();
+        if (variable == null) {
+            return false;
+        }
+        // For Go, check if the method invocation is called on the tracked variable
+        // This would require examining the receiver of the function invocation
+        // Currently limited support
         return false;
     }
 
     @Override
-    public boolean isInitForVariable(Tree newClass, @Nonnull TraceSymbol<Void> variableSymbol) {
-        // Go doesn't have new class syntax
+    public boolean isInitForVariable(Tree newClass, @Nonnull TraceSymbol<Symbol> variableSymbol) {
+        // Go doesn't have new class syntax - check if this is an assignment
+        if (!variableSymbol.is(TraceSymbol.State.SYMBOL)) {
+            return false;
+        }
+        // Currently limited support for Go
         return false;
     }
 
@@ -199,7 +236,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Void> {
      * @param functionInvocation the function invocation to analyze
      */
     private void analyseExpression(
-            @Nonnull TraceSymbol<Void> traceSymbol,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
             @Nonnull FunctionInvocationTree functionInvocation) {
 
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
