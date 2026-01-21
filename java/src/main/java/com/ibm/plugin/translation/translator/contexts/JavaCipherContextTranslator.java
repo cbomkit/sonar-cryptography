@@ -51,10 +51,9 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
-import org.sonar.plugins.java.api.tree.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.java.api.tree.Tree;
 
 public final class JavaCipherContextTranslator extends JavaAbstractLibraryTranslator {
 
