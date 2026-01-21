@@ -21,9 +21,12 @@ package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
-import com.ibm.mapper.model.BlockCipher;
+import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
+import com.ibm.plugin.utils.GenerateAssertsHelper;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
@@ -63,9 +66,16 @@ class GoCryptoAESTest extends TestBase {
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
 
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(BlockCipher.class);
-        assertThat(node.asString()).isEqualTo("AES");
+        GenerateAssertsHelper.generate(detectionStore, nodes);
+
+        /*
+         * Detection Store
+         */
+        assertThat(detectionStore).isNotNull();
+        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
+        IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+        assertThat(value0).isInstanceOf(ValueAction.class);
+        assertThat(value0.asString()).isEqualTo("AES");
     }
 }

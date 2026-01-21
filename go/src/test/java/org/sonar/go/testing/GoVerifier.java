@@ -19,6 +19,23 @@
  */
 package org.sonar.go.testing;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.go.converter.GoConverter;
 import org.sonar.go.converter.GoParseCommand;
@@ -36,24 +53,6 @@ import org.sonar.plugins.go.api.checks.GoModFileData;
 import org.sonar.plugins.go.api.checks.InitContext;
 import org.sonar.plugins.go.api.checks.SecondaryLocation;
 import org.sonarsource.analyzer.commons.checks.verifier.SingleFileVerifier;
-
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 
 /**
  * Test verifier for Go checks. Adapted from SonarSource sonar-go GoVerifier.
@@ -75,7 +74,8 @@ import static org.mockito.Mockito.when;
 public class GoVerifier {
     private static final Path BASE_DIR = Paths.get("src", "test", "files");
     public static final File CONVERTER_DIR = Paths.get("build", "test-tmp").toFile();
-    public static final GoConverter GO_CONVERTER_DEBUG_TYPE_CHECK = new GoConverter(new GoParseCommand(CONVERTER_DIR, "-debug_type_check"));
+    public static final GoConverter GO_CONVERTER_DEBUG_TYPE_CHECK =
+            new GoConverter(new GoParseCommand(CONVERTER_DIR, "-debug_type_check"));
 
     private GoVerifier() {
         // Utility class
@@ -101,20 +101,33 @@ public class GoVerifier {
      * this uses a mock-based approach that focuses on validating the comment-based issue
      * expectations.
      */
-    protected static SingleFileVerifier createVerifier(Path path, GoCheck check) {
+    protected static @Nonnull SingleFileVerifier createVerifier(Path path, GoCheck check) {
         SingleFileVerifier verifier = SingleFileVerifier.create(path, UTF_8);
 
         String testFileContent = readFile(path);
         GoModFileData goModFileData = GoModFileData.UNKNOWN_DATA;
-        Tree root = GO_CONVERTER_DEBUG_TYPE_CHECK.parse(Map.of("foo.go", testFileContent), goModFileData.moduleName()).get("foo.go").tree();
+        Tree root =
+                GO_CONVERTER_DEBUG_TYPE_CHECK
+                        .parse(Map.of("foo.go", testFileContent), goModFileData.moduleName())
+                        .get("foo.go")
+                        .tree();
+        if (root instanceof TopLevelTree topLevelTree) {
+            topLevelTree
+                    .allComments()
+                    .forEach(
+                            comment -> {
+                                TextPointer start = comment.textRange().start();
+                                verifier.addComment(
+                                        start.line(), start.lineOffset() + 1, comment.text(), 2, 0);
+                            });
+        }
 
-        ((TopLevelTree) root).allComments()
-                .forEach(comment -> {
-                    TextPointer start = comment.textRange().start();
-                    verifier.addComment(start.line(), start.lineOffset() + 1, comment.text(), 2, 0);
-                });
-
-        TestContext ctx = new TestContext(verifier, createMockInputFile(path), path.getFileName().toString(), testFileContent);
+        TestContext ctx =
+                new TestContext(
+                        verifier,
+                        createMockInputFile(path),
+                        path.getFileName().toString(),
+                        testFileContent);
         new SymbolVisitor<>().scan(ctx, root);
         check.initialize(ctx);
         ctx.scan(root);
@@ -122,26 +135,9 @@ public class GoVerifier {
         return verifier;
     }
 
-    /**
-     * Parses comments from Go source code to extract issue expectations. Looks for "//
-     * Noncompliant" comments with optional message.
-     */
-    private static void parseCommentsForVerifier(String content, SingleFileVerifier verifier) {
-        String[] lines = content.split("\n");
-        for (int lineNum = 1; lineNum <= lines.length; lineNum++) {
-            String line = lines[lineNum - 1];
-            int commentIndex = line.indexOf("//");
-            if (commentIndex >= 0) {
-                String comment = line.substring(commentIndex);
-                // Add comment for verifier processing
-                verifier.addComment(lineNum, commentIndex + 1, comment, 2, 0);
-            }
-        }
-    }
-
     protected static String readFile(Path path) {
         try {
-            return new String(Files.readAllBytes(path), UTF_8);
+            return Files.readString(path);
         } catch (IOException e) {
             throw new IllegalStateException("Cannot read " + path, e);
         }
@@ -188,23 +184,26 @@ public class GoVerifier {
         }
 
         @Override
-        public <T extends Tree> void register(Class<T> cls, BiConsumer<CheckContext, T> consumer) {
+        public <T extends Tree> void register(
+                @Nonnull Class<T> cls, @Nonnull BiConsumer<CheckContext, T> consumer) {
             visitor.register(cls, (ctx, node) -> consumer.accept(this, node));
         }
 
         @Override
-        public void registerOnLeave(BiConsumer<CheckContext, Tree> visitor) {
+        public void registerOnLeave(@Nonnull BiConsumer<CheckContext, Tree> visitor) {
             this.onLeave = tree -> visitor.accept(this, tree);
         }
 
         @Override
-        public void reportIssue(HasTextRange toHighlight, String message) {
+        public void reportIssue(@Nonnull HasTextRange toHighlight, @Nonnull String message) {
             reportIssue(toHighlight, message, Collections.emptyList());
         }
 
         @Override
         public void reportIssue(
-                HasTextRange toHighlight, String message, SecondaryLocation secondaryLocation) {
+                @Nonnull HasTextRange toHighlight,
+                @Nonnull String message,
+                @Nonnull SecondaryLocation secondaryLocation) {
             reportIssue(toHighlight, message, Collections.singletonList(secondaryLocation));
         }
 
@@ -229,34 +228,34 @@ public class GoVerifier {
         }
 
         @Override
-        public void reportIssue(TextRange textRange, String message) {
+        public void reportIssue(@Nonnull TextRange textRange, @Nonnull String message) {
             reportIssue(textRange, message, Collections.emptyList(), null);
         }
 
         @Override
         public void reportIssue(
-                HasTextRange toHighlight,
-                String message,
-                List<SecondaryLocation> secondaryLocations) {
+                @Nonnull HasTextRange toHighlight,
+                @Nonnull String message,
+                @Nonnull List<SecondaryLocation> secondaryLocations) {
             reportIssue(toHighlight, message, secondaryLocations, null);
         }
 
         @Override
         public void reportIssue(
-                HasTextRange toHighlight,
-                String message,
-                List<SecondaryLocation> secondaryLocations,
+                @Nonnull HasTextRange toHighlight,
+                @Nonnull String message,
+                @Nonnull List<SecondaryLocation> secondaryLocations,
                 @Nullable Double gap) {
             reportIssue(toHighlight.textRange(), message, secondaryLocations, gap);
         }
 
         @Override
-        public void reportFileIssue(String message) {
+        public void reportFileIssue(@Nonnull String message) {
             reportFileIssue(message, null);
         }
 
         @Override
-        public void reportFileIssue(String message, @Nullable Double gap) {
+        public void reportFileIssue(@Nonnull String message, @Nullable Double gap) {
             verifier.reportIssue(message).onFile().withGap(gap);
             reportedIssues.add(new ReportedIssue(0, message));
         }

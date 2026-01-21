@@ -21,11 +21,13 @@ package com.ibm.plugin.translation.translator;
 
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
+import com.ibm.plugin.translation.translator.contexts.GoCipherContextTranslator;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -56,11 +58,12 @@ public class GoTranslator extends ITranslator<GoCheck, Tree, Symbol, GoScanConte
             return Optional.empty();
         }
 
-        // Context-specific translation will be added as detection rules are implemented
-        // Similar to Python, this will delegate to context-specific translators:
-        // - GoCipherContextTranslator
-        // - GoKeyContextTranslator
-        // - etc.
+        if (detectionValueContext.is(CipherContext.class)) {
+            final GoCipherContextTranslator goCipherContextTranslator =
+                    new GoCipherContextTranslator();
+            return goCipherContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
 
         return Optional.empty();
     }
