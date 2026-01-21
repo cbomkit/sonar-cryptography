@@ -22,13 +22,12 @@ package com.ibm.engine.language.go;
 import com.ibm.engine.detection.IBaseMethodVisitor;
 import com.ibm.engine.detection.IDetectionEngine;
 import com.ibm.engine.detection.TraceSymbol;
+import javax.annotation.Nonnull;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.visitors.TreeContext;
 import org.sonar.go.visitors.TreeVisitor;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 
 /**
  * Base method visitor for Go that uses TreeVisitor for AST traversal. Registers handlers for

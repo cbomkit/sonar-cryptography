@@ -19,28 +19,25 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
-import com.ibm.engine.model.BlockSize;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.KeySize;
-import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
-import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.mode.CBC;
-import com.ibm.mapper.model.mode.CFB;
-import com.ibm.mapper.model.mode.CTR;
-import com.ibm.mapper.model.mode.GCM;
+import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
-public final class GoCipherContextTranslator implements IContextTranslation<Tree> {
+/**
+ * Translator for Go MAC (Message Authentication Code) contexts.
+ *
+ * <p>Translates detected MAC algorithm values to their corresponding mapper model classes.
+ * Currently supports HMAC detection from the crypto/hmac package.
+ */
+public final class GoMacContextTranslator implements IContextTranslation<Tree> {
 
     @Override
     public @Nonnull Optional<INode> translate(
@@ -51,24 +48,9 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
 
         if (value instanceof ValueAction<Tree>) {
             return switch (value.asString().toUpperCase().trim()) {
-                case "AES" -> Optional.of(new AES(detectionLocation));
-                case "GCM" -> Optional.of(new GCM(detectionLocation));
-                case "CBC" -> Optional.of(new CBC(detectionLocation));
-                case "CFB" -> Optional.of(new CFB(detectionLocation));
-                case "CTR" -> Optional.of(new CTR(detectionLocation));
+                case "HMAC" -> Optional.of(new HMAC(detectionLocation));
                 default -> Optional.empty();
             };
-        } else if (value instanceof BlockSize<Tree> blockSize) {
-            return Optional.of(
-                    new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));
-        } else if (value instanceof KeySize<Tree> keySize) {
-            final KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);
-            return Optional.of(keyLength);
-        } else if (value instanceof OperationMode<Tree> operationMode) {
-            JcaCipherOperationModeMapper operationModeMapper = new JcaCipherOperationModeMapper();
-            return operationModeMapper
-                    .parse(operationMode.asString(), detectionLocation)
-                    .map(f -> f);
         }
 
         return Optional.empty();

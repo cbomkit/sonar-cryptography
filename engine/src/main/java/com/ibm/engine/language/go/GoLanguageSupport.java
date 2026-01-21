@@ -19,6 +19,8 @@
  */
 package com.ibm.engine.language.go;
 
+import static com.ibm.engine.detection.MethodMatcher.ANY;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.Handler;
@@ -31,20 +33,17 @@ import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
-import static com.ibm.engine.detection.MethodMatcher.ANY;
 
 /**
  * Language support implementation for Go. Provides the necessary infrastructure for cryptographic
@@ -95,7 +94,9 @@ public final class GoLanguageSupport
         // Navigate up the tree to find the enclosing FunctionDeclarationTree
         // Go Tree API provides children() but not parent(), so we need to track context
         // during registration. For now, check if expression itself is a function declaration.
-        if (expression instanceof FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+        if (expression
+                instanceof
+                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
             return Optional.of(functionInvocationWIthIdentifiersTree.getBlockTree());
         }
         // Without parent() access, we cannot navigate up. The Go plugin handles this

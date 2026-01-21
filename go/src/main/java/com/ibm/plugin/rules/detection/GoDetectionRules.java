@@ -21,6 +21,15 @@ package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoAES;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoECDSA;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoElliptic;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoHMAC;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoMD5;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRSA;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRand;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA1;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA256;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA512;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -33,6 +42,18 @@ public final class GoDetectionRules {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(GoCryptoAES.rules().stream()).flatMap(i -> i).toList();
+        return Stream.of(
+                        GoCryptoAES.rules().stream(),
+                        GoCryptoECDSA.rules().stream(),
+                        GoCryptoElliptic.rules().stream(),
+                        GoCryptoHMAC.rules().stream(),
+                        GoCryptoMD5.rules().stream(),
+                        GoCryptoRSA.rules().stream(),
+                        GoCryptoRand.rules().stream(),
+                        GoCryptoSHA1.rules().stream(),
+                        GoCryptoSHA256.rules().stream(),
+                        GoCryptoSHA512.rules().stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

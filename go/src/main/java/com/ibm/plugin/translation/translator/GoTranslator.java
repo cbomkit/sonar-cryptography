@@ -22,23 +22,32 @@ package com.ibm.plugin.translation.translator;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.plugin.translation.translator.contexts.GoCipherContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoDigestContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoKeyContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoMacContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoPRNGContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoSignatureContextTranslator;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.MemberSelectTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Optional;
 
 public class GoTranslator extends ITranslator<GoCheck, Tree, Symbol, GoScanContext> {
 
@@ -63,6 +72,38 @@ public class GoTranslator extends ITranslator<GoCheck, Tree, Symbol, GoScanConte
             final GoCipherContextTranslator goCipherContextTranslator =
                     new GoCipherContextTranslator();
             return goCipherContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(DigestContext.class)) {
+            final GoDigestContextTranslator goDigestContextTranslator =
+                    new GoDigestContextTranslator();
+            return goDigestContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(MacContext.class)) {
+            final GoMacContextTranslator goMacContextTranslator = new GoMacContextTranslator();
+            return goMacContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(PRNGContext.class)) {
+            final GoPRNGContextTranslator goPRNGContextTranslator = new GoPRNGContextTranslator();
+            return goPRNGContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(KeyContext.class)) {
+            final GoKeyContextTranslator goKeyContextTranslator = new GoKeyContextTranslator();
+            return goKeyContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(SignatureContext.class)) {
+            final GoSignatureContextTranslator goSignatureContextTranslator =
+                    new GoSignatureContextTranslator();
+            return goSignatureContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 

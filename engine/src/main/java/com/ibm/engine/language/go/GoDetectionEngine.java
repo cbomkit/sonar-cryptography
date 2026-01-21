@@ -31,6 +31,12 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
@@ -45,13 +51,6 @@ import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -82,12 +81,17 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 if (item instanceof VariableDeclarationTree variableDeclarationTree) {
                     for (Tree initializer : variableDeclarationTree.initializers()) {
                         if (initializer instanceof FunctionInvocationTree functionInvocation) {
-                            handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
+                            handler.addCallToCallStack(
+                                    functionInvocation, detectionStore.getScanContext());
                             if (detectionStore
                                     .getDetectionRule()
-                                    .match(functionInvocation, handler.getLanguageSupport().translation())) {
-                                final List<IdentifierTree> identifierTrees = variableDeclarationTree.identifiers();
-                                this.analyseExpression(traceSymbol,
+                                    .match(
+                                            functionInvocation,
+                                            handler.getLanguageSupport().translation())) {
+                                final List<IdentifierTree> identifierTrees =
+                                        variableDeclarationTree.identifiers();
+                                this.analyseExpression(
+                                        traceSymbol,
                                         new FunctionInvocationWIthIdentifiersTree(
                                                 functionInvocation.metaData(),
                                                 functionInvocation.memberSelect(),
@@ -109,7 +113,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Tree methodInvocation,
             @Nonnull Tree methodParameterIdentifier) {
         if (methodDefinition instanceof FunctionDeclarationTree functionDecl
-                && methodInvocation instanceof FunctionInvocationWIthIdentifiersTree functionInvocation
+                && methodInvocation
+                        instanceof FunctionInvocationWIthIdentifiersTree functionInvocation
                 && methodParameterIdentifier instanceof IdentifierTree paramIdentifier) {
 
             List<Tree> formalParameters = functionDecl.formalParameters();
@@ -211,7 +216,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                 } else {
                                     // Recursively resolve the initializer
                                     result.addAll(
-                                            resolveValues(clazz, valueTree, valueFactory, selections));
+                                            resolveValues(
+                                                    clazz, valueTree, valueFactory, selections));
                                 }
                             }
                         } else if (usageType == UsageType.ASSIGNMENT) {
@@ -267,7 +273,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             // Special handling for make([]byte, n) - extract size from second argument
             Tree memberSelect = functionInvocation.memberSelect();
 
-            if (memberSelect instanceof IdentifierTree makeIdentifier && "make".equals(makeIdentifier.name())) {
+            if (memberSelect instanceof IdentifierTree makeIdentifier
+                    && "make".equals(makeIdentifier.name())) {
                 final List<Tree> makeArgs = functionInvocation.arguments();
                 if (makeArgs != null && makeArgs.size() >= 2) {
                     // Second argument is the size
@@ -398,12 +405,15 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             if (symbol != null) {
                 return Optional.of(TraceSymbol.createFrom(symbol));
             }
-        } else if (expression instanceof FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
-            for (IdentifierTree identifierTree : functionInvocationWIthIdentifiersTree.getIdentifiers()) {
-               if (identifierTree.type().equals("error")) {
-                   continue;
-               }
-               return Optional.of(TraceSymbol.createFrom(identifierTree.symbol()));
+        } else if (expression
+                instanceof
+                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+            for (IdentifierTree identifierTree :
+                    functionInvocationWIthIdentifiersTree.getIdentifiers()) {
+                if (identifierTree.type().equals("error")) {
+                    continue;
+                }
+                return Optional.of(TraceSymbol.createFrom(identifierTree.symbol()));
             }
         }
         return Optional.empty();
