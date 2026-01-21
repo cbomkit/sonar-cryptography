@@ -246,8 +246,23 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         // Handle FunctionInvocationTree - function calls
         if (tree instanceof FunctionInvocationTree functionInvocation) {
             selections.addFirst(functionInvocation);
-            // Try to resolve via member select (the function being called)
+            // Special handling for make([]byte, n) - extract size from second argument
             Tree memberSelect = functionInvocation.memberSelect();
+
+            if (memberSelect instanceof IdentifierTree makeIdentifier && "make".equals(makeIdentifier.name())) {
+                final List<Tree> makeArgs = functionInvocation.arguments();
+                if (makeArgs != null && makeArgs.size() >= 2) {
+                    // Second argument is the size
+                    final Tree sizeArg = makeArgs.get(1);
+                    List<ResolvedValue<O, Tree>> result =
+                            resolveValues(clazz, sizeArg, valueFactory, selections);
+                    if (!result.isEmpty()) {
+                        return result;
+                    }
+                }
+            }
+
+            // Try to resolve via member select (the function being called)
             if (memberSelect != null) {
                 List<ResolvedValue<O, Tree>> result =
                         resolveValues(clazz, memberSelect, valueFactory, selections);

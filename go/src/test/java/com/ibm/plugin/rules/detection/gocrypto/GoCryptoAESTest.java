@@ -22,11 +22,13 @@ package com.ibm.plugin.rules.detection.gocrypto;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
 import org.junit.jupiter.api.Test;
@@ -52,7 +54,6 @@ class GoCryptoAESTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
-
         /*
          * Detection Store
          */
@@ -63,6 +64,14 @@ class GoCryptoAESTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("AES");
 
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeySize.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(1);
+        assertThat(store1.getDetectionValueContext()).isInstanceOf(CipherContext.class);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(KeySize.class);
+        assertThat(value01.asString()).isEqualTo("256");
+
         /*
          * Translation
          */
@@ -71,8 +80,14 @@ class GoCryptoAESTest extends TestBase {
         // BlockCipher
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(blockCipherNode.getChildren()).hasSize(2);
-        assertThat(blockCipherNode.asString()).isEqualTo("AES");
+        assertThat(blockCipherNode.getChildren()).hasSize(3);
+        assertThat(blockCipherNode.asString()).isEqualTo("AES256");
+
+        // KeyLength under BlockCipher
+        INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
+        assertThat(keyLengthNode).isNotNull();
+        assertThat(keyLengthNode.getChildren()).isEmpty();
+        assertThat(keyLengthNode.asString()).isEqualTo("256");
 
         // BlockSize under BlockCipher
         INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
@@ -84,6 +99,6 @@ class GoCryptoAESTest extends TestBase {
         INode oidNode = blockCipherNode.getChildren().get(Oid.class);
         assertThat(oidNode).isNotNull();
         assertThat(oidNode.getChildren()).isEmpty();
-        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1");
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1.4");
     }
 }
