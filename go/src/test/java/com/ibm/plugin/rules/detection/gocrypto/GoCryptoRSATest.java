@@ -34,7 +34,6 @@ import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
@@ -47,16 +46,7 @@ class GoCryptoRSATest extends TestBase {
         super(GoCryptoRSA.rules());
     }
 
-    /**
-     * Test RSA detection.
-     *
-     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not have gc export
-     * data for the crypto/rsa package, causing type checking to fail. The detection rule and
-     * translator code is correct and follows the same patterns as other working detection rules.
-     * Once the test infrastructure supports crypto/rsa, this test should pass.
-     */
     @Test
-    @Disabled("Test infrastructure lacks gc export data for crypto/rsa package")
     void test() {
         GoVerifier.verify("rules/detection/gocrypto/GoCryptoRSATestFile.go", this);
     }

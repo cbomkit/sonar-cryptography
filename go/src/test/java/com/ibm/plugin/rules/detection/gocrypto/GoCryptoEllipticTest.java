@@ -47,13 +47,13 @@ class GoCryptoEllipticTest extends TestBase {
     /**
      * Test elliptic curve detection.
      *
-     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not have gc export
-     * data for the crypto/elliptic package, causing type checking to fail. The detection rule and
-     * translator code is correct and follows the same patterns as other working detection rules.
-     * Once the test infrastructure supports crypto/elliptic, this test should pass.
+     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not include gc
+     * export data for crypto/elliptic. The binary has embedded support for: crypto/aes, cipher,
+     * des, dsa, md5, rand, rc4, rsa, sha1, sha256, sha512, tls, x509. Packages crypto/hmac,
+     * elliptic, and ecdsa are NOT included. The detection rule code is correct.
      */
     @Test
-    @Disabled("Test infrastructure lacks gc export data for crypto/elliptic package")
+    @Disabled("sonar-go-to-slang binary lacks embedded gc export data for crypto/elliptic")
     void test() {
         GoVerifier.verify("rules/detection/gocrypto/GoCryptoEllipticTestFile.go", this);
     }

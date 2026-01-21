@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// Generate a 2048-bit RSA key
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // Noncompliant {{(PublicKeyEncryption) RSA}}
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // Noncompliant {{(PublicKeyEncryption) RSA-2048}}
 	if err != nil {
 		panic(err)
 	}

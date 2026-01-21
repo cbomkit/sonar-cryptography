@@ -47,13 +47,13 @@ class GoCryptoHMACTest extends TestBase {
     /**
      * Test HMAC detection.
      *
-     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not have gc export
-     * data for the crypto/hmac package, causing type checking to fail. The detection rule and
-     * translator code is correct and follows the same patterns as other working detection rules.
-     * Once the test infrastructure supports crypto/hmac, this test should pass.
+     * <p>Note: This test is disabled because the sonar-go-to-slang binary does not include gc
+     * export data for crypto/hmac. The binary has embedded support for: crypto/aes, cipher, des,
+     * dsa, md5, rand, rc4, rsa, sha1, sha256, sha512, tls, x509. Packages crypto/hmac, elliptic,
+     * and ecdsa are NOT included. The detection rule code is correct.
      */
     @Test
-    @Disabled("Test infrastructure lacks gc export data for crypto/hmac package")
+    @Disabled("sonar-go-to-slang binary lacks embedded gc export data for crypto/hmac")
     void test() {
         GoVerifier.verify("rules/detection/gocrypto/GoCryptoHMACTestFile.go", this);
     }
