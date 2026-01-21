@@ -20,12 +20,13 @@
 package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Detection rules for Go's crypto/aes package.
@@ -51,8 +52,8 @@ public final class GoCryptoAES {
                     .createDetectionRule()
                     .forObjectTypes("crypto/aes")
                     .forMethods("NewCipher")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
                     .withMethodParameter("[]byte")
-                    .shouldBeDetectedAs(new AlgorithmFactory<>("AES"))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();

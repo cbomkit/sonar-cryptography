@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.event.Level;
 import org.sonar.api.testfixtures.log.LogTesterJUnit5;
 import org.sonar.go.symbols.Symbol;
@@ -55,7 +55,12 @@ public abstract class TestBase extends GoInventoryRule {
         super(GoDetectionRules.rules());
     }
 
-    @Before
+    @BeforeEach
+    public void resetState() {
+        GoAggregator.reset();
+    }
+
+    @BeforeEach
     public void debug() {
         LogTesterJUnit5 logTesterJUnit5 = new LogTesterJUnit5();
         logTesterJUnit5.setLevel(Level.DEBUG);
