@@ -27,10 +27,12 @@ import com.ibm.engine.detection.TraceSymbol;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
+import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
+import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 
 class GoDetectionEngineTest {
@@ -129,36 +131,84 @@ class GoDetectionEngineTest {
     @Test
     void shouldExtractArgumentFromFunctionInvocation() {
         GoDetectionEngine engine = createMinimalEngine();
+
+        // Create function declaration with parameters
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        ParameterTree param0 = mock(ParameterTree.class);
+        ParameterTree param1 = mock(ParameterTree.class);
+        IdentifierTree param0Id = mock(IdentifierTree.class);
+        IdentifierTree param1Id = mock(IdentifierTree.class);
+        when(param0.identifier()).thenReturn(param0Id);
+        when(param1.identifier()).thenReturn(param1Id);
+        when(param0Id.name()).thenReturn("key");
+        when(param1Id.name()).thenReturn("plaintext");
+        when(functionDecl.formalParameters()).thenReturn(List.of(param0, param1));
+
+        // Create function invocation with arguments
         FunctionInvocationTree functionInvocation = mock(FunctionInvocationTree.class);
         Tree arg0 = mock(Tree.class);
         Tree arg1 = mock(Tree.class);
         when(functionInvocation.arguments()).thenReturn(List.of(arg0, arg1));
 
-        Tree result = engine.extractArgumentFromMethodCaller(null, functionInvocation, 0, null);
+        // Create parameter identifier to look up
+        IdentifierTree targetParam = mock(IdentifierTree.class);
+        when(targetParam.name()).thenReturn("key");
+
+        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
         assertThat(result).isSameAs(arg0);
 
-        result = engine.extractArgumentFromMethodCaller(null, functionInvocation, 1, null);
+        // Test second parameter
+        when(targetParam.name()).thenReturn("plaintext");
+        result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
         assertThat(result).isSameAs(arg1);
     }
 
     @Test
-    void shouldReturnNullForInvalidArgumentIndex() {
+    void shouldReturnNullWhenParameterCountMismatch() {
         GoDetectionEngine engine = createMinimalEngine();
-        FunctionInvocationTree functionInvocation = mock(FunctionInvocationTree.class);
-        when(functionInvocation.arguments()).thenReturn(List.of());
 
-        Tree result = engine.extractArgumentFromMethodCaller(null, functionInvocation, 0, null);
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        when(functionDecl.formalParameters()).thenReturn(List.of(mock(Tree.class)));
+
+        FunctionInvocationTree functionInvocation = mock(FunctionInvocationTree.class);
+        when(functionInvocation.arguments()).thenReturn(List.of()); // Empty arguments
+
+        IdentifierTree targetParam = mock(IdentifierTree.class);
+        when(targetParam.name()).thenReturn("param");
+
+        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
         assertThat(result).isNull();
     }
 
     @Test
-    void shouldReturnNullForNegativeArgumentIndex() {
+    void shouldReturnNullWhenParameterNotFound() {
         GoDetectionEngine engine = createMinimalEngine();
-        FunctionInvocationTree functionInvocation = mock(FunctionInvocationTree.class);
-        Tree arg0 = mock(Tree.class);
-        when(functionInvocation.arguments()).thenReturn(List.of(arg0));
 
-        Tree result = engine.extractArgumentFromMethodCaller(null, functionInvocation, -1, null);
+        FunctionDeclarationTree functionDecl = mock(FunctionDeclarationTree.class);
+        ParameterTree param = mock(ParameterTree.class);
+        IdentifierTree paramId = mock(IdentifierTree.class);
+        when(param.identifier()).thenReturn(paramId);
+        when(paramId.name()).thenReturn("existingParam");
+        when(functionDecl.formalParameters()).thenReturn(List.of(param));
+
+        FunctionInvocationTree functionInvocation = mock(FunctionInvocationTree.class);
+        when(functionInvocation.arguments()).thenReturn(List.of(mock(Tree.class)));
+
+        IdentifierTree targetParam = mock(IdentifierTree.class);
+        when(targetParam.name()).thenReturn("nonExistentParam");
+
+        Tree result = engine.extractArgumentFromMethodCaller(functionDecl, functionInvocation, targetParam);
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void shouldReturnNullForNonMatchingTypes() {
+        GoDetectionEngine engine = createMinimalEngine();
+        Tree tree = mock(Tree.class);
+        Tree invocation = mock(Tree.class);
+        Tree param = mock(Tree.class);
+
+        Tree result = engine.extractArgumentFromMethodCaller(tree, invocation, param);
         assertThat(result).isNull();
     }
 

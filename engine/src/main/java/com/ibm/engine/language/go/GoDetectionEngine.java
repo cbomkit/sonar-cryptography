@@ -31,19 +31,22 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
+import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
+import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -85,30 +88,43 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Tree methodDefinition,
             @Nonnull Tree methodInvocation,
             @Nonnull Tree methodParameterIdentifier) {
-        // Go doesn't support extracting arguments from method definitions in the same way as Java
-        // This would require cross-file analysis which is not available in the Go plugin API
-        return null;
-    }
+        if (methodDefinition instanceof FunctionDeclarationTree functionDecl
+                && methodInvocation instanceof FunctionInvocationTree functionInvocation
+                && methodParameterIdentifier instanceof IdentifierTree paramIdentifier) {
 
-    /**
-     * Extracts an argument from a function invocation by index.
-     *
-     * @param methodInvocation the function invocation tree (ignored, for compatibility)
-     * @param functionInvocation the function invocation to extract from
-     * @param index the argument index
-     * @param context detection context (ignored)
-     * @return the argument tree at the specified index, or null if not available
-     */
-    @Nullable
-    public Tree extractArgumentFromMethodCaller(
-            @Nullable Tree methodInvocation,
-            @Nonnull Tree functionInvocation,
-            int index,
-            @Nullable Object context) {
-        if (functionInvocation instanceof FunctionInvocationTree invocation) {
-            List<Tree> args = invocation.arguments();
-            if (args != null && index >= 0 && index < args.size()) {
-                return args.get(index);
+            List<Tree> formalParameters = functionDecl.formalParameters();
+            List<Tree> arguments = functionInvocation.arguments();
+
+            if (formalParameters == null || arguments == null) {
+                return null;
+            }
+
+            // Check parameter counts match
+            if (formalParameters.size() != arguments.size()) {
+                return null;
+            }
+
+            // Get the target parameter name
+            String targetParamName = paramIdentifier.name();
+
+            // Find the index of the parameter in the formal parameters
+            for (int i = 0; i < formalParameters.size(); i++) {
+                Tree param = formalParameters.get(i);
+                String paramName = null;
+
+                // Handle ParameterTree (formal parameter)
+                if (param instanceof ParameterTree parameterTree) {
+                    IdentifierTree identifier = parameterTree.identifier();
+                    if (identifier != null) {
+                        paramName = identifier.name();
+                    }
+                } else if (param instanceof IdentifierTree identifier) {
+                    paramName = identifier.name();
+                }
+
+                if (paramName != null && paramName.equals(targetParamName)) {
+                    return arguments.get(i);
+                }
             }
         }
         return null;
