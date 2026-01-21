@@ -19,17 +19,23 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.BlockSize;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeySize;
+import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 public final class GoCipherContextTranslator implements IContextTranslation<Tree> {
 
@@ -45,6 +51,17 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
                 case "AES" -> Optional.of(new AES(detectionLocation));
                 default -> Optional.empty();
             };
+        } else if (value instanceof BlockSize<Tree> blockSize) {
+            return Optional.of(
+                    new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));
+        } else if (value instanceof KeySize<Tree> keySize) {
+            final KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);
+            return Optional.of(keyLength);
+        } else if (value instanceof OperationMode<Tree> operationMode) {
+            JcaCipherOperationModeMapper operationModeMapper = new JcaCipherOperationModeMapper();
+            return operationModeMapper
+                    .parse(operationMode.asString(), detectionLocation)
+                    .map(f -> f);
         }
 
         return Optional.empty();

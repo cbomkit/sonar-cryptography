@@ -32,11 +32,14 @@ import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import org.sonar.go.symbols.Symbol;
+import org.sonar.go.symbols.Usage;
+import org.sonar.go.symbols.Usage.UsageType;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.HasSymbol;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
+import org.sonar.plugins.go.api.MemberSelectTree;
 import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
@@ -135,17 +138,198 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Class<O> clazz,
             @Nonnull Tree expression,
             @Nullable IValueFactory<Tree> valueFactory) {
-        if (expression instanceof LiteralTree literal && clazz == String.class) {
-            @SuppressWarnings("unchecked")
-            O value = (O) literal.value();
-            return List.of(new ResolvedValue<>(value, expression));
+        return resolveValues(clazz, expression, valueFactory, new LinkedList<>());
+    }
+
+    /**
+     * Resolves values from a Go AST tree, following variable references and function calls.
+     *
+     * <p>Similar to the Java implementation, this method recursively traverses the AST to resolve
+     * values. Go's AST API has more limited symbol resolution compared to Java, so some advanced
+     * resolution (like following variable assignments across scopes) may not be fully supported.
+     *
+     * @param clazz the class type to expect in the expression tree
+     * @param tree the tree to resolve
+     * @param valueFactory optional value factory for custom value creation
+     * @param selections accumulated member selections for tracking traversal
+     * @return list of resolved values
+     */
+    @Nonnull
+    @SuppressWarnings("java:S6541")
+    private <O> List<ResolvedValue<O, Tree>> resolveValues(
+            @Nonnull Class<O> clazz,
+            @Nonnull Tree tree,
+            @Nullable IValueFactory<Tree> valueFactory,
+            @Nonnull LinkedList<Tree> selections) {
+        // Prevent infinite recursion
+        if (selections.size() > 15) {
+            return Collections.emptyList();
         }
-        if (expression instanceof IdentifierTree identifier && clazz == String.class) {
-            @SuppressWarnings("unchecked")
-            O value = (O) identifier.name();
-            return List.of(new ResolvedValue<>(value, expression));
+
+        // Handle IdentifierTree - variable references
+        if (tree instanceof IdentifierTree identifierTree) {
+            Symbol symbol = identifierTree.symbol();
+            if (symbol != null) {
+                List<Usage> usages = symbol.getUsages();
+                if (usages != null && !usages.isEmpty()) {
+                    LinkedList<ResolvedValue<O, Tree>> result = new LinkedList<>();
+
+                    for (Usage usage : usages) {
+                        // Skip the current identifier to avoid self-reference
+                        if (usage.identifier() == identifierTree) {
+                            continue;
+                        }
+
+                        UsageType usageType = usage.type();
+                        Tree valueTree = usage.value();
+
+                        if (usageType == UsageType.DECLARATION) {
+                            // Variable declaration with initializer
+                            if (valueTree != null) {
+                                Optional<O> constValue = resolveConstant(clazz, valueTree);
+                                if (constValue.isPresent()) {
+                                    result.addFirst(
+                                            new ResolvedValue<>(constValue.get(), valueTree));
+                                } else {
+                                    // Recursively resolve the initializer
+                                    result.addAll(
+                                            resolveValues(clazz, valueTree, valueFactory, selections));
+                                }
+                            }
+                        } else if (usageType == UsageType.ASSIGNMENT) {
+                            // Variable assignment - resolve the assigned expression
+                            if (valueTree != null) {
+                                result.addAll(
+                                        resolveValues(clazz, valueTree, valueFactory, selections));
+                            }
+                        }
+                        // PARAMETER and REFERENCE types are handled by outer scope resolution
+                    }
+
+                    if (!result.isEmpty()) {
+                        return result;
+                    }
+                }
+            }
+
+            // Fallback: try to resolve the identifier name as a constant
+            String name = identifierTree.name();
+            if (name != null && !name.isEmpty()) {
+                Optional<O> value = resolveConstant(clazz, name);
+                if (value.isPresent()) {
+                    return List.of(new ResolvedValue<>(value.get(), tree));
+                }
+            }
+            return Collections.emptyList();
         }
+
+        // Handle MemberSelectTree - pkg.member or receiver.method patterns
+        if (tree instanceof MemberSelectTree memberSelectTree) {
+            selections.addFirst(memberSelectTree);
+            // Try to resolve the identifier part first (the selected member name)
+            IdentifierTree identifier = memberSelectTree.identifier();
+            if (identifier != null) {
+                String name = identifier.name();
+                Optional<O> value = resolveConstant(clazz, name);
+                if (value.isPresent()) {
+                    return List.of(new ResolvedValue<>(value.get(), tree));
+                }
+            }
+            // Fall through to resolving the expression (receiver/package)
+            Tree expression = memberSelectTree.expression();
+            if (expression != null) {
+                return resolveValues(clazz, expression, valueFactory, selections);
+            }
+            return Collections.emptyList();
+        }
+
+        // Handle FunctionInvocationTree - function calls
+        if (tree instanceof FunctionInvocationTree functionInvocation) {
+            selections.addFirst(functionInvocation);
+            // Try to resolve via member select (the function being called)
+            Tree memberSelect = functionInvocation.memberSelect();
+            if (memberSelect != null) {
+                List<ResolvedValue<O, Tree>> result =
+                        resolveValues(clazz, memberSelect, valueFactory, selections);
+                if (!result.isEmpty()) {
+                    return result;
+                }
+            }
+            // For some cases, resolve arguments (e.g., when the function wraps a value)
+            List<Tree> arguments = functionInvocation.arguments();
+            if (arguments != null && arguments.size() == 1) {
+                // Single argument functions might be wrappers
+                return resolveValues(clazz, arguments.get(0), valueFactory, selections);
+            }
+            return Collections.emptyList();
+        }
+
+        // Handle LiteralTree - direct values
+        if (tree instanceof LiteralTree literalTree) {
+            String literalValue = literalTree.value();
+            Optional<O> value = resolveConstant(clazz, literalValue);
+            return value.map(v -> List.of(new ResolvedValue<>(v, tree)))
+                    .orElse(Collections.emptyList());
+        }
+
         return Collections.emptyList();
+    }
+
+    /**
+     * Resolves a constant value from a Tree (typically a LiteralTree).
+     *
+     * @param clazz the class type to expect
+     * @param tree the tree to extract the constant value from
+     * @return an Optional with the constant value if found, otherwise empty
+     */
+    @Nonnull
+    private <O> Optional<O> resolveConstant(@Nonnull Class<O> clazz, @Nonnull Tree tree) {
+        if (tree instanceof LiteralTree literalTree) {
+            return resolveConstant(clazz, literalTree.value());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Resolves a constant value from a string representation.
+     *
+     * @param clazz the class type to expect
+     * @param value the string value to resolve
+     * @return an Optional with the constant value if it can be cast to the requested type
+     */
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    private <O> Optional<O> resolveConstant(@Nonnull Class<O> clazz, @Nullable String value) {
+        if (value == null) {
+            return Optional.empty();
+        }
+
+        try {
+            // Try to cast directly if the expected class is String
+            if (clazz == String.class) {
+                return Optional.of(clazz.cast(value));
+            }
+            // Try to parse as Integer
+            if (clazz == Integer.class || clazz == Object.class) {
+                try {
+                    Integer intValue = Integer.parseInt(value);
+                    if (clazz == Integer.class) {
+                        return Optional.of(clazz.cast(intValue));
+                    }
+                    // For Object.class, return as Object
+                    return Optional.of((O) intValue);
+                } catch (NumberFormatException e) {
+                    // Not an integer, continue
+                }
+            }
+            // For Object.class, return the string value
+            if (clazz == Object.class) {
+                return Optional.of((O) value);
+            }
+            return Optional.empty();
+        } catch (ClassCastException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -159,7 +343,9 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     public <O> void resolveMethodReturnValues(
             @Nonnull Class<O> clazz,
             @Nonnull Tree methodDefinition,
-            @Nonnull Parameter<Tree> parameter) {}
+            @Nonnull Parameter<Tree> parameter) {
+        // Go return value resolution is not currently supported
+    }
 
     @Nullable @Override
     public <O> ResolvedValue<O, Tree> resolveEnumValue(

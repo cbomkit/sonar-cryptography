@@ -51,9 +51,10 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 public final class JavaCipherContextTranslator extends JavaAbstractLibraryTranslator {
 
@@ -110,7 +111,7 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
             };
         } else if (value instanceof ValueAction<Tree> valueAction
                 && detectionContext instanceof DetectionContext context) {
-            String kind = context.get("kind").map(k -> k).orElse("");
+            String kind = context.get("kind").orElse("");
             switch (kind) {
                 case "BLOCK_CIPHER_ENGINE", "HASH":
                     /* TODO: better handle the HASH case (used in `BcOCBBlockCipher`): use asKind MessageDigest? */
