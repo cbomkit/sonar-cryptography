@@ -19,28 +19,29 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoAESTest extends TestBase {
 
@@ -54,6 +55,7 @@ class GoCryptoAESTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
+
         /*
          * Detection Store
          */
@@ -64,56 +66,53 @@ class GoCryptoAESTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("AES");
 
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
-                getStoreOfValueType(KeySize.class, detectionStore.getChildren());
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
         assertThat(store1.getDetectionValues()).hasSize(1);
         assertThat(store1.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value01 = store1.getDetectionValues().get(0);
-        assertThat(value01).isInstanceOf(KeySize.class);
-        assertThat(value01.asString()).isEqualTo("256");
+        assertThat(value01).isInstanceOf(ValueAction.class);
+        assertThat(value01.asString()).isEqualTo("GCM");
 
-        // GCM mode detection (depending rule)
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store2 =
-                getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store2 = getStoreOfValueType(KeySize.class, detectionStore.getChildren());
         assertThat(store2).isNotNull();
         assertThat(store2.getDetectionValues()).hasSize(1);
         assertThat(store2.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value02 = store2.getDetectionValues().get(0);
-        assertThat(value02).isInstanceOf(ValueAction.class);
-        assertThat(value02.asString()).isEqualTo("GCM");
+        assertThat(value02).isInstanceOf(KeySize.class);
+        assertThat(value02.asString()).isEqualTo("256");
 
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
 
-        // BlockCipher
-        INode blockCipherNode = nodes.get(0);
-        assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(blockCipherNode.getChildren()).hasSize(4);
-        assertThat(blockCipherNode.asString()).isEqualTo("AES256-GCM");
+        // AuthenticatedEncryption
+        INode authenticatedEncryptionNode = nodes.get(0);
+        assertThat(authenticatedEncryptionNode.getKind()).isEqualTo(AuthenticatedEncryption.class);
+        assertThat(authenticatedEncryptionNode.getChildren()).hasSize(4);
+        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES256-GCM");
 
-        // KeyLength under BlockCipher
-        INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
-        assertThat(keyLengthNode).isNotNull();
-        assertThat(keyLengthNode.getChildren()).isEmpty();
-        assertThat(keyLengthNode.asString()).isEqualTo("256");
-
-        // BlockSize under BlockCipher
-        INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
+        // BlockSize under AuthenticatedEncryption
+        INode blockSizeNode = authenticatedEncryptionNode.getChildren().get(BlockSize.class);
         assertThat(blockSizeNode).isNotNull();
         assertThat(blockSizeNode.getChildren()).isEmpty();
         assertThat(blockSizeNode.asString()).isEqualTo("128");
 
-        // Oid under BlockCipher
-        INode oidNode = blockCipherNode.getChildren().get(Oid.class);
+        // KeyLength under AuthenticatedEncryption
+        INode keyLengthNode = authenticatedEncryptionNode.getChildren().get(KeyLength.class);
+        assertThat(keyLengthNode).isNotNull();
+        assertThat(keyLengthNode.getChildren()).isEmpty();
+        assertThat(keyLengthNode.asString()).isEqualTo("256");
+
+        // Oid under AuthenticatedEncryption
+        INode oidNode = authenticatedEncryptionNode.getChildren().get(Oid.class);
         assertThat(oidNode).isNotNull();
         assertThat(oidNode.getChildren()).isEmpty();
-        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1.4");
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1.46");
 
-        // Mode under BlockCipher
-        INode modeNode = blockCipherNode.getChildren().get(Mode.class);
+        // Mode under AuthenticatedEncryption
+        INode modeNode = authenticatedEncryptionNode.getChildren().get(Mode.class);
         assertThat(modeNode).isNotNull();
         assertThat(modeNode.getChildren()).isEmpty();
         assertThat(modeNode.asString()).isEqualTo("GCM");
