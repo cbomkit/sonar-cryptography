@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoAES;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -32,11 +33,6 @@ public final class GoDetectionRules {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.<IDetectionRule<Tree>>of(
-                        // Go detection rules will be added here
-                        // e.g., GoCryptoAES.rules().stream(),
-                        //       GoCryptoRSA.rules().stream()
-                        )
-                .toList();
+        return Stream.of(GoCryptoAES.rules().stream()).flatMap(i -> i).toList();
     }
 }
