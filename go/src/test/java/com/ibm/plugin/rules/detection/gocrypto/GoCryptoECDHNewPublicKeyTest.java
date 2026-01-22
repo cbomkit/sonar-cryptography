@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -29,26 +31,23 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-import javax.annotation.Nonnull;
-import java.util.List;
+class GoCryptoECDHNewPublicKeyTest extends TestBase {
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-class GoCryptoECDHTest extends TestBase {
-
-    public GoCryptoECDHTest() {
+    public GoCryptoECDHNewPublicKeyTest() {
         super(GoCryptoECDH.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDHTestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDHNewPublicKeyTestFile.go", this);
     }
 
     @Override
@@ -57,13 +56,13 @@ class GoCryptoECDHTest extends TestBase {
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
         if (findingId == 0) {
-            // First finding: ecdh.P256() curve selection
+            // First finding: ecdh.X25519() curve selection
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
             assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
             IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
             assertThat(value0).isInstanceOf(ValueAction.class);
-            assertThat(value0.asString()).isEqualTo("P256");
+            assertThat(value0.asString()).isEqualTo("X25519");
 
             /*
              * Translation
@@ -76,19 +75,17 @@ class GoCryptoECDHTest extends TestBase {
             assertThat(keyAgreementNode.getChildren()).hasSize(2);
             assertThat(keyAgreementNode.asString()).isEqualTo("ECDH");
 
-            // EllipticCurve under KeyAgreement
+            // EllipticCurve under KeyAgreement (X25519 uses Curve25519)
             INode ellipticCurveNode = keyAgreementNode.getChildren().get(EllipticCurve.class);
             assertThat(ellipticCurveNode).isNotNull();
-            assertThat(ellipticCurveNode.getChildren()).isEmpty();
-            assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
+            assertThat(ellipticCurveNode.asString()).isEqualTo("Curve25519");
 
-            // Oid under KeyAgreement
+            // Oid under KeyAgreement (ECDH OID, not X25519-specific)
             INode oidNode = keyAgreementNode.getChildren().get(Oid.class);
             assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
             assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
         } else if (findingId == 1) {
-            // Second finding: curve.GenerateKey() key generation
+            // Second finding: curve.NewPublicKey() key import
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
             assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);

@@ -19,23 +19,22 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.KeySizeFactory;
-import com.ibm.engine.model.factory.ValueActionFactory;
-import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_CBC_DECRYPTER;
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_CBC_ENCRYPTER;
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_CFB_DECRYPTER;
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_CFB_ENCRYPTER;
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_CTR;
 import static com.ibm.plugin.rules.detection.gocrypto.GoCryptoCipherModes.NEW_OFB;
+
+import com.ibm.engine.model.Size;
+import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import java.util.List;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/des package.

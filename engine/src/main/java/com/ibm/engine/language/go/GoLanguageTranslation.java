@@ -101,11 +101,13 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
 
                 // For package-level function calls (e.g., aes.NewCipher)
                 // the expression is the package alias
-                if (packageName != null && !packageName.isEmpty()) {
+                if (packageName != null
+                        && !packageName.isEmpty()
+                        && !"UNKNOWN".equals(packageName)) {
                     return Optional.of(createGoType(packageName, matchContext));
                 }
                 // For method calls on a variable, use the type
-                if (typeName != null && !typeName.isEmpty()) {
+                if (typeName != null && !typeName.isEmpty() && !"UNKNOWN".equals(typeName)) {
                     return Optional.of(createGoType(typeName, matchContext));
                 }
                 // Fallback to the identifier name (likely package alias)

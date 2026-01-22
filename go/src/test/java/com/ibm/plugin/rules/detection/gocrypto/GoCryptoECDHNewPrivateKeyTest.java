@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -29,26 +31,23 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-import javax.annotation.Nonnull;
-import java.util.List;
+class GoCryptoECDHNewPrivateKeyTest extends TestBase {
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-class GoCryptoECDHTest extends TestBase {
-
-    public GoCryptoECDHTest() {
+    public GoCryptoECDHNewPrivateKeyTest() {
         super(GoCryptoECDH.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDHTestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDHNewPrivateKeyTestFile.go", this);
     }
 
     @Override
@@ -79,16 +78,14 @@ class GoCryptoECDHTest extends TestBase {
             // EllipticCurve under KeyAgreement
             INode ellipticCurveNode = keyAgreementNode.getChildren().get(EllipticCurve.class);
             assertThat(ellipticCurveNode).isNotNull();
-            assertThat(ellipticCurveNode.getChildren()).isEmpty();
             assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
 
             // Oid under KeyAgreement
             INode oidNode = keyAgreementNode.getChildren().get(Oid.class);
             assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
             assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
         } else if (findingId == 1) {
-            // Second finding: curve.GenerateKey() key generation
+            // Second finding: curve.NewPrivateKey() key import
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
             assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);

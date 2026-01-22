@@ -24,7 +24,6 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -43,7 +42,7 @@ public final class GoCryptoCipherModes {
                     .forMethods("NewGCM")
                     .shouldBeDetectedAs(new ValueActionFactory<>("GCM"))
                     .withMethodParameter("cipher.Block")
-                    .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -57,7 +56,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CBC"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -71,7 +70,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CBC"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -85,7 +84,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CFB"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -99,7 +98,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CFB"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -113,7 +112,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CTR"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -127,7 +126,7 @@ public final class GoCryptoCipherModes {
                     .shouldBeDetectedAs(new ValueActionFactory<>("OFB"))
                     .withMethodParameter("cipher.Block")
                     .withMethodParameter("[]byte")
-                    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER_MODE")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 

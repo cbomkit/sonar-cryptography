@@ -27,16 +27,13 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.gocrypto.GoCryptoModeMapper;
 import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.DESede;
-import com.ibm.mapper.model.mode.CBC;
-import com.ibm.mapper.model.mode.CFB;
-import com.ibm.mapper.model.mode.CTR;
-import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -52,16 +49,22 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
             @Nonnull DetectionLocation detectionLocation) {
 
         if (value instanceof ValueAction<Tree>) {
-            return switch (value.asString().toUpperCase().trim()) {
-                case "AES" -> Optional.of(new AES(detectionLocation));
-                case "DES" -> Optional.of(new DES(detectionLocation));
-                case "3DES", "DESEDE", "TRIPLEDES" -> Optional.of(new DESede(detectionLocation));
-                case "GCM" -> Optional.of(new GCM(detectionLocation));
-                case "CBC" -> Optional.of(new CBC(detectionLocation));
-                case "CFB" -> Optional.of(new CFB(detectionLocation));
-                case "CTR" -> Optional.of(new CTR(detectionLocation));
-                default -> Optional.empty();
-            };
+            String valueStr = value.asString().toUpperCase().trim();
+            // Try to map as algorithm first
+            Optional<INode> algorithmResult =
+                    switch (valueStr) {
+                        case "AES" -> Optional.of(new AES(detectionLocation));
+                        case "DES" -> Optional.of(new DES(detectionLocation));
+                        case "3DES", "DESEDE", "TRIPLEDES" ->
+                                Optional.of(new DESede(detectionLocation));
+                        default -> Optional.empty();
+                    };
+            if (algorithmResult.isPresent()) {
+                return algorithmResult;
+            }
+            // Try to map as cipher mode
+            GoCryptoModeMapper modeMapper = new GoCryptoModeMapper();
+            return modeMapper.parse(valueStr, detectionLocation).map(mode -> mode);
         } else if (value instanceof BlockSize<Tree> blockSize) {
             return Optional.of(
                     new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));

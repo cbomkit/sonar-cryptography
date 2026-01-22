@@ -10,7 +10,7 @@ func main() {
 	curve := ecdh.P256() // Noncompliant {{(KeyAgreement) ECDH}}
 
 	// Generate a key pair
-	privateKey, err := curve.GenerateKey(rand.Reader)
+	privateKey, err := curve.GenerateKey(rand.Reader) // Noncompliant {{(KeyAgreement) ECDH}}
 	if err != nil {
 		panic(err)
 	}

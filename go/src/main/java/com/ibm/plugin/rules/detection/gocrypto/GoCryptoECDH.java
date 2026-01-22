@@ -39,6 +39,8 @@ import org.sonar.plugins.go.api.Tree;
  *   <li>ecdh.P521().GenerateKey() - generates an ECDH key pair using P-521 curve
  *   <li>ecdh.X25519().GenerateKey() - generates an ECDH key pair using X25519 curve
  *   <li>PrivateKey.ECDH() - performs ECDH key exchange
+ *   <li>Curve.NewPrivateKey() - creates a PrivateKey from raw bytes (key import)
+ *   <li>Curve.NewPublicKey() - creates a PublicKey from raw bytes (key import)
  * </ul>
  */
 @SuppressWarnings("java:S1192")
@@ -122,8 +124,42 @@ public final class GoCryptoECDH {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // Curve.NewPrivateKey(key []byte) (*PrivateKey, error)
+    // Creates a PrivateKey from existing raw bytes (key import)
+    private static final IDetectionRule<Tree> NEW_PRIVATE_KEY =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("*ecdh.Curve", "ecdh.Curve")
+                    .forMethods("NewPrivateKey")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // Curve.NewPublicKey(key []byte) (*PublicKey, error)
+    // Creates a PublicKey from existing raw bytes (key import)
+    private static final IDetectionRule<Tree> NEW_PUBLIC_KEY =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("*ecdh.Curve", "ecdh.Curve")
+                    .forMethods("NewPublicKey")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(P256, P384, P521, X25519, GENERATE_KEY, ECDH_EXCHANGE);
+        return List.of(
+                P256,
+                P384,
+                P521,
+                X25519,
+                GENERATE_KEY,
+                ECDH_EXCHANGE,
+                NEW_PRIVATE_KEY,
+                NEW_PUBLIC_KEY);
     }
 }

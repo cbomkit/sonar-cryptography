@@ -20,52 +20,46 @@
 package com.ibm.mapper.mapper.gocrypto;
 
 import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.EllipticCurve;
-import com.ibm.mapper.model.curves.Curve25519;
-import com.ibm.mapper.model.curves.Secp224r1;
-import com.ibm.mapper.model.curves.Secp256r1;
-import com.ibm.mapper.model.curves.Secp384r1;
-import com.ibm.mapper.model.curves.Secp521r1;
+import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.mode.CFB;
+import com.ibm.mapper.model.mode.CTR;
+import com.ibm.mapper.model.mode.GCM;
+import com.ibm.mapper.model.mode.OFB;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Maps Go crypto/elliptic and crypto/ecdh curve names to the corresponding elliptic curve model
- * classes.
+ * Maps Go crypto/cipher mode names to the corresponding mode model classes.
  *
- * <p>Go's crypto/elliptic package provides NIST P-curves:
- *
- * <ul>
- *   <li>P-224 → secp224r1
- *   <li>P-256 → secp256r1
- *   <li>P-384 → secp384r1
- *   <li>P-521 → secp521r1
- * </ul>
- *
- * <p>Go's crypto/ecdh package additionally provides:
+ * <p>Go's crypto/cipher package provides the following block cipher modes:
  *
  * <ul>
- *   <li>X25519 → Curve25519
+ *   <li>GCM - Galois/Counter Mode (AEAD)
+ *   <li>CBC - Cipher Block Chaining
+ *   <li>CFB - Cipher Feedback
+ *   <li>CTR - Counter Mode
+ *   <li>OFB - Output Feedback
  * </ul>
  */
-public final class GoCryptoCurveMapper implements IMapper {
+public final class GoCryptoModeMapper implements IMapper {
 
     @Nonnull
     @Override
-    public Optional<? extends EllipticCurve> parse(
+    public Optional<? extends Mode> parse(
             @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
         if (str == null) {
             return Optional.empty();
         }
 
         return switch (str.toUpperCase().trim()) {
-            case "P-224", "P224" -> Optional.of(new Secp224r1(detectionLocation));
-            case "P-256", "P256" -> Optional.of(new Secp256r1(detectionLocation));
-            case "P-384", "P384" -> Optional.of(new Secp384r1(detectionLocation));
-            case "P-521", "P521" -> Optional.of(new Secp521r1(detectionLocation));
-            case "X25519", "CURVE25519" -> Optional.of(new Curve25519(detectionLocation));
+            case "GCM" -> Optional.of(new GCM(detectionLocation));
+            case "CBC" -> Optional.of(new CBC(detectionLocation));
+            case "CFB" -> Optional.of(new CFB(detectionLocation));
+            case "CTR" -> Optional.of(new CTR(detectionLocation));
+            case "OFB" -> Optional.of(new OFB(detectionLocation));
             default -> Optional.empty();
         };
     }

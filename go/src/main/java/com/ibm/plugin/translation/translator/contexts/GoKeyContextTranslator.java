@@ -66,7 +66,18 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                 case "Ed25519":
                     return Optional.of(new Ed25519(detectionLocation));
                 case "ECDH":
-                    return curveMapper.parse(value.asString(), detectionLocation).map(ECDH::new);
+                    // Try to parse as curve name first (e.g., "P256", "X25519")
+                    Optional<? extends INode> curveResult =
+                            curveMapper.parse(value.asString(), detectionLocation).map(ECDH::new);
+                    if (curveResult.isPresent()) {
+                        return curveResult.map(n -> n);
+                    }
+                    // If value is "ECDH" itself (from GenerateKey/NewPrivateKey/NewPublicKey),
+                    // return a generic ECDH node without curve details
+                    if ("ECDH".equals(value.asString())) {
+                        return Optional.of(new ECDH(detectionLocation));
+                    }
+                    return Optional.empty();
                 case "EC":
                     return curveMapper.parse(value.asString(), detectionLocation).map(f -> f);
                 case "KDF":
