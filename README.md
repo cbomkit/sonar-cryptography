@@ -19,14 +19,17 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                         | Coverage | 
+| Language | Cryptographic Library                                                                         | Coverage |
 |----------|-----------------------------------------------------------------------------------------------|----------|
 | Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%     |
 |          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1] |
 | Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%     |
+| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | Partial[^2] |
 
 
 [^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+
+[^2]: Go support requires [sonar-go-to-slang](https://github.com/SonarSource/sonar-go/tree/master/sonar-go-to-slang) for type resolution. Some cryptographic packages (e.g., `crypto/hmac`, `crypto/elliptic`, `crypto/ecdsa`) require rebuilding sonar-go-to-slang with additional package export data. See [Adding packages to sonar-go-to-slang](#adding-packages-to-sonar-go-to-slang) for instructions.
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
@@ -75,6 +78,84 @@ to start your first scan.
 Once you have scanned your source code with the plugin, and obtained a `cbom.json` file, you can use [Cbomkit's CBOM Viewer](https://github.com/cbomkit/cbomkit) service to know more about it.
 It provides you with general insights about the cryptography used in your source code and its compliance with post-quantum safety.
 It also allows you to explore precisely each cryptography asset and its detailed specification, and displays where it appears in your code.
+
+## Build
+
+### Adding packages to sonar-go-to-slang
+
+Go cryptographic detection relies on [sonar-go-to-slang](https://github.com/SonarSource/sonar-go/tree/master/sonar-go-to-slang) for type resolution. The default binary includes common packages, but some cryptographic packages may require you to rebuild it with additional package export data.
+
+#### When is this needed?
+
+If you see "undefined: \<identifier\>" errors during type checking for packages like `crypto/hmac`, `crypto/elliptic`, or `crypto/ecdsa`, you need to add the missing package export data.
+
+#### Steps to add a package
+
+1. **Generate the package export data file** (`.o` file):
+
+```go
+//go:build ignore
+
+package main
+
+import (
+    "fmt"
+    "go/importer"
+    "go/token"
+    "os"
+    "golang.org/x/tools/go/gcexportdata"
+)
+
+func main() {
+    fset := token.NewFileSet()
+    imp := importer.ForCompiler(fset, "gc", nil)
+    pkg, err := imp.Import("crypto/hmac")  // <-- target package
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error importing package: %v\n", err)
+        os.Exit(1)
+    }
+    file, err := os.Create("packages/crypto_hmac.o")  // <-- output file
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error creating file: %v\n", err)
+        os.Exit(1)
+    }
+    defer file.Close()
+    // CRITICAL: Pass nil for fset, NOT the fset used for import
+    if err := gcexportdata.Write(file, nil, pkg); err != nil {
+        fmt.Fprintf(os.Stderr, "Error writing export data: %v\n", err)
+        os.Exit(1)
+    }
+    fmt.Printf("Successfully created package export data for %s\n", pkg.Path())
+}
+```
+
+Run with `go run gen_package.go`, then delete the script.
+
+> **CRITICAL**: The `gcexportdata.Write` call must pass `nil` for the `fset` parameter. Passing the same fset used for import will embed absolute file paths, causing runtime errors.
+
+2. **Check for dependencies**: Some packages depend on types from other packages. Common dependencies:
+
+| Package | May require |
+|---------|-------------|
+| `crypto/hmac` | `hash` |
+| `crypto/cipher` | `io` |
+| `crypto/*` (most) | `io`, `hash` |
+
+3. **Add mapping entry** to `mapping_generated.go` in alphabetical order:
+
+```go
+"crypto/hmac": "crypto_hmac.o",
+```
+
+4. **Rebuild the binary**: `./make.sh build`
+
+#### File naming convention
+
+| Package Path | Export Data File |
+|--------------|------------------|
+| `crypto/hmac` | `crypto_hmac.o` |
+| `crypto/elliptic` | `crypto_elliptic.o` |
+| `golang.org/x/crypto/bcrypt` | `x_crypto_bcrypt.o` |
 
 ## Help and troubleshooting
 
