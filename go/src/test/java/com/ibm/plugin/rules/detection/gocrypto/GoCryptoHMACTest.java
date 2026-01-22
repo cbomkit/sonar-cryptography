@@ -23,9 +23,16 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.functionality.Digest;
+import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.plugin.TestBase;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
@@ -56,27 +63,77 @@ class GoCryptoHMACTest extends TestBase {
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
 
-        if (findingId == 0) {
-            // hmac.New(sha256.New, key) - HMAC
-            /*
-             * Detection Store
-             */
-            assertThat(detectionStore).isNotNull();
-            assertThat(detectionStore.getDetectionValues()).hasSize(1);
-            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
-            assertThat(value0).isInstanceOf(ValueAction.class);
-            assertThat(value0.asString()).isEqualTo("HMAC");
+        /*
+         * Detection Store
+         */
+        assertThat(detectionStore).isNotNull();
+        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
+        IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+        assertThat(value0).isInstanceOf(ValueAction.class);
+        assertThat(value0.asString()).isEqualTo("HMAC");
 
-            /*
-             * Translation
-             */
-            assertThat(nodes).hasSize(1);
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(1);
+        assertThat(store1.getDetectionValueContext()).isInstanceOf(DigestContext.class);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(ValueAction.class);
+        assertThat(value01.asString()).isEqualTo("SHA256");
 
-            // Mac
-            INode macNode = nodes.get(0);
-            assertThat(macNode.getKind()).isEqualTo(Mac.class);
-            assertThat(macNode.asString()).isEqualTo("HMAC");
-        }
+        /*
+         * Translation
+         */
+        assertThat(nodes).hasSize(1);
+
+        // Mac
+        INode macNode = nodes.get(0);
+        assertThat(macNode.getKind()).isEqualTo(Mac.class);
+        assertThat(macNode.getChildren()).hasSize(3);
+        assertThat(macNode.asString()).isEqualTo("HMAC-SHA256");
+
+        // Oid under Mac
+        INode oidNode = macNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("1.2.840.113549.2.9");
+
+        // Tag under Mac
+        INode tagNode = macNode.getChildren().get(Tag.class);
+        assertThat(tagNode).isNotNull();
+        assertThat(tagNode.getChildren()).isEmpty();
+        assertThat(tagNode.asString()).isEqualTo("TAG");
+
+        // MessageDigest under Mac
+        INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
+        assertThat(messageDigestNode).isNotNull();
+        assertThat(messageDigestNode.getChildren()).hasSize(4);
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+
+        // DigestSize under MessageDigest under Mac
+        INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
+        assertThat(digestSizeNode).isNotNull();
+        assertThat(digestSizeNode.getChildren()).isEmpty();
+        assertThat(digestSizeNode.asString()).isEqualTo("256");
+
+        // Digest under MessageDigest under Mac
+        INode digestNode = messageDigestNode.getChildren().get(Digest.class);
+        assertThat(digestNode).isNotNull();
+        assertThat(digestNode.getChildren()).isEmpty();
+        assertThat(digestNode.asString()).isEqualTo("DIGEST");
+
+        // BlockSize under MessageDigest under Mac
+        INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
+        assertThat(blockSizeNode).isNotNull();
+        assertThat(blockSizeNode.getChildren()).isEmpty();
+        assertThat(blockSizeNode.asString()).isEqualTo("512");
+
+        // Oid under MessageDigest under Mac
+        INode oidNode1 = messageDigestNode.getChildren().get(Oid.class);
+        assertThat(oidNode1).isNotNull();
+        assertThat(oidNode1.getChildren()).isEmpty();
+        assertThat(oidNode1.asString()).isEqualTo("2.16.840.1.101.3.4.2.1");
+
+
     }
 }

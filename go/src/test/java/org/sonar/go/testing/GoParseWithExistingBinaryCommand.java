@@ -19,12 +19,7 @@
  */
 package org.sonar.go.testing;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.go.converter.Command;
-import org.sonar.go.converter.PlatformInfo;
-import org.sonar.go.converter.SystemPlatformInfo;
-import org.sonar.plugins.go.api.ParseException;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -42,21 +37,28 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sonar.go.converter.Command;
+import org.sonar.go.converter.PlatformInfo;
+import org.sonar.go.converter.SystemPlatformInfo;
+import org.sonar.plugins.go.api.ParseException;
 
 /**
- * Main code from <a href="https://github.com/SonarSource/sonar-go/blob/master/sonar-go-commons/src/main/java/org/sonar/go/converter/DefaultCommand.java">...</a>
+ * This file is adapted from SonarSource sonar-go project: <a
+ * href="https://github.com/SonarSource/sonar-go/blob/master/sonar-go-commons/src/main/java/org/sonar/go/converter/DefaultCommand.java">...</a>
  *
- * A {@link Command} implementation that uses an existing sonar-go-to-slang binary without
+ * <p>Modifications have been made to work with this project's testing infrastructure.
+ *
+ * <p>A {@link Command} implementation that uses an existing sonar-go-to-slang binary without
  * extracting it from the JAR. This allows using a custom-built binary for testing.
  *
- * <p>The binary must already exist in the converter directory with the appropriate platform-specific
- * name (e.g., sonar-go-to-slang-darwin-arm64).
+ * <p>The binary must already exist in the converter directory with the appropriate
+ * platform-specific name (e.g., sonar-go-to-slang-darwin-arm64).
  */
-
 public class GoParseWithExistingBinaryCommand implements Command {
-    private static final Logger LOG = LoggerFactory.getLogger(GoParseWithExistingBinaryCommand.class);
+    private static final Logger LOG =
+            LoggerFactory.getLogger(GoParseWithExistingBinaryCommand.class);
 
     private static final long PROCESS_TIMEOUT_MS = 5_000;
     private static final int COPY_BUFFER_SIZE = 8192;
@@ -69,14 +71,19 @@ public class GoParseWithExistingBinaryCommand implements Command {
         this(workDir, new SystemPlatformInfo(), extraArgs);
     }
 
-    public GoParseWithExistingBinaryCommand(File workDir, PlatformInfo platformInfo, String... arguments) {
+    public GoParseWithExistingBinaryCommand(
+            File workDir, PlatformInfo platformInfo, String... arguments) {
         command = new ArrayList<>();
         var executable = findExistingBinary(workDir);
         command.add(executable);
-        command.addAll(Arrays.asList(mergeArgs(arguments,
-                "-module_name", "moduleNamePlaceholder",
-                "-gc_export_data_dir",
-                new File(workDir, "go").getAbsolutePath())));
+        command.addAll(
+                Arrays.asList(
+                        mergeArgs(
+                                arguments,
+                                "-module_name",
+                                "moduleNamePlaceholder",
+                                "-gc_export_data_dir",
+                                new File(workDir, "go").getAbsolutePath())));
         moduleNameIndex = command.indexOf("moduleNamePlaceholder");
     }
 
@@ -152,7 +159,8 @@ public class GoParseWithExistingBinaryCommand implements Command {
     }
 
     @Override
-    public String executeCommand(Map<String, String> filenameToContentMap) throws IOException, InterruptedException {
+    public String executeCommand(Map<String, String> filenameToContentMap)
+            throws IOException, InterruptedException {
         var byteBuffers = convertToBytesArray(filenameToContentMap);
 
         var processBuilder = new ProcessBuilder(getCommand());
@@ -161,16 +169,19 @@ public class GoParseWithExistingBinaryCommand implements Command {
         var process = processBuilder.start();
         try {
             // Consume error stream asynchronously
-            executor.submit(() -> {
-                try (var reader = new BufferedReader(new InputStreamReader(process.getErrorStream(), UTF_8))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        LOG.debug(line);
-                    }
-                } catch (IOException e) {
-                    LOG.debug("Error reading process error stream", e);
-                }
-            });
+            executor.submit(
+                    () -> {
+                        try (var reader =
+                                new BufferedReader(
+                                        new InputStreamReader(process.getErrorStream(), UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                LOG.debug(line);
+                            }
+                        } catch (IOException e) {
+                            LOG.debug("Error reading process error stream", e);
+                        }
+                    });
             try (var out = process.getOutputStream()) {
                 for (ByteBuffer byteBuffer : byteBuffers) {
                     out.write(byteBuffer.array());
@@ -182,11 +193,13 @@ public class GoParseWithExistingBinaryCommand implements Command {
             }
             boolean exited = process.waitFor(PROCESS_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (exited && process.exitValue() != 0) {
-                throw new ParseException("Go executable returned non-zero exit value: " + process.exitValue());
+                throw new ParseException(
+                        "Go executable returned non-zero exit value: " + process.exitValue());
             }
             if (process.isAlive()) {
                 process.destroyForcibly();
-                throw new ParseException("Go executable took too long. External process killed forcibly");
+                throw new ParseException(
+                        "Go executable took too long. External process killed forcibly");
             }
             return output;
         } finally {
@@ -200,12 +213,13 @@ public class GoParseWithExistingBinaryCommand implements Command {
             var filenameBytes = filenameToContent.getKey().getBytes(UTF_8);
             var contentBytes = filenameToContent.getValue().getBytes(UTF_8);
             int capacity = filenameBytes.length + contentBytes.length + FILENAME_AND_CONTENT_LENGTH;
-            var byteBuffer = ByteBuffer.allocate(capacity)
-                    .order(ByteOrder.LITTLE_ENDIAN)
-                    .putInt(filenameBytes.length)
-                    .put(filenameBytes)
-                    .putInt(contentBytes.length)
-                    .put(contentBytes);
+            var byteBuffer =
+                    ByteBuffer.allocate(capacity)
+                            .order(ByteOrder.LITTLE_ENDIAN)
+                            .putInt(filenameBytes.length)
+                            .put(filenameBytes)
+                            .putInt(contentBytes.length)
+                            .put(contentBytes);
             buffers.add(byteBuffer);
         }
         return buffers;

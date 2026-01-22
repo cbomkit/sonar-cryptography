@@ -19,6 +19,23 @@
  */
 package org.sonar.go.testing;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.go.visitors.SymbolVisitor;
 import org.sonar.go.visitors.TreeContext;
@@ -35,26 +52,13 @@ import org.sonar.plugins.go.api.checks.InitContext;
 import org.sonar.plugins.go.api.checks.SecondaryLocation;
 import org.sonarsource.analyzer.commons.checks.verifier.SingleFileVerifier;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Test verifier for Go checks. Adapted from SonarSource sonar-go GoVerifier.
+ *
+ * <p>This file is adapted from SonarSource sonar-go project: <a
+ * href="https://github.com/SonarSource/sonar-go/blob/master/sonar-go-commons/src/testFixtures/java/org/sonar/go/testing/GoVerifier.java">...</a>
+ *
+ * <p>Modifications have been made to work with this project's testing infrastructure.
  *
  * <p>This version works without the native Go parser by using mock-based testing or integration
  * with the detection engine. For full AST-based testing, use TestBase with the detection rules
@@ -81,7 +85,8 @@ public class GoVerifier {
     }
 
     private static GoConverter createConverter() {
-        return new GoConverter(new GoParseWithExistingBinaryCommand(CONVERTER_DIR, "-debug_type_check"));
+        return new GoConverter(
+                new GoParseWithExistingBinaryCommand(CONVERTER_DIR, "-debug_type_check"));
     }
 
     /**

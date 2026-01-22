@@ -23,10 +23,11 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/hmac package.
@@ -56,7 +57,9 @@ public final class GoCryptoHMAC {
                     .forObjectTypes("crypto/hmac")
                     .forMethods("New")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("func() hash.Hash")
+                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .withMethodParameter("[]byte")
                     .buildForContext(new MacContext(Map.of("kind", "HMAC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();

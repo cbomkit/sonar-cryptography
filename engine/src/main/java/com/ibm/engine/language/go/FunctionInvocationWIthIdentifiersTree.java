@@ -28,7 +28,7 @@ import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.TreeMetaData;
 import org.sonar.plugins.go.api.Type;
 
-public class FunctionInvocationWIthIdentifiersTree extends FunctionInvocationTreeImpl
+public final class FunctionInvocationWIthIdentifiersTree extends FunctionInvocationTreeImpl
         implements FunctionInvocationTree {
     private final List<IdentifierTree> identifiers;
     private final BlockTree blockTree;

@@ -57,6 +57,10 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
                 // Direct function call: Function()
                 return Optional.of(identifierTree.name());
             }
+        } else if (methodInvocation instanceof MemberSelectTree memberSelectTree) {
+            // Function reference: pkg.Function (without invocation parentheses)
+            // e.g., sha256.New passed as a parameter to hmac.New
+            return Optional.of(memberSelectTree.identifier().name());
         }
         return Optional.empty();
     }
@@ -67,33 +71,51 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             @Nonnull MatchContext matchContext, @Nonnull Tree methodInvocation) {
         if (methodInvocation instanceof FunctionInvocationTree functionInvocation) {
             Tree memberSelect = functionInvocation.memberSelect();
-            if (memberSelect instanceof MemberSelectTree memberSelectTree) {
-                // Get the receiver/package expression
-                Tree expression = memberSelectTree.expression();
-                if (expression instanceof IdentifierTree identifierTree) {
-                    // Could be package name or variable name
-                    String name = identifierTree.name();
-                    String packageName = identifierTree.packageName();
-                    String typeName = identifierTree.type();
+            return getTypeFromMemberSelect(memberSelect, matchContext);
+        } else if (methodInvocation instanceof MemberSelectTree memberSelectTree) {
+            // Function reference: pkg.Function (without invocation parentheses)
+            // e.g., sha256.New passed as a parameter to hmac.New
+            return getTypeFromMemberSelect(memberSelectTree, matchContext);
+        }
+        return Optional.empty();
+    }
 
-                    // For package-level function calls (e.g., aes.NewCipher)
-                    // the expression is the package alias
-                    if (packageName != null && !packageName.isEmpty()) {
-                        return Optional.of(createGoType(packageName, matchContext));
-                    }
-                    // For method calls on a variable, use the type
-                    if (typeName != null && !typeName.isEmpty()) {
-                        return Optional.of(createGoType(typeName, matchContext));
-                    }
-                    // Fallback to the identifier name (likely package alias)
-                    return Optional.of(createGoType(name, matchContext));
-                }
-            } else if (memberSelect instanceof IdentifierTree identifierTree) {
-                // Direct function call - check package
+    /**
+     * Extracts the type information from a member select tree or identifier tree.
+     *
+     * @param memberSelect the tree to extract type from (MemberSelectTree or IdentifierTree)
+     * @param matchContext the match context
+     * @return the type if found
+     */
+    @Nonnull
+    private Optional<IType> getTypeFromMemberSelect(
+            @Nonnull Tree memberSelect, @Nonnull MatchContext matchContext) {
+        if (memberSelect instanceof MemberSelectTree memberSelectTree) {
+            // Get the receiver/package expression
+            Tree expression = memberSelectTree.expression();
+            if (expression instanceof IdentifierTree identifierTree) {
+                // Could be package name or variable name
+                String name = identifierTree.name();
                 String packageName = identifierTree.packageName();
+                String typeName = identifierTree.type();
+
+                // For package-level function calls (e.g., aes.NewCipher)
+                // the expression is the package alias
                 if (packageName != null && !packageName.isEmpty()) {
                     return Optional.of(createGoType(packageName, matchContext));
                 }
+                // For method calls on a variable, use the type
+                if (typeName != null && !typeName.isEmpty()) {
+                    return Optional.of(createGoType(typeName, matchContext));
+                }
+                // Fallback to the identifier name (likely package alias)
+                return Optional.of(createGoType(name, matchContext));
+            }
+        } else if (memberSelect instanceof IdentifierTree identifierTree) {
+            // Direct function call - check package
+            String packageName = identifierTree.packageName();
+            if (packageName != null && !packageName.isEmpty()) {
+                return Optional.of(createGoType(packageName, matchContext));
             }
         }
         return Optional.empty();
@@ -131,6 +153,10 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
                 types.add(createArgumentType(argument, matchContext));
             }
             return types;
+        } else if (methodInvocation instanceof MemberSelectTree) {
+            // Function reference: pkg.Function (without invocation parentheses)
+            // Function references have no arguments at the call site
+            return Collections.emptyList();
         }
         return Collections.emptyList();
     }

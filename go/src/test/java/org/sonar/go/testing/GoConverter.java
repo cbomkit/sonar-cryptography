@@ -19,6 +19,12 @@
  */
 package org.sonar.go.testing;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.go.converter.InitializationException;
@@ -29,13 +35,12 @@ import org.sonar.plugins.go.api.ASTConverter;
 import org.sonar.plugins.go.api.ParseException;
 import org.sonar.plugins.go.api.TreeOrError;
 
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+/**
+ * This file is adapted from SonarSource sonar-go project: <a
+ * href="https://github.com/SonarSource/sonar-go/blob/master/sonar-go-commons/src/main/java/org/sonar/go/converter/GoConverter.java">...</a>
+ *
+ * <p>Modifications have been made to work with this project's testing infrastructure.
+ */
 public class GoConverter implements ASTConverter {
     private static final Logger LOG = LoggerFactory.getLogger(GoConverter.class);
     public static final long MAX_SUPPORTED_SOURCE_FILE_SIZE = 1_500_000L;
@@ -65,15 +70,23 @@ public class GoConverter implements ASTConverter {
     }
 
     @Override
-    public Map<String, TreeOrError> parse(Map<String, String> filenameToContentMap, @Nonnull String moduleName) {
+    public Map<String, TreeOrError> parse(
+            Map<String, String> filenameToContentMap, @Nonnull String moduleName) {
         Map<String, TreeOrError> result = new HashMap<>(filenameToContentMap.size());
         Map<String, String> filesToParse = new HashMap<>();
         for (Map.Entry<String, String> entry : filenameToContentMap.entrySet()) {
             String filename = entry.getKey();
             String content = entry.getValue();
             if (content.length() > MAX_SUPPORTED_SOURCE_FILE_SIZE) {
-                result.put(filename, TreeOrError.of("The file size is too big and should be excluded," +
-                        " its size is " + content.length() + " (maximum allowed is " + MAX_SUPPORTED_SOURCE_FILE_SIZE + " bytes)"));
+                result.put(
+                        filename,
+                        TreeOrError.of(
+                                "The file size is too big and should be excluded,"
+                                        + " its size is "
+                                        + content.length()
+                                        + " (maximum allowed is "
+                                        + MAX_SUPPORTED_SOURCE_FILE_SIZE
+                                        + " bytes)"));
             } else {
                 filesToParse.put(filename, content);
             }

@@ -31,12 +31,6 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
@@ -51,6 +45,13 @@ import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -103,6 +104,15 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         }
                     }
                 }
+            }
+        } else if (tree instanceof MemberSelectTree memberSelectTree) {
+            // Handle function reference passed as a parameter (e.g., sha256.New in hmac.New)
+            // The MemberSelectTree represents a function reference without invocation
+            handler.addCallToCallStack(memberSelectTree, detectionStore.getScanContext());
+            if (detectionStore
+                    .getDetectionRule()
+                    .match(memberSelectTree, handler.getLanguageSupport().translation())) {
+                this.analyseExpressionForFunctionReference(traceSymbol, memberSelectTree);
             }
         }
     }
@@ -543,5 +553,35 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
             index++;
         }
+    }
+
+    /**
+     * Analyzes a function reference (MemberSelectTree) for cryptographic patterns.
+     *
+     * <p>This handles cases where a function is passed as a value without being invoked, such as
+     * {@code sha256.New} being passed to {@code hmac.New(sha256.New, key)}.
+     *
+     * @param traceSymbol the trace symbol for tracking
+     * @param memberSelectTree the function reference to analyze
+     */
+    private void analyseExpressionForFunctionReference(
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull MemberSelectTree memberSelectTree) {
+
+        if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(memberSelectTree, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+            return;
+        }
+
+        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
+        if (detectionRule.actionFactory() != null) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(memberSelectTree, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+        }
+
+        // Function references don't have arguments at the call site,
+        // so no parameter processing is needed.
+        // The function reference itself is the detected value.
     }
 }

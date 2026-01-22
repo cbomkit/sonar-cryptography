@@ -33,19 +33,16 @@ import org.sonar.plugins.go.api.Tree;
  * Base method visitor for Go that uses TreeVisitor for AST traversal. Registers handlers for
  * function invocations to run detection.
  */
-public class GoBaseMethodVisitor extends TreeVisitor<TreeContext>
+public final class GoBaseMethodVisitor extends TreeVisitor<TreeContext>
         implements IBaseMethodVisitor<Tree> {
-
     @Nonnull private final TraceSymbol<Symbol> traceSymbol;
     @Nonnull private final IDetectionEngine<Tree, Symbol> detectionEngine;
-    @Nonnull private final TreeContext context;
 
     public GoBaseMethodVisitor(
             @Nonnull TraceSymbol<Symbol> traceSymbol,
             @Nonnull IDetectionEngine<Tree, Symbol> detectionEngine) {
         this.traceSymbol = traceSymbol;
         this.detectionEngine = detectionEngine;
-        this.context = new TreeContext();
     }
 
     @Override
