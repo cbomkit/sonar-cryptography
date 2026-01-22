@@ -52,7 +52,7 @@
             <!-- This dependency is not explicitly needed, but having it enables IDE linting in BouncyCastle test files -->
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.81</version>
+            <version>1.83</version>
             <scope>test</scope>
         </dependency>
         <dependency>
