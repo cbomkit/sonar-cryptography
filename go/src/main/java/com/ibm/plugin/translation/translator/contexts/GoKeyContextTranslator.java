@@ -27,10 +27,13 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoCurveMapper;
+import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
+import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.utils.DetectionLocation;
 import org.sonar.plugins.go.api.Tree;
@@ -53,15 +56,25 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof ValueAction<Tree>
                 && detectionContext instanceof DetectionContext context) {
+            final GoCryptoCurveMapper curveMapper = new GoCryptoCurveMapper();
+
             String kind = context.get("kind").orElse("");
             switch (kind) {
                 case "RSA":
                     return Optional.of(new RSA(PublicKeyEncryption.class, detectionLocation));
                 case "ECDSA":
                     return Optional.of(new ECDSA(detectionLocation));
+                case "Ed25519":
+                    return Optional.of(new Ed25519(detectionLocation));
+                case "ECDH":
+                    return curveMapper.parse(value.asString(), detectionLocation)
+                            .map(ECDH::new);
                 case "EC":
-                    final GoCryptoCurveMapper curveMapper = new GoCryptoCurveMapper();
                     return curveMapper.parse(value.asString(), detectionLocation).map(f -> f);
+                case "KDF":
+                    final GoCryptoKeyDerivationFunctionMapper kdfMapper =
+                            new GoCryptoKeyDerivationFunctionMapper();
+                    return kdfMapper.parse(value.asString(), detectionLocation).map(n -> n);
                 default:
                     return Optional.empty();
             }

@@ -19,51 +19,50 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
-import javax.annotation.Nonnull;
-import java.util.List;
-
 /**
- * Detection rules for Go's crypto/aes package.
+ * Detection rules for Go's golang.org/x/crypto/pbkdf2 package.
  *
  * <p>Detects usage of:
  *
  * <ul>
- *   <li>aes.NewCipher(key) - creates a new AES cipher block
+ *   <li>pbkdf2.Key(password, salt, iter, keyLen, h) - derives a key from password
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoAES {
+public final class GoCryptoPBKDF2 {
 
-    private GoCryptoAES() {
+    private GoCryptoPBKDF2() {
         // private
     }
 
-    // aes.NewCipher(key []byte) (cipher.Block, error)
-    // The key argument should be the AES key, either 16, 24, or 32 bytes
-    // to select AES-128, AES-192, or AES-256.
-    private static final IDetectionRule<Tree> NEW_CIPHER =
+    // pbkdf2.Key(password, salt []byte, iter, keyLen int, h func() hash.Hash) []byte
+    // Derives a key from a password using PBKDF2 algorithm
+    private static final IDetectionRule<Tree> KEY =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectTypes("crypto/aes")
-                    .forMethods("NewCipher")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withMethodParameter("[]byte")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
-                    .asChildOfParameterWithId(-1)
-                    .buildForContext(new CipherContext())
+                    .forObjectTypes("golang.org/x/crypto/pbkdf2")
+                    .forMethods("Key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                     .inBundle(() -> "GoCrypto")
-                    .withDependingDetectionRules(GoCryptoCipherModes.rules());
+                    .withoutDependingDetectionRules();
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(NEW_CIPHER);
+        return List.of(KEY);
     }
 }

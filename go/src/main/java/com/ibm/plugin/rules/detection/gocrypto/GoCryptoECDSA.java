@@ -24,11 +24,10 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/ecdsa package.
@@ -94,8 +93,38 @@ public final class GoCryptoECDSA {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // ecdsa.SignASN1(rand io.Reader, priv *PrivateKey, hash []byte) ([]byte, error)
+    // Signs a hash using the private key, returning the ASN.1 encoded signature
+    private static final IDetectionRule<Tree> SIGN_ASN1 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdsa")
+                    .forMethods("SignASN1")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new SignatureContext(Map.of("kind", "ECDSA")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // ecdsa.VerifyASN1(pub *PublicKey, hash, sig []byte) bool
+    // Verifies the ASN.1 encoded signature of hash using the public key
+    private static final IDetectionRule<Tree> VERIFY_ASN1 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdsa")
+                    .forMethods("VerifyASN1")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new SignatureContext(Map.of("kind", "ECDSA")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(GENERATE_KEY, SIGN, VERIFY);
+        return List.of(GENERATE_KEY, SIGN, VERIFY, SIGN_ASN1, VERIFY_ASN1);
     }
 }

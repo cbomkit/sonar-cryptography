@@ -31,6 +31,8 @@ import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
+import com.ibm.mapper.model.algorithms.DES;
+import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.model.mode.CFB;
 import com.ibm.mapper.model.mode.CTR;
@@ -52,6 +54,8 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
         if (value instanceof ValueAction<Tree>) {
             return switch (value.asString().toUpperCase().trim()) {
                 case "AES" -> Optional.of(new AES(detectionLocation));
+                case "DES" -> Optional.of(new DES(detectionLocation));
+                case "3DES", "DESEDE", "TRIPLEDES" -> Optional.of(new DESede(detectionLocation));
                 case "GCM" -> Optional.of(new GCM(detectionLocation));
                 case "CBC" -> Optional.of(new CBC(detectionLocation));
                 case "CFB" -> Optional.of(new CFB(detectionLocation));

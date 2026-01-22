@@ -28,6 +28,8 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.algorithms.SHA3;
+import com.ibm.mapper.model.algorithms.shake.SHAKE;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -55,6 +57,12 @@ public final class GoDigestContextTranslator implements IContextTranslation<Tree
                 case "SHA256" -> Optional.of(new SHA2(256, detectionLocation));
                 case "SHA384" -> Optional.of(new SHA2(384, detectionLocation));
                 case "SHA512" -> Optional.of(new SHA2(512, detectionLocation));
+                case "SHA3-224" -> Optional.of(new SHA3(224, detectionLocation));
+                case "SHA3-256" -> Optional.of(new SHA3(256, detectionLocation));
+                case "SHA3-384" -> Optional.of(new SHA3(384, detectionLocation));
+                case "SHA3-512" -> Optional.of(new SHA3(512, detectionLocation));
+                case "SHAKE128" -> Optional.of(new SHAKE(128, detectionLocation));
+                case "SHAKE256" -> Optional.of(new SHAKE(256, detectionLocation));
                 default -> Optional.empty();
             };
         }

@@ -27,6 +27,7 @@ import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ECDSA;
+import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -58,6 +59,11 @@ public final class GoSignatureContextTranslator implements IContextTranslation<T
             // ECDSA
             if (valueStr.equals("ECDSA")) {
                 return Optional.of(new ECDSA(detectionLocation));
+            }
+
+            // Ed25519
+            if (valueStr.equals("ED25519")) {
+                return Optional.of(new Ed25519(detectionLocation));
             }
 
             return Optional.empty();

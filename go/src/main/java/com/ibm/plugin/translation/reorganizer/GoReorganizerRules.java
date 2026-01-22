@@ -29,10 +29,9 @@ import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
 import com.ibm.mapper.reorganizer.rules.PaddingReorganizer;
 import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 public final class GoReorganizerRules {
 

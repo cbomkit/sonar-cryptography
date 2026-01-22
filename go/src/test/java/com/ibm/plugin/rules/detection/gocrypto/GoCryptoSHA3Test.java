@@ -25,9 +25,9 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -37,15 +37,15 @@ import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-class GoCryptoECDSATest extends TestBase {
+class GoCryptoSHA3Test extends TestBase {
 
-    public GoCryptoECDSATest() {
-        super(GoCryptoECDSA.rules());
+    public GoCryptoSHA3Test() {
+        super(GoCryptoSHA3.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDSATestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoSHA3TestFile.go", this);
     }
 
     @Override
@@ -58,22 +58,34 @@ class GoCryptoECDSATest extends TestBase {
          */
         assertThat(detectionStore).isNotNull();
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("ECDSA");
-
-        // Note: Depending detection rules for elliptic.Curve argument don't capture the curve
-        // value from elliptic.P256() yet. This is a known limitation.
 
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
+        INode digestNode = nodes.get(0);
+        assertThat(digestNode.getKind()).isEqualTo(MessageDigest.class);
 
-        // Signature
-        INode signatureNode = nodes.get(0);
-        assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-        assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+        switch (findingId) {
+            case 0 -> {
+                // sha3.New256()
+                assertThat(value0.asString()).isEqualTo("SHA3-256");
+                assertThat(digestNode.asString()).isEqualTo("SHA3-256");
+            }
+            case 1 -> {
+                // sha3.New512()
+                assertThat(value0.asString()).isEqualTo("SHA3-512");
+                assertThat(digestNode.asString()).isEqualTo("SHA3-512");
+            }
+            case 2 -> {
+                // sha3.Sum256()
+                assertThat(value0.asString()).isEqualTo("SHA3-256");
+                assertThat(digestNode.asString()).isEqualTo("SHA3-256");
+            }
+            default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
+        }
     }
 }

@@ -21,14 +21,20 @@ package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoAES;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoDES;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoECDH;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoECDSA;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoEd25519;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoElliptic;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoHKDF;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoHMAC;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoMD5;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoPBKDF2;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRSA;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRand;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA1;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA256;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA3;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA512;
 import java.util.List;
 import java.util.stream.Stream;
@@ -44,14 +50,20 @@ public final class GoDetectionRules {
     public static List<IDetectionRule<Tree>> rules() {
         return Stream.of(
                         GoCryptoAES.rules().stream(),
+                        GoCryptoDES.rules().stream(),
+                        GoCryptoECDH.rules().stream(),
                         GoCryptoECDSA.rules().stream(),
+                        GoCryptoEd25519.rules().stream(),
                         GoCryptoElliptic.rules().stream(),
+                        GoCryptoHKDF.rules().stream(),
                         GoCryptoHMAC.rules().stream(),
                         GoCryptoMD5.rules().stream(),
+                        GoCryptoPBKDF2.rules().stream(),
                         GoCryptoRSA.rules().stream(),
                         GoCryptoRand.rules().stream(),
                         GoCryptoSHA1.rules().stream(),
                         GoCryptoSHA256.rules().stream(),
+                        GoCryptoSHA3.rules().stream(),
                         GoCryptoSHA512.rules().stream())
                 .flatMap(i -> i)
                 .toList();

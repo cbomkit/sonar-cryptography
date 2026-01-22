@@ -27,7 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -37,15 +37,15 @@ import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-class GoCryptoECDSATest extends TestBase {
+class GoCryptoPBKDF2Test extends TestBase {
 
-    public GoCryptoECDSATest() {
-        super(GoCryptoECDSA.rules());
+    public GoCryptoPBKDF2Test() {
+        super(GoCryptoPBKDF2.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDSATestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoPBKDF2TestFile.go", this);
     }
 
     @Override
@@ -61,19 +61,14 @@ class GoCryptoECDSATest extends TestBase {
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("ECDSA");
-
-        // Note: Depending detection rules for elliptic.Curve argument don't capture the curve
-        // value from elliptic.P256() yet. This is a known limitation.
+        assertThat(value0.asString()).isEqualTo("PBKDF2");
 
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
-
-        // Signature
-        INode signatureNode = nodes.get(0);
-        assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-        assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+        INode kdfNode = nodes.get(0);
+        assertThat(kdfNode.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
+        assertThat(kdfNode.asString()).isEqualTo("PBKDF2");
     }
 }

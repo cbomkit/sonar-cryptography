@@ -19,33 +19,36 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.KeyAgreement;
+import com.ibm.mapper.model.Oid;
 import com.ibm.plugin.TestBase;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-class GoCryptoECDSATest extends TestBase {
+import javax.annotation.Nonnull;
+import java.util.List;
 
-    public GoCryptoECDSATest() {
-        super(GoCryptoECDSA.rules());
+import static org.assertj.core.api.Assertions.assertThat;
+
+class GoCryptoECDHTest extends TestBase {
+
+    public GoCryptoECDHTest() {
+        super(GoCryptoECDH.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDSATestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDHTestFile.go", this);
     }
 
     @Override
@@ -61,19 +64,29 @@ class GoCryptoECDSATest extends TestBase {
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("ECDSA");
-
-        // Note: Depending detection rules for elliptic.Curve argument don't capture the curve
-        // value from elliptic.P256() yet. This is a known limitation.
+        assertThat(value0.asString()).isEqualTo("P256");
 
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
 
-        // Signature
-        INode signatureNode = nodes.get(0);
-        assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-        assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+        // KeyAgreement
+        INode keyAgreementNode = nodes.get(0);
+        assertThat(keyAgreementNode.getKind()).isEqualTo(KeyAgreement.class);
+        assertThat(keyAgreementNode.getChildren()).hasSize(2);
+        assertThat(keyAgreementNode.asString()).isEqualTo("ECDH");
+
+        // EllipticCurve under KeyAgreement
+        INode ellipticCurveNode = keyAgreementNode.getChildren().get(EllipticCurve.class);
+        assertThat(ellipticCurveNode).isNotNull();
+        assertThat(ellipticCurveNode.getChildren()).isEmpty();
+        assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
+
+        // Oid under KeyAgreement
+        INode oidNode = keyAgreementNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
     }
 }
