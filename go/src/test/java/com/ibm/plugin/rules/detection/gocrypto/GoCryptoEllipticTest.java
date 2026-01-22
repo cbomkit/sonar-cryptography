@@ -26,6 +26,8 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.plugin.TestBase;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
@@ -54,36 +56,138 @@ class GoCryptoEllipticTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        if (findingId == 0) {
+            /*
+             * Detection Store
+             */
+            assertThat(detectionStore).isNotNull();
+            assertThat(detectionStore.getDetectionValues()).hasSize(1);
+            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+            assertThat(value0).isInstanceOf(ValueAction.class);
+            assertThat(value0.asString()).isEqualTo("P-224");
 
-        String expectedCurve =
-                switch (findingId) {
-                    case 0 -> "P-224";
-                    case 1 -> "P-256";
-                    case 2 -> "P-384";
-                    case 3 -> "P-521";
-                    default ->
-                            throw new IllegalStateException("Unexpected findingId: " + findingId);
-                };
+            /*
+             * Translation
+             */
+            assertThat(nodes).hasSize(1);
 
-        /*
-         * Detection Store
-         */
-        assertThat(detectionStore).isNotNull();
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
-        assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo(expectedCurve);
+            // PublicKeyEncryption
+            INode publicKeyEncryptionNode = nodes.get(0);
+            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
+            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
+            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp224r1");
 
-        /*
-         * Translation
-         */
-        assertThat(nodes).hasSize(1);
+            // Oid under PublicKeyEncryption
+            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.getChildren()).isEmpty();
+            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
 
-        // EllipticCurve
-        INode ellipticCurveNode = nodes.get(0);
-        assertThat(ellipticCurveNode.getKind()).isEqualTo(EllipticCurve.class);
-        assertThat(ellipticCurveNode.getChildren()).isEmpty();
-        assertThat(ellipticCurveNode.asString()).isEqualTo(expectedCurve);
+            // EllipticCurve under PublicKeyEncryption
+            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            assertThat(ellipticCurveNode).isNotNull();
+            assertThat(ellipticCurveNode.getChildren()).isEmpty();
+            assertThat(ellipticCurveNode.asString()).isEqualTo("secp224r1");
+        } else if (findingId == 1) {
+            /*
+             * Detection Store
+             */
+            assertThat(detectionStore).isNotNull();
+            assertThat(detectionStore.getDetectionValues()).hasSize(1);
+            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+            assertThat(value0).isInstanceOf(ValueAction.class);
+            assertThat(value0.asString()).isEqualTo("P-256");
+
+            /*
+             * Translation
+             */
+            assertThat(nodes).hasSize(1);
+
+            // PublicKeyEncryption
+            INode publicKeyEncryptionNode = nodes.get(0);
+            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
+            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
+            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp256r1");
+
+            // Oid under PublicKeyEncryption
+            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.getChildren()).isEmpty();
+            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
+
+            // EllipticCurve under PublicKeyEncryption
+            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            assertThat(ellipticCurveNode).isNotNull();
+            assertThat(ellipticCurveNode.getChildren()).isEmpty();
+            assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
+        } else if (findingId == 2) {
+            /*
+             * Detection Store
+             */
+            assertThat(detectionStore).isNotNull();
+            assertThat(detectionStore.getDetectionValues()).hasSize(1);
+            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+            assertThat(value0).isInstanceOf(ValueAction.class);
+            assertThat(value0.asString()).isEqualTo("P-384");
+
+            /*
+             * Translation
+             */
+            assertThat(nodes).hasSize(1);
+
+            // PublicKeyEncryption
+            INode publicKeyEncryptionNode = nodes.get(0);
+            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
+            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
+            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp384r1");
+
+            // Oid under PublicKeyEncryption
+            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.getChildren()).isEmpty();
+            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
+
+            // EllipticCurve under PublicKeyEncryption
+            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            assertThat(ellipticCurveNode).isNotNull();
+            assertThat(ellipticCurveNode.getChildren()).isEmpty();
+            assertThat(ellipticCurveNode.asString()).isEqualTo("secp384r1");
+        } else if (findingId == 3) {
+            /*
+             * Detection Store
+             */
+            assertThat(detectionStore).isNotNull();
+            assertThat(detectionStore.getDetectionValues()).hasSize(1);
+            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+            assertThat(value0).isInstanceOf(ValueAction.class);
+            assertThat(value0.asString()).isEqualTo("P-521");
+
+            /*
+             * Translation
+             */
+            assertThat(nodes).hasSize(1);
+
+            // PublicKeyEncryption
+            INode publicKeyEncryptionNode = nodes.get(0);
+            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
+            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
+            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp521r1");
+
+            // Oid under PublicKeyEncryption
+            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.getChildren()).isEmpty();
+            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
+
+            // EllipticCurve under PublicKeyEncryption
+            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            assertThat(ellipticCurveNode).isNotNull();
+            assertThat(ellipticCurveNode.getChildren()).isEmpty();
+            assertThat(ellipticCurveNode.asString()).isEqualTo("secp521r1");
+        }
     }
 }

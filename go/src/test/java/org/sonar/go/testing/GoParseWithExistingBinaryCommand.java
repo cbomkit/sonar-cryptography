@@ -19,7 +19,12 @@
  */
 package org.sonar.go.testing;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sonar.go.converter.Command;
+import org.sonar.go.converter.PlatformInfo;
+import org.sonar.go.converter.SystemPlatformInfo;
+import org.sonar.plugins.go.api.ParseException;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -37,12 +42,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.go.converter.Command;
-import org.sonar.go.converter.PlatformInfo;
-import org.sonar.go.converter.SystemPlatformInfo;
-import org.sonar.plugins.go.api.ParseException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This file is adapted from SonarSource sonar-go project: <a
@@ -140,7 +141,7 @@ public class GoParseWithExistingBinaryCommand implements Command {
             throw new IllegalStateException(
                     "Binary not found: "
                             + binary.getAbsolutePath()
-                            + ". Place your custom binary there before running tests");
+                            + ". Place your custom binary there before running tests.");
         }
         if (!binary.canExecute()) {
             throw new IllegalStateException(

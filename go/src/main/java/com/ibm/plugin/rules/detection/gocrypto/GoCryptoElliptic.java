@@ -23,10 +23,11 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/elliptic package.
@@ -55,7 +56,7 @@ public final class GoCryptoElliptic {
                     .forMethods("P224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("P-224"))
                     .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "EC", "curve", "P-224")))
+                    .buildForContext(new KeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -68,7 +69,7 @@ public final class GoCryptoElliptic {
                     .forMethods("P256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("P-256"))
                     .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "EC", "curve", "P-256")))
+                    .buildForContext(new KeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -81,7 +82,7 @@ public final class GoCryptoElliptic {
                     .forMethods("P384")
                     .shouldBeDetectedAs(new ValueActionFactory<>("P-384"))
                     .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "EC", "curve", "P-384")))
+                    .buildForContext(new KeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -94,7 +95,7 @@ public final class GoCryptoElliptic {
                     .forMethods("P521")
                     .shouldBeDetectedAs(new ValueActionFactory<>("P-521"))
                     .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "EC", "curve", "P-521")))
+                    .buildForContext(new KeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
