@@ -26,6 +26,7 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
@@ -64,6 +65,11 @@ public final class GoSignatureContextTranslator implements IContextTranslation<T
             // Ed25519
             if (valueStr.equals("ED25519")) {
                 return Optional.of(new Ed25519(detectionLocation));
+            }
+
+            // DSA
+            if (valueStr.equals("DSA")) {
+                return Optional.of(new DSA(detectionLocation));
             }
 
             return Optional.empty();

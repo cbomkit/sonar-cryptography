@@ -19,25 +19,30 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.plugin.TestBase;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoECDHNewPublicKeyTest extends TestBase {
 
@@ -55,53 +60,63 @@ class GoCryptoECDHNewPublicKeyTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        if (findingId == 0) {
-            // First finding: ecdh.X25519() curve selection
-            assertThat(detectionStore).isNotNull();
-            assertThat(detectionStore.getDetectionValues()).hasSize(1);
-            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
-            assertThat(value0).isInstanceOf(ValueAction.class);
-            assertThat(value0.asString()).isEqualTo("X25519");
+        /*
+         * Detection Store
+         */
+        assertThat(detectionStore).isNotNull();
+        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+        IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+        assertThat(value0).isInstanceOf(ValueAction.class);
+        assertThat(value0.asString()).isEqualTo("X25519");
 
-            /*
-             * Translation
-             */
-            assertThat(nodes).hasSize(1);
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeyAction.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(2);
+        assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(KeyAction.class);
+        assertThat(value01.asString()).isEqualTo("PUBLIC_KEY_GENERATION");
 
-            // KeyAgreement
-            INode keyAgreementNode = nodes.get(0);
-            assertThat(keyAgreementNode.getKind()).isEqualTo(KeyAgreement.class);
-            assertThat(keyAgreementNode.getChildren()).hasSize(2);
-            assertThat(keyAgreementNode.asString()).isEqualTo("ECDH");
+        IValue<Tree> value11 = store1.getDetectionValues().get(1);
+        assertThat(value11).isInstanceOf(KeySize.class);
+        assertThat(value11.asString()).isEqualTo("256");
 
-            // EllipticCurve under KeyAgreement (X25519 uses Curve25519)
-            INode ellipticCurveNode = keyAgreementNode.getChildren().get(EllipticCurve.class);
-            assertThat(ellipticCurveNode).isNotNull();
-            assertThat(ellipticCurveNode.asString()).isEqualTo("Curve25519");
+        /*
+         * Translation
+         */
+        assertThat(nodes).hasSize(1);
 
-            // Oid under KeyAgreement (ECDH OID, not X25519-specific)
-            INode oidNode = keyAgreementNode.getChildren().get(Oid.class);
-            assertThat(oidNode).isNotNull();
-            assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
-        } else if (findingId == 1) {
-            // Second finding: curve.NewPublicKey() key import
-            assertThat(detectionStore).isNotNull();
-            assertThat(detectionStore.getDetectionValues()).hasSize(1);
-            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
-            assertThat(value0).isInstanceOf(ValueAction.class);
-            assertThat(value0.asString()).isEqualTo("ECDH");
+        // KeyAgreement
+        INode keyAgreementNode = nodes.get(0);
+        assertThat(keyAgreementNode.getKind()).isEqualTo(KeyAgreement.class);
+        assertThat(keyAgreementNode.getChildren()).hasSize(4);
+        assertThat(keyAgreementNode.asString()).isEqualTo("ECDH");
 
-            /*
-             * Translation
-             */
-            assertThat(nodes).hasSize(1);
+        // Generate under KeyAgreement
+        INode generateNode = keyAgreementNode.getChildren().get(Generate.class);
+        assertThat(generateNode).isNotNull();
+        assertThat(generateNode.getChildren()).isEmpty();
+        assertThat(generateNode.asString()).isEqualTo("GENERATE");
 
-            // KeyAgreement
-            INode keyAgreementNode = nodes.get(0);
-            assertThat(keyAgreementNode.getKind()).isEqualTo(KeyAgreement.class);
-            assertThat(keyAgreementNode.asString()).isEqualTo("ECDH");
-        }
+        // EllipticCurve under KeyAgreement
+        INode ellipticCurveNode = keyAgreementNode.getChildren().get(EllipticCurve.class);
+        assertThat(ellipticCurveNode).isNotNull();
+        assertThat(ellipticCurveNode.getChildren()).isEmpty();
+        assertThat(ellipticCurveNode.asString()).isEqualTo("Curve25519");
+
+        // KeyLength under KeyAgreement
+        INode keyLengthNode = keyAgreementNode.getChildren().get(KeyLength.class);
+        assertThat(keyLengthNode).isNotNull();
+        assertThat(keyLengthNode.getChildren()).isEmpty();
+        assertThat(keyLengthNode.asString()).isEqualTo("256");
+
+        // Oid under KeyAgreement
+        INode oidNode = keyAgreementNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
+
+
     }
 }

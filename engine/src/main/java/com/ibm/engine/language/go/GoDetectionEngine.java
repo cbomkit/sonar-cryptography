@@ -41,6 +41,7 @@ import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
+import org.sonar.plugins.go.api.AssignmentExpressionTree;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
@@ -93,10 +94,29 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         traceSymbol,
                                         new FunctionInvocationWIthIdentifiersTree(
                                                 functionInvocation,
-                                                variableDeclarationTree,
+                                                variableDeclarationTree.identifiers(),
                                                 blockTree));
                             }
                         }
+                    }
+                } else if (item instanceof AssignmentExpressionTree assignmentExpressionTree
+                        && assignmentExpressionTree.statementOrExpression()
+                                instanceof FunctionInvocationTree functionInvocation) {
+                    handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
+                    if (detectionStore
+                            .getDetectionRule()
+                            .match(
+                                    functionInvocation,
+                                    handler.getLanguageSupport().translation())) {
+                        this.analyseExpression(
+                                traceSymbol,
+                                new FunctionInvocationWIthIdentifiersTree(
+                                        functionInvocation,
+                                        assignmentExpressionTree.leftHandSide()
+                                                        instanceof IdentifierTree identifierTree
+                                                ? List.of(identifierTree)
+                                                : null,
+                                        blockTree));
                     }
                 }
             }
@@ -423,11 +443,10 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 return Optional.of(TraceSymbol.createFrom(symbol));
             }
         } else if (expression
-                        instanceof
-                        FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree
-                && functionInvocationWIthIdentifiersTree.variableDeclarationTree() != null) {
+                instanceof
+                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
             for (IdentifierTree identifierTree :
-                    functionInvocationWIthIdentifiersTree.variableDeclarationTree().identifiers()) {
+                    functionInvocationWIthIdentifiersTree.identifiers()) {
                 if (identifierTree.type().equals("error")) {
                     continue;
                 }
@@ -590,7 +609,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                 parameter,
                                 new FunctionInvocationWIthIdentifiersTree(
                                         newFunctionInvocation,
-                                        variableDeclarationTree.get(),
+                                        variableDeclarationTree.get().identifiers(),
                                         functionInvocation.blockTree()),
                                 DetectionStore.Scope.EXPRESSION);
                     } else {

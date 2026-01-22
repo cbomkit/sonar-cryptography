@@ -19,14 +19,19 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.factory.KeyActionFactory;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/ecdh package.
@@ -38,7 +43,6 @@ import org.sonar.plugins.go.api.Tree;
  *   <li>ecdh.P384().GenerateKey() - generates an ECDH key pair using P-384 curve
  *   <li>ecdh.P521().GenerateKey() - generates an ECDH key pair using P-521 curve
  *   <li>ecdh.X25519().GenerateKey() - generates an ECDH key pair using X25519 curve
- *   <li>PrivateKey.ECDH() - performs ECDH key exchange
  *   <li>Curve.NewPrivateKey() - creates a PrivateKey from raw bytes (key import)
  *   <li>Curve.NewPublicKey() - creates a PublicKey from raw bytes (key import)
  * </ul>
@@ -50,54 +54,6 @@ public final class GoCryptoECDH {
         // private
     }
 
-    // ecdh.P256() returns a Curve that implements P-256 (FIPS 186-3, section D.2.3)
-    private static final IDetectionRule<Tree> P256 =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("crypto/ecdh")
-                    .forMethods("P256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("P256"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
-
-    // ecdh.P384() returns a Curve that implements P-384 (FIPS 186-3, section D.2.4)
-    private static final IDetectionRule<Tree> P384 =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("crypto/ecdh")
-                    .forMethods("P384")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("P384"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
-
-    // ecdh.P521() returns a Curve that implements P-521 (FIPS 186-3, section D.2.5)
-    private static final IDetectionRule<Tree> P521 =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("crypto/ecdh")
-                    .forMethods("P521")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("P521"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
-
-    // ecdh.X25519() returns a Curve that implements X25519 (RFC 7748)
-    private static final IDetectionRule<Tree> X25519 =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("crypto/ecdh")
-                    .forMethods("X25519")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
-
     // Curve.GenerateKey(rand io.Reader) (*PrivateKey, error)
     // Generates a new private key for the curve
     private static final IDetectionRule<Tree> GENERATE_KEY =
@@ -105,21 +61,10 @@ public final class GoCryptoECDH {
                     .createDetectionRule()
                     .forObjectTypes("*ecdh.Curve", "ecdh.Curve")
                     .forMethods("GenerateKey")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "GoCrypto")
-                    .withoutDependingDetectionRules();
-
-    // PrivateKey.ECDH(remote *PublicKey) ([]byte, error)
-    // Performs an ECDH exchange and returns the shared secret
-    private static final IDetectionRule<Tree> ECDH_EXCHANGE =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("*ecdh.PrivateKey")
-                    .forMethods("ECDH")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new KeyActionFactory<>(KeyAction.Action.PRIVATE_KEY_GENERATION))
+                    .withMethodParameter("io.Reader")
+                    .addDependingDetectionRules(GoCryptoRand.rules())
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -131,8 +76,10 @@ public final class GoCryptoECDH {
                     .createDetectionRule()
                     .forObjectTypes("*ecdh.Curve", "ecdh.Curve")
                     .forMethods("NewPrivateKey")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new KeyActionFactory<>(KeyAction.Action.PRIVATE_KEY_GENERATION))
+                    .withMethodParameter("[]byte")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -144,22 +91,68 @@ public final class GoCryptoECDH {
                     .createDetectionRule()
                     .forObjectTypes("*ecdh.Curve", "ecdh.Curve")
                     .forMethods("NewPublicKey")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new KeyActionFactory<>(KeyAction.Action.PUBLIC_KEY_GENERATION))
+                    .withMethodParameter("[]byte")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // ecdh.P256() returns a Curve that implements P-256 (FIPS 186-3, section D.2.3)
+    private static final IDetectionRule<Tree> P256 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdh")
+                    .forMethods("P256")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("P256"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withDependingDetectionRules(
+                            List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
+
+    // ecdh.P384() returns a Curve that implements P-384 (FIPS 186-3, section D.2.4)
+    private static final IDetectionRule<Tree> P384 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdh")
+                    .forMethods("P384")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("P384"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withDependingDetectionRules(
+                            List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
+
+    // ecdh.P521() returns a Curve that implements P-521 (FIPS 186-3, section D.2.5)
+    private static final IDetectionRule<Tree> P521 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdh")
+                    .forMethods("P521")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("P521"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withDependingDetectionRules(
+                            List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
+
+    // ecdh.X25519() returns a Curve that implements X25519 (RFC 7748)
+    private static final IDetectionRule<Tree> X25519 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/ecdh")
+                    .forMethods("X25519")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
+                    .inBundle(() -> "GoCrypto")
+                    .withDependingDetectionRules(
+                            List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(
-                P256,
-                P384,
-                P521,
-                X25519,
-                GENERATE_KEY,
-                ECDH_EXCHANGE,
-                NEW_PRIVATE_KEY,
-                NEW_PUBLIC_KEY);
+        return List.of(P256, P384, P521, X25519);
     }
 }

@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoAES;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoDES;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoDSA;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoECDH;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoECDSA;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoEd25519;
@@ -51,6 +52,7 @@ public final class GoDetectionRules {
         return Stream.of(
                         GoCryptoAES.rules().stream(),
                         GoCryptoDES.rules().stream(),
+                        GoCryptoDSA.rules().stream(),
                         GoCryptoECDH.rules().stream(),
                         GoCryptoECDSA.rules().stream(),
                         GoCryptoEd25519.rules().stream(),

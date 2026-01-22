@@ -203,6 +203,7 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
      *   <li>Full package path: "crypto/aes"
      *   <li>Package name only: "aes"
      *   <li>Type with package: "aes.Block"
+     *   <li>Dot-qualified type: "*dsa.Parameters" matches "*Parameters"
      * </ul>
      */
     @Nonnull
@@ -211,18 +212,46 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             if (typeName.equals(expectedType)) {
                 return true;
             }
-            // Handle Go package patterns: "crypto/aes" matches "aes"
-            if (expectedType.contains("/")) {
-                String lastPart = expectedType.substring(expectedType.lastIndexOf('/') + 1);
-                return typeName.equals(lastPart);
-            }
-            // Handle type matching: "aes" matches "crypto/aes"
-            if (typeName.contains("/")) {
-                String lastPart = typeName.substring(typeName.lastIndexOf('/') + 1);
-                return lastPart.equals(expectedType);
-            }
-            return false;
+            // Normalize both types and compare
+            String normalizedTypeName = normalizeGoType(typeName);
+            String normalizedExpectedType = normalizeGoType(expectedType);
+            return normalizedTypeName.equals(normalizedExpectedType);
         };
+    }
+
+    /**
+     * Normalizes a Go type to its shortest canonical form for matching.
+     *
+     * <p>Go types from the parser can include full package paths (e.g., {@code
+     * *crypto/dsa.Parameters}). This method strips the path prefix, keeping only the short package
+     * name and type, while preserving any pointer/slice prefix.
+     *
+     * <p>Examples:
+     *
+     * <ul>
+     *   <li>"*crypto/dsa.Parameters" → "*dsa.Parameters"
+     *   <li>"crypto/dsa" → "dsa"
+     *   <li>"[]crypto/dsa.Parameters" → "[]dsa.Parameters"
+     *   <li>"*math/big.Int" → "*big.Int"
+     *   <li>"io.Reader" → "io.Reader" (unchanged, no path)
+     *   <li>"*dsa.Parameters" → "*dsa.Parameters" (unchanged, no path)
+     * </ul>
+     */
+    @Nonnull
+    private static String normalizeGoType(@Nonnull String goType) {
+        if (!goType.contains("/")) {
+            return goType;
+        }
+        // Extract prefix (*, [], etc.) - everything before the first letter
+        int prefixEnd = 0;
+        while (prefixEnd < goType.length() && !Character.isLetter(goType.charAt(prefixEnd))) {
+            prefixEnd++;
+        }
+        String prefix = goType.substring(0, prefixEnd);
+        String withoutPrefix = goType.substring(prefixEnd);
+        // Strip path: "crypto/dsa.Parameters" → "dsa.Parameters", "crypto/dsa" → "dsa"
+        String shortened = withoutPrefix.substring(withoutPrefix.lastIndexOf('/') + 1);
+        return prefix + shortened;
     }
 
     /** Creates an IType for a function argument based on its AST node. */

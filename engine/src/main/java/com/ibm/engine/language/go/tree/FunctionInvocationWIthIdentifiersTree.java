@@ -19,34 +19,38 @@
  */
 package com.ibm.engine.language.go.tree;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sonar.go.impl.FunctionInvocationTreeImpl;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
-import org.sonar.plugins.go.api.VariableDeclarationTree;
+import org.sonar.plugins.go.api.IdentifierTree;
 
 public final class FunctionInvocationWIthIdentifiersTree extends FunctionInvocationTreeImpl
         implements FunctionInvocationTree, ITreeWithBlock {
-    @Nullable private final VariableDeclarationTree variableDeclarationTree;
+    @Nonnull private final List<IdentifierTree> identifiers;
     private final BlockTree blockTree;
 
     public FunctionInvocationWIthIdentifiersTree(
             @Nonnull FunctionInvocationTree functionInvocationTree,
-            @Nullable VariableDeclarationTree variableDeclarationTree,
+            @Nullable List<IdentifierTree> identifiers,
             @Nonnull BlockTree blockTree) {
         super(
                 functionInvocationTree.metaData(),
                 functionInvocationTree.memberSelect(),
                 functionInvocationTree.arguments(),
                 functionInvocationTree.returnTypes());
-        this.variableDeclarationTree = variableDeclarationTree;
+        this.identifiers = Optional.ofNullable(identifiers).orElse(new ArrayList<>());
         this.blockTree = blockTree;
     }
 
-    @Nullable public VariableDeclarationTree variableDeclarationTree() {
-        return variableDeclarationTree;
+    @Nonnull
+    public List<IdentifierTree> identifiers() {
+        return identifiers;
     }
 
     @Override

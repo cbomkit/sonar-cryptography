@@ -20,6 +20,7 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
@@ -31,14 +32,17 @@ import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
  * Translator for Go Key contexts.
@@ -65,6 +69,8 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                     return Optional.of(new ECDSA(detectionLocation));
                 case "Ed25519":
                     return Optional.of(new Ed25519(detectionLocation));
+                case "DSA":
+                    return Optional.of(new DSA(detectionLocation));
                 case "ECDH":
                     // Try to parse as curve name first (e.g., "P256", "X25519")
                     Optional<? extends INode> curveResult =
@@ -89,6 +95,13 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             }
         } else if (value instanceof KeySize<Tree> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
+        } else if (value instanceof KeyAction<Tree> keyAction) {
+            switch (keyAction.getAction()) {
+                case PRIVATE_KEY_GENERATION, PUBLIC_KEY_GENERATION, SECRET_KEY_GENERATION:
+                    return Optional.of(new Generate(detectionLocation));
+                default:
+                    return Optional.empty();
+            }
         }
 
         return Optional.empty();

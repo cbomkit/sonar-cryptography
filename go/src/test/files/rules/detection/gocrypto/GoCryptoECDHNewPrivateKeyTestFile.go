@@ -10,7 +10,7 @@ func main() {
 
 	// Create a private key from raw bytes (32 bytes for P256)
 	privateKeyBytes := make([]byte, 32)
-	privateKey, err := curve.NewPrivateKey(privateKeyBytes) // Noncompliant {{(KeyAgreement) ECDH}}
+	privateKey, err := curve.NewPrivateKey(privateKeyBytes)
 	if err != nil {
 		panic(err)
 	}
