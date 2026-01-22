@@ -226,7 +226,7 @@ class ProtocolTest extends TestBase {
                             assertThat(protocolProperties.getCipherSuites()).isNotNull();
                             assertThat(protocolProperties.getCipherSuites()).hasSize(1);
                             assertThat(protocolProperties.getCryptoRefArray()).isNotNull();
-                            assertThat(protocolProperties.getCryptoRefArray().getRef()).hasSize(3);
+                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(3);
 
                             final org.cyclonedx.model.component.crypto.CipherSuite cipherSuite =
                                     protocolProperties.getCipherSuites().get(0);
@@ -267,7 +267,7 @@ class ProtocolTest extends TestBase {
                             assertThat(protocolProperties.getVersion()).isNull();
                             assertThat(protocolProperties.getCipherSuites()).isNull();
                             assertThat(protocolProperties.getCryptoRefArray()).isNotNull();
-                            assertThat(protocolProperties.getCryptoRefArray().getRef()).hasSize(2);
+                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(2);
                         }
                     }
                 });
