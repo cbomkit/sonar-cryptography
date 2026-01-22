@@ -36,3 +36,6 @@ build/
 
 .SonarQube/plugins
 .checkstyle.xml
+
+### Sonar Go ###
+!go/build/
