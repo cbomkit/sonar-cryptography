@@ -23,14 +23,13 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
 
 class GoCryptoDSATest extends TestBase {
 
@@ -47,6 +46,5 @@ class GoCryptoDSATest extends TestBase {
     public void asserts(
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
-            @Nonnull List<INode> nodes) {
-    }
+            @Nonnull List<INode> nodes) {}
 }

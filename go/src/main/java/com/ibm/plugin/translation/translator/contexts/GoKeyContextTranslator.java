@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
@@ -28,6 +29,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoCurveMapper;
+import com.ibm.mapper.mapper.gocrypto.GoCryptoDSAParameterMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
@@ -101,6 +103,14 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                     return Optional.of(new Generate(detectionLocation));
                 default:
                     return Optional.empty();
+            }
+        } else if (value instanceof AlgorithmParameter<Tree> algorithmParameter) {
+            if (algorithmParameter.getKind() == AlgorithmParameter.Kind.DSA_L_AND_N) {
+                final GoCryptoDSAParameterMapper dsaParameterMapper =
+                        new GoCryptoDSAParameterMapper();
+                return dsaParameterMapper
+                        .parse(algorithmParameter.asString(), detectionLocation)
+                        .map(n -> n);
             }
         }
 

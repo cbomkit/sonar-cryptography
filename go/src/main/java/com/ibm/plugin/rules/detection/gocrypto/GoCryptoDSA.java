@@ -19,9 +19,10 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
-import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -60,11 +61,13 @@ public final class GoCryptoDSA {
                     .forObjectTypes("crypto/dsa")
                     .forMethods("GenerateParameters")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withMethodParameter("*dsa.Parameters")
+                    .withMethodParameter("*Parameters")
                     .withMethodParameter("io.Reader")
-                    .withMethodParameter("dsa.ParameterSizes")
-                    .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new KeyContext(Map.of("kind", "DSA111")))
+                    .withMethodParameter("ParameterSizes")
+                    .shouldBeDetectedAs(
+                            new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.DSA_L_AND_N))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 

@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -33,16 +35,13 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoECDHNewPublicKeyTest extends TestBase {
 
@@ -70,7 +69,8 @@ class GoCryptoECDHNewPublicKeyTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("X25519");
 
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeyAction.class, detectionStore.getChildren());
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                getStoreOfValueType(KeyAction.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
         assertThat(store1.getDetectionValues()).hasSize(2);
         assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
@@ -116,7 +116,5 @@ class GoCryptoECDHNewPublicKeyTest extends TestBase {
         assertThat(oidNode).isNotNull();
         assertThat(oidNode.getChildren()).isEmpty();
         assertThat(oidNode.asString()).isEqualTo("1.3.132.1.12");
-
-
     }
 }

@@ -249,8 +249,12 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
         }
         String prefix = goType.substring(0, prefixEnd);
         String withoutPrefix = goType.substring(prefixEnd);
-        // Strip path: "crypto/dsa.Parameters" → "dsa.Parameters", "crypto/dsa" → "dsa"
+        // Strip path and package: "crypto/dsa.Parameters" → "Parameters"
         String shortened = withoutPrefix.substring(withoutPrefix.lastIndexOf('/') + 1);
+        int dotIndex = shortened.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            shortened = shortened.substring(dotIndex + 1);
+        }
         return prefix + shortened;
     }
 
