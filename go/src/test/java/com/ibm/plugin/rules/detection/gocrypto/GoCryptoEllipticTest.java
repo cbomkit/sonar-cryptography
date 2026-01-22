@@ -24,10 +24,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
-import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Oid;
-import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.plugin.TestBase;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
@@ -48,7 +45,7 @@ class GoCryptoEllipticTest extends TestBase {
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoEllipticTestFile.go", this);
+        GoVerifier.verifyNoIssue("rules/detection/gocrypto/GoCryptoEllipticTestFile.go", this);
     }
 
     @Override
@@ -72,20 +69,8 @@ class GoCryptoEllipticTest extends TestBase {
              */
             assertThat(nodes).hasSize(1);
 
-            // PublicKeyEncryption
-            INode publicKeyEncryptionNode = nodes.get(0);
-            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
-            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
-            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp224r1");
-
-            // Oid under PublicKeyEncryption
-            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
-            assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
-            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
-
-            // EllipticCurve under PublicKeyEncryption
-            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            // EllipticCurve
+            INode ellipticCurveNode = nodes.get(0);
             assertThat(ellipticCurveNode).isNotNull();
             assertThat(ellipticCurveNode.getChildren()).isEmpty();
             assertThat(ellipticCurveNode.asString()).isEqualTo("secp224r1");
@@ -105,20 +90,8 @@ class GoCryptoEllipticTest extends TestBase {
              */
             assertThat(nodes).hasSize(1);
 
-            // PublicKeyEncryption
-            INode publicKeyEncryptionNode = nodes.get(0);
-            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
-            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
-            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp256r1");
-
-            // Oid under PublicKeyEncryption
-            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
-            assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
-            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
-
-            // EllipticCurve under PublicKeyEncryption
-            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            // EllipticCurve
+            INode ellipticCurveNode = nodes.get(0);
             assertThat(ellipticCurveNode).isNotNull();
             assertThat(ellipticCurveNode.getChildren()).isEmpty();
             assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
@@ -138,20 +111,8 @@ class GoCryptoEllipticTest extends TestBase {
              */
             assertThat(nodes).hasSize(1);
 
-            // PublicKeyEncryption
-            INode publicKeyEncryptionNode = nodes.get(0);
-            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
-            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
-            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp384r1");
-
-            // Oid under PublicKeyEncryption
-            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
-            assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
-            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
-
-            // EllipticCurve under PublicKeyEncryption
-            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            // EllipticCurve
+            INode ellipticCurveNode = nodes.get(0);
             assertThat(ellipticCurveNode).isNotNull();
             assertThat(ellipticCurveNode.getChildren()).isEmpty();
             assertThat(ellipticCurveNode.asString()).isEqualTo("secp384r1");
@@ -171,20 +132,8 @@ class GoCryptoEllipticTest extends TestBase {
              */
             assertThat(nodes).hasSize(1);
 
-            // PublicKeyEncryption
-            INode publicKeyEncryptionNode = nodes.get(0);
-            assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
-            assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
-            assertThat(publicKeyEncryptionNode.asString()).isEqualTo("EC-secp521r1");
-
-            // Oid under PublicKeyEncryption
-            INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);
-            assertThat(oidNode).isNotNull();
-            assertThat(oidNode.getChildren()).isEmpty();
-            assertThat(oidNode.asString()).isEqualTo("1.2.840.10045.2.1");
-
-            // EllipticCurve under PublicKeyEncryption
-            INode ellipticCurveNode = publicKeyEncryptionNode.getChildren().get(EllipticCurve.class);
+            // EllipticCurve
+            INode ellipticCurveNode = nodes.get(0);
             assertThat(ellipticCurveNode).isNotNull();
             assertThat(ellipticCurveNode.getChildren()).isEmpty();
             assertThat(ellipticCurveNode.asString()).isEqualTo("secp521r1");

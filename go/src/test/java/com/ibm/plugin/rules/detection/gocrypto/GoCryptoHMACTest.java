@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -34,16 +36,13 @@ import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoHMACTest extends TestBase {
 
@@ -73,7 +72,8 @@ class GoCryptoHMACTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("HMAC");
 
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
         assertThat(store1.getDetectionValues()).hasSize(1);
         assertThat(store1.getDetectionValueContext()).isInstanceOf(DigestContext.class);
@@ -133,7 +133,5 @@ class GoCryptoHMACTest extends TestBase {
         assertThat(oidNode1).isNotNull();
         assertThat(oidNode1.getChildren()).isEmpty();
         assertThat(oidNode1.asString()).isEqualTo("2.16.840.1.101.3.4.2.1");
-
-
     }
 }

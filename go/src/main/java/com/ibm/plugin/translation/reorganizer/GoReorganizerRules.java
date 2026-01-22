@@ -29,9 +29,10 @@ import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
 import com.ibm.mapper.reorganizer.rules.PaddingReorganizer;
 import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public final class GoReorganizerRules {
 
@@ -46,6 +47,7 @@ public final class GoReorganizerRules {
                                 Sign.class, PublicKeyEncryption.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
                                 Sign.class, Signature.class),
+                        SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
                         SignatureReorganizer.MERGE_SIGNATURE_WITH_PKE_UNDER_PRIVATE_KEY,
                         SignatureReorganizer.MOVE_PSS_FROM_UNDER_SIGN_FUNCTION_TO_UNDER_KEY,
                         SignatureReorganizer.MAKE_RSA_TO_SIGNATURE,

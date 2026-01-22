@@ -51,16 +51,19 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             @Nonnull IValue<Tree> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> && detectionContext instanceof DetectionContext context) {
+        if (value instanceof ValueAction<Tree>
+                && detectionContext instanceof DetectionContext context) {
             String kind = context.get("kind").orElse("");
             switch (kind) {
                 case "RSA":
                     return Optional.of(new RSA(PublicKeyEncryption.class, detectionLocation));
-                case "ECDSA": return Optional.of(new ECDSA(detectionLocation));
+                case "ECDSA":
+                    return Optional.of(new ECDSA(detectionLocation));
                 case "EC":
                     final GoCryptoCurveMapper curveMapper = new GoCryptoCurveMapper();
-                    return curveMapper.parse(value.asString(), detectionLocation).map(f-> f);
-                default: return Optional.empty();
+                    return curveMapper.parse(value.asString(), detectionLocation).map(f -> f);
+                default:
+                    return Optional.empty();
             }
         } else if (value instanceof KeySize<Tree> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));

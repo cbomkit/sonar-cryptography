@@ -32,6 +32,7 @@ import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.language.IScanContext;
+import com.ibm.engine.language.go.tree.ITreeWithBlock;
 import com.ibm.engine.rule.IDetectionRule;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -91,13 +92,8 @@ public final class GoLanguageSupport
     @Nonnull
     @Override
     public Optional<Tree> getEnclosingMethod(@Nonnull Tree expression) {
-        // Navigate up the tree to find the enclosing FunctionDeclarationTree
-        // Go Tree API provides children() but not parent(), so we need to track context
-        // during registration. For now, check if expression itself is a function declaration.
-        if (expression
-                instanceof
-                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
-            return Optional.of(functionInvocationWIthIdentifiersTree.getBlockTree());
+        if (expression instanceof ITreeWithBlock treeWithBlock) {
+            return Optional.of(treeWithBlock.blockTree());
         }
         // Without parent() access, we cannot navigate up. The Go plugin handles this
         // through its registration pattern - handlers are registered for specific tree types.

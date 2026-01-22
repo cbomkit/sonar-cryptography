@@ -20,16 +20,16 @@
 package com.ibm.mapper.mapper.gocrypto;
 
 import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.EllipticCurveAlgorithm;
+import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.curves.Secp224r1;
 import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.model.curves.Secp384r1;
 import com.ibm.mapper.model.curves.Secp521r1;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * Maps Go crypto/elliptic curve names to the corresponding elliptic curve model classes.
@@ -47,7 +47,7 @@ public final class GoCryptoCurveMapper implements IMapper {
 
     @Nonnull
     @Override
-    public Optional<? extends Algorithm> parse(
+    public Optional<? extends EllipticCurve> parse(
             @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
         if (str == null) {
             return Optional.empty();
@@ -55,13 +55,13 @@ public final class GoCryptoCurveMapper implements IMapper {
 
         return switch (str.toUpperCase().trim()) {
             case "P-224" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Secp224r1(detectionLocation)));
+                    Optional.of(new Secp224r1(detectionLocation));
             case "P-256" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Secp256r1(detectionLocation)));
+                    Optional.of(new Secp256r1(detectionLocation));
             case "P-384" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Secp384r1(detectionLocation)));
+                    Optional.of(new Secp384r1(detectionLocation));
             case "P-521" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Secp521r1(detectionLocation)));
+                    Optional.of(new Secp521r1(detectionLocation));
             default -> Optional.empty();
         };
     }

@@ -55,7 +55,6 @@ class GoCryptoECDSATest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
-
         /*
          * Detection Store
          */
@@ -66,31 +65,29 @@ class GoCryptoECDSATest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("ECDSA");
 
-        // Check for child store with elliptic curve
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> curveStore =
-                getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
-        assertThat(curveStore).isNotNull();
-        assertThat(curveStore.getDetectionValues()).hasSize(1);
-        assertThat(curveStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        IValue<Tree> curveValue = curveStore.getDetectionValues().get(0);
-        assertThat(curveValue).isInstanceOf(ValueAction.class);
-        assertThat(curveValue.asString()).isEqualTo("P-256");
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(1);
+        assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(ValueAction.class);
+        assertThat(value01.asString()).isEqualTo("P-256");
 
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
 
-        // ECDSA (Signature)
-        INode ecdsaNode = nodes.get(0);
-        assertThat(ecdsaNode.getKind()).isEqualTo(Signature.class);
-        assertThat(ecdsaNode.getChildren()).hasSize(1);
-        assertThat(ecdsaNode.asString()).isEqualTo("ECDSA");
+        // Signature
+        INode signatureNode = nodes.get(0);
+        assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
+        assertThat(signatureNode.getChildren()).hasSize(1);
+        assertThat(signatureNode.asString()).isEqualTo("ECDSA");
 
-        // EllipticCurve under ECDSA
-        INode ellipticCurveNode = ecdsaNode.getChildren().get(EllipticCurve.class);
+        // EllipticCurve under Signature
+        INode ellipticCurveNode = signatureNode.getChildren().get(EllipticCurve.class);
         assertThat(ellipticCurveNode).isNotNull();
         assertThat(ellipticCurveNode.getChildren()).isEmpty();
-        assertThat(ellipticCurveNode.asString()).isEqualTo("P-256");
+        assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
     }
 }

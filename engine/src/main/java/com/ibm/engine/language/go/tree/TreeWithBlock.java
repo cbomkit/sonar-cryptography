@@ -17,39 +17,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.engine.language.go;
+package com.ibm.engine.language.go.tree;
 
 import java.util.List;
-import org.sonar.go.impl.FunctionInvocationTreeImpl;
+import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.sonar.go.impl.BaseTreeImpl;
 import org.sonar.plugins.go.api.BlockTree;
-import org.sonar.plugins.go.api.FunctionInvocationTree;
-import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.Tree;
-import org.sonar.plugins.go.api.TreeMetaData;
-import org.sonar.plugins.go.api.Type;
 
-public final class FunctionInvocationWIthIdentifiersTree extends FunctionInvocationTreeImpl
-        implements FunctionInvocationTree {
-    private final List<IdentifierTree> identifiers;
+public class TreeWithBlock extends BaseTreeImpl implements ITreeWithBlock {
     private final BlockTree blockTree;
+    private final List<Tree> children;
 
-    public FunctionInvocationWIthIdentifiersTree(
-            TreeMetaData metaData,
-            Tree memberSelect,
-            List<Tree> arguments,
-            List<Type> returnTypes,
-            List<IdentifierTree> identifiers,
-            BlockTree blockTree) {
-        super(metaData, memberSelect, arguments, returnTypes);
-        this.identifiers = identifiers;
+    public TreeWithBlock(@Nonnull Tree tree, @Nonnull BlockTree blockTree) {
+        super(tree.metaData());
+        this.children = tree.children();
         this.blockTree = blockTree;
     }
 
-    public BlockTree getBlockTree() {
-        return blockTree;
+    @Override
+    public List<Tree> children() {
+        return children;
     }
 
-    public List<IdentifierTree> getIdentifiers() {
-        return identifiers;
+    @Override
+    public @NonNull BlockTree blockTree() {
+        return blockTree;
     }
 }

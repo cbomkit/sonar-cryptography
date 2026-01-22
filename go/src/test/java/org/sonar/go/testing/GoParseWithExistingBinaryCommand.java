@@ -19,12 +19,7 @@
  */
 package org.sonar.go.testing;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.go.converter.Command;
-import org.sonar.go.converter.PlatformInfo;
-import org.sonar.go.converter.SystemPlatformInfo;
-import org.sonar.plugins.go.api.ParseException;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -42,8 +37,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sonar.go.converter.Command;
+import org.sonar.go.converter.PlatformInfo;
+import org.sonar.go.converter.SystemPlatformInfo;
+import org.sonar.plugins.go.api.ParseException;
 
 /**
  * This file is adapted from SonarSource sonar-go project: <a

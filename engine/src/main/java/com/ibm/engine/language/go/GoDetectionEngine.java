@@ -26,6 +26,7 @@ import com.ibm.engine.detection.MethodDetection;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
+import com.ibm.engine.language.go.tree.FunctionInvocationWIthIdentifiersTree;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
@@ -89,16 +90,11 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                     .match(
                                             functionInvocation,
                                             handler.getLanguageSupport().translation())) {
-                                final List<IdentifierTree> identifierTrees =
-                                        variableDeclarationTree.identifiers();
                                 this.analyseExpression(
                                         traceSymbol,
                                         new FunctionInvocationWIthIdentifiersTree(
-                                                functionInvocation.metaData(),
-                                                functionInvocation.memberSelect(),
-                                                functionInvocation.arguments(),
-                                                functionInvocation.returnTypes(),
-                                                identifierTrees,
+                                                functionInvocation,
+                                                variableDeclarationTree,
                                                 blockTree));
                             }
                         }
@@ -113,6 +109,13 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .getDetectionRule()
                     .match(memberSelectTree, handler.getLanguageSupport().translation())) {
                 this.analyseExpressionForFunctionReference(traceSymbol, memberSelectTree);
+            }
+        } else if (tree instanceof FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+            handler.addCallToCallStack(functionInvocationWIthIdentifiersTree, detectionStore.getScanContext());
+            if (detectionStore
+                    .getDetectionRule()
+                    .match(functionInvocationWIthIdentifiersTree, handler.getLanguageSupport().translation())) {
+                this.analyseExpression(traceSymbol, functionInvocationWIthIdentifiersTree);
             }
         }
     }
@@ -416,10 +419,11 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 return Optional.of(TraceSymbol.createFrom(symbol));
             }
         } else if (expression
-                instanceof
-                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+                        instanceof
+                        FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree
+                && functionInvocationWIthIdentifiersTree.variableDeclarationTree() != null) {
             for (IdentifierTree identifierTree :
-                    functionInvocationWIthIdentifiersTree.getIdentifiers()) {
+                    functionInvocationWIthIdentifiersTree.variableDeclarationTree().identifiers()) {
                 if (identifierTree.type().equals("error")) {
                     continue;
                 }
@@ -488,6 +492,32 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     }
 
     /**
+     * Finds the VariableDeclarationTree that contains the given FunctionInvocationTree within a
+     * BlockTree.
+     *
+     * <p>This method searches through the statements in the block to find the variable declaration
+     * whose initializer is the specified function invocation.
+     *
+     * @param functionInvocation the function invocation to search for
+     * @param blockTree the block tree containing the statements to search
+     * @return an Optional containing the VariableDeclarationTree if found, otherwise empty
+     */
+    @Nonnull
+    public Optional<VariableDeclarationTree> findVariableDeclaration(
+            @Nonnull FunctionInvocationTree functionInvocation, @Nonnull BlockTree blockTree) {
+        for (Tree statement : blockTree.statementOrExpressions()) {
+            if (statement instanceof VariableDeclarationTree variableDeclarationTree) {
+                for (Tree initializer : variableDeclarationTree.initializers()) {
+                    if (initializer == functionInvocation) {
+                        return Optional.of(variableDeclarationTree);
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Analyzes a function invocation expression for cryptographic patterns.
      *
      * @param traceSymbol the trace symbol for tracking
@@ -495,7 +525,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      */
     private void analyseExpression(
             @Nonnull TraceSymbol<Symbol> traceSymbol,
-            @Nonnull FunctionInvocationTree functionInvocation) {
+            @Nonnull FunctionInvocationWIthIdentifiersTree functionInvocation) {
 
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
             MethodDetection<Tree> methodDetection = new MethodDetection<>(functionInvocation, null);
@@ -546,9 +576,33 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             .forEach(detectionStore::onReceivingNewDetection);
                 }
             } else if (!parameter.getDetectionRules().isEmpty()) {
-                // Handle depending detection rules
-                detectionStore.onDetectedDependingParameter(
-                        parameter, expression, DetectionStore.Scope.EXPRESSION);
+                if (expression instanceof FunctionInvocationTree newFunctionInvocation) {
+                    final Optional<VariableDeclarationTree> variableDeclarationTree =
+                            findVariableDeclaration(
+                                    newFunctionInvocation, functionInvocation.blockTree());
+                    if (variableDeclarationTree.isPresent()) {
+                        // declaration for this function is within the same block
+                        detectionStore.onDetectedDependingParameter(
+                                parameter,
+                                new FunctionInvocationWIthIdentifiersTree(
+                                        newFunctionInvocation,
+                                        variableDeclarationTree.get(),
+                                        functionInvocation.blockTree()),
+                                DetectionStore.Scope.EXPRESSION);
+                    } else {
+                        detectionStore.onDetectedDependingParameter(
+                                parameter,
+                                new FunctionInvocationWIthIdentifiersTree(
+                                        newFunctionInvocation,
+                                        null,
+                                        functionInvocation.blockTree()),
+                                DetectionStore.Scope.EXPRESSION);
+                    }
+                } else {
+                    // Handle depending detection rules
+                    detectionStore.onDetectedDependingParameter(
+                            parameter, expression, DetectionStore.Scope.EXPRESSION);
+                }
             }
 
             index++;
@@ -565,8 +619,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * @param memberSelectTree the function reference to analyze
      */
     private void analyseExpressionForFunctionReference(
-            @Nonnull TraceSymbol<Symbol> traceSymbol,
-            @Nonnull MemberSelectTree memberSelectTree) {
+            @Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull MemberSelectTree memberSelectTree) {
 
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
             MethodDetection<Tree> methodDetection = new MethodDetection<>(memberSelectTree, null);
