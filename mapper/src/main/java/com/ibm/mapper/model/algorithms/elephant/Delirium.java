@@ -47,7 +47,7 @@ public class Delirium extends Elephant {
 
     public Delirium(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
-        this.put(new BlockSize(200, detectionLocation));
+        this.put(BlockSize.ofDefault(200, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
     }
 }

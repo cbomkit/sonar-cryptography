@@ -22,6 +22,7 @@ package com.ibm.enricher.algorithm;
 import com.ibm.mapper.model.IAsset;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NodeOrigin;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -32,7 +33,8 @@ public interface IEnrichWithDefaultKeySize {
         // default key length
         if (keyLength == null
                 && asset.getDetectionContext().bundle().getIdentifier().equals("Jca")) {
-            keyLength = new KeyLength(defaultKeySize, asset.getDetectionContext());
+            keyLength =
+                    new KeyLength(defaultKeySize, asset.getDetectionContext(), NodeOrigin.ENRICHED);
             asset.put(keyLength);
         }
     }

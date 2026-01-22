@@ -30,7 +30,7 @@ public class Grain128a extends Grain {
 
     public Grain128a(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, StreamCipher.class, detectionLocation);
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new InitializationVectorLength(96, detectionLocation));
     }
 }

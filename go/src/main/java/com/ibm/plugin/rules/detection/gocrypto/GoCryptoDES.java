@@ -67,13 +67,14 @@ public final class GoCryptoDES {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
-                    .withDependingDetectionRules(List.of(
-                            NEW_CBC_ENCRYPTER,
-                            NEW_CBC_DECRYPTER,
-                            NEW_CFB_ENCRYPTER,
-                            NEW_CFB_DECRYPTER,
-                            NEW_CTR,
-                            NEW_OFB));
+                    .withDependingDetectionRules(
+                            List.of(
+                                    NEW_CBC_ENCRYPTER,
+                                    NEW_CBC_DECRYPTER,
+                                    NEW_CFB_ENCRYPTER,
+                                    NEW_CFB_DECRYPTER,
+                                    NEW_CTR,
+                                    NEW_OFB));
 
     // des.NewTripleDESCipher(key []byte) (cipher.Block, error)
     // Creates and returns a new Triple DES cipher.Block
@@ -88,13 +89,14 @@ public final class GoCryptoDES {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
-                    .withDependingDetectionRules(List.of(
-                            NEW_CBC_ENCRYPTER,
-                            NEW_CBC_DECRYPTER,
-                            NEW_CFB_ENCRYPTER,
-                            NEW_CFB_DECRYPTER,
-                            NEW_CTR,
-                            NEW_OFB));
+                    .withDependingDetectionRules(
+                            List.of(
+                                    NEW_CBC_ENCRYPTER,
+                                    NEW_CBC_DECRYPTER,
+                                    NEW_CFB_ENCRYPTER,
+                                    NEW_CFB_DECRYPTER,
+                                    NEW_CTR,
+                                    NEW_OFB));
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {

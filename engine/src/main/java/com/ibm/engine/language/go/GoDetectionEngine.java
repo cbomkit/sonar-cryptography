@@ -32,6 +32,12 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
@@ -46,13 +52,6 @@ import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -110,11 +109,16 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .match(memberSelectTree, handler.getLanguageSupport().translation())) {
                 this.analyseExpressionForFunctionReference(traceSymbol, memberSelectTree);
             }
-        } else if (tree instanceof FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
-            handler.addCallToCallStack(functionInvocationWIthIdentifiersTree, detectionStore.getScanContext());
+        } else if (tree
+                instanceof
+                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+            handler.addCallToCallStack(
+                    functionInvocationWIthIdentifiersTree, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
-                    .match(functionInvocationWIthIdentifiersTree, handler.getLanguageSupport().translation())) {
+                    .match(
+                            functionInvocationWIthIdentifiersTree,
+                            handler.getLanguageSupport().translation())) {
                 this.analyseExpression(traceSymbol, functionInvocationWIthIdentifiersTree);
             }
         }

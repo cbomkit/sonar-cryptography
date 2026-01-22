@@ -50,6 +50,6 @@ public final class XOEsch extends Algorithm implements MessageDigest {
 
     public XOEsch(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 }

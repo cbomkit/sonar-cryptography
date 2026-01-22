@@ -56,7 +56,7 @@ public final class CAST128 extends Algorithm implements BlockCipher {
 
     public CAST128(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
     }
 
     public CAST128(int keyLength, @Nonnull DetectionLocation detectionLocation) {

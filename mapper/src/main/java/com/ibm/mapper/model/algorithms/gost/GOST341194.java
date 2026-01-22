@@ -53,7 +53,7 @@ public final class GOST341194 extends Algorithm implements MessageDigest {
 
     public GOST341194(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
-        this.put(new BlockSize(256, detectionLocation));
+        this.put(BlockSize.ofDefault(256, detectionLocation));
         this.put(new DigestSize(256, detectionLocation));
         // The hash function is derived from this block cipher:
         this.put(new GOST28147(detectionLocation));

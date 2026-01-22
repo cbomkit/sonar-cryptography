@@ -55,8 +55,8 @@ public final class XTEA extends Algorithm implements BlockCipher {
 
     public XTEA(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
     }
 
     public XTEA(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

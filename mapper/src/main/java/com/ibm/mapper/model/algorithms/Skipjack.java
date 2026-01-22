@@ -53,8 +53,8 @@ public final class Skipjack extends Algorithm implements BlockCipher {
 
     public Skipjack(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
-        this.put(new KeyLength(80, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
+        this.put(KeyLength.ofDefault(80, detectionLocation));
     }
 
     public Skipjack(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

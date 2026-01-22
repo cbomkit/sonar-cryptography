@@ -52,7 +52,7 @@ public final class TripleDES extends Algorithm implements BlockCipher {
 
     public TripleDES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
     }
 
     public TripleDES(int keyLength, @Nonnull DetectionLocation detectionLocation) {

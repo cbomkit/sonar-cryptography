@@ -51,7 +51,7 @@ public final class SipHash extends Algorithm implements Mac {
     public SipHash(int outputSize, @Nonnull DetectionLocation detectionLocation) {
         super(NAME, Mac.class, detectionLocation);
         this.put(new DigestSize(outputSize, detectionLocation));
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
     }
 
     public SipHash(@Nonnull DetectionLocation detectionLocation) {

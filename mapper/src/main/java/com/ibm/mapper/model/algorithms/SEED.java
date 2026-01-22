@@ -54,8 +54,8 @@ public final class SEED extends Algorithm implements BlockCipher, KeyWrap {
 
     public SEED(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
     }
 
     public SEED(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

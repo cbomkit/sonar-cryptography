@@ -31,9 +31,30 @@ public final class BlockSize extends Property {
         this.value = value;
     }
 
+    public BlockSize(
+            @Nonnull Integer value,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
+        super(BlockSize.class, detectionLocation, origin);
+        this.value = value;
+    }
+
     private BlockSize(@Nonnull BlockSize blockSize) {
-        super(blockSize.type, blockSize.detectionLocation, blockSize.children);
+        super(blockSize.type, blockSize.detectionLocation, blockSize.children, blockSize.origin);
         this.value = blockSize.value;
+    }
+
+    /**
+     * Creates a BlockSize with DEFAULT origin, for use in algorithm constructors.
+     *
+     * @param value the block size in bits
+     * @param detectionLocation the detection location
+     * @return a new BlockSize marked as DEFAULT
+     */
+    @Nonnull
+    public static BlockSize ofDefault(
+            @Nonnull Integer value, @Nonnull DetectionLocation detectionLocation) {
+        return new BlockSize(value, detectionLocation, NodeOrigin.DEFAULT);
     }
 
     @Nonnull

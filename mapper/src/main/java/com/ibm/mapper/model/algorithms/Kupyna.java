@@ -77,11 +77,11 @@ public final class Kupyna extends Algorithm implements MessageDigest {
         this.put(new DigestSize(digestSize, detectionLocation));
 
         if (digestSize >= 8 && digestSize <= 256) {
-            this.put(new BlockSize(512, detectionLocation));
+            this.put(BlockSize.ofDefault(512, detectionLocation));
             this.put(new InitializationVectorLength(512, detectionLocation));
         }
         if (digestSize > 256 && digestSize <= 512) {
-            this.put(new BlockSize(1024, detectionLocation));
+            this.put(BlockSize.ofDefault(1024, detectionLocation));
             this.put(new InitializationVectorLength(1024, detectionLocation));
         }
     }

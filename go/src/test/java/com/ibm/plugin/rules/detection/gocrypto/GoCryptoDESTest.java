@@ -19,23 +19,27 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.plugin.TestBase;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoDESTest extends TestBase {
 
@@ -63,14 +67,35 @@ class GoCryptoDESTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("DES");
 
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeySize.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(1);
+        assertThat(store1.getDetectionValueContext()).isInstanceOf(CipherContext.class);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(KeySize.class);
+        assertThat(value01.asString()).isEqualTo("64");
+
         /*
          * Translation
          */
         assertThat(nodes).hasSize(1);
 
         // BlockCipher
-        INode cipherNode = nodes.get(0);
-        assertThat(cipherNode.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(cipherNode.asString()).isEqualTo("DES56");
+        INode blockCipherNode = nodes.get(0);
+        assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
+        assertThat(blockCipherNode.getChildren()).hasSize(2);
+        assertThat(blockCipherNode.asString()).isEqualTo("DES64");
+
+        // BlockSize under BlockCipher
+        INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
+        assertThat(blockSizeNode).isNotNull();
+        assertThat(blockSizeNode.getChildren()).isEmpty();
+        assertThat(blockSizeNode.asString()).isEqualTo("64");
+
+        // KeyLength under BlockCipher
+        INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
+        assertThat(keyLengthNode).isNotNull();
+        assertThat(keyLengthNode.getChildren()).isEmpty();
+        assertThat(keyLengthNode.asString()).isEqualTo("64");
     }
 }

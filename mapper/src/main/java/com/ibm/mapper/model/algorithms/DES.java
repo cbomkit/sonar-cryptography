@@ -63,8 +63,8 @@ public final class DES extends Algorithm implements BlockCipher, Mac {
 
     public DES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new KeyLength(56, detectionLocation));
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(KeyLength.ofDefault(56, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
     }
 
     public DES(int keyLength, @Nonnull DetectionLocation detectionLocation) {

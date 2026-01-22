@@ -17,38 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.model.algorithms.ascon;
-
-import com.ibm.mapper.model.BlockSize;
-import com.ibm.mapper.model.DigestSize;
-import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.utils.DetectionLocation;
-import javax.annotation.Nonnull;
+package com.ibm.mapper.model;
 
 /**
- *
- *
- * <h2>{@value #NAME}</h2>
- *
- * <p>
- *
- * <h3>Specification</h3>
- *
- * <ul>
- * </ul>
- *
- * <h3>Other Names and Related Standards</h3>
- *
- * <ul>
- *   *
- * </ul>
+ * Indicates the origin of a node's value, distinguishing between values that were actually detected
+ * in source code versus values that were added as defaults or through enrichment.
  */
-public final class AsconHash extends Ascon implements MessageDigest {
-    private static final String NAME = "Ascon-Hash";
+public enum NodeOrigin {
+    /** Value was detected in the analyzed source code. */
+    DETECTED,
 
-    public AsconHash(@Nonnull DetectionLocation detectionLocation) {
-        super(NAME, MessageDigest.class, detectionLocation);
-        this.put(new DigestSize(256, detectionLocation));
-        this.put(BlockSize.ofDefault(64, detectionLocation));
-    }
+    /** Value was added as a default by algorithm constructors (e.g., DES default key length). */
+    DEFAULT,
+
+    /** Value was added during the enrichment phase. */
+    ENRICHED
 }

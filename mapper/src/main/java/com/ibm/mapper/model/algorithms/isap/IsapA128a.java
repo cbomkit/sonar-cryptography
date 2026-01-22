@@ -29,7 +29,7 @@ public class IsapA128a extends Isap {
 
     public IsapA128a(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
         this.put(new InitializationVectorLength(192, detectionLocation));
     }
 }

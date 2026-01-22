@@ -25,10 +25,9 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.List;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/aes package.

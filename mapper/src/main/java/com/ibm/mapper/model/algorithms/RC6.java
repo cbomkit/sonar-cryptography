@@ -55,7 +55,7 @@ public final class RC6 extends Algorithm implements BlockCipher, AuthenticatedEn
 
     public RC6(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 
     public RC6(int keyLength, @Nonnull DetectionLocation detectionLocation) {

@@ -30,22 +30,40 @@ public abstract class Property implements IProperty {
     @Nonnull protected final Class<? extends IProperty> type;
     @Nonnull protected final Map<Class<? extends INode>, INode> children;
     @Nonnull protected final DetectionLocation detectionLocation;
+    @Nonnull protected final NodeOrigin origin;
 
     protected Property(
             @Nonnull Class<? extends IProperty> type,
             @Nonnull DetectionLocation detectionLocation) {
+        this(type, detectionLocation, NodeOrigin.DETECTED);
+    }
+
+    protected Property(
+            @Nonnull Class<? extends IProperty> type,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
         this.type = type;
         this.children = new HashMap<>();
         this.detectionLocation = detectionLocation;
+        this.origin = origin;
     }
 
     protected Property(
             @Nonnull Class<? extends IProperty> type,
             @Nonnull DetectionLocation detectionLocation,
             @Nonnull Map<Class<? extends INode>, INode> children) {
+        this(type, detectionLocation, children, NodeOrigin.DETECTED);
+    }
+
+    protected Property(
+            @Nonnull Class<? extends IProperty> type,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull Map<Class<? extends INode>, INode> children,
+            @Nonnull NodeOrigin origin) {
         this.type = type;
         this.children = children;
         this.detectionLocation = detectionLocation;
+        this.origin = origin;
     }
 
     @Override
@@ -62,6 +80,12 @@ public abstract class Property implements IProperty {
     @Override
     public DetectionLocation getDetectionContext() {
         return detectionLocation;
+    }
+
+    @Nonnull
+    @Override
+    public NodeOrigin getOrigin() {
+        return origin;
     }
 
     @Nonnull

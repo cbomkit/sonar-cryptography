@@ -52,7 +52,7 @@ public final class Whirlpool extends Algorithm implements MessageDigest {
     public Whirlpool(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
         this.put(new DigestSize(512, detectionLocation));
-        this.put(new BlockSize(512, detectionLocation));
+        this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new NumberOfIterations(10, detectionLocation));
     }
 }

@@ -36,10 +36,9 @@ import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.utils.DetectionLocation;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 /**
  * Translator for Go Key contexts.
@@ -67,8 +66,7 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                 case "Ed25519":
                     return Optional.of(new Ed25519(detectionLocation));
                 case "ECDH":
-                    return curveMapper.parse(value.asString(), detectionLocation)
-                            .map(ECDH::new);
+                    return curveMapper.parse(value.asString(), detectionLocation).map(ECDH::new);
                 case "EC":
                     return curveMapper.parse(value.asString(), detectionLocation).map(f -> f);
                 case "KDF":

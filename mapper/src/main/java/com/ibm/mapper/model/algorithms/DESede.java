@@ -67,7 +67,7 @@ public final class DESede extends Algorithm implements BlockCipher, KeyWrap, Mac
 
     public DESede(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
     }
 
     public DESede(int keyLength, @Nonnull DetectionLocation detectionLocation) {

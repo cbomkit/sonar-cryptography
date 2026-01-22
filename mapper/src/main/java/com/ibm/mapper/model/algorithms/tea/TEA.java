@@ -54,8 +54,8 @@ public final class TEA extends Algorithm implements BlockCipher {
 
     public TEA(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
     }
 
     public TEA(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

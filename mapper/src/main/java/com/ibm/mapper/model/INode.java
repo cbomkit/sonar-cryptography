@@ -26,6 +26,14 @@ import javax.annotation.Nonnull;
 public interface INode {
     void put(@Nonnull INode child);
 
+    /**
+     * Returns the origin of this node's value.
+     *
+     * @return the origin indicating whether the value was detected, is a default, or was enriched
+     */
+    @Nonnull
+    NodeOrigin getOrigin();
+
     boolean hasChildren();
 
     @Nonnull

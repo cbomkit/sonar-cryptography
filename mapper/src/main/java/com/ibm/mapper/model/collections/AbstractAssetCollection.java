@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.collections;
 
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.NodeOrigin;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -94,5 +95,11 @@ public abstract class AbstractAssetCollection<K extends INode> implements IAsset
     @Override
     public void removeChildOfType(@Nonnull Class<? extends INode> nodeType) {
         this.children.remove(nodeType);
+    }
+
+    @Nonnull
+    @Override
+    public NodeOrigin getOrigin() {
+        return NodeOrigin.DETECTED;
     }
 }

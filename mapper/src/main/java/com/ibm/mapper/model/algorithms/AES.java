@@ -104,6 +104,6 @@ public final class AES extends Algorithm
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 }

@@ -32,9 +32,30 @@ public final class KeyLength extends Property {
         this.value = value;
     }
 
+    public KeyLength(
+            @Nonnull Integer value,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
+        super(KeyLength.class, detectionLocation, origin);
+        this.value = value;
+    }
+
     private KeyLength(@Nonnull KeyLength keyLength) {
-        super(keyLength.type, keyLength.detectionLocation, keyLength.children);
+        super(keyLength.type, keyLength.detectionLocation, keyLength.children, keyLength.origin);
         this.value = keyLength.value;
+    }
+
+    /**
+     * Creates a KeyLength with DEFAULT origin, for use in algorithm constructors.
+     *
+     * @param value the key length in bits
+     * @param detectionLocation the detection location
+     * @return a new KeyLength marked as DEFAULT
+     */
+    @Nonnull
+    public static KeyLength ofDefault(
+            @Nonnull Integer value, @Nonnull DetectionLocation detectionLocation) {
+        return new KeyLength(value, detectionLocation, NodeOrigin.DEFAULT);
     }
 
     @Nonnull

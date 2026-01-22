@@ -69,7 +69,7 @@ public final class Esch extends Algorithm implements MessageDigest {
 
     public Esch(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 
     public Esch(int digestSize, @Nonnull DetectionLocation detectionLocation) {

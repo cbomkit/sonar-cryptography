@@ -31,6 +31,7 @@ public class Algorithm implements IAlgorithm {
     @Nonnull protected final Class<? extends IPrimitive> kind;
     @Nonnull protected final DetectionLocation detectionLocation;
     @Nonnull protected final String name;
+    @Nonnull protected final NodeOrigin origin;
 
     public Algorithm(
             @Nonnull IAlgorithm algorithm, @Nonnull final Class<? extends IPrimitive> asKind) {
@@ -38,16 +39,26 @@ public class Algorithm implements IAlgorithm {
         this.children = algorithm.getChildren();
         this.detectionLocation = algorithm.getDetectionContext();
         this.kind = asKind;
+        this.origin = algorithm.getOrigin();
     }
 
     public Algorithm(
             @Nonnull String name,
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull DetectionLocation detectionLocation) {
+        this(name, asKind, detectionLocation, NodeOrigin.DETECTED);
+    }
+
+    public Algorithm(
+            @Nonnull String name,
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
         this.name = name;
         this.children = new HashMap<>();
         this.detectionLocation = detectionLocation;
         this.kind = asKind;
+        this.origin = origin;
     }
 
     private Algorithm(@Nonnull Algorithm algorithm) {
@@ -55,6 +66,7 @@ public class Algorithm implements IAlgorithm {
         this.kind = algorithm.kind;
         this.detectionLocation = algorithm.detectionLocation;
         this.name = algorithm.name;
+        this.origin = algorithm.origin;
     }
 
     @Override
@@ -91,6 +103,12 @@ public class Algorithm implements IAlgorithm {
     @Override
     public DetectionLocation getDetectionContext() {
         return detectionLocation;
+    }
+
+    @Nonnull
+    @Override
+    public NodeOrigin getOrigin() {
+        return origin;
     }
 
     @Nonnull

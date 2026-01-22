@@ -55,7 +55,7 @@ public final class SHACAL1 extends Algorithm implements BlockCipher, Authenticat
 
     public SHACAL1(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(160, detectionLocation));
+        this.put(BlockSize.ofDefault(160, detectionLocation));
     }
 
     public SHACAL1(int keyLength, @Nonnull DetectionLocation detectionLocation) {

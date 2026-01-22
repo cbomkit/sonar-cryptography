@@ -111,6 +111,12 @@ public class Key implements IAsset {
 
     @Nonnull
     @Override
+    public NodeOrigin getOrigin() {
+        return NodeOrigin.DETECTED;
+    }
+
+    @Nonnull
+    @Override
     public Optional<INode> hasChildOfType(@Nonnull Class<? extends INode> nodeType) {
         return Optional.ofNullable(children.get(nodeType));
     }

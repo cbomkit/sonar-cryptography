@@ -95,6 +95,12 @@ public class Protocol implements IAsset {
     }
 
     @Nonnull
+    @Override
+    public NodeOrigin getOrigin() {
+        return NodeOrigin.DETECTED;
+    }
+
+    @Nonnull
     public String getType() {
         return type;
     }

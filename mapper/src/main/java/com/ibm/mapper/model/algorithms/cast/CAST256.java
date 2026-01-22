@@ -56,7 +56,7 @@ public final class CAST256 extends Algorithm implements BlockCipher {
 
     public CAST256(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 
     public CAST256(int keyLength, @Nonnull DetectionLocation detectionLocation) {

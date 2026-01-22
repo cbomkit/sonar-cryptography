@@ -57,7 +57,7 @@ public final class Serpent extends Algorithm implements BlockCipher, Authenticat
 
     public Serpent(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
     }
 
     public Serpent(int keyLength, @Nonnull DetectionLocation detectionLocation) {

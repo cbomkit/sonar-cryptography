@@ -47,6 +47,6 @@ public final class AsconXof extends Ascon implements ExtendableOutputFunction {
 
     public AsconXof(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
     }
 }

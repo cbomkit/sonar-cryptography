@@ -52,8 +52,8 @@ public final class GOSTR34122015 extends Algorithm implements BlockCipher, Authe
 
     public GOSTR34122015(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(128, detectionLocation));
-        this.put(new KeyLength(256, detectionLocation));
+        this.put(BlockSize.ofDefault(128, detectionLocation));
+        this.put(KeyLength.ofDefault(256, detectionLocation));
     }
 
     public GOSTR34122015(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

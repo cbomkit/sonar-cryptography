@@ -52,7 +52,7 @@ public final class Tiger extends Algorithm implements MessageDigest {
 
     public Tiger(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
-        this.put(new BlockSize(512, detectionLocation));
+        this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new NumberOfIterations(24, detectionLocation));
     }
 

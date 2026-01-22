@@ -52,7 +52,7 @@ public class PhotonBeetleAEAD extends Algorithm implements AuthenticatedEncrypti
 
     public PhotonBeetleAEAD(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, AuthenticatedEncryption.class, detectionLocation);
-        this.put(new KeyLength(128, detectionLocation));
+        this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
         this.put(new NonceLength(128, detectionLocation));
     }

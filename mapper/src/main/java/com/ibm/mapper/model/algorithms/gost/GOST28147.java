@@ -59,8 +59,8 @@ public final class GOST28147 extends Algorithm
 
     public GOST28147(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
-        this.put(new BlockSize(64, detectionLocation));
-        this.put(new KeyLength(256, detectionLocation));
+        this.put(BlockSize.ofDefault(64, detectionLocation));
+        this.put(KeyLength.ofDefault(256, detectionLocation));
     }
 
     public GOST28147(@Nonnull Mode mode, @Nonnull DetectionLocation detectionLocation) {

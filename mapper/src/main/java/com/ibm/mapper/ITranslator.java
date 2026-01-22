@@ -24,6 +24,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.model.collections.MergeableCollection;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.ArrayList;
@@ -226,10 +227,27 @@ public abstract class ITranslator<R, T, S, P> {
                                     parentNode.put(mergedCollectionNode);
                                 } else if (existingNode.is(childNode.getKind())
                                         && !existingNode.asString().equals(childNode.asString())) {
-                                    // add node to new roots
-                                    final INode newParent = parentNode.deepCopy();
-                                    newParent.put(childNode);
-                                    newRoots.add(newParent);
+                                    // Handle based on origin:
+                                    // - DETECTED values override DEFAULT/ENRICHED values
+                                    // - Only create new roots when both are DETECTED with different
+                                    // values
+                                    if (existingNode.getOrigin() == NodeOrigin.DEFAULT
+                                            || existingNode.getOrigin() == NodeOrigin.ENRICHED) {
+                                        // Replace default/enriched with detected value
+                                        if (childNode.getOrigin() == NodeOrigin.DETECTED) {
+                                            parentNode.put(childNode);
+                                        }
+                                        // If child is also DEFAULT/ENRICHED, keep existing
+                                    } else if (childNode.getOrigin() == NodeOrigin.DEFAULT
+                                            || childNode.getOrigin() == NodeOrigin.ENRICHED) {
+                                        // Keep existing DETECTED value, ignore default/enriched
+                                        // child
+                                    } else {
+                                        // Both are DETECTED with different values: create new roots
+                                        final INode newParent = parentNode.deepCopy();
+                                        newParent.put(childNode);
+                                        newRoots.add(newParent);
+                                    }
                                 }
                             } else {
                                 parentNode.put(childNode);
