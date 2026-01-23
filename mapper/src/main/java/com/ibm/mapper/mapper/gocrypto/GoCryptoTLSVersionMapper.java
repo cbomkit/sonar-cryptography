@@ -22,10 +22,9 @@ package com.ibm.mapper.mapper.gocrypto;
 import com.ibm.mapper.mapper.IMapper;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.utils.DetectionLocation;
-
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 /**
  * Maps Go crypto/tls version constants to the corresponding TLS version strings.

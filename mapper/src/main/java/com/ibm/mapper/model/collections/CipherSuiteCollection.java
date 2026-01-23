@@ -44,6 +44,11 @@ public class CipherSuiteCollection extends AbstractAssetCollection<CipherSuite> 
         return copy;
     }
 
+    @Override
+    public boolean isMergeable() {
+        return true;
+    }
+
     @Nonnull
     @Override
     public CipherSuiteCollection createMerged(@Nonnull List<CipherSuite> mergedCollection) {

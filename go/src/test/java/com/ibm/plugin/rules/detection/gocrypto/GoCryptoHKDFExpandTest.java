@@ -38,7 +38,6 @@ import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
-import com.ibm.plugin.utils.GenerateAssertsHelper;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -63,7 +62,6 @@ class GoCryptoHKDFExpandTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        GenerateAssertsHelper.generate(detectionStore, nodes);
         if (findingId == 0) {
             /*
              * Detection Store

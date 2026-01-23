@@ -176,11 +176,11 @@ public final class MethodMatcher<T> {
             return false;
         }
 
-        // For constructors ("<init>"), use subset matching on parameters.
-        // This supports Go composite literals where fields are matched by name.
-        // The rule matches if at least one expected parameter exists in the actual fields.
-        // Fields not present in the literal are simply not processed.
-        if (invokedMethodName.get().equals("<init>") && !parameterTypesSerializable.isEmpty()) {
+        // For languages supporting subset parameter matching (e.g., Go composite literals),
+        // the rule matches if at least one expected parameter exists in the actual fields.
+        if (invokedMethodName.get().equals("<init>")
+                && !parameterTypesSerializable.isEmpty()
+                && translation.supportsSubsetParameterMatching()) {
             return anyParameterMatches(param);
         }
 

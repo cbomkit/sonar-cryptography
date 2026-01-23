@@ -198,12 +198,15 @@ public abstract class ITranslator<R, T, S, P> {
                                     parentNode.hasChildOfType(childNode.getKind());
                             if (existingNodeOpt.isPresent()) {
                                 INode existingNode = existingNodeOpt.get();
-                                /* Special case of multiple asset collections of the same type: we merge them */
-                                if (childNode instanceof AbstractAssetCollection<?> addedCollectionNode
+                                /* Special case of multiple mergeable asset collections of the same type: we merge them */
+                                if (childNode
+                                                instanceof
+                                                AbstractAssetCollection<?> addedCollectionNode
                                         && existingNode
                                                 instanceof
                                                 AbstractAssetCollection<?> existingCollectionNode
-                                        /* this 3rd condition ensures that both nodes have the same *exact* class */
+                                        && addedCollectionNode.isMergeable()
+                                        /* this condition ensures that both nodes have the same *exact* class */
                                         && addedCollectionNode
                                                 .getClass()
                                                 .equals(existingCollectionNode.getClass())) {

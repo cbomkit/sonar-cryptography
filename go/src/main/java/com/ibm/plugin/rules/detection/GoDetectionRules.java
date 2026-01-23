@@ -40,11 +40,10 @@ import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA256;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA3;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA512;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoTLS;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 public final class GoDetectionRules {
     private GoDetectionRules() {
@@ -74,7 +73,7 @@ public final class GoDetectionRules {
                         GoCryptoSHA3.rules().stream(),
                         GoCryptoSHA512.rules().stream(),
                         GoCryptoTLS.rules().stream())
-                        // TODO: GoCryptoX509
+                // TODO: GoCryptoX509
                 .flatMap(i -> i)
                 .toList();
     }

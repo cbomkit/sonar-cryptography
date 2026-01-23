@@ -34,6 +34,12 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
@@ -51,13 +57,6 @@ import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.UnaryExpressionTree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -610,8 +609,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     private void analyseExpression(
             @Nonnull FunctionInvocationWIthIdentifiersTree functionInvocation) {
 
-        DetectionRule<Tree> detectionRule =
-                emitDetectionAndGetRule(functionInvocation);
+        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(functionInvocation);
         if (detectionRule == null) {
             return;
         }
@@ -645,11 +643,9 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      *
      * @param compositeLiteral the composite literal to analyze
      */
-    private void analyseCompositeLiteral(
-            @Nonnull CompositeLiteralWithBlockTree compositeLiteral) {
+    private void analyseCompositeLiteral(@Nonnull CompositeLiteralWithBlockTree compositeLiteral) {
 
-        DetectionRule<Tree> detectionRule =
-                emitDetectionAndGetRule(compositeLiteral);
+        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(compositeLiteral);
         if (detectionRule == null) {
             return;
         }
@@ -690,8 +686,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * @param tree the matched tree (function invocation or composite literal)
      * @return the detection rule for parameter processing, or null if no further processing needed
      */
-    @Nullable
-    private DetectionRule<Tree> emitDetectionAndGetRule(@Nonnull Tree tree) {
+    @Nullable private DetectionRule<Tree> emitDetectionAndGetRule(@Nonnull Tree tree) {
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
             detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
             return null;
@@ -765,7 +760,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     parameter,
                     new FunctionInvocationWIthIdentifiersTree(
                             newFunctionInvocation,
-                            variableDeclarationTree.map(VariableDeclarationTree::identifiers)
+                            variableDeclarationTree
+                                    .map(VariableDeclarationTree::identifiers)
                                     .orElse(null),
                             blockTree),
                     DetectionStore.Scope.EXPRESSION);
@@ -805,8 +801,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      *
      * @param memberSelectTree the function reference to analyze
      */
-    private void analyseExpressionForFunctionReference(
-            @Nonnull MemberSelectTree memberSelectTree) {
+    private void analyseExpressionForFunctionReference(@Nonnull MemberSelectTree memberSelectTree) {
         emitDetectionAndGetRule(memberSelectTree);
     }
 

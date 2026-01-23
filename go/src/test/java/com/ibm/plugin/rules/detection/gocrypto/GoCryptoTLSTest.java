@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -30,16 +32,13 @@ import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoTLSTest extends TestBase {
 
@@ -67,7 +66,8 @@ class GoCryptoTLSTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("TLS");
 
-        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(Protocol.class, detectionStore.getChildren());
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                getStoreOfValueType(Protocol.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
         assertThat(store1.getDetectionValues()).hasSize(1);
         assertThat(store1.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
@@ -90,7 +90,9 @@ class GoCryptoTLSTest extends TestBase {
         INode cipherSuiteCollectionNode = tLSNode.getChildren().get(CipherSuiteCollection.class);
         assertThat(cipherSuiteCollectionNode).isNotNull();
         assertThat(cipherSuiteCollectionNode.getChildren()).isEmpty();
-        assertThat(cipherSuiteCollectionNode.asString()).isEqualTo("[TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256]");
+        assertThat(cipherSuiteCollectionNode.asString())
+                .isEqualTo(
+                        "[TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256]");
 
         // Version under TLS
         INode versionNode = tLSNode.getChildren().get(Version.class);

@@ -58,8 +58,7 @@ public final class CipherSuiteReorganizer {
                     .createReorganizerRule()
                     .forNodeKind(TLS.class)
                     .withDetectionCondition(
-                            (node, parent, roots) ->
-                                    node.hasChildOfType(TLS.class).isPresent())
+                            (node, parent, roots) -> node.hasChildOfType(TLS.class).isPresent())
                     .perform(
                             (node, parent, roots) -> {
                                 TLS childTls = (TLS) node.getChildren().get(TLS.class);

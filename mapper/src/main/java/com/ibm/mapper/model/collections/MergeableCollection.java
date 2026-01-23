@@ -52,6 +52,11 @@ public class MergeableCollection extends AbstractAssetCollection<INode> {
         return copy;
     }
 
+    @Override
+    public boolean isMergeable() {
+        return true;
+    }
+
     @Nonnull
     @Override
     public MergeableCollection createMerged(@Nonnull List<INode> mergedCollection) {

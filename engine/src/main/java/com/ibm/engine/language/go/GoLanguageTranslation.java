@@ -356,4 +356,9 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
         // Default: match any type
         return expectedType -> true;
     }
+
+    @Override
+    public boolean supportsSubsetParameterMatching() {
+        return true;
+    }
 }

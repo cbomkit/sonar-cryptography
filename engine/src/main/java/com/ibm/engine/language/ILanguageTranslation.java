@@ -118,4 +118,15 @@ public interface ILanguageTranslation<T> {
      */
     @Nonnull
     Optional<String> getEnumClassName(@Nonnull MatchContext matchContext, @Nonnull T enumClass);
+
+    /**
+     * Returns whether constructor parameter matching should use subset logic (i.e., the rule
+     * matches if at least one expected parameter type exists in the actual parameters). This is
+     * needed for languages like Go where composite literals may specify only a subset of fields.
+     *
+     * @return true if subset matching should be used for constructors, false for exact matching
+     */
+    default boolean supportsSubsetParameterMatching() {
+        return false;
+    }
 }
