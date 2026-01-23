@@ -43,10 +43,9 @@ import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
-import org.sonar.plugins.go.api.Tree;
-
-import javax.annotation.Nonnull;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.sonar.plugins.go.api.Tree;
 
 /**
  * Translator for Go Key contexts.

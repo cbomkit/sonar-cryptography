@@ -26,10 +26,11 @@ import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's golang.org/x/crypto/hkdf package.
@@ -72,37 +73,45 @@ public final class GoCryptoHKDF {
 
     // hkdf.Extract(hash func() hash.Hash, secret, salt []byte) []byte
     // HKDF extract step - extracts a pseudorandom key
-    private static final IDetectionRule<Tree> EXTRACT =
+    static final IDetectionRule<Tree> EXTRACT =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectTypes("golang.org/x/crypto/hkdf")
+                    .forObjectTypes("golang.org/x/crypto/hkdf", "crypto/hkdf")
                     .forMethods("Extract")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .withMethodParameter("func() hash.Hash")
+                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .withMethodParameter("[]byte")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("[]byte")
+                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    // hkdf.Expand(hash func() hash.Hash, prk, info []byte, keyLen int) io.Reader
+    // hkdf.Expand(hash func() hash.Hash, pseudorandomKey, info []byte, keyLength int) io.Reader
     // HKDF expand step - expands a pseudorandom key to the desired length
     private static final IDetectionRule<Tree> EXPAND =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectTypes("golang.org/x/crypto/hkdf")
+                    .forObjectTypes("golang.org/x/crypto/hkdf", "crypto/hkdf")
                     .forMethods("Expand")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .withMethodParameter("func() hash.Hash")
+                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .withMethodParameter("[]byte")
+                    .addDependingDetectionRules(List.of(EXTRACT))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(NEW, EXTRACT, EXPAND);
+        return List.of(NEW, EXPAND);
     }
 }
