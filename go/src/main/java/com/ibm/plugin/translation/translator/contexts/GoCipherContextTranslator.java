@@ -34,6 +34,7 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.DESede;
+import com.ibm.mapper.model.algorithms.RC4;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -57,6 +58,7 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
                         case "DES" -> Optional.of(new DES(detectionLocation));
                         case "3DES", "DESEDE", "TRIPLEDES" ->
                                 Optional.of(new DESede(detectionLocation));
+                        case "RC4", "ARC4", "ARCFOUR" -> Optional.of(new RC4(detectionLocation));
                         default -> Optional.empty();
                     };
             if (algorithmResult.isPresent()) {
