@@ -22,11 +22,6 @@ package com.ibm.engine.language.go;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.language.ILanguageTranslation;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
@@ -34,6 +29,12 @@ import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.MemberSelectTree;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Language translation implementation for Go. Provides methods to extract information from Go AST
@@ -249,12 +250,8 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
         }
         String prefix = goType.substring(0, prefixEnd);
         String withoutPrefix = goType.substring(prefixEnd);
-        // Strip path and package: "crypto/dsa.Parameters" → "Parameters"
+        // Strip path and package: "crypto/dsa.Parameters" → "dsa.Parameters"
         String shortened = withoutPrefix.substring(withoutPrefix.lastIndexOf('/') + 1);
-        int dotIndex = shortened.lastIndexOf('.');
-        if (dotIndex >= 0) {
-            shortened = shortened.substring(dotIndex + 1);
-        }
         return prefix + shortened;
     }
 
