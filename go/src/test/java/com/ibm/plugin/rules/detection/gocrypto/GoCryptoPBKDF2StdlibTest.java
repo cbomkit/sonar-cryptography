@@ -49,15 +49,15 @@ import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-class GoCryptoPBKDF2Test extends TestBase {
+class GoCryptoPBKDF2StdlibTest extends TestBase {
 
-    public GoCryptoPBKDF2Test() {
+    public GoCryptoPBKDF2StdlibTest() {
         super(GoCryptoPBKDF2.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoPBKDF2TestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoPBKDF2StdlibTestFile.go", this);
     }
 
     @Override
@@ -75,7 +75,7 @@ class GoCryptoPBKDF2Test extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("PBKDF2");
 
-        // SaltSize child (salt = []byte("salt") → 6 bytes → 48 bits)
+        // SaltSize child (salt = make([]byte, 16) → 16 bytes → 128 bits)
         DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
                 getStoreOfValueType(SaltSize.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
@@ -83,9 +83,9 @@ class GoCryptoPBKDF2Test extends TestBase {
         assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         IValue<Tree> value01 = store1.getDetectionValues().get(0);
         assertThat(value01).isInstanceOf(SaltSize.class);
-        assertThat(value01.asString()).isEqualTo("48");
+        assertThat(value01.asString()).isEqualTo("128");
 
-        // IterationCount child (iterations = 10000)
+        // IterationCount child (iter = 600000)
         DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store2 =
                 getStoreOfValueType(IterationCount.class, detectionStore.getChildren());
         assertThat(store2).isNotNull();
@@ -93,9 +93,9 @@ class GoCryptoPBKDF2Test extends TestBase {
         assertThat(store2.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         IValue<Tree> value02 = store2.getDetectionValues().get(0);
         assertThat(value02).isInstanceOf(IterationCount.class);
-        assertThat(value02.asString()).isEqualTo("10000");
+        assertThat(value02.asString()).isEqualTo("600000");
 
-        // KeySize child (keyLen = 32 → 256 bits)
+        // KeySize child (keyLength = 32 → 256 bits)
         DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store3 =
                 getStoreOfValueType(KeySize.class, detectionStore.getChildren());
         assertThat(store3).isNotNull();
@@ -129,7 +129,7 @@ class GoCryptoPBKDF2Test extends TestBase {
         // NumberOfIterations under PBKDF2
         INode iterationsNode = kdfNode.getChildren().get(NumberOfIterations.class);
         assertThat(iterationsNode).isNotNull();
-        assertThat(iterationsNode.asString()).isEqualTo("10000");
+        assertThat(iterationsNode.asString()).isEqualTo("600000");
 
         // KeyLength under PBKDF2
         INode keyLengthNode = kdfNode.getChildren().get(KeyLength.class);
@@ -139,7 +139,7 @@ class GoCryptoPBKDF2Test extends TestBase {
         // SaltLength under PBKDF2
         INode saltLengthNode = kdfNode.getChildren().get(SaltLength.class);
         assertThat(saltLengthNode).isNotNull();
-        assertThat(saltLengthNode.asString()).isEqualTo("48");
+        assertThat(saltLengthNode.asString()).isEqualTo("128");
 
         // MessageDigest under PBKDF2
         INode messageDigestNode = kdfNode.getChildren().get(MessageDigest.class);

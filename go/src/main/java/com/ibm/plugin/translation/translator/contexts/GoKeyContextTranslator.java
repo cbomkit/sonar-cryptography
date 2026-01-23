@@ -21,6 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.SaltSize;
@@ -35,6 +36,7 @@ import com.ibm.mapper.mapper.gocrypto.GoCryptoKEMMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.algorithms.DSA;
@@ -128,6 +130,9 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             }
         } else if (value instanceof SaltSize<Tree> saltSize) {
             return Optional.of(new SaltLength(saltSize.getValue(), detectionLocation));
+        } else if (value instanceof IterationCount<Tree> iterationCount) {
+            return Optional.of(
+                    new NumberOfIterations(iterationCount.getValue(), detectionLocation));
         }
         return Optional.empty();
     }
