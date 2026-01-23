@@ -30,6 +30,7 @@ import com.ibm.plugin.rules.detection.gocrypto.GoCryptoElliptic;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoHKDF;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoHMAC;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoMD5;
+import com.ibm.plugin.rules.detection.gocrypto.GoCryptoMLKEM;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoPBKDF2;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRSA;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoRand;
@@ -59,6 +60,7 @@ public final class GoDetectionRules {
                         GoCryptoElliptic.rules().stream(),
                         GoCryptoHKDF.rules().stream(),
                         GoCryptoHMAC.rules().stream(),
+                        GoCryptoMLKEM.rules().stream(),
                         GoCryptoMD5.rules().stream(),
                         GoCryptoPBKDF2.rules().stream(),
                         GoCryptoRSA.rules().stream(),

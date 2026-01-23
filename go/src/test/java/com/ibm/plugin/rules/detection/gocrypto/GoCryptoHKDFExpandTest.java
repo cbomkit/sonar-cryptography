@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -37,16 +39,13 @@ import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
 import com.ibm.plugin.utils.GenerateAssertsHelper;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoHKDFExpandTest extends TestBase {
 
@@ -76,7 +75,8 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(value0).isInstanceOf(ValueAction.class);
             assertThat(value0.asString()).isEqualTo("HKDF");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeySize.class, detectionStore.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                    getStoreOfValueType(KeySize.class, detectionStore.getChildren());
             assertThat(store1).isNotNull();
             assertThat(store1.getDetectionValues()).hasSize(1);
             assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
@@ -84,7 +84,8 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(value01).isInstanceOf(KeySize.class);
             assertThat(value01.asString()).isEqualTo("256");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store2 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store2 =
+                    getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
             assertThat(store2).isNotNull();
             assertThat(store2.getDetectionValues()).hasSize(1);
             assertThat(store2.getDetectionValueContext()).isInstanceOf(DigestContext.class);
@@ -110,7 +111,8 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(keyLengthNode.asString()).isEqualTo("256");
 
             // MessageDigest under KeyDerivationFunction
-            INode messageDigestNode = keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
+            INode messageDigestNode =
+                    keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
             assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
@@ -158,7 +160,8 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(keyLengthNode1.asString()).isEqualTo("64");
 
             // MessageDigest under KeyDerivationFunction
-            INode messageDigestNode1 = keyDerivationFunctionNode1.getChildren().get(MessageDigest.class);
+            INode messageDigestNode1 =
+                    keyDerivationFunctionNode1.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(2);
             assertThat(messageDigestNode1.asString()).isEqualTo("SHA256");

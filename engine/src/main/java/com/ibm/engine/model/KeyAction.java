@@ -28,6 +28,8 @@ public class KeyAction<T> extends AbstractValue<T> implements IAction<T> {
         PUBLIC_KEY_GENERATION,
         SECRET_KEY_GENERATION,
         GENERATION,
+        ENCAPSULATION,
+        DECAPSULATION,
         KDF
     }
 

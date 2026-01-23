@@ -27,11 +27,17 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -85,6 +91,15 @@ class GoCryptoHKDFTest extends TestBase {
         assertThat(value02).isInstanceOf(SaltSize.class);
         assertThat(value02.asString()).isEqualTo("48");
 
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store3 =
+                getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+        assertThat(store3).isNotNull();
+        assertThat(store3.getDetectionValues()).hasSize(1);
+        assertThat(store3.getDetectionValueContext()).isInstanceOf(DigestContext.class);
+        IValue<Tree> value03 = store3.getDetectionValues().get(0);
+        assertThat(value03).isInstanceOf(ValueAction.class);
+        assertThat(value03.asString()).isEqualTo("SHA256");
+
         /*
          * Translation
          */
@@ -93,8 +108,34 @@ class GoCryptoHKDFTest extends TestBase {
         // KeyDerivationFunction
         INode keyDerivationFunctionNode = nodes.get(0);
         assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
-        assertThat(keyDerivationFunctionNode.getChildren()).hasSize(2);
-        assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF");
+        assertThat(keyDerivationFunctionNode.getChildren()).hasSize(3);
+        assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA256");
+
+        // MessageDigest under KeyDerivationFunction
+        INode messageDigestNode = keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
+        assertThat(messageDigestNode).isNotNull();
+        assertThat(messageDigestNode.getChildren()).hasSize(4);
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+
+        // Digest under MessageDigest under KeyDerivationFunction
+        INode digestNode = messageDigestNode.getChildren().get(Digest.class);
+        assertThat(digestNode).isNotNull();
+        assertThat(digestNode.asString()).isEqualTo("DIGEST");
+
+        // Oid under MessageDigest under KeyDerivationFunction
+        INode oidNode = messageDigestNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.2.1");
+
+        // DigestSize under MessageDigest under KeyDerivationFunction
+        INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
+        assertThat(digestSizeNode).isNotNull();
+        assertThat(digestSizeNode.asString()).isEqualTo("256");
+
+        // BlockSize under MessageDigest under KeyDerivationFunction
+        INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
+        assertThat(blockSizeNode).isNotNull();
+        assertThat(blockSizeNode.asString()).isEqualTo("512");
 
         // SaltLength under KeyDerivationFunction
         INode saltLengthNode = keyDerivationFunctionNode.getChildren().get(SaltLength.class);

@@ -31,6 +31,7 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoCurveMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoDSAParameterMapper;
+import com.ibm.mapper.mapper.gocrypto.GoCryptoKEMMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
@@ -41,6 +42,8 @@ import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.functionality.Decapsulate;
+import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -93,6 +96,9 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                     final GoCryptoKeyDerivationFunctionMapper kdfMapper =
                             new GoCryptoKeyDerivationFunctionMapper();
                     return kdfMapper.parse(value.asString(), detectionLocation).map(n -> n);
+                case "KEM":
+                    final GoCryptoKEMMapper kemMapper = new GoCryptoKEMMapper();
+                    return kemMapper.parse(value.asString(), detectionLocation).map(n -> n);
                 default:
                     return Optional.empty();
             }
@@ -102,6 +108,10 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             switch (keyAction.getAction()) {
                 case PRIVATE_KEY_GENERATION, PUBLIC_KEY_GENERATION, SECRET_KEY_GENERATION:
                     return Optional.of(new Generate(detectionLocation));
+                case ENCAPSULATION:
+                    return Optional.of(new Encapsulate(detectionLocation));
+                case DECAPSULATION:
+                    return Optional.of(new Decapsulate(detectionLocation));
                 default:
                     return Optional.empty();
             }
