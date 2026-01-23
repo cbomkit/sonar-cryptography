@@ -6,7 +6,7 @@ import (
 
 func main() {
 	// Dial a TLS connection
-	conf := tls.Config{ // Noncompliant {{(TLS) TLS}}
+	conf := tls.Config{ // Noncompliant {{(TLS) TLSv1.2}}
 		MinVersion: tls.VersionTLS12,
 		CipherSuites: []uint16{
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,

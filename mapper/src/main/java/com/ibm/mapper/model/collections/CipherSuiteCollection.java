@@ -43,4 +43,10 @@ public class CipherSuiteCollection extends AbstractAssetCollection<CipherSuite> 
         }
         return copy;
     }
+
+    @Nonnull
+    @Override
+    public CipherSuiteCollection createMerged(@Nonnull List<CipherSuite> mergedCollection) {
+        return new CipherSuiteCollection(mergedCollection);
+    }
 }

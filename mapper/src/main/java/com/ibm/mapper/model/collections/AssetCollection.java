@@ -42,4 +42,10 @@ public class AssetCollection extends AbstractAssetCollection<INode> {
         }
         return copy;
     }
+
+    @Nonnull
+    @Override
+    public AssetCollection createMerged(@Nonnull List<INode> mergedCollection) {
+        return new AssetCollection(mergedCollection);
+    }
 }

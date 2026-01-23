@@ -102,4 +102,7 @@ public abstract class AbstractAssetCollection<K extends INode> implements IAsset
     public NodeOrigin getOrigin() {
         return NodeOrigin.DETECTED;
     }
+
+    @Nonnull
+    public abstract AbstractAssetCollection<K> createMerged(@Nonnull List<K> mergedCollection);
 }

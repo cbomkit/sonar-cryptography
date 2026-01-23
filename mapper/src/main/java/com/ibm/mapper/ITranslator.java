@@ -25,7 +25,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.NodeOrigin;
-import com.ibm.mapper.model.collections.MergeableCollection;
+import com.ibm.mapper.model.collections.AbstractAssetCollection;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -198,28 +198,35 @@ public abstract class ITranslator<R, T, S, P> {
                                     parentNode.hasChildOfType(childNode.getKind());
                             if (existingNodeOpt.isPresent()) {
                                 INode existingNode = existingNodeOpt.get();
-                                /* Special case of multiple `MergeableCollection`: we merge them */
-                                if (childNode instanceof MergeableCollection addedCollectionNode
+                                /* Special case of multiple asset collections of the same type: we merge them */
+                                if (childNode instanceof AbstractAssetCollection<?> addedCollectionNode
                                         && existingNode
                                                 instanceof
-                                                MergeableCollection existingCollectionNode
+                                                AbstractAssetCollection<?> existingCollectionNode
                                         /* this 3rd condition ensures that both nodes have the same *exact* class */
                                         && addedCollectionNode
                                                 .getClass()
                                                 .equals(existingCollectionNode.getClass())) {
 
+                                    @SuppressWarnings("unchecked")
+                                    AbstractAssetCollection<INode> existingColl =
+                                            (AbstractAssetCollection<INode>) existingCollectionNode;
+                                    @SuppressWarnings("unchecked")
+                                    AbstractAssetCollection<INode> addedColl =
+                                            (AbstractAssetCollection<INode>) addedCollectionNode;
+
                                     List<INode> mergedCollection =
-                                            new ArrayList<>(existingCollectionNode.getCollection());
-                                    mergedCollection.addAll(addedCollectionNode.getCollection());
+                                            new ArrayList<>(existingColl.getCollection());
+                                    mergedCollection.addAll(addedColl.getCollection());
 
-                                    MergeableCollection mergedCollectionNode =
-                                            new MergeableCollection(mergedCollection);
+                                    AbstractAssetCollection<INode> mergedCollectionNode =
+                                            existingColl.createMerged(mergedCollection);
 
-                                    addedCollectionNode
+                                    addedColl
                                             .getChildren()
                                             .values()
                                             .forEach(mergedCollectionNode::put);
-                                    existingCollectionNode
+                                    existingColl
                                             .getChildren()
                                             .values()
                                             .forEach(mergedCollectionNode::put);

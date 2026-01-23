@@ -30,11 +30,13 @@ import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoTLSVersionMapper;
 import com.ibm.mapper.mapper.ssl.CipherSuiteMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import org.sonar.plugins.go.api.Tree;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Optional;
 
 public final class GoProtocolContextTranslator implements IContextTranslation<Tree> {
@@ -61,7 +63,8 @@ public final class GoProtocolContextTranslator implements IContextTranslation<Tr
                 case TLS ->
                         new CipherSuiteMapper()
                                 .parse(cipherSuite.get(), detectionLocation)
-                                .map(n -> n);
+                                .map(com.ibm.mapper.model.CipherSuite.class::cast)
+                                .map(cs -> new CipherSuiteCollection(List.of(cs)));
                 default ->
                         Optional.empty();
             };

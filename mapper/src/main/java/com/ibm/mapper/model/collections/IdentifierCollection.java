@@ -43,4 +43,10 @@ public class IdentifierCollection extends AbstractAssetCollection<Identifier> {
         }
         return copy;
     }
+
+    @Nonnull
+    @Override
+    public IdentifierCollection createMerged(@Nonnull List<Identifier> mergedCollection) {
+        return new IdentifierCollection(mergedCollection);
+    }
 }
