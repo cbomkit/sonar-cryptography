@@ -23,6 +23,7 @@ import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
+import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -34,6 +35,7 @@ import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
@@ -41,9 +43,10 @@ import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
  * Translator for Go Key contexts.
@@ -104,15 +107,19 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                     return Optional.empty();
             }
         } else if (value instanceof AlgorithmParameter<Tree> algorithmParameter) {
-            if (algorithmParameter.getKind() == AlgorithmParameter.Kind.DSA_L_AND_N) {
-                final GoCryptoDSAParameterMapper dsaParameterMapper =
-                        new GoCryptoDSAParameterMapper();
-                return dsaParameterMapper
-                        .parse(algorithmParameter.asString(), detectionLocation)
-                        .map(n -> n);
+            switch (algorithmParameter.getKind()) {
+                case DSA_L_AND_N:
+                    final GoCryptoDSAParameterMapper dsaParameterMapper =
+                            new GoCryptoDSAParameterMapper();
+                    return dsaParameterMapper
+                            .parse(algorithmParameter.asString(), detectionLocation)
+                            .map(n -> n);
+                default:
+                    return Optional.empty();
             }
+        } else if (value instanceof SaltSize<Tree> saltSize) {
+            return Optional.of(new SaltLength(saltSize.getValue(), detectionLocation));
         }
-
         return Optional.empty();
     }
 }
