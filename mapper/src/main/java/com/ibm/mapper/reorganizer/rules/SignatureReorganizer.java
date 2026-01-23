@@ -33,6 +33,7 @@ import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,6 +202,34 @@ public final class SignatureReorganizer {
                                                 }
                                             });
                             return null;
+                        });
+    }
+
+    @Nonnull
+    public static IReorganizerRule moveFunctionalityUnderChildNode(
+            @Nonnull Class<? extends Functionality> functionalityClazz,
+            @Nonnull Class<? extends INode> childNodeClazz) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule("MOVE_FUNCTIONALITY_UNDER_CHILD_NODE")
+                .forNodeKind(functionalityClazz)
+                .withDetectionCondition(
+                        (node, parent, roots) ->
+                                parent == null && node.hasChildOfType(childNodeClazz).isPresent())
+                .perform(
+                        (node, parent, roots) -> {
+                            Optional<INode> childOpt = node.hasChildOfType(childNodeClazz);
+                            if (childOpt.isPresent()) {
+                                INode child = childOpt.get();
+                                // Remove the child from under the functionality
+                                node.removeChildOfType(childNodeClazz);
+                                // Put the functionality under the child
+                                child.put(node);
+                                // Replace the functionality with the child in roots
+                                List<INode> newRoots = new LinkedList<>(roots);
+                                newRoots.replaceAll(r -> r == node ? child : r);
+                                return newRoots;
+                            }
+                            return roots;
                         });
     }
 

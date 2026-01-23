@@ -27,6 +27,7 @@ import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
 import com.ibm.engine.language.go.tree.FunctionInvocationWIthIdentifiersTree;
+import com.ibm.engine.language.go.tree.IdentifierWithBlockTree;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
@@ -141,6 +142,12 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             handler.getLanguageSupport().translation())) {
                 this.analyseExpression(traceSymbol, functionInvocationWIthIdentifiersTree);
             }
+        } else if (tree instanceof IdentifierWithBlockTree identifierWithBlockTree) {
+            // Search the block for function invocations that match the detection rule.
+            // This handles cases like: privateKey.Parameters = *params, where we need
+            // to find dsa.GenerateParameters(params, ...) in the same block.
+            BlockTree blockTree = identifierWithBlockTree.blockTree();
+            this.run(traceSymbol, blockTree);
         }
     }
 
@@ -621,6 +628,14 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         functionInvocation.blockTree()),
                                 DetectionStore.Scope.EXPRESSION);
                     }
+                } else if (expression instanceof IdentifierTree identifierExpression) {
+                    // Wrap IdentifierTree with block context so the run() method
+                    // can search for related assignments and function invocations
+                    detectionStore.onDetectedDependingParameter(
+                            parameter,
+                            new IdentifierWithBlockTree(
+                                    identifierExpression, functionInvocation.blockTree()),
+                            DetectionStore.Scope.EXPRESSION);
                 } else {
                     // Handle depending detection rules
                     detectionStore.onDetectedDependingParameter(

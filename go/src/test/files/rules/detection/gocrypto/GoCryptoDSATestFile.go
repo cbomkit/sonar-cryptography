@@ -8,7 +8,7 @@ import (
 func main() {
 	// Generate DSA parameters with L2048N256 size
 	params := new(dsa.Parameters)
-	err := dsa.GenerateParameters(params, rand.Reader, dsa.L2048N256) // Noncompliant {{(Signature) DSA}}
+	err := dsa.GenerateParameters(params, rand.Reader, dsa.L2048N256)
 	if err != nil {
 		panic(err)
 	}
@@ -29,6 +29,6 @@ func main() {
 	}
 
 	// Verify the signature
-	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s) // Noncompliant {{(Signature) DSA}}
+	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s)
 	_ = valid
 }

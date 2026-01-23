@@ -20,9 +20,11 @@
 package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.AlgorithmParameter;
+import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -60,7 +62,6 @@ public final class GoCryptoDSA {
                     .createDetectionRule()
                     .forObjectTypes("crypto/dsa")
                     .forMethods("GenerateParameters")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withMethodParameter("*Parameters")
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("ParameterSizes")
@@ -79,8 +80,9 @@ public final class GoCryptoDSA {
                     .forObjectTypes("crypto/dsa")
                     .forMethods("GenerateKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .withMethodParameter("*PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_PARAMETERS))
+                    .withMethodParameter("io.Reader")
                     .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -92,10 +94,11 @@ public final class GoCryptoDSA {
                     .createDetectionRule()
                     .forObjectTypes("crypto/dsa")
                     .forMethods("Sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withMethodParameter("io.Reader")
+                    .withMethodParameter("*PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -107,9 +110,10 @@ public final class GoCryptoDSA {
                     .createDetectionRule()
                     .forObjectTypes("crypto/dsa")
                     .forMethods("Verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withMethodParameter("*PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new SignatureContext(Map.of("kind", "DSA")))
@@ -118,6 +122,6 @@ public final class GoCryptoDSA {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(GENERATE_PARAMETERS, GENERATE_KEY, SIGN, VERIFY);
+        return List.of(GENERATE_KEY, SIGN, VERIFY);
     }
 }

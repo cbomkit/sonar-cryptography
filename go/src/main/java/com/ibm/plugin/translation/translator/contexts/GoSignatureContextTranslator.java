@@ -20,6 +20,7 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
@@ -30,10 +31,13 @@ import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
  * Translator for Go Signature contexts.
@@ -73,6 +77,15 @@ public final class GoSignatureContextTranslator implements IContextTranslation<T
             }
 
             return Optional.empty();
+        } else if (value instanceof SignatureAction<Tree> signatureAction) {
+            switch (signatureAction.getAction()) {
+                case SIGN:
+                    return Optional.of(new Sign(detectionLocation));
+                case VERIFY:
+                    return Optional.of(new Verify(detectionLocation));
+                default:
+                    return Optional.empty();
+            }
         }
 
         return Optional.empty();
