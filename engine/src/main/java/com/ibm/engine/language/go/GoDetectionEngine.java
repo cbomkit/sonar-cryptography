@@ -96,7 +96,6 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                             functionInvocation,
                                             handler.getLanguageSupport().translation())) {
                                 this.analyseExpression(
-                                        traceSymbol,
                                         new FunctionInvocationWIthIdentifiersTree(
                                                 functionInvocation,
                                                 variableDeclarationTree.identifiers(),
@@ -114,7 +113,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                     .match(
                                             wrappedTree,
                                             handler.getLanguageSupport().translation())) {
-                                this.analyseCompositeLiteral(traceSymbol, wrappedTree);
+                                this.analyseCompositeLiteral(wrappedTree);
                             }
                         }
                     }
@@ -129,7 +128,6 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         functionInvocation,
                                         handler.getLanguageSupport().translation())) {
                             this.analyseExpression(
-                                    traceSymbol,
                                     new FunctionInvocationWIthIdentifiersTree(
                                             functionInvocation,
                                             assignmentExpressionTree.leftHandSide()
@@ -150,7 +148,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         if (detectionStore
                                 .getDetectionRule()
                                 .match(wrappedTree, handler.getLanguageSupport().translation())) {
-                            this.analyseCompositeLiteral(traceSymbol, wrappedTree);
+                            this.analyseCompositeLiteral(wrappedTree);
                         }
                     }
                 }
@@ -162,7 +160,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             if (detectionStore
                     .getDetectionRule()
                     .match(memberSelectTree, handler.getLanguageSupport().translation())) {
-                this.analyseExpressionForFunctionReference(traceSymbol, memberSelectTree);
+                this.analyseExpressionForFunctionReference(memberSelectTree);
             }
         } else if (tree
                 instanceof
@@ -174,7 +172,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .match(
                             functionInvocationWIthIdentifiersTree,
                             handler.getLanguageSupport().translation())) {
-                this.analyseExpression(traceSymbol, functionInvocationWIthIdentifiersTree);
+                this.analyseExpression(functionInvocationWIthIdentifiersTree);
             }
         } else if (tree instanceof CompositeLiteralWithBlockTree compositeLiteralWithBlockTree) {
             if (detectionStore
@@ -182,7 +180,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .match(
                             compositeLiteralWithBlockTree,
                             handler.getLanguageSupport().translation())) {
-                this.analyseCompositeLiteral(traceSymbol, compositeLiteralWithBlockTree);
+                this.analyseCompositeLiteral(compositeLiteralWithBlockTree);
             }
         } else if (tree instanceof IdentifierWithBlockTree identifierWithBlockTree) {
             // Search the block for function invocations that match the detection rule.
@@ -607,26 +605,17 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     /**
      * Analyzes a function invocation expression for cryptographic patterns.
      *
-     * @param traceSymbol the trace symbol for tracking
      * @param functionInvocation the function invocation to analyze
      */
     private void analyseExpression(
-            @Nonnull TraceSymbol<Symbol> traceSymbol,
             @Nonnull FunctionInvocationWIthIdentifiersTree functionInvocation) {
 
-        if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(functionInvocation, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
+        DetectionRule<Tree> detectionRule =
+                emitDetectionAndGetRule(functionInvocation);
+        if (detectionRule == null) {
             return;
         }
 
-        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
-        if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(functionInvocation, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
-        }
-
-        // Extract and process arguments
         List<Tree> arguments = functionInvocation.arguments();
         if (arguments == null) {
             return;
@@ -638,84 +627,11 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 index++;
                 continue;
             }
-
-            Tree expression = arguments.get(index);
-
-            if (parameter.is(DetectableParameter.class)) {
-                DetectableParameter<Tree> detectableParameter =
-                        (DetectableParameter<Tree>) parameter;
-                // Try to resolve value in inner scope
-                List<ResolvedValue<Object, Tree>> resolvedValues =
-                        resolveValuesInInnerScope(
-                                Object.class, expression, detectableParameter.getiValueFactory());
-                if (resolvedValues.isEmpty()) {
-                    // Go outer scope resolution is limited
-                    resolveValuesInOuterScope(expression, detectableParameter);
-                } else {
-                    resolvedValues.stream()
-                            .map(
-                                    resolvedValue ->
-                                            new ValueDetection<>(
-                                                    resolvedValue,
-                                                    detectableParameter,
-                                                    functionInvocation,
-                                                    functionInvocation))
-                            .forEach(detectionStore::onReceivingNewDetection);
-                }
-            } else if (!parameter.getDetectionRules().isEmpty()) {
-                if (expression instanceof FunctionInvocationTree newFunctionInvocation) {
-                    final Optional<VariableDeclarationTree> variableDeclarationTree =
-                            findVariableDeclaration(
-                                    newFunctionInvocation, functionInvocation.blockTree());
-                    if (variableDeclarationTree.isPresent()) {
-                        // declaration for this function is within the same block
-                        detectionStore.onDetectedDependingParameter(
-                                parameter,
-                                new FunctionInvocationWIthIdentifiersTree(
-                                        newFunctionInvocation,
-                                        variableDeclarationTree.get().identifiers(),
-                                        functionInvocation.blockTree()),
-                                DetectionStore.Scope.EXPRESSION);
-                    } else {
-                        detectionStore.onDetectedDependingParameter(
-                                parameter,
-                                new FunctionInvocationWIthIdentifiersTree(
-                                        newFunctionInvocation,
-                                        null,
-                                        functionInvocation.blockTree()),
-                                DetectionStore.Scope.EXPRESSION);
-                    }
-                } else if (expression instanceof CompositeLiteralTree compositeLiteralExpr) {
-                    detectionStore.onDetectedDependingParameter(
-                            parameter,
-                            new CompositeLiteralWithBlockTree(
-                                    compositeLiteralExpr, null, functionInvocation.blockTree()),
-                            DetectionStore.Scope.EXPRESSION);
-                } else if (expression instanceof IdentifierTree identifierExpression) {
-                    // Wrap IdentifierTree with block context so the run() method
-                    // can search for related assignments and function invocations
-                    detectionStore.onDetectedDependingParameter(
-                            parameter,
-                            new IdentifierWithBlockTree(
-                                    identifierExpression, functionInvocation.blockTree()),
-                            DetectionStore.Scope.EXPRESSION);
-                } else if (expression instanceof UnaryExpressionTree unaryExpressionTree) {
-                    // Try to extract a base identifier from complex expressions
-                    // (e.g., &privateKey.PublicKey → privateKey)
-                    IdentifierTree baseIdentifier = extractBaseIdentifier(unaryExpressionTree);
-                    if (baseIdentifier != null) {
-                        detectionStore.onDetectedDependingParameter(
-                                parameter,
-                                new IdentifierWithBlockTree(
-                                        baseIdentifier, functionInvocation.blockTree()),
-                                DetectionStore.Scope.EXPRESSION);
-                    }
-                } else {
-                    detectionStore.onDetectedDependingParameter(
-                            parameter, expression, DetectionStore.Scope.EXPRESSION);
-                }
-            }
-
+            processParameter(
+                    parameter,
+                    arguments.get(index),
+                    functionInvocation.blockTree(),
+                    functionInvocation);
             index++;
         }
     }
@@ -727,26 +643,17 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * tls.VersionTLS12}}. Each key-value pair is treated as a named parameter, matched by key name
      * rather than positional index.
      *
-     * @param traceSymbol the trace symbol for tracking
      * @param compositeLiteral the composite literal to analyze
      */
     private void analyseCompositeLiteral(
-            @Nonnull TraceSymbol<Symbol> traceSymbol,
             @Nonnull CompositeLiteralWithBlockTree compositeLiteral) {
 
-        if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(compositeLiteral, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
+        DetectionRule<Tree> detectionRule =
+                emitDetectionAndGetRule(compositeLiteral);
+        if (detectionRule == null) {
             return;
         }
 
-        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
-        if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(compositeLiteral, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
-        }
-
-        // Match key-value pairs against detection rule parameters by name
         List<Parameter<Tree>> parameters = detectionRule.parameters();
         if (parameters.isEmpty()) {
             return;
@@ -762,109 +669,145 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             }
                             String keyName = keyIdentifier.name();
 
-                            // Find the matching parameter by name (parameterType matches the key
-                            // name)
-                            for (int i = 0; i < parameters.size(); i++) {
-                                Parameter<Tree> parameter = parameters.get(i);
+                            for (Parameter<Tree> parameter : parameters) {
                                 if (!parameter.getParameterType().equals(keyName)) {
                                     continue;
                                 }
-
-                                Tree valueTree = keyValue.value();
-
-                                if (parameter.is(DetectableParameter.class)) {
-                                    DetectableParameter<Tree> detectableParameter =
-                                            (DetectableParameter<Tree>) parameter;
-                                    List<ResolvedValue<Object, Tree>> resolvedValues =
-                                            resolveValuesInInnerScope(
-                                                    Object.class,
-                                                    valueTree,
-                                                    detectableParameter.getiValueFactory());
-                                    if (!resolvedValues.isEmpty()) {
-                                        resolvedValues.stream()
-                                                .map(
-                                                        resolvedValue ->
-                                                                new ValueDetection<>(
-                                                                        resolvedValue,
-                                                                        detectableParameter,
-                                                                        compositeLiteral,
-                                                                        compositeLiteral))
-                                                .forEach(detectionStore::onReceivingNewDetection);
-                                    }
-                                } else if (!parameter.getDetectionRules().isEmpty()) {
-                                    // Process depending detection rules on the value
-                                    if (valueTree
-                                            instanceof
-                                            FunctionInvocationTree newFunctionInvocation) {
-                                        detectionStore.onDetectedDependingParameter(
-                                                parameter,
-                                                new FunctionInvocationWIthIdentifiersTree(
-                                                        newFunctionInvocation,
-                                                        null,
-                                                        compositeLiteral.blockTree()),
-                                                DetectionStore.Scope.EXPRESSION);
-                                    } else if (valueTree
-                                            instanceof CompositeLiteralTree nestedLiteral) {
-                                        detectionStore.onDetectedDependingParameter(
-                                                parameter,
-                                                new CompositeLiteralWithBlockTree(
-                                                        nestedLiteral,
-                                                        null,
-                                                        compositeLiteral.blockTree()),
-                                                DetectionStore.Scope.EXPRESSION);
-                                    } else if (valueTree
-                                            instanceof IdentifierTree identifierExpression) {
-                                        detectionStore.onDetectedDependingParameter(
-                                                parameter,
-                                                new IdentifierWithBlockTree(
-                                                        identifierExpression,
-                                                        compositeLiteral.blockTree()),
-                                                DetectionStore.Scope.EXPRESSION);
-                                    } else if (valueTree
-                                            instanceof MemberSelectTree memberSelectTree) {
-                                        detectionStore.onDetectedDependingParameter(
-                                                parameter,
-                                                memberSelectTree,
-                                                DetectionStore.Scope.EXPRESSION);
-                                    } else {
-                                        detectionStore.onDetectedDependingParameter(
-                                                parameter,
-                                                valueTree,
-                                                DetectionStore.Scope.EXPRESSION);
-                                    }
-                                }
+                                processParameter(
+                                        parameter,
+                                        keyValue.value(),
+                                        compositeLiteral.blockTree(),
+                                        compositeLiteral);
                                 break;
                             }
                         });
     }
 
     /**
-     * Analyzes a function reference (MemberSelectTree) for cryptographic patterns.
+     * Emits the initial method detection and returns the detection rule for further parameter
+     * processing. Returns null if the rule is a MethodDetectionRule (already fully handled).
      *
-     * <p>This handles cases where a function is passed as a value without being invoked, such as
-     * {@code sha256.New} being passed to {@code hmac.New(sha256.New, key)}.
-     *
-     * @param traceSymbol the trace symbol for tracking
-     * @param memberSelectTree the function reference to analyze
+     * @param tree the matched tree (function invocation or composite literal)
+     * @return the detection rule for parameter processing, or null if no further processing needed
      */
-    private void analyseExpressionForFunctionReference(
-            @Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull MemberSelectTree memberSelectTree) {
-
+    @Nullable
+    private DetectionRule<Tree> emitDetectionAndGetRule(@Nonnull Tree tree) {
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(memberSelectTree, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
-            return;
+            detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
+            return null;
         }
 
         DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
         if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(memberSelectTree, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
+            detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
         }
+        return detectionRule;
+    }
 
-        // Function references don't have arguments at the call site,
-        // so no parameter processing is needed.
-        // The function reference itself is the detected value.
+    /**
+     * Processes a single parameter against an expression from either a function argument or a
+     * composite literal key-value pair.
+     *
+     * <p>For {@link DetectableParameter}, resolves values and emits value detections. For
+     * parameters with sub-detection rules, wraps the expression in the appropriate tree type and
+     * dispatches to depending parameter handling.
+     *
+     * @param parameter the detection rule parameter
+     * @param expression the expression to analyze (argument value or struct field value)
+     * @param blockTree the enclosing block for context
+     * @param parentTree the parent tree for value detection attribution
+     */
+    private void processParameter(
+            @Nonnull Parameter<Tree> parameter,
+            @Nonnull Tree expression,
+            @Nonnull BlockTree blockTree,
+            @Nonnull Tree parentTree) {
+
+        if (parameter.is(DetectableParameter.class)) {
+            DetectableParameter<Tree> detectableParameter = (DetectableParameter<Tree>) parameter;
+            List<ResolvedValue<Object, Tree>> resolvedValues =
+                    resolveValuesInInnerScope(
+                            Object.class, expression, detectableParameter.getiValueFactory());
+            if (resolvedValues.isEmpty()) {
+                resolveValuesInOuterScope(expression, detectableParameter);
+            } else {
+                resolvedValues.stream()
+                        .map(
+                                resolvedValue ->
+                                        new ValueDetection<>(
+                                                resolvedValue,
+                                                detectableParameter,
+                                                parentTree,
+                                                parentTree))
+                        .forEach(detectionStore::onReceivingNewDetection);
+            }
+        } else if (!parameter.getDetectionRules().isEmpty()) {
+            dispatchDependingParameter(parameter, expression, blockTree);
+        }
+    }
+
+    /**
+     * Dispatches a depending parameter by wrapping the expression in the appropriate tree type.
+     *
+     * @param parameter the parameter with sub-detection rules
+     * @param expression the expression to wrap and dispatch
+     * @param blockTree the enclosing block for context
+     */
+    private void dispatchDependingParameter(
+            @Nonnull Parameter<Tree> parameter,
+            @Nonnull Tree expression,
+            @Nonnull BlockTree blockTree) {
+
+        if (expression instanceof FunctionInvocationTree newFunctionInvocation) {
+            final Optional<VariableDeclarationTree> variableDeclarationTree =
+                    findVariableDeclaration(newFunctionInvocation, blockTree);
+            detectionStore.onDetectedDependingParameter(
+                    parameter,
+                    new FunctionInvocationWIthIdentifiersTree(
+                            newFunctionInvocation,
+                            variableDeclarationTree.map(VariableDeclarationTree::identifiers)
+                                    .orElse(null),
+                            blockTree),
+                    DetectionStore.Scope.EXPRESSION);
+        } else if (expression instanceof CompositeLiteralTree compositeLiteralExpr) {
+            detectionStore.onDetectedDependingParameter(
+                    parameter,
+                    new CompositeLiteralWithBlockTree(compositeLiteralExpr, null, blockTree),
+                    DetectionStore.Scope.EXPRESSION);
+        } else if (expression instanceof IdentifierTree identifierExpression) {
+            detectionStore.onDetectedDependingParameter(
+                    parameter,
+                    new IdentifierWithBlockTree(identifierExpression, blockTree),
+                    DetectionStore.Scope.EXPRESSION);
+        } else if (expression instanceof UnaryExpressionTree unaryExpressionTree) {
+            IdentifierTree baseIdentifier = extractBaseIdentifier(unaryExpressionTree);
+            if (baseIdentifier != null) {
+                detectionStore.onDetectedDependingParameter(
+                        parameter,
+                        new IdentifierWithBlockTree(baseIdentifier, blockTree),
+                        DetectionStore.Scope.EXPRESSION);
+            }
+        } else if (expression instanceof MemberSelectTree memberSelectTree) {
+            detectionStore.onDetectedDependingParameter(
+                    parameter, memberSelectTree, DetectionStore.Scope.EXPRESSION);
+        } else {
+            detectionStore.onDetectedDependingParameter(
+                    parameter, expression, DetectionStore.Scope.EXPRESSION);
+        }
+    }
+
+    /**
+     * Analyzes a function reference (MemberSelectTree) for cryptographic patterns.
+     *
+     * <p>This handles cases where a function is passed as a value without being invoked, such as
+     * {@code sha256.New} being passed to {@code hmac.New(sha256.New, key)}. Function references
+     * don't have arguments at the call site, so no parameter processing is needed.
+     *
+     * @param memberSelectTree the function reference to analyze
+     */
+    private void analyseExpressionForFunctionReference(
+            @Nonnull MemberSelectTree memberSelectTree) {
+        emitDetectionAndGetRule(memberSelectTree);
     }
 
     /**
