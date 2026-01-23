@@ -24,6 +24,7 @@ import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
@@ -45,10 +46,14 @@ public final class GoReorganizerRules {
         return Stream.of(
                         SignatureReorganizer.moveFunctionalityUnderChildNode(
                                 Sign.class, Signature.class),
+                        SignatureReorganizer.moveFunctionalityUnderChildNode(
+                                Verify.class, Signature.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
                                 Sign.class, PublicKeyEncryption.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
                                 Sign.class, Signature.class),
+                        SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
+                                Verify.class, Signature.class),
                         SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
                         SignatureReorganizer.MERGE_SIGNATURE_WITH_PKE_UNDER_PRIVATE_KEY,
                         SignatureReorganizer.MOVE_PSS_FROM_UNDER_SIGN_FUNCTION_TO_UNDER_KEY,

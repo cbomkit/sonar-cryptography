@@ -32,6 +32,7 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.plugin.TestBase;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
@@ -139,7 +140,54 @@ class GoCryptoDSATest extends TestBase {
             assertThat(oidNode.getChildren()).isEmpty();
             assertThat(oidNode.asString()).isEqualTo("1.2.840.10040.4.1");
         } else if (findingId == 2) {
+            /*
+             * Detection Store
+             */
+            assertThat(detectionStore).isNotNull();
+            assertThat(detectionStore.getDetectionValues()).hasSize(1);
+            assertThat(detectionStore.getDetectionValueContext())
+                    .isInstanceOf(SignatureContext.class);
+            IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
+            assertThat(value0).isInstanceOf(SignatureAction.class);
+            assertThat(value0.asString()).isEqualTo("VERIFY");
 
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                    getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+            assertThat(store1).isNotNull();
+            assertThat(store1.getDetectionValues()).hasSize(1);
+            assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
+            IValue<Tree> value01 = store1.getDetectionValues().get(0);
+            assertThat(value01).isInstanceOf(ValueAction.class);
+            assertThat(value01.asString()).isEqualTo("DSA");
+
+            /*
+             * Translation
+             */
+            assertThat(nodes).hasSize(1);
+
+            // Signature
+            INode signatureNode = nodes.get(0);
+            assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
+            assertThat(signatureNode.getChildren()).hasSize(3);
+            assertThat(signatureNode.asString()).isEqualTo("DSA");
+
+            // KeyLength under Signature
+            INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);
+            assertThat(keyLengthNode).isNotNull();
+            assertThat(keyLengthNode.getChildren()).isEmpty();
+            assertThat(keyLengthNode.asString()).isEqualTo("2048");
+
+            // Verify under Signature
+            INode verifyNode = signatureNode.getChildren().get(Verify.class);
+            assertThat(verifyNode).isNotNull();
+            assertThat(verifyNode.getChildren()).isEmpty();
+            assertThat(verifyNode.asString()).isEqualTo("VERIFY");
+
+            // Oid under Signature
+            INode oidNode = signatureNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.getChildren()).isEmpty();
+            assertThat(oidNode.asString()).isEqualTo("1.2.840.10040.4.1");
         }
     }
 }

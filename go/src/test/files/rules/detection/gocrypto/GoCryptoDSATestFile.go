@@ -29,6 +29,6 @@ func main() {
 	}
 
 	// Verify the signature
-	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s)
+	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s) // Noncompliant {{(Signature) DSA}}
 	_ = valid
 }

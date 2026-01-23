@@ -33,12 +33,6 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
@@ -52,8 +46,16 @@ import org.sonar.plugins.go.api.LiteralTree;
 import org.sonar.plugins.go.api.MemberSelectTree;
 import org.sonar.plugins.go.api.ParameterTree;
 import org.sonar.plugins.go.api.Tree;
+import org.sonar.plugins.go.api.UnaryExpressionTree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -637,9 +639,19 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                     identifierExpression, functionInvocation.blockTree()),
                             DetectionStore.Scope.EXPRESSION);
                 } else {
-                    // Handle depending detection rules
-                    detectionStore.onDetectedDependingParameter(
-                            parameter, expression, DetectionStore.Scope.EXPRESSION);
+                    // Try to extract a base identifier from complex expressions
+                    // (e.g., &privateKey.PublicKey → privateKey)
+                    IdentifierTree baseIdentifier = extractBaseIdentifier(expression);
+                    if (baseIdentifier != null) {
+                        detectionStore.onDetectedDependingParameter(
+                                parameter,
+                                new IdentifierWithBlockTree(
+                                        baseIdentifier, functionInvocation.blockTree()),
+                                DetectionStore.Scope.EXPRESSION);
+                    } else {
+                        detectionStore.onDetectedDependingParameter(
+                                parameter, expression, DetectionStore.Scope.EXPRESSION);
+                    }
                 }
             }
 
@@ -674,5 +686,38 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         // Function references don't have arguments at the call site,
         // so no parameter processing is needed.
         // The function reference itself is the detected value.
+    }
+
+    /**
+     * Extracts the base identifier from a complex expression tree.
+     *
+     * <p>This handles patterns like {@code &privateKey.PublicKey} where we need to extract {@code
+     * privateKey} as the base identifier for tracking purposes. It unwraps:
+     *
+     * <ul>
+     *   <li>UnaryExpressionTree (e.g., address-of {@code &x})
+     *   <li>MemberSelectTree (e.g., field access {@code x.Field})
+     * </ul>
+     *
+     * @param tree the expression tree to extract the base identifier from
+     * @return the base IdentifierTree if found, otherwise null
+     */
+    @Nullable private IdentifierTree extractBaseIdentifier(@Nonnull Tree tree) {
+        Tree current = tree;
+
+        // Unwrap UnaryExpressionTree (e.g., &expr)
+        if (current instanceof UnaryExpressionTree unaryExpr) {
+            current = unaryExpr.operand();
+        }
+
+        // Unwrap MemberSelectTree (e.g., obj.Field) to get the base expression
+        if (current instanceof MemberSelectTree memberSelect) {
+            Tree expression = memberSelect.expression();
+            if (expression instanceof IdentifierTree identifier) {
+                return identifier;
+            }
+        }
+
+        return null;
     }
 }
