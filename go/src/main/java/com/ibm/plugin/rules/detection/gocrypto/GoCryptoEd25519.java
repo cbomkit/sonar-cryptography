@@ -19,8 +19,10 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -57,7 +59,8 @@ public final class GoCryptoEd25519 {
                     .forObjectTypes("crypto/ed25519")
                     .forMethods("GenerateKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
-                    .withMethodParameter("*")
+                    .withMethodParameter("io.Reader")
+                    .addDependingDetectionRules(GoCryptoRand.rules())
                     .buildForContext(new KeyContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -70,7 +73,7 @@ public final class GoCryptoEd25519 {
                     .forObjectTypes("crypto/ed25519")
                     .forMethods("NewKeyFromSeed")
                     .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
-                    .withMethodParameter("*")
+                    .withMethodParameter("[]byte")
                     .buildForContext(new KeyContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -82,9 +85,10 @@ public final class GoCryptoEd25519 {
                     .createDetectionRule()
                     .forObjectTypes("crypto/ed25519")
                     .forMethods("Sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withMethodParameter("ed25519.PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY, NEW_KEY_FROM_SEED))
+                    .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -96,10 +100,11 @@ public final class GoCryptoEd25519 {
                     .createDetectionRule()
                     .forObjectTypes("crypto/ed25519")
                     .forMethods("Verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withMethodParameter("ed25519.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -111,11 +116,12 @@ public final class GoCryptoEd25519 {
                     .createDetectionRule()
                     .forObjectTypes("crypto/ed25519")
                     .forMethods("VerifyWithOptions")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withMethodParameter("ed25519.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("*ed25519.Options")
                     .buildForContext(new SignatureContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();

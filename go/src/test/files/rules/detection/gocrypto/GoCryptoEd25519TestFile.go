@@ -7,16 +7,12 @@ import (
 
 func main() {
 	// GenerateKey - generates a public/private key pair
-	pub, priv, err := ed25519.GenerateKey(rand.Reader) // Noncompliant {{(Signature) Ed25519}}
+	_, _, err := ed25519.GenerateKey(rand.Reader) // Noncompliant {{(Signature) Ed25519}}
 	if err != nil {
 		panic(err)
 	}
 
-	// Sign - signs a message
-	message := []byte("test message")
-	sig := ed25519.Sign(priv, message) // Noncompliant {{(Signature) Ed25519}}
-
-	// Verify - verifies a signature
-	valid := ed25519.Verify(pub, message, sig) // Noncompliant {{(Signature) Ed25519}}
-	_ = valid
+	// NewKeyFromSeed - creates a private key from seed
+	seed := make([]byte, ed25519.SeedSize)
+	_ = ed25519.NewKeyFromSeed(seed) // Noncompliant {{(Signature) Ed25519}}
 }

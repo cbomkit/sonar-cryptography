@@ -30,7 +30,8 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.PseudorandomNumberGenerator;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.plugin.TestBase;
@@ -42,15 +43,15 @@ import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 
-class GoCryptoECDSAVerifyASN1Test extends TestBase {
+class GoCryptoEd25519VerifyTest extends TestBase {
 
-    public GoCryptoECDSAVerifyASN1Test() {
-        super(GoCryptoECDSA.rules());
+    public GoCryptoEd25519VerifyTest() {
+        super(GoCryptoEd25519.rules());
     }
 
     @Test
     void test() {
-        GoVerifier.verify("rules/detection/gocrypto/GoCryptoECDSAVerifyASN1TestFile.go", this);
+        GoVerifier.verify("rules/detection/gocrypto/GoCryptoEd25519VerifyTestFile.go", this);
     }
 
     @Override
@@ -60,14 +61,14 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             @Nonnull List<INode> nodes) {
         if (findingId == 0) {
             /*
-             * Detection Store
+             * Detection Store for GenerateKey
              */
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
             assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
             IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
             assertThat(value0).isInstanceOf(ValueAction.class);
-            assertThat(value0.asString()).isEqualTo("ECDSA");
+            assertThat(value0.asString()).isEqualTo("Ed25519");
 
             /*
              * Translation
@@ -77,24 +78,26 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             // Signature
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-            assertThat(signatureNode.getChildren()).hasSize(2);
-            assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode.getChildren()).hasSize(3);
+            assertThat(signatureNode.asString()).isEqualTo("Ed25519");
 
             // EllipticCurve under Signature
             INode ellipticCurveNode = signatureNode.getChildren().get(EllipticCurve.class);
             assertThat(ellipticCurveNode).isNotNull();
-            assertThat(ellipticCurveNode.getChildren()).isEmpty();
-            assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
+            assertThat(ellipticCurveNode.asString()).isEqualTo("Edwards25519");
 
-            // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode =
-                    signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
-            assertThat(pseudorandomNumberGeneratorNode).isNotNull();
-            assertThat(pseudorandomNumberGeneratorNode.getChildren()).isEmpty();
-            assertThat(pseudorandomNumberGeneratorNode.asString()).isEqualTo("NATIVEPRNG");
+            // MessageDigest under Signature
+            INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
+            assertThat(messageDigestNode).isNotNull();
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+
+            // Oid under Signature
+            INode oidNode = signatureNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.asString()).isEqualTo("1.3.101.112");
         } else if (findingId == 1) {
             /*
-             * Detection Store
+             * Detection Store for Verify
              */
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
@@ -111,7 +114,7 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
             IValue<Tree> value01 = store1.getDetectionValues().get(0);
             assertThat(value01).isInstanceOf(ValueAction.class);
-            assertThat(value01.asString()).isEqualTo("ECDSA");
+            assertThat(value01.asString()).isEqualTo("Ed25519");
 
             /*
              * Translation
@@ -121,26 +124,27 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             // Signature
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-            assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode.getChildren()).hasSize(4);
+            assertThat(signatureNode.asString()).isEqualTo("Ed25519");
 
             // EllipticCurve under Signature
             INode ellipticCurveNode = signatureNode.getChildren().get(EllipticCurve.class);
             assertThat(ellipticCurveNode).isNotNull();
-            assertThat(ellipticCurveNode.getChildren()).isEmpty();
-            assertThat(ellipticCurveNode.asString()).isEqualTo("secp256r1");
+            assertThat(ellipticCurveNode.asString()).isEqualTo("Edwards25519");
 
-            // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode =
-                    signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
-            assertThat(pseudorandomNumberGeneratorNode).isNotNull();
-            assertThat(pseudorandomNumberGeneratorNode.getChildren()).isEmpty();
-            assertThat(pseudorandomNumberGeneratorNode.asString()).isEqualTo("NATIVEPRNG");
+            // MessageDigest under Signature
+            INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
+            assertThat(messageDigestNode).isNotNull();
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+
+            // Oid under Signature
+            INode oidNode = signatureNode.getChildren().get(Oid.class);
+            assertThat(oidNode).isNotNull();
+            assertThat(oidNode.asString()).isEqualTo("1.3.101.112");
 
             // Verify under Signature
             INode verifyNode = signatureNode.getChildren().get(Verify.class);
             assertThat(verifyNode).isNotNull();
-            assertThat(verifyNode.getChildren()).isEmpty();
             assertThat(verifyNode.asString()).isEqualTo("VERIFY");
         }
     }
