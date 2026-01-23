@@ -19,15 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/ecdsa package.
@@ -101,10 +104,12 @@ public final class GoCryptoECDSA {
                     .createDetectionRule()
                     .forObjectTypes("crypto/ecdsa")
                     .forMethods("SignASN1")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withMethodParameter("io.Reader")
+                    .addDependingDetectionRules(GoCryptoRand.rules())
+                    .withMethodParameter("*ecdsa.PrivateKey")
+                    .addDependingDetectionRules(List.of(GoCryptoECDSA.GENERATE_KEY))
+                    .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -116,10 +121,11 @@ public final class GoCryptoECDSA {
                     .createDetectionRule()
                     .forObjectTypes("crypto/ecdsa")
                     .forMethods("VerifyASN1")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withMethodParameter("*ecdsa.PublicKey")
+                    .addDependingDetectionRules(List.of(GoCryptoECDSA.GENERATE_KEY))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
