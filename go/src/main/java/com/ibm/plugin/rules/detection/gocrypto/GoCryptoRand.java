@@ -23,9 +23,10 @@ import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Detection rules for Go's crypto/rand package.
@@ -42,13 +43,24 @@ public final class GoCryptoRand {
         // private
     }
 
+    private static final IDetectionRule<Tree> CONSTRUCTOR =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/rand")
+                    .forMethods("Reader")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
+                    .withoutParameters()
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     // rand.Read(b []byte) (n int, err error)
     private static final IDetectionRule<Tree> READ =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
                     .forObjectTypes("crypto/rand")
                     .forMethods("Read")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CSPRNG"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
                     .withMethodParameter("[]byte")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "GoCrypto")
@@ -56,6 +68,6 @@ public final class GoCryptoRand {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(READ);
+        return List.of(CONSTRUCTOR, READ);
     }
 }

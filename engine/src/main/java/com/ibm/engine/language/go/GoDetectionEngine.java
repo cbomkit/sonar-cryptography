@@ -638,20 +638,20 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             new IdentifierWithBlockTree(
                                     identifierExpression, functionInvocation.blockTree()),
                             DetectionStore.Scope.EXPRESSION);
-                } else {
+                } else if (expression instanceof UnaryExpressionTree unaryExpressionTree) {
                     // Try to extract a base identifier from complex expressions
                     // (e.g., &privateKey.PublicKey → privateKey)
-                    IdentifierTree baseIdentifier = extractBaseIdentifier(expression);
+                    IdentifierTree baseIdentifier = extractBaseIdentifier(unaryExpressionTree);
                     if (baseIdentifier != null) {
                         detectionStore.onDetectedDependingParameter(
                                 parameter,
                                 new IdentifierWithBlockTree(
                                         baseIdentifier, functionInvocation.blockTree()),
                                 DetectionStore.Scope.EXPRESSION);
-                    } else {
-                        detectionStore.onDetectedDependingParameter(
-                                parameter, expression, DetectionStore.Scope.EXPRESSION);
                     }
+                } else {
+                    detectionStore.onDetectedDependingParameter(
+                            parameter, expression, DetectionStore.Scope.EXPRESSION);
                 }
             }
 
@@ -702,13 +702,11 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * @param tree the expression tree to extract the base identifier from
      * @return the base IdentifierTree if found, otherwise null
      */
-    @Nullable private IdentifierTree extractBaseIdentifier(@Nonnull Tree tree) {
+    @Nullable private IdentifierTree extractBaseIdentifier(@Nonnull UnaryExpressionTree tree) {
         Tree current = tree;
-
         // Unwrap UnaryExpressionTree (e.g., &expr)
-        if (current instanceof UnaryExpressionTree unaryExpr) {
-            current = unaryExpr.operand();
-        }
+        UnaryExpressionTree unaryExpr = (UnaryExpressionTree) current;
+        current = unaryExpr.operand();
 
         // Unwrap MemberSelectTree (e.g., obj.Field) to get the base expression
         if (current instanceof MemberSelectTree memberSelect) {

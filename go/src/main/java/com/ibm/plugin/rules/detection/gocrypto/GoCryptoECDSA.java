@@ -58,6 +58,7 @@ public final class GoCryptoECDSA {
                     .withMethodParameter("elliptic.Curve")
                     .addDependingDetectionRules(GoCryptoElliptic.rules())
                     .withMethodParameter("io.Reader")
+                    .addDependingDetectionRules(GoCryptoRand.rules())
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();

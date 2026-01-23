@@ -28,9 +28,10 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
  * Translator for Go PRNG (Pseudorandom Number Generator) contexts.
@@ -48,10 +49,10 @@ public final class GoPRNGContextTranslator implements IContextTranslation<Tree> 
 
         if (value instanceof ValueAction<Tree>) {
             return switch (value.asString().toUpperCase().trim()) {
-                case "CSPRNG" ->
+                case "NATIVEPRNG" ->
                         Optional.of(
                                 new Algorithm(
-                                        "CSPRNG",
+                                        "NATIVEPRNG",
                                         PseudorandomNumberGenerator.class,
                                         detectionLocation));
                 default -> Optional.empty();
