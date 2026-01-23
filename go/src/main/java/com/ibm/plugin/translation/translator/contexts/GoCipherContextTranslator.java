@@ -31,10 +31,14 @@ import com.ibm.mapper.mapper.gocrypto.GoCryptoModeMapper;
 import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.RC4;
+import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.padding.OAEP;
+import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -59,6 +63,16 @@ public final class GoCipherContextTranslator implements IContextTranslation<Tree
                         case "3DES", "DESEDE", "TRIPLEDES" ->
                                 Optional.of(new DESede(detectionLocation));
                         case "RC4", "ARC4", "ARCFOUR" -> Optional.of(new RC4(detectionLocation));
+                        case "RSA-OAEP" -> {
+                            RSA rsaOaep = new RSA(PublicKeyEncryption.class, detectionLocation);
+                            rsaOaep.put(new OAEP(detectionLocation));
+                            yield Optional.of((INode) rsaOaep);
+                        }
+                        case "RSA-PKCS1V15" -> {
+                            RSA rsaPkcs1 = new RSA(PublicKeyEncryption.class, detectionLocation);
+                            rsaPkcs1.put(new PKCS1(detectionLocation));
+                            yield Optional.of((INode) rsaPkcs1);
+                        }
                         default -> Optional.empty();
                     };
             if (algorithmResult.isPresent()) {

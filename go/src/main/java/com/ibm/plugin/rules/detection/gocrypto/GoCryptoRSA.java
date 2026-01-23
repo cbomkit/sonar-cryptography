@@ -20,16 +20,18 @@
 package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.Size;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import org.sonar.plugins.go.api.Tree;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import org.sonar.plugins.go.api.Tree;
 
 /**
  * Detection rules for Go's crypto/rsa package.
@@ -37,14 +39,15 @@ import org.sonar.plugins.go.api.Tree;
  * <p>Detects usage of:
  *
  * <ul>
- *   <li>rsa.GenerateKey(random io.Reader, bits int) - generates an RSA keypair
- *   <li>rsa.EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) - PKCS#1 v1.5 encryption
- *   <li>rsa.DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) - PKCS#1 v1.5
- *       decryption
- *   <li>rsa.SignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed []byte) -
- *       PKCS#1 v1.5 signature
- *   <li>rsa.VerifyPKCS1v15(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte) - PKCS#1
- *       v1.5 verification
+ *   <li>rsa.GenerateKey(random, bits) - RSA key generation
+ *   <li>rsa.EncryptOAEP(hash, random, pub, msg, label) - OAEP encryption
+ *   <li>rsa.DecryptOAEP(hash, random, priv, ciphertext, label) - OAEP decryption
+ *   <li>rsa.EncryptPKCS1v15(random, pub, msg) - PKCS#1 v1.5 encryption
+ *   <li>rsa.DecryptPKCS1v15(random, priv, ciphertext) - PKCS#1 v1.5 decryption
+ *   <li>rsa.SignPKCS1v15(random, priv, hash, hashed) - PKCS#1 v1.5 signature
+ *   <li>rsa.VerifyPKCS1v15(pub, hash, hashed, sig) - PKCS#1 v1.5 verification
+ *   <li>rsa.SignPSS(rand, priv, hash, digest, opts) - PSS signature
+ *   <li>rsa.VerifyPSS(pub, hash, digest, sig, opts) - PSS verification
  * </ul>
  */
 @SuppressWarnings("java:S1192")
@@ -55,7 +58,6 @@ public final class GoCryptoRSA {
     }
 
     // rsa.GenerateKey(random io.Reader, bits int) (*PrivateKey, error)
-    // Generates an RSA keypair of the given bit size
     private static final IDetectionRule<Tree> GENERATE_KEY =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -70,8 +72,45 @@ public final class GoCryptoRSA {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // rsa.EncryptOAEP(hash hash.Hash, random io.Reader, pub *PublicKey, msg []byte, label []byte)
+    // ([]byte, error)
+    private static final IDetectionRule<Tree> ENCRYPT_OAEP =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/rsa")
+                    .forMethods("EncryptOAEP")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
+                    .withMethodParameter("hash.Hash")
+                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .withMethodParameter("io.Reader")
+                    .withMethodParameter("*rsa.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // rsa.DecryptOAEP(hash hash.Hash, random io.Reader, priv *PrivateKey, ciphertext []byte,
+    // label []byte) ([]byte, error)
+    private static final IDetectionRule<Tree> DECRYPT_OAEP =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/rsa")
+                    .forMethods("DecryptOAEP")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
+                    .withMethodParameter("hash.Hash")
+                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .withMethodParameter("io.Reader")
+                    .withMethodParameter("*rsa.PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     // rsa.EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, error)
-    // Encrypts the given message with PKCS#1 v1.5
     private static final IDetectionRule<Tree> ENCRYPT_PKCS1V15 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -80,13 +119,13 @@ public final class GoCryptoRSA {
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1v15"))
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("*rsa.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
                     .withMethodParameter("[]byte")
-                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
     // rsa.DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) ([]byte, error)
-    // Decrypts a PKCS#1 v1.5 encrypted message
     private static final IDetectionRule<Tree> DECRYPT_PKCS1V15 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -95,14 +134,14 @@ public final class GoCryptoRSA {
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1v15"))
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("*rsa.PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
                     .withMethodParameter("[]byte")
-                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
     // rsa.SignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed []byte)
     // ([]byte, error)
-    // Signs the hashed message using PKCS#1 v1.5
     private static final IDetectionRule<Tree> SIGN_PKCS1V15 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -111,6 +150,7 @@ public final class GoCryptoRSA {
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1v15"))
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("*rsa.PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
                     .withMethodParameter("crypto.Hash")
                     .withMethodParameter("[]byte")
                     .buildForContext(new SignatureContext(Map.of("kind", "RSA")))
@@ -118,7 +158,6 @@ public final class GoCryptoRSA {
                     .withoutDependingDetectionRules();
 
     // rsa.VerifyPKCS1v15(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte) error
-    // Verifies a PKCS#1 v1.5 signature
     private static final IDetectionRule<Tree> VERIFY_PKCS1V15 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -126,6 +165,7 @@ public final class GoCryptoRSA {
                     .forMethods("VerifyPKCS1v15")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1v15"))
                     .withMethodParameter("*rsa.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
                     .withMethodParameter("crypto.Hash")
                     .withMethodParameter("[]byte")
                     .withMethodParameter("[]byte")
@@ -133,9 +173,53 @@ public final class GoCryptoRSA {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // rsa.SignPSS(rand io.Reader, priv *PrivateKey, hash crypto.Hash, digest []byte,
+    // opts *PSSOptions) ([]byte, error)
+    private static final IDetectionRule<Tree> SIGN_PSS =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/rsa")
+                    .forMethods("SignPSS")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
+                    .withMethodParameter("io.Reader")
+                    .withMethodParameter("*rsa.PrivateKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("crypto.Hash")
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("*rsa.PSSOptions")
+                    .buildForContext(new SignatureContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // rsa.VerifyPSS(pub *PublicKey, hash crypto.Hash, digest []byte, sig []byte,
+    // opts *PSSOptions) error
+    private static final IDetectionRule<Tree> VERIFY_PSS =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/rsa")
+                    .forMethods("VerifyPSS")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
+                    .withMethodParameter("*rsa.PublicKey")
+                    .addDependingDetectionRules(List.of(GENERATE_KEY))
+                    .withMethodParameter("crypto.Hash")
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("[]byte")
+                    .withMethodParameter("*rsa.PSSOptions")
+                    .buildForContext(new SignatureContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
         return List.of(
-                GENERATE_KEY, ENCRYPT_PKCS1V15, DECRYPT_PKCS1V15, SIGN_PKCS1V15, VERIFY_PKCS1V15);
+                GENERATE_KEY,
+                ENCRYPT_OAEP,
+                DECRYPT_OAEP,
+                ENCRYPT_PKCS1V15,
+                DECRYPT_PKCS1V15,
+                SIGN_PKCS1V15,
+                VERIFY_PKCS1V15,
+                SIGN_PSS,
+                VERIFY_PSS);
     }
 }
