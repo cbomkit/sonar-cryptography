@@ -20,11 +20,14 @@
 package com.ibm.mapper.reorganizer.rules;
 
 import com.ibm.mapper.model.CipherSuite;
+import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 public final class CipherSuiteReorganizer {
@@ -47,5 +50,37 @@ public final class CipherSuiteReorganizer {
                                     return new ArrayList<>(Collections.singleton(tls));
                                 }
                                 return roots;
+                            });
+
+    @Nonnull
+    public static final IReorganizerRule REPLACE_TLS_WITH_VERSIONED_CHILD =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(TLS.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) ->
+                                    node.hasChildOfType(TLS.class).isPresent())
+                    .perform(
+                            (node, parent, roots) -> {
+                                TLS childTls = (TLS) node.getChildren().get(TLS.class);
+                                for (Map.Entry<Class<? extends INode>, INode> entry :
+                                        node.getChildren().entrySet()) {
+                                    if (!entry.getKey().equals(TLS.class)) {
+                                        childTls.put(entry.getValue());
+                                    }
+                                }
+                                if (parent == null) {
+                                    List<INode> rootsCopy = new ArrayList<>(roots);
+                                    for (int i = 0; i < rootsCopy.size(); i++) {
+                                        if (rootsCopy.get(i).equals(node)) {
+                                            rootsCopy.set(i, childTls);
+                                            break;
+                                        }
+                                    }
+                                    return rootsCopy;
+                                } else {
+                                    parent.put(childTls);
+                                    return roots;
+                                }
                             });
 }

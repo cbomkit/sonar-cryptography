@@ -28,13 +28,15 @@ import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import com.ibm.mapper.reorganizer.rules.CipherSuiteReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
 import com.ibm.mapper.reorganizer.rules.PaddingReorganizer;
 import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public final class GoReorganizerRules {
 
@@ -74,6 +76,7 @@ public final class GoReorganizerRules {
                         KeyDerivationReorganizer.moveModeFromParentToNode(BlockCipher.class),
                         KeyDerivationReorganizer.moveModeFromParentToNode(MessageDigest.class),
                         KeyAgreementReorganizer.MERGE_KEYAGREEMENT_WITH_PKE_UNDER_PRIVATE_KEY,
+                        CipherSuiteReorganizer.REPLACE_TLS_WITH_VERSIONED_CHILD,
                         PaddingReorganizer.MOVE_OAEP_UNDER_ALGORITHM)
                 .toList();
     }

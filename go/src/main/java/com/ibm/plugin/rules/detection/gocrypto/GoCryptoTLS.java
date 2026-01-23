@@ -20,6 +20,9 @@
 package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.model.factory.CipherSuiteFactory;
+import com.ibm.engine.model.factory.ProtocolFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import org.sonar.plugins.go.api.Tree;
@@ -57,12 +60,16 @@ public final class GoCryptoTLS {
                     .createDetectionRule()
                     .forObjectTypes("crypto/tls.Config")
                     .forConstructor()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withMethodParameter("CipherSuites")
-                    .addDependingDetectionRules(GoCryptoTLSCipherSuites.rules())
+                    .shouldBeDetectedAs(new CipherSuiteFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .withMethodParameter("MinVersion")
-                    .addDependingDetectionRules(GoCryptoTLSVersions.rules())
+                    .shouldBeDetectedAs(new ProtocolFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .withMethodParameter("MaxVersion")
-                    .addDependingDetectionRules(GoCryptoTLSVersions.rules())
+                    .shouldBeDetectedAs(new ProtocolFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -151,6 +158,6 @@ public final class GoCryptoTLS {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(CONFIG, DIAL, DIAL_WITH_DIALER, LISTEN, NEW_LISTENER, SERVER, CLIENT);
+        return List.of(DIAL, DIAL_WITH_DIALER, LISTEN, NEW_LISTENER, SERVER, CLIENT);
     }
 }
