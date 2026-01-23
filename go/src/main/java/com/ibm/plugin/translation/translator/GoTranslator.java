@@ -27,6 +27,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.ITranslator;
@@ -37,6 +38,7 @@ import com.ibm.plugin.translation.translator.contexts.GoDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.GoKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.GoMacContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.GoPRNGContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.GoProtocolContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.GoSignatureContextTranslator;
 import java.util.List;
 import java.util.Optional;
@@ -104,6 +106,13 @@ public class GoTranslator extends ITranslator<GoCheck, Tree, Symbol, GoScanConte
             final GoSignatureContextTranslator goSignatureContextTranslator =
                     new GoSignatureContextTranslator();
             return goSignatureContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(ProtocolContext.class)) {
+            final GoProtocolContextTranslator goProtocolContextTranslator =
+                    new GoProtocolContextTranslator();
+            return goProtocolContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 

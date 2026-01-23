@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -38,16 +40,13 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoEd25519VerifyTest extends TestBase {
 
@@ -76,7 +75,8 @@ class GoCryptoEd25519VerifyTest extends TestBase {
             assertThat(value0).isInstanceOf(ValueAction.class);
             assertThat(value0.asString()).isEqualTo("Ed25519");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                    getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
             assertThat(store1).isNotNull();
             assertThat(store1.getDetectionValues()).hasSize(1);
             assertThat(store1.getDetectionValueContext()).isInstanceOf(PRNGContext.class);
@@ -96,7 +96,8 @@ class GoCryptoEd25519VerifyTest extends TestBase {
             assertThat(signatureNode.asString()).isEqualTo("Ed25519");
 
             // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode = signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
+            INode pseudorandomNumberGeneratorNode =
+                    signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
             assertThat(pseudorandomNumberGeneratorNode).isNotNull();
             assertThat(pseudorandomNumberGeneratorNode.getChildren()).isEmpty();
             assertThat(pseudorandomNumberGeneratorNode.asString()).isEqualTo("NATIVEPRNG");
@@ -148,12 +149,14 @@ class GoCryptoEd25519VerifyTest extends TestBase {
              */
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
-            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(SignatureContext.class);
+            assertThat(detectionStore.getDetectionValueContext())
+                    .isInstanceOf(SignatureContext.class);
             IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
             assertThat(value0).isInstanceOf(SignatureAction.class);
             assertThat(value0.asString()).isEqualTo("VERIFY");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                    getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
             assertThat(store1).isNotNull();
             assertThat(store1.getDetectionValues()).hasSize(1);
             assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
@@ -161,7 +164,8 @@ class GoCryptoEd25519VerifyTest extends TestBase {
             assertThat(value01).isInstanceOf(ValueAction.class);
             assertThat(value01.asString()).isEqualTo("Ed25519");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store11 = getStoreOfValueType(ValueAction.class, store1.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store11 =
+                    getStoreOfValueType(ValueAction.class, store1.getChildren());
             assertThat(store11).isNotNull();
             assertThat(store11.getDetectionValues()).hasSize(1);
             assertThat(store11.getDetectionValueContext()).isInstanceOf(PRNGContext.class);
@@ -181,7 +185,8 @@ class GoCryptoEd25519VerifyTest extends TestBase {
             assertThat(signatureNode.asString()).isEqualTo("Ed25519");
 
             // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode = signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
+            INode pseudorandomNumberGeneratorNode =
+                    signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
             assertThat(pseudorandomNumberGeneratorNode).isNotNull();
             assertThat(pseudorandomNumberGeneratorNode.getChildren()).isEmpty();
             assertThat(pseudorandomNumberGeneratorNode.asString()).isEqualTo("NATIVEPRNG");

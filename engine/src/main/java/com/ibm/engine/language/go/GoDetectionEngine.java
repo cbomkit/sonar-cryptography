@@ -26,6 +26,7 @@ import com.ibm.engine.detection.MethodDetection;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
+import com.ibm.engine.language.go.tree.CompositeLiteralWithBlockTree;
 import com.ibm.engine.language.go.tree.FunctionInvocationWIthIdentifiersTree;
 import com.ibm.engine.language.go.tree.IdentifierWithBlockTree;
 import com.ibm.engine.model.factory.IValueFactory;
@@ -33,17 +34,12 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.symbols.Usage;
 import org.sonar.go.symbols.Usage.UsageType;
 import org.sonar.plugins.go.api.AssignmentExpressionTree;
 import org.sonar.plugins.go.api.BlockTree;
+import org.sonar.plugins.go.api.CompositeLiteralTree;
 import org.sonar.plugins.go.api.FunctionDeclarationTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.HasSymbol;
@@ -55,6 +51,13 @@ import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.UnaryExpressionTree;
 import org.sonar.plugins.go.api.VariableDeclarationTree;
 import org.sonar.plugins.go.api.checks.GoCheck;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Detection engine implementation for Go. Handles detection of cryptographic patterns in Go AST.
@@ -99,26 +102,56 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                                 variableDeclarationTree.identifiers(),
                                                 blockTree));
                             }
+                        } else if (initializer
+                                instanceof CompositeLiteralTree compositeLiteralTree) {
+                            CompositeLiteralWithBlockTree wrappedTree =
+                                    new CompositeLiteralWithBlockTree(
+                                            compositeLiteralTree,
+                                            variableDeclarationTree.identifiers(),
+                                            blockTree);
+                            if (detectionStore
+                                    .getDetectionRule()
+                                    .match(
+                                            wrappedTree,
+                                            handler.getLanguageSupport().translation())) {
+                                this.analyseCompositeLiteral(traceSymbol, wrappedTree);
+                            }
                         }
                     }
-                } else if (item instanceof AssignmentExpressionTree assignmentExpressionTree
-                        && assignmentExpressionTree.statementOrExpression()
-                                instanceof FunctionInvocationTree functionInvocation) {
-                    handler.addCallToCallStack(functionInvocation, detectionStore.getScanContext());
-                    if (detectionStore
-                            .getDetectionRule()
-                            .match(
-                                    functionInvocation,
-                                    handler.getLanguageSupport().translation())) {
-                        this.analyseExpression(
-                                traceSymbol,
-                                new FunctionInvocationWIthIdentifiersTree(
+                } else if (item instanceof AssignmentExpressionTree assignmentExpressionTree) {
+                    Tree assignedValue = assignmentExpressionTree.statementOrExpression();
+                    if (assignedValue instanceof FunctionInvocationTree functionInvocation) {
+                        handler.addCallToCallStack(
+                                functionInvocation, detectionStore.getScanContext());
+                        if (detectionStore
+                                .getDetectionRule()
+                                .match(
                                         functionInvocation,
+                                        handler.getLanguageSupport().translation())) {
+                            this.analyseExpression(
+                                    traceSymbol,
+                                    new FunctionInvocationWIthIdentifiersTree(
+                                            functionInvocation,
+                                            assignmentExpressionTree.leftHandSide()
+                                                            instanceof IdentifierTree identifierTree
+                                                    ? List.of(identifierTree)
+                                                    : null,
+                                            blockTree));
+                        }
+                    } else if (assignedValue instanceof CompositeLiteralTree compositeLiteralTree) {
+                        CompositeLiteralWithBlockTree wrappedTree =
+                                new CompositeLiteralWithBlockTree(
+                                        compositeLiteralTree,
                                         assignmentExpressionTree.leftHandSide()
                                                         instanceof IdentifierTree identifierTree
                                                 ? List.of(identifierTree)
                                                 : null,
-                                        blockTree));
+                                        blockTree);
+                        if (detectionStore
+                                .getDetectionRule()
+                                .match(wrappedTree, handler.getLanguageSupport().translation())) {
+                            this.analyseCompositeLiteral(traceSymbol, wrappedTree);
+                        }
                     }
                 }
             }
@@ -142,6 +175,14 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             functionInvocationWIthIdentifiersTree,
                             handler.getLanguageSupport().translation())) {
                 this.analyseExpression(traceSymbol, functionInvocationWIthIdentifiersTree);
+            }
+        } else if (tree instanceof CompositeLiteralWithBlockTree compositeLiteralWithBlockTree) {
+            if (detectionStore
+                    .getDetectionRule()
+                    .match(
+                            compositeLiteralWithBlockTree,
+                            handler.getLanguageSupport().translation())) {
+                this.analyseCompositeLiteral(traceSymbol, compositeLiteralWithBlockTree);
             }
         } else if (tree instanceof IdentifierWithBlockTree identifierWithBlockTree) {
             // Search the block for function invocations that match the detection rule.
@@ -347,6 +388,21 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 return resolveValues(clazz, arguments.get(0), valueFactory, selections);
             }
             return Collections.emptyList();
+        }
+
+        if (tree instanceof UnaryExpressionTree unaryExpressionTree) {
+            return resolveValues(clazz, unaryExpressionTree.operand(), valueFactory, selections);
+        }
+
+        if (tree instanceof CompositeLiteralTree compositeLiteralTree) {
+            LinkedList<ResolvedValue<O, Tree>> result = new LinkedList<>();
+            for (Tree element : compositeLiteralTree.elements()) {
+                result.addAll(resolveValues(clazz, element, valueFactory, selections));
+            }
+
+            if (!result.isEmpty()) {
+                return result;
+            }
         }
 
         // Handle LiteralTree - direct values
@@ -629,6 +685,12 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         functionInvocation.blockTree()),
                                 DetectionStore.Scope.EXPRESSION);
                     }
+                } else if (expression instanceof CompositeLiteralTree compositeLiteralExpr) {
+                    detectionStore.onDetectedDependingParameter(
+                            parameter,
+                            new CompositeLiteralWithBlockTree(
+                                    compositeLiteralExpr, null, functionInvocation.blockTree()),
+                            DetectionStore.Scope.EXPRESSION);
                 } else if (expression instanceof IdentifierTree identifierExpression) {
                     // Wrap IdentifierTree with block context so the run() method
                     // can search for related assignments and function invocations
@@ -656,6 +718,124 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
             index++;
         }
+    }
+
+    /**
+     * Analyzes a composite literal (struct initialization) for cryptographic patterns.
+     *
+     * <p>This handles Go struct literals like {@code tls.Config{CipherSuites: [...], MinVersion:
+     * tls.VersionTLS12}}. Each key-value pair is treated as a named parameter, matched by key name
+     * rather than positional index.
+     *
+     * @param traceSymbol the trace symbol for tracking
+     * @param compositeLiteral the composite literal to analyze
+     */
+    private void analyseCompositeLiteral(
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull CompositeLiteralWithBlockTree compositeLiteral) {
+
+        if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(compositeLiteral, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+            return;
+        }
+
+        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
+        if (detectionRule.actionFactory() != null) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(compositeLiteral, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+        }
+
+        // Match key-value pairs against detection rule parameters by name
+        List<Parameter<Tree>> parameters = detectionRule.parameters();
+        if (parameters.isEmpty()) {
+            return;
+        }
+
+        compositeLiteral
+                .getKeyValuesElements()
+                .forEach(
+                        keyValue -> {
+                            Tree key = keyValue.key();
+                            if (!(key instanceof IdentifierTree keyIdentifier)) {
+                                return;
+                            }
+                            String keyName = keyIdentifier.name();
+
+                            // Find the matching parameter by name (parameterType matches the key
+                            // name)
+                            for (int i = 0; i < parameters.size(); i++) {
+                                Parameter<Tree> parameter = parameters.get(i);
+                                if (!parameter.getParameterType().equals(keyName)) {
+                                    continue;
+                                }
+
+                                Tree valueTree = keyValue.value();
+
+                                if (parameter.is(DetectableParameter.class)) {
+                                    DetectableParameter<Tree> detectableParameter =
+                                            (DetectableParameter<Tree>) parameter;
+                                    List<ResolvedValue<Object, Tree>> resolvedValues =
+                                            resolveValuesInInnerScope(
+                                                    Object.class,
+                                                    valueTree,
+                                                    detectableParameter.getiValueFactory());
+                                    if (!resolvedValues.isEmpty()) {
+                                        resolvedValues.stream()
+                                                .map(
+                                                        resolvedValue ->
+                                                                new ValueDetection<>(
+                                                                        resolvedValue,
+                                                                        detectableParameter,
+                                                                        compositeLiteral,
+                                                                        compositeLiteral))
+                                                .forEach(detectionStore::onReceivingNewDetection);
+                                    }
+                                } else if (!parameter.getDetectionRules().isEmpty()) {
+                                    // Process depending detection rules on the value
+                                    if (valueTree
+                                            instanceof
+                                            FunctionInvocationTree newFunctionInvocation) {
+                                        detectionStore.onDetectedDependingParameter(
+                                                parameter,
+                                                new FunctionInvocationWIthIdentifiersTree(
+                                                        newFunctionInvocation,
+                                                        null,
+                                                        compositeLiteral.blockTree()),
+                                                DetectionStore.Scope.EXPRESSION);
+                                    } else if (valueTree
+                                            instanceof CompositeLiteralTree nestedLiteral) {
+                                        detectionStore.onDetectedDependingParameter(
+                                                parameter,
+                                                new CompositeLiteralWithBlockTree(
+                                                        nestedLiteral,
+                                                        null,
+                                                        compositeLiteral.blockTree()),
+                                                DetectionStore.Scope.EXPRESSION);
+                                    } else if (valueTree
+                                            instanceof IdentifierTree identifierExpression) {
+                                        detectionStore.onDetectedDependingParameter(
+                                                parameter,
+                                                new IdentifierWithBlockTree(
+                                                        identifierExpression,
+                                                        compositeLiteral.blockTree()),
+                                                DetectionStore.Scope.EXPRESSION);
+                                    } else if (valueTree
+                                            instanceof MemberSelectTree memberSelectTree) {
+                                        detectionStore.onDetectedDependingParameter(
+                                                parameter,
+                                                memberSelectTree,
+                                                DetectionStore.Scope.EXPRESSION);
+                                    } else {
+                                        detectionStore.onDetectedDependingParameter(
+                                                parameter,
+                                                valueTree,
+                                                DetectionStore.Scope.EXPRESSION);
+                                    }
+                                }
+                                break;
+                            }
+                        });
     }
 
     /**
@@ -713,6 +893,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             if (expression instanceof IdentifierTree identifier) {
                 return identifier;
             }
+        } else if (current instanceof IdentifierTree identifier) {
+            return identifier;
         }
 
         return null;

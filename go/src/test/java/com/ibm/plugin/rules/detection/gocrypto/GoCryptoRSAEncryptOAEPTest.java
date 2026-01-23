@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -36,16 +38,13 @@ import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoRSAEncryptOAEPTest extends TestBase {
 
@@ -74,7 +73,8 @@ class GoCryptoRSAEncryptOAEPTest extends TestBase {
             assertThat(value0).isInstanceOf(ValueAction.class);
             assertThat(value0.asString()).isEqualTo("RSA");
 
-            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 = getStoreOfValueType(KeySize.class, detectionStore.getChildren());
+            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                    getStoreOfValueType(KeySize.class, detectionStore.getChildren());
             assertThat(store1).isNotNull();
             assertThat(store1.getDetectionValues()).hasSize(1);
             assertThat(store1.getDetectionValueContext()).isInstanceOf(KeyContext.class);
@@ -145,7 +145,8 @@ class GoCryptoRSAEncryptOAEPTest extends TestBase {
             assertThat(oidNode.asString()).isEqualTo("1.2.840.113549.1.1.7");
 
             // MessageDigest under PublicKeyEncryption
-            INode messageDigestNode = publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
+            INode messageDigestNode =
+                    publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
             assertThat(messageDigestNode.asString()).isEqualTo("SHA256");

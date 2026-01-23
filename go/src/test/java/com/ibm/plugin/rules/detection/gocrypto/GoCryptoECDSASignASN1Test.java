@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
@@ -32,16 +34,13 @@ import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.go.testing.GoVerifier;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoCryptoECDSASignASN1Test extends TestBase {
 
@@ -82,7 +81,8 @@ class GoCryptoECDSASignASN1Test extends TestBase {
             assertThat(signatureNode.asString()).isEqualTo("ECDSA");
 
             // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode = signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
+            INode pseudorandomNumberGeneratorNode =
+                    signatureNode.getChildren().get(PseudorandomNumberGenerator.class);
             assertThat(pseudorandomNumberGeneratorNode).isNotNull();
             assertThat(pseudorandomNumberGeneratorNode.getChildren()).isEmpty();
             assertThat(pseudorandomNumberGeneratorNode.asString()).isEqualTo("NATIVEPRNG");
@@ -98,7 +98,8 @@ class GoCryptoECDSASignASN1Test extends TestBase {
              */
             assertThat(detectionStore).isNotNull();
             assertThat(detectionStore.getDetectionValues()).hasSize(1);
-            assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(SignatureContext.class);
+            assertThat(detectionStore.getDetectionValueContext())
+                    .isInstanceOf(SignatureContext.class);
             IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
             assertThat(value0).isInstanceOf(SignatureAction.class);
             assertThat(value0.asString()).isEqualTo("SIGN");
@@ -121,13 +122,15 @@ class GoCryptoECDSASignASN1Test extends TestBase {
             assertThat(signNode.asString()).isEqualTo("SIGN");
 
             // PseudorandomNumberGenerator under Sign under Signature
-            INode pseudorandomNumberGeneratorNode1 = signNode.getChildren().get(PseudorandomNumberGenerator.class);
+            INode pseudorandomNumberGeneratorNode1 =
+                    signNode.getChildren().get(PseudorandomNumberGenerator.class);
             assertThat(pseudorandomNumberGeneratorNode1).isNotNull();
             assertThat(pseudorandomNumberGeneratorNode1.getChildren()).isEmpty();
             assertThat(pseudorandomNumberGeneratorNode1.asString()).isEqualTo("NATIVEPRNG");
 
             // PseudorandomNumberGenerator under Signature
-            INode pseudorandomNumberGeneratorNode2 = signatureNode1.getChildren().get(PseudorandomNumberGenerator.class);
+            INode pseudorandomNumberGeneratorNode2 =
+                    signatureNode1.getChildren().get(PseudorandomNumberGenerator.class);
             assertThat(pseudorandomNumberGeneratorNode2).isNotNull();
             assertThat(pseudorandomNumberGeneratorNode2.getChildren()).isEmpty();
             assertThat(pseudorandomNumberGeneratorNode2.asString()).isEqualTo("NATIVEPRNG");

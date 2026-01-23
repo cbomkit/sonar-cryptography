@@ -22,6 +22,7 @@ package com.ibm.engine.language.go;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.language.ILanguageTranslation;
+import com.ibm.engine.language.go.tree.CompositeLiteralWithBlockTree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonar.plugins.go.api.CompositeLiteralTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
 import org.sonar.plugins.go.api.IdentifierTree;
 import org.sonar.plugins.go.api.LiteralTree;
@@ -61,6 +63,11 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             // Function reference: pkg.Function (without invocation parentheses)
             // e.g., sha256.New passed as a parameter to hmac.New
             return Optional.of(memberSelectTree.identifier().name());
+        } else if (methodInvocation instanceof CompositeLiteralWithBlockTree) {
+            // Composite literal (struct initialization) treated as constructor
+            return Optional.of("<init>");
+        } else if (methodInvocation instanceof CompositeLiteralTree) {
+            return Optional.of("<init>");
         }
         return Optional.empty();
     }
@@ -76,6 +83,11 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             // Function reference: pkg.Function (without invocation parentheses)
             // e.g., sha256.New passed as a parameter to hmac.New
             return getTypeFromMemberSelect(memberSelectTree, matchContext);
+        } else if (methodInvocation instanceof CompositeLiteralWithBlockTree compositeLiteral) {
+            return getTypeFromCompositeLiteral(
+                    compositeLiteral.compositeLiteralTree(), matchContext);
+        } else if (methodInvocation instanceof CompositeLiteralTree compositeLiteralTree) {
+            return getTypeFromCompositeLiteral(compositeLiteralTree, matchContext);
         }
         return Optional.empty();
     }
@@ -159,6 +171,11 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
             // Function reference: pkg.Function (without invocation parentheses)
             // Function references have no arguments at the call site
             return Collections.emptyList();
+        } else if (methodInvocation instanceof CompositeLiteralWithBlockTree compositeLiteral) {
+            return getCompositeLiteralParameterTypes(
+                    compositeLiteral.compositeLiteralTree(), matchContext);
+        } else if (methodInvocation instanceof CompositeLiteralTree compositeLiteralTree) {
+            return getCompositeLiteralParameterTypes(compositeLiteralTree, matchContext);
         }
         return Collections.emptyList();
     }
@@ -252,6 +269,66 @@ public final class GoLanguageTranslation implements ILanguageTranslation<Tree> {
         // Strip path and package: "crypto/dsa.Parameters" → "dsa.Parameters"
         String shortened = withoutPrefix.substring(withoutPrefix.lastIndexOf('/') + 1);
         return prefix + shortened;
+    }
+
+    /**
+     * Extracts the type from a CompositeLiteralTree's type expression.
+     *
+     * <p>For composite literals like {@code tls.Config{...}}, the type is a MemberSelectTree
+     * representing {@code tls.Config}. This method extracts the full qualified type (e.g., {@code
+     * crypto/tls.Config}) for matching against detection rule object types.
+     */
+    @Nonnull
+    private Optional<IType> getTypeFromCompositeLiteral(
+            @Nonnull CompositeLiteralTree compositeLiteralTree,
+            @Nonnull MatchContext matchContext) {
+        Tree typeTree = compositeLiteralTree.type();
+        if (typeTree instanceof MemberSelectTree memberSelectTree) {
+            // pkg.Type pattern (e.g., tls.Config)
+            Tree expression = memberSelectTree.expression();
+            String typeName = memberSelectTree.identifier().name();
+            if (expression instanceof IdentifierTree identifierTree) {
+                String packageName = identifierTree.packageName();
+                if (packageName != null
+                        && !packageName.isEmpty()
+                        && !"UNKNOWN".equals(packageName)) {
+                    // Full qualified: "crypto/tls.Config"
+                    return Optional.of(createGoType(packageName + "." + typeName, matchContext));
+                }
+                // Fallback: "tls.Config"
+                return Optional.of(
+                        createGoType(identifierTree.name() + "." + typeName, matchContext));
+            }
+        } else if (typeTree instanceof IdentifierTree identifierTree) {
+            // Unqualified type name (e.g., Config within same package)
+            return Optional.of(createGoType(identifierTree.name(), matchContext));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Gets the parameter types for a composite literal, using field names as types.
+     *
+     * <p>For composite literals, parameters are identified by their key names (field names) rather
+     * than positional types. Each key in the key-value pairs becomes a "parameter type" that the
+     * detection rule can match against using {@code withParameter("FieldName")}.
+     */
+    @Nonnull
+    private List<IType> getCompositeLiteralParameterTypes(
+            @Nonnull CompositeLiteralTree compositeLiteralTree,
+            @Nonnull MatchContext matchContext) {
+        List<IType> types = new ArrayList<>();
+        compositeLiteralTree
+                .getKeyValuesElements()
+                .forEach(
+                        keyValue -> {
+                            Tree key = keyValue.key();
+                            if (key instanceof IdentifierTree identifierTree) {
+                                // Use the field name as the parameter type for matching
+                                types.add(createGoType(identifierTree.name(), matchContext));
+                            }
+                        });
+        return types;
     }
 
     /** Creates an IType for a function argument based on its AST node. */
