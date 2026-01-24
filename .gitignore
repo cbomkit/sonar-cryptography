@@ -36,3 +36,6 @@ build/
 
 .SonarQube/plugins
 .checkstyle.xml
+
+### Add binaries for testing ###
+!go/build/
