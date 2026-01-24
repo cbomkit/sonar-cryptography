@@ -319,12 +319,21 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 }
             }
 
-            // Fallback: try to resolve the identifier name as a constant
-            String name = identifierTree.name();
-            if (name != null && !name.isEmpty()) {
-                Optional<O> value = resolveConstant(clazz, name);
-                if (value.isPresent()) {
-                    return List.of(new ResolvedValue<>(value.get(), tree));
+            // Fallback: try to resolve the identifier name as a constant, but only if the
+            // identifier is not a function parameter (parameters don't have resolvable values
+            // without a concrete call site).
+            boolean isParameter =
+                    symbol != null
+                            && symbol.getUsages() != null
+                            && symbol.getUsages().stream()
+                                    .anyMatch(u -> u.type() == UsageType.PARAMETER);
+            if (!isParameter) {
+                String name = identifierTree.name();
+                if (name != null && !name.isEmpty()) {
+                    Optional<O> value = resolveConstant(clazz, name);
+                    if (value.isPresent()) {
+                        return List.of(new ResolvedValue<>(value.get(), tree));
+                    }
                 }
             }
             return Collections.emptyList();
