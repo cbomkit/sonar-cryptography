@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +44,11 @@ import org.sonar.go.plugin.ChecksVisitor;
 import org.sonar.go.plugin.DurationStatistics;
 import org.sonar.go.plugin.GoChecks;
 import org.sonar.go.plugin.GoFolder;
-import org.sonar.go.plugin.GoLanguage;
 import org.sonar.go.plugin.GoModFileAnalyzer;
 import org.sonar.go.plugin.GoModFileDataStore;
 import org.sonar.go.plugin.GoSensor;
 import org.sonar.go.plugin.InputFileContext;
 import org.sonar.go.plugin.MemoryMonitor;
-import org.sonar.go.plugin.caching.HashCacheUtils;
 import org.sonar.go.plugin.converter.ASTConverterValidation;
 import org.sonar.go.report.GoProgressReport;
 import org.sonar.go.visitors.TreeVisitor;
@@ -115,9 +114,7 @@ public class CryptoGoSensor implements Sensor {
                                 fs.inputFiles(
                                                 fs.predicates()
                                                         .and(
-                                                                fs.predicates()
-                                                                        .hasLanguage(
-                                                                                GoLanguage.KEY),
+                                                                fs.predicates().hasLanguage("go"),
                                                                 fs.predicates()
                                                                         .hasType(
                                                                                 InputFile.Type
@@ -135,7 +132,7 @@ public class CryptoGoSensor implements Sensor {
 
         boolean success = false;
         try {
-            var visitors = visitors(context, durationStatistics, goModFileDataStore);
+            var visitors = visitors(durationStatistics, goModFileDataStore);
             success =
                     analyseFiles(
                             converter,
@@ -155,10 +152,9 @@ public class CryptoGoSensor implements Sensor {
         }
     }
 
+    @Nonnull
     private List<TreeVisitor<InputFileContext>> visitors(
-            SensorContext sensorContext,
-            DurationStatistics statistics,
-            GoModFileDataStore goModFileDataStore) {
+            DurationStatistics statistics, GoModFileDataStore goModFileDataStore) {
         // Only run ChecksVisitor with our crypto checks.
         // Other visitors (SymbolVisitor, CpdVisitor, SyntaxHighlighter, IssueSuppressionVisitor)
         // are handled by the official sonar-go sensor and would cause NoSuchMethodError due to
@@ -168,18 +164,12 @@ public class CryptoGoSensor implements Sensor {
 
     protected boolean analyseFiles(
             ASTConverter converter,
-            SensorContext sensorContext,
-            List<InputFile> inputFiles,
+            @Nonnull SensorContext sensorContext,
+            @Nonnull List<InputFile> inputFiles,
             GoProgressReport goProgressReport,
             List<TreeVisitor<InputFileContext>> visitors,
             DurationStatistics statistics,
             GoModFileDataStore goModFileDataStore) {
-        if (sensorContext.canSkipUnchangedFiles()) {
-            LOG.info(
-                    "The {} analyzer is running in a context where unchanged files can be skipped.",
-                    GoLanguage.KEY);
-        }
-
         var filesByDirectory = groupFilesByDirectory(inputFiles);
         goProgressReport.start(filesByDirectory);
 
@@ -210,10 +200,10 @@ public class CryptoGoSensor implements Sensor {
                         statistics,
                         sensorContext,
                         moduleName);
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | IOException e) {
                 LOG.warn("Unable to parse directory '{}'.", goFolder.name(), e);
                 if (GoSensor.isFailFast(sensorContext)) {
-                    throw e;
+                    throw new RuntimeException(e);
                 }
             }
             goProgressReport.nextFolder();
@@ -221,7 +211,8 @@ public class CryptoGoSensor implements Sensor {
         return true;
     }
 
-    static List<GoFolder> groupFilesByDirectory(List<InputFile> inputFiles) {
+    @Nonnull
+    static List<GoFolder> groupFilesByDirectory(@Nonnull List<InputFile> inputFiles) {
         Map<String, List<InputFile>> filesByDirectory =
                 inputFiles.stream()
                         .collect(
@@ -244,25 +235,24 @@ public class CryptoGoSensor implements Sensor {
             ASTConverter converter,
             List<InputFileContext> inputFileContextList,
             List<TreeVisitor<InputFileContext>> visitors,
-            GoProgressReport goProgressReport,
+            @Nonnull GoProgressReport goProgressReport,
             DurationStatistics statistics,
             SensorContext sensorContext,
-            String moduleName) {
+            String moduleName)
+            throws IOException {
 
-        goProgressReport.setStep(GoProgressReport.Step.CACHING);
-        Map<String, CacheEntry> filenameToCacheEntry =
-                filterOutFilesFromCache(inputFileContextList, visitors);
+        final Pattern emptyFilePattern = Pattern.compile("\\s*+");
+        Map<String, InputFileContext> filenameToContext = new HashMap<>();
+        Map<String, String> filenameToContentMap = new HashMap<>();
 
-        final Pattern EMPTY_FILE_CONTENT_PATTERN = Pattern.compile("\\s*+");
-        Map<String, String> filenameToContentMap =
-                filenameToCacheEntry.values().stream()
-                        .map(CryptoGoSensor::convertCacheEntryToFilenameAndContent)
-                        .filter(
-                                entry ->
-                                        !EMPTY_FILE_CONTENT_PATTERN
-                                                .matcher(entry.getValue())
-                                                .matches())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        for (InputFileContext inputFileContext : inputFileContextList) {
+            String fileName = inputFileContext.inputFile.toString();
+            String content = inputFileContext.inputFile.contents();
+            if (!emptyFilePattern.matcher(content).matches()) {
+                filenameToContext.put(fileName, inputFileContext);
+                filenameToContentMap.put(fileName, content);
+            }
+        }
 
         if (filenameToContentMap.isEmpty()) {
             return;
@@ -272,39 +262,25 @@ public class CryptoGoSensor implements Sensor {
         Map<String, TreeOrError> treeOrErrorMap = converter.parse(filenameToContentMap, moduleName);
 
         goProgressReport.setStep(GoProgressReport.Step.HANDLING_PARSE_ERRORS);
-        handleParsingErrors(sensorContext, treeOrErrorMap, filenameToCacheEntry);
+        handleParsingErrors(sensorContext, treeOrErrorMap, filenameToContext);
 
         goProgressReport.setStep(GoProgressReport.Step.ANALYZING);
-        visitTrees(visitors, statistics, treeOrErrorMap, filenameToCacheEntry);
-    }
-
-    private static Map.Entry<String, String> convertCacheEntryToFilenameAndContent(
-            CacheEntry cacheEntry) {
-        String content;
-        String fileName;
-        try {
-            content = cacheEntry.fileContext().inputFile.contents();
-            fileName = cacheEntry.fileContext().inputFile.toString();
-            return Map.entry(fileName, content);
-        } catch (IOException | RuntimeException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        visitTrees(visitors, statistics, treeOrErrorMap, filenameToContext);
     }
 
     private static void handleParsingErrors(
             SensorContext sensorContext,
             Map<String, TreeOrError> treeOrErrorMap,
-            Map<String, CacheEntry> filenameToCacheResult) {
+            Map<String, InputFileContext> filenameToContext) {
         var isAnyError = false;
         for (Map.Entry<String, TreeOrError> filenameToTree : treeOrErrorMap.entrySet()) {
             var treeOrError = filenameToTree.getValue();
-            if (treeOrError.isError()) {
+            if (treeOrError.isError() && treeOrError.error() != null) {
                 isAnyError = true;
                 String fileName = filenameToTree.getKey();
                 LOG.warn("Unable to parse file: {}. {}", fileName, treeOrError.error());
-                filenameToCacheResult
+                filenameToContext
                         .get(fileName)
-                        .fileContext()
                         .reportAnalysisParseError(
                                 GoScannerRuleDefinition.REPOSITORY_KEY, treeOrError.error());
             }
@@ -315,38 +291,17 @@ public class CryptoGoSensor implements Sensor {
         }
     }
 
-    private static Map<String, CacheEntry> filterOutFilesFromCache(
-            List<InputFileContext> inputFileContexts,
-            List<TreeVisitor<InputFileContext>> visitors) {
-        Map<String, CacheEntry> result = new HashMap<>();
-        for (InputFileContext inputFileContext : inputFileContexts) {
-            if (fileCanBeSkipped(inputFileContext)) {
-                String fileKey = inputFileContext.inputFile.key();
-                LOG.debug(
-                        "Checking that previous results can be reused for input file {}.", fileKey);
-                result.put(
-                        inputFileContext.inputFile.toString(),
-                        new CacheEntry(inputFileContext, List.of()));
-            } else {
-                result.put(
-                        inputFileContext.inputFile.toString(),
-                        new CacheEntry(inputFileContext, List.of()));
-            }
-        }
-        return result;
-    }
-
     private static void visitTrees(
             List<TreeVisitor<InputFileContext>> visitors,
             DurationStatistics statistics,
             Map<String, TreeOrError> treeOrErrorMap,
-            Map<String, CacheEntry> filenameToCacheEntry) {
+            Map<String, InputFileContext> filenameToContext) {
         for (Map.Entry<String, TreeOrError> filenameToTree : treeOrErrorMap.entrySet()) {
             var treeOrError = filenameToTree.getValue();
             if (treeOrError.isTree()) {
                 var filename = filenameToTree.getKey();
-                var cacheResult = filenameToCacheEntry.get(filename);
-                visitTree(visitors, statistics, cacheResult, treeOrError.tree());
+                var inputFileContext = filenameToContext.get(filename);
+                visitTree(visitors, statistics, inputFileContext, treeOrError.tree());
             }
         }
     }
@@ -354,16 +309,10 @@ public class CryptoGoSensor implements Sensor {
     private static void visitTree(
             List<TreeVisitor<InputFileContext>> visitors,
             DurationStatistics statistics,
-            CacheEntry cacheResult,
+            InputFileContext inputFileContext,
             Tree tree) {
-        var visitorsToSkip = cacheResult.visitorsToSkip();
-        var inputFileContext = cacheResult.fileContext();
-
         for (TreeVisitor<InputFileContext> visitor : visitors) {
             try {
-                if (visitorsToSkip.contains(visitor)) {
-                    continue;
-                }
                 String visitorId = visitor.getClass().getSimpleName();
                 statistics.time(visitorId, () -> visitor.scan(inputFileContext, tree));
             } catch (RuntimeException e) {
@@ -373,21 +322,5 @@ public class CryptoGoSensor implements Sensor {
                 LOG.warn(message, e);
             }
         }
-        writeHashToCache(inputFileContext);
     }
-
-    private static boolean fileCanBeSkipped(InputFileContext inputFileContext) {
-        SensorContext sensorContext = inputFileContext.sensorContext;
-        if (!sensorContext.canSkipUnchangedFiles()) {
-            return false;
-        }
-        return HashCacheUtils.hasSameHashCached(inputFileContext);
-    }
-
-    private static void writeHashToCache(InputFileContext inputFileContext) {
-        HashCacheUtils.writeHashForNextAnalysis(inputFileContext);
-    }
-
-    record CacheEntry(
-            InputFileContext fileContext, List<TreeVisitor<InputFileContext>> visitorsToSkip) {}
 }
