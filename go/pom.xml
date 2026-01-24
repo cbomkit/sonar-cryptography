@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>go</artifactId>
-  <name>Sonar Cryptography Plugin :: Go</name>
 
   <properties>
       <maven.compiler.source>17</maven.compiler.source>

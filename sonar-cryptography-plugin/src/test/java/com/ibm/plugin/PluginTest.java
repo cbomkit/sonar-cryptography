@@ -39,6 +39,6 @@ class PluginTest {
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
         CryptographyPlugin plugin = new CryptographyPlugin();
         plugin.define(context);
-        Assertions.assertEquals(7, context.getExtensions().size());
+        Assertions.assertEquals(8, context.getExtensions().size());
     }
 }
