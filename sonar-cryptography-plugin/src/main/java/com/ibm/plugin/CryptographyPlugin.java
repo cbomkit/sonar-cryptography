@@ -46,8 +46,8 @@ public class CryptographyPlugin implements Plugin {
                 PythonScannerRuleDefinition.class, // Define Rules
                 PythonCheckRegistrar.class, // Register Python rules by sonar-python sensor
                 // golang
-                GoScannerRuleDefinition.class,
-
+                GoScannerRuleDefinition.class, // Define Go rules
+                CryptoGoSensor.class, // Custom sensor (sonar-go has no CheckRegistrar API)
                 // general
                 OutputFileJob.class);
     }

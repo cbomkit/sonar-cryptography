@@ -1,7 +1,6 @@
 services:
   sonarqube:
-#    image: sonarqube:25.2.0.102705-community
-    image: sonarqube:25.8.0.112029-community
+    image: sonarqube:26.1.0.118079-community
     user: "${UID}"
     volumes:
       - sonar-data:/opt/sonarqube/data

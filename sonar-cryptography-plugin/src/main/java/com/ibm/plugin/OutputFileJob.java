@@ -21,7 +21,6 @@ package com.ibm.plugin;
 
 import com.ibm.output.cyclondx.CBOMOutputFileFactory;
 import java.io.File;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.postjob.PostJob;
@@ -37,7 +36,7 @@ public class OutputFileJob implements PostJob {
     }
 
     @Override
-    public void execute(@Nonnull PostJobContext postJobContext) {
+    public void execute(PostJobContext postJobContext) {
         final String cbomFilename =
                 postJobContext
                         .config()
