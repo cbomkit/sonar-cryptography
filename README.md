@@ -24,12 +24,13 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 | Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%     |
 |          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1] |
 | Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%     |
-| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | Partial[^2] |
+| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2] |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3] |
 
 
 [^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
-
-[^2]: Go support requires [sonar-go-to-slang](https://github.com/SonarSource/sonar-go/tree/master/sonar-go-to-slang) for type resolution. Some cryptographic packages (e.g., `crypto/hmac`, `crypto/elliptic`, `crypto/ecdsa`) require rebuilding sonar-go-to-slang with additional package export data. See [Adding packages to sonar-go-to-slang](#adding-packages-to-sonar-go-to-slang) for instructions.
+[^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
+[^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
