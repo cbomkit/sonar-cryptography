@@ -97,7 +97,7 @@ class PycaPBKDF2Test extends TestBase {
         assertThat(passwordBasedKeyDerivationFunctionNode.getKind())
                 .isEqualTo(PasswordBasedKeyDerivationFunction.class);
         assertThat(passwordBasedKeyDerivationFunctionNode.getChildren()).hasSize(3);
-        assertThat(passwordBasedKeyDerivationFunctionNode.asString()).isEqualTo("PBKDF2-SHA256");
+        assertThat(passwordBasedKeyDerivationFunctionNode.asString()).isEqualTo("PBKDF2-SHA-256");
 
         // KeyDerivation under PasswordBasedKeyDerivationFunction
         INode keyDerivationNode =
@@ -111,7 +111,7 @@ class PycaPBKDF2Test extends TestBase {
                 passwordBasedKeyDerivationFunctionNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // Digest under MessageDigest under PasswordBasedKeyDerivationFunction
         INode digestNode = messageDigestNode.getChildren().get(Digest.class);

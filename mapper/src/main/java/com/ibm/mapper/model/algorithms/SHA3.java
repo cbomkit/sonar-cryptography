@@ -29,23 +29,26 @@ import javax.annotation.Nonnull;
 /**
  *
  *
- * <h2>{@value #NAME}</h2>
+ * <h2>SHA-3 (Secure Hash Algorithm 3)</h2>
  *
  * <p>
  *
  * <h3>Specification</h3>
  *
  * <ul>
+ *   <li>https://csrc.nist.gov/projects/hash-functions
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SHA-3-224, SHA-3-256,
+ *       SHA-3-384, SHA-3-512)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
  *
  * <ul>
- *   *
+ *   <li>Keccak-based hash function
  * </ul>
  */
 public final class SHA3 extends Algorithm implements MessageDigest {
-    private static final String NAME = "SHA3";
+    private static final String NAME = "SHA-3";
 
     public SHA3(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);

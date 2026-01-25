@@ -82,7 +82,7 @@ class JcaDHGenParameterSpecTest extends TestBase {
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(PublicKeyEncryption.class);
         assertThat(node).isInstanceOf(DH.class);
-        assertThat(node.asString()).isEqualTo("DH-2048");
+        assertThat(node.asString()).isEqualTo("FFDH-2048");
 
         INode defaultKeyLength = node.getChildren().get(KeyLength.class);
         assertThat(defaultKeyLength).isNotNull();

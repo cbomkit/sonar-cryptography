@@ -79,7 +79,7 @@ class JcaKeyAgreementInitTest extends TestBase {
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node).isNotNull();
-        assertThat(node.asString()).isEqualTo("DH-512");
+        assertThat(node.asString()).isEqualTo("FFDH-512");
 
         INode keyLength = node.getChildren().get(KeyLength.class);
         assertThat(keyLength).isNotNull();

@@ -76,7 +76,7 @@ public final class PycaDiffieHellmanGenerateTest extends TestBase {
         INode privateKeyNode = nodes.get(0);
         assertThat(privateKeyNode.getKind()).isEqualTo(PrivateKey.class);
         assertThat(privateKeyNode.getChildren()).hasSize(2);
-        assertThat(privateKeyNode.asString()).isEqualTo("DH");
+        assertThat(privateKeyNode.asString()).isEqualTo("FFDH");
 
         // KeyGeneration under PrivateKey
         INode keyGenerationNode = privateKeyNode.getChildren().get(KeyGeneration.class);
@@ -88,7 +88,7 @@ public final class PycaDiffieHellmanGenerateTest extends TestBase {
         INode publicKeyEncryptionNode = privateKeyNode.getChildren().get(PublicKeyEncryption.class);
         assertThat(publicKeyEncryptionNode).isNotNull();
         assertThat(publicKeyEncryptionNode.getChildren()).hasSize(1);
-        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("DH");
+        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("FFDH");
 
         // Oid under PublicKeyEncryption under PrivateKey
         INode oidNode = publicKeyEncryptionNode.getChildren().get(Oid.class);

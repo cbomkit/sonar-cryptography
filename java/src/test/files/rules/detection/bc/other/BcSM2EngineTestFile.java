@@ -24,7 +24,7 @@ public class BcSM2EngineTestFile {
 
         // Create SM2Engine instance
         SM2Engine sm2Engine = new SM2Engine(new SHA256Digest(), SM2Engine.Mode.C1C3C2);
-        // Noncompliant@-1 {{(MessageDigest) SHA256}} {{(PublicKeyEncryption) SM2}}
+        // Noncompliant@-1 {{(MessageDigest) SHA-256}} {{(PublicKeyEncryption) SM2}}
 
         // Encrypt
         byte[] plaintext = "Hello, SM2!".getBytes();

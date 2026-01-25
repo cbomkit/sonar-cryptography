@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 /**
  *
  *
- * <h2>{@value #NAME}</h2>
+ * <h2>FFDH (Finite Field Diffie-Hellman)</h2>
  *
  * <p>
  *
@@ -40,16 +40,18 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: FFDH)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
  *
  * <ul>
- *   <li>Diffie Hellman
+ *   <li>Diffie-Hellman
+ *   <li>DH
  * </ul>
  */
 public final class DH extends Algorithm implements Signature, KeyAgreement, PublicKeyEncryption {
-    private static final String NAME = "DH";
+    private static final String NAME = "FFDH";
 
     @Override
     public @Nonnull String asString() {

@@ -92,7 +92,7 @@ class PycaConcatKDFHMACTest extends TestBase {
         INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // DigestSize under MessageDigest under Mac
         INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

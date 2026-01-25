@@ -71,7 +71,7 @@ class JcaMessageDigestGetInstanceTest extends TestBase {
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(MessageDigest.class);
-        assertThat(node.asString()).isEqualTo("SHA512/224");
+        assertThat(node.asString()).isEqualTo("SHA-512/224");
 
         INode digestSize = node.getChildren().get(DigestSize.class);
         assertThat(digestSize).isNotNull();
@@ -90,7 +90,7 @@ class JcaMessageDigestGetInstanceTest extends TestBase {
 
         INode digest = node.getChildren().get(MessageDigest.class);
         assertThat(digest).isNotNull();
-        assertThat(digest.asString()).isEqualTo("SHA512");
+        assertThat(digest.asString()).isEqualTo("SHA-512");
 
         digestSize = digest.getChildren().get(DigestSize.class);
         assertThat(digestSize).isNotNull();

@@ -78,7 +78,7 @@ class GoCryptoSHA1Test extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA1");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-1");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);

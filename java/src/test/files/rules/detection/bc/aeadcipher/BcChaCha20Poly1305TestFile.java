@@ -13,7 +13,7 @@ public class BcChaCha20Poly1305TestFile {
         secureRandom.nextBytes(keyBytes);
 
         // Instantiate ChaCha20Poly1305 with constructor
-        ChaCha20Poly1305 constructor = new ChaCha20Poly1305(); // Noncompliant {{(AuthenticatedEncryption) ChaCha20Poly1305}}
+        ChaCha20Poly1305 constructor = new ChaCha20Poly1305(); // Noncompliant {{(AuthenticatedEncryption) ChaCha20-Poly1305}}
 
         // Initialize cipher with key and parameters
         KeyParameter keyParameter = new KeyParameter(keyBytes);
