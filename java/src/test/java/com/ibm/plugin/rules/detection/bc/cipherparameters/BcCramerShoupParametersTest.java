@@ -103,7 +103,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = blockCipherNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under BlockCipher
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -160,7 +160,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -220,7 +220,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = blockCipherNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under BlockCipher
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -283,7 +283,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -343,7 +343,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = blockCipherNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest under BlockCipher
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -406,7 +406,7 @@ class BcCramerShoupParametersTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

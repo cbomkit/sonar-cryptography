@@ -13,7 +13,7 @@ public class BcISO9796d2PSSSignerTestFile {
     public static void test() {
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Initialize the Engine
         AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{(PublicKeyEncryption) RSA}}

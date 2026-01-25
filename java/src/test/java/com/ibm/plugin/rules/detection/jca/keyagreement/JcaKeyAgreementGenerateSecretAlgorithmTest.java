@@ -81,7 +81,7 @@ class JcaKeyAgreementGenerateSecretAlgorithmTest extends TestBase {
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node).isNotNull();
-        assertThat(node.asString()).isEqualTo("DH-3072");
+        assertThat(node.asString()).isEqualTo("FFDH-3072");
         assertThat(node.is(PublicKeyEncryption.class)).isTrue();
 
         INode oid = node.getChildren().get(Oid.class);

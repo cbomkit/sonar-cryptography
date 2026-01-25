@@ -40,7 +40,7 @@ public class BcHandshakeKDFFunctionTestFile {
 
         // Define the HandshakeKDFFunction using EthereumIESEngine
         int counterStart = 1; // Starting value for the counter
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         EthereumIESEngine.HandshakeKDFFunction kdfFunction =
                 new EthereumIESEngine.HandshakeKDFFunction(counterStart, digest);
         // Noncompliant@-1 {{(KeyDerivationFunction) KDF2}}

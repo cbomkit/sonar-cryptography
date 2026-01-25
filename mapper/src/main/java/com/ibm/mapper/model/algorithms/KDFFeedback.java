@@ -28,7 +28,7 @@ import javax.annotation.Nonnull;
 /**
  *
  *
- * <h2>{@value #NAME}</h2>
+ * <h2>SP800-108 Feedback Mode KDF</h2>
  *
  * <p>
  *
@@ -36,16 +36,18 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>See 4.2 in https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-108r1-upd1.pdf
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SP800-108-FeedbackKDF)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
  *
  * <ul>
+ *   <li>KDF in Feedback Mode
  * </ul>
  */
 public final class KDFFeedback extends Algorithm implements KeyDerivationFunction {
 
-    private static final String NAME = "KDF in Feedback Mode";
+    private static final String NAME = "SP800-108-FeedbackKDF";
 
     public KDFFeedback(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);

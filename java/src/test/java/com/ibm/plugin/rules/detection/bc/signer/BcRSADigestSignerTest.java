@@ -82,7 +82,7 @@ class BcRSADigestSignerTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -146,7 +146,7 @@ class BcRSADigestSignerTest extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("SHA256withRSA");
+            assertThat(signatureNode.asString()).isEqualTo("SHA-256withRSA");
 
             // Oid under Signature
             INode oidNode = signatureNode.getChildren().get(Oid.class);
@@ -164,7 +164,7 @@ class BcRSADigestSignerTest extends TestBase {
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under Signature
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

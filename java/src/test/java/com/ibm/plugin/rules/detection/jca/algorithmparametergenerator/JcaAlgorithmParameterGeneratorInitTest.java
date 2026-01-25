@@ -84,7 +84,7 @@ class JcaAlgorithmParameterGeneratorInitTest extends TestBase {
         INode publicKeyEncryptionNode = nodes.get(0);
         assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
         assertThat(publicKeyEncryptionNode.getChildren()).hasSize(2);
-        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("DH-2048");
+        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("FFDH-2048");
 
         // KeyLength under PublicKeyEncryption
         INode keyLengthNode = publicKeyEncryptionNode.getChildren().get(KeyLength.class);

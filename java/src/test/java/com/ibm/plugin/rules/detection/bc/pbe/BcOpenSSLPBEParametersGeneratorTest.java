@@ -128,7 +128,7 @@ class BcOpenSSLPBEParametersGeneratorTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -190,7 +190,7 @@ class BcOpenSSLPBEParametersGeneratorTest extends TestBase {
                     passwordBasedEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest under PasswordBasedEncryption
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

@@ -24,11 +24,25 @@ import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
+/**
+ *
+ *
+ * <h2>ChaCha20-Poly1305</h2>
+ *
+ * <p>
+ *
+ * <h3>Specification</h3>
+ *
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/html/rfc8439
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: ChaCha20-Poly1305)
+ * </ul>
+ */
 public final class ChaCha20Poly1305 extends Algorithm implements AuthenticatedEncryption {
 
     @Override
     public @Nonnull String asString() {
-        return "ChaCha20Poly1305";
+        return "ChaCha20-Poly1305";
     }
 
     public ChaCha20Poly1305(@Nonnull DetectionLocation detectionLocation) {

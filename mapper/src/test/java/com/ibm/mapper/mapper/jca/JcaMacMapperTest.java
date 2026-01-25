@@ -45,7 +45,7 @@ class JcaMacMapperTest {
                 jcaMacMapper.parse("HmacSHA512/224", testDetectionLocation);
 
         assertThat(macOptional).isPresent();
-        assertThat(macOptional.get().asString()).isEqualTo("HMAC-SHA512/224");
+        assertThat(macOptional.get().asString()).isEqualTo("HMAC-SHA-512/224");
         assertThat(macOptional.get().hasChildren()).isTrue();
 
         Map<Class<? extends INode>, INode> children = macOptional.get().getChildren();
@@ -54,7 +54,7 @@ class JcaMacMapperTest {
         INode child = children.get(MessageDigest.class);
         assertThat(child.is(MessageDigest.class)).isTrue();
         MessageDigest messageDigest = (MessageDigest) child;
-        assertThat(messageDigest.getName()).isEqualTo("SHA512/224");
+        assertThat(messageDigest.getName()).isEqualTo("SHA-512/224");
         assertThat(messageDigest.getDigestSize()).isPresent();
         assertThat(messageDigest.getDigestSize().get().getValue()).isEqualTo(224);
     }
@@ -105,7 +105,7 @@ class JcaMacMapperTest {
 
         Optional<Mac> mac = pbe.getMac();
         assertThat(mac).isPresent();
-        assertThat(mac.get().asString()).isEqualTo("HMAC-SHA256");
+        assertThat(mac.get().asString()).isEqualTo("HMAC-SHA-256");
         assertThat(mac.get().hasChildren()).isTrue();
 
         Map<Class<? extends INode>, INode> children = mac.get().getChildren();
@@ -113,7 +113,7 @@ class JcaMacMapperTest {
 
         MessageDigest messageDigest = (MessageDigest) children.get(MessageDigest.class);
         assertThat(messageDigest).isInstanceOf(SHA2.class);
-        assertThat(messageDigest.getName()).isEqualTo("SHA256");
+        assertThat(messageDigest.getName()).isEqualTo("SHA-256");
         assertThat(messageDigest.getDigestSize()).isPresent();
         assertThat(messageDigest.getDigestSize().get().getValue()).isEqualTo(256);
     }

@@ -28,7 +28,7 @@ import javax.annotation.Nonnull;
 /**
  *
  *
- * <h2>{@value #NAME}</h2>
+ * <h2>SLH-DSA (Stateless Hash-Based Digital Signature Algorithm)</h2>
  *
  * <p>
  *
@@ -36,16 +36,19 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>https://sphincs.org
+ *   <li>https://csrc.nist.gov/pubs/fips/205/final
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SLH-DSA)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
  *
  * <ul>
+ *   <li>SPHINCS+
  * </ul>
  */
 public class SPHINCSPlus extends Algorithm implements Signature {
 
-    private static final String NAME = "SPHINCS+";
+    private static final String NAME = "SLH-DSA";
 
     @Override
     public @Nonnull String asString() {

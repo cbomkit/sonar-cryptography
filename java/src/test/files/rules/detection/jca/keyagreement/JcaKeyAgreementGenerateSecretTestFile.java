@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 public class JcaKeyAgreementGenerateSecretTestFile {
 
     public void test() throws NoSuchAlgorithmException, InvalidKeyException {
-        KeyAgreement keyAgreement = KeyAgreement.getInstance("DiffieHellman"); // Noncompliant {{(PublicKeyEncryption) DH-3072}}
+        KeyAgreement keyAgreement = KeyAgreement.getInstance("DiffieHellman"); // Noncompliant {{(PublicKeyEncryption) FFDH-3072}}
         SecretKey key = keyAgreement.generateSecret();
     }
 

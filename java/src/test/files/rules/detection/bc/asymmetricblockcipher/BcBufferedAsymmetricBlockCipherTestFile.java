@@ -31,7 +31,7 @@ public class BcBufferedAsymmetricBlockCipherTestFile {
     public static void main(String[] args) {
         // Initialize your asymmetric block cipher, for example RSA
         AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{(PublicKeyEncryption) RSA}}
-        OAEPEncoding cipher = new OAEPEncoding(engine, new SHA3Digest()); // Noncompliant {{(MessageDigest) SHA3}} {{(PublicKeyEncryption) RSA-OAEP}}
+        OAEPEncoding cipher = new OAEPEncoding(engine, new SHA3Digest()); // Noncompliant {{(MessageDigest) SHA-3}} {{(PublicKeyEncryption) RSA-OAEP}}
 
         // Initialize a key for encryption/decryption
         AsymmetricKeyParameter key = null; // Initialize your asymmetric key (e.g., RSA key)

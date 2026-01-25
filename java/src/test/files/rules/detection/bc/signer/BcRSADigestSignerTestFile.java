@@ -10,11 +10,11 @@ public class BcRSADigestSignerTestFile {
     public static void test() {
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Initialize RSADigestSigner
         RSADigestSigner signer = new RSADigestSigner(digest, new ASN1ObjectIdentifier("1234"));
-        // Noncompliant@-1 {{(Signature) SHA256withRSA}}
+        // Noncompliant@-1 {{(Signature) SHA-256withRSA}}
 
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
 

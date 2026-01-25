@@ -97,7 +97,7 @@ class JcaSignatureSetParameter2Test extends TestBase {
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(Signature.class);
         assertThat(node.is(ProbabilisticSignatureScheme.class)).isTrue();
-        assertThat(node.asString()).isEqualTo("RSASSA-PSS");
+        assertThat(node.asString()).isEqualTo("RSA-PSS");
 
         INode oid = node.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
@@ -109,7 +109,7 @@ class JcaSignatureSetParameter2Test extends TestBase {
 
         INode md = mgf1.getChildren().get(MessageDigest.class);
         assertThat(md).isNotNull();
-        assertThat(md.asString()).isEqualTo("SHA256");
+        assertThat(md.asString()).isEqualTo("SHA-256");
 
         INode salt = node.getChildren().get(SaltLength.class);
         assertThat(salt).isNotNull();
@@ -117,6 +117,6 @@ class JcaSignatureSetParameter2Test extends TestBase {
 
         md = node.getChildren().get(MessageDigest.class);
         assertThat(md).isNotNull();
-        assertThat(md.asString()).isEqualTo("SHA3-256");
+        assertThat(md.asString()).isEqualTo("SHA-3-256");
     }
 }

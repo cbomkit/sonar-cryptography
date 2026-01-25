@@ -76,7 +76,7 @@ class BenchmarkTest00003Test extends TestBase {
         INode messageDigestNode = nodes.get(0);
         assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
         // Oid under MessageDigest
         INode oidNode = messageDigestNode.getChildren().get(Oid.class);

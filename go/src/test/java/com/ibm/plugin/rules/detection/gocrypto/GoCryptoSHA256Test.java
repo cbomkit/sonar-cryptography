@@ -75,7 +75,7 @@ class GoCryptoSHA256Test extends TestBase {
             // MessageDigest
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -101,7 +101,7 @@ class GoCryptoSHA256Test extends TestBase {
             // MessageDigest
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA224");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-224");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -127,7 +127,7 @@ class GoCryptoSHA256Test extends TestBase {
             // MessageDigest
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -153,7 +153,7 @@ class GoCryptoSHA256Test extends TestBase {
             // MessageDigest
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA224");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-224");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

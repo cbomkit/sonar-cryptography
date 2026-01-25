@@ -89,7 +89,7 @@ class GoCryptoHMACTest extends TestBase {
         INode macNode = nodes.get(0);
         assertThat(macNode.getKind()).isEqualTo(Mac.class);
         assertThat(macNode.getChildren()).hasSize(3);
-        assertThat(macNode.asString()).isEqualTo("HMAC-SHA256");
+        assertThat(macNode.asString()).isEqualTo("HMAC-SHA-256");
 
         // Oid under Mac
         INode oidNode = macNode.getChildren().get(Oid.class);
@@ -101,7 +101,7 @@ class GoCryptoHMACTest extends TestBase {
         INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // Oid under MessageDigest under Mac
         INode oidNode1 = messageDigestNode.getChildren().get(Oid.class);

@@ -78,7 +78,7 @@ class Issue297Sha256Test extends TestBase {
         INode messageDigestNode = nodes.get(0);
         assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // Oid under MessageDigest
         INode oidNode = messageDigestNode.getChildren().get(Oid.class);

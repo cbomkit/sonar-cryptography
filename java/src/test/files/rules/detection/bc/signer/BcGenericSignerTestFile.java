@@ -18,10 +18,10 @@ public class BcGenericSignerTestFile {
         AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{(PublicKeyEncryption) RSA}}
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Create signer
-        GenericSigner signer = new GenericSigner(engine, digest); // Noncompliant {{(Signature) SHA256withRSA}}
+        GenericSigner signer = new GenericSigner(engine, digest); // Noncompliant {{(Signature) SHA-256withRSA}}
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
 
         // Data to sign
@@ -44,7 +44,7 @@ public class BcGenericSignerTestFile {
         AsymmetricBlockCipher engine = new PKCS1Encoding(new ElGamalEngine()); // Noncompliant {{(PublicKeyEncryption) ElGamal}} {{(PublicKeyEncryption) ElGamal}}
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Create signer
         GenericSigner signer = new GenericSigner(engine, digest); // Noncompliant {{(Signature) ElGamal}}

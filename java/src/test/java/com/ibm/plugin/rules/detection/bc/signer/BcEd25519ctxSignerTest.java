@@ -102,7 +102,7 @@ class BcEd25519ctxSignerTest extends TestBase {
         INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
         // BlockSize under MessageDigest under Signature
         INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);

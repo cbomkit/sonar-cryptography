@@ -122,14 +122,14 @@ class AlgorithmTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(4);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("PBKDF2-SHA1", "SHA1");
+                            .contains("PBKDF2-SHA-1", "SHA-1");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
                         assertThat(component.getCryptoProperties()).isNotNull();
                         final CryptoProperties cryptoProperties = component.getCryptoProperties();
 
-                        if (component.getName().equalsIgnoreCase("PBKDF2-SHA1")) {
+                        if (component.getName().equalsIgnoreCase("PBKDF2-SHA-1")) {
                             assertThat(cryptoProperties.getAssetType())
                                     .isEqualTo(AssetType.ALGORITHM);
                             assertThat(cryptoProperties.getAlgorithmProperties()).isNotNull();
@@ -138,7 +138,7 @@ class AlgorithmTest extends TestBase {
                             assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.KDF);
                             assertThat(algorithmProperties.getParameterSetIdentifier())
                                     .isEqualTo("1024");
-                        } else if (component.getName().equalsIgnoreCase("SHA1")) {
+                        } else if (component.getName().equalsIgnoreCase("SHA-1")) {
                             assertThat(cryptoProperties.getAssetType())
                                     .isEqualTo(AssetType.ALGORITHM);
                             assertThat(cryptoProperties.getAlgorithmProperties()).isNotNull();
@@ -187,7 +187,7 @@ class AlgorithmTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(3);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("SHA256withDSA", "SHA256");
+                            .contains("SHA-256withDSA", "SHA-256");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -209,13 +209,13 @@ class AlgorithmTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("SHA256withDSA");
+                                assertThat(component.getName()).isEqualTo("SHA-256withDSA");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.3.2");
                                 assertThat(algorithmProperties.getCryptoFunctions())
                                         .contains(CryptoFunction.SIGN, CryptoFunction.KEYGEN);
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
-                                assertThat(component.getName()).isEqualTo("SHA256");
+                                assertThat(component.getName()).isEqualTo("SHA-256");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.2.1");
                                 assertThat(algorithmProperties.getParameterSetIdentifier())
@@ -253,7 +253,7 @@ class AlgorithmTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("RSA-OAEP", "SHA256", "MGF1", "SHA384");
+                            .contains("RSA-OAEP", "SHA-256", "MGF1", "SHA-384");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -285,8 +285,8 @@ class AlgorithmTest extends TestBase {
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
                                 assertThat(component.getName())
                                         .satisfiesAnyOf(
-                                                s -> assertThat(s).isEqualTo("SHA256"),
-                                                s -> assertThat(s).isEqualTo("SHA384"));
+                                                s -> assertThat(s).isEqualTo("SHA-256"),
+                                                s -> assertThat(s).isEqualTo("SHA-384"));
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.OTHER)) {
                                 assertThat(component.getName()).isEqualTo("MGF1");
                                 assertThat(cryptoProperties.getOid())
@@ -322,7 +322,7 @@ class AlgorithmTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("RSASSA-PSS", "SHA256", "MGF1", "SHA384");
+                            .contains("RSA-PSS", "SHA-256", "MGF1", "SHA-384");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -344,7 +344,7 @@ class AlgorithmTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("RSASSA-PSS");
+                                assertThat(component.getName()).isEqualTo("RSA-PSS");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("1.2.840.113549.1.1.10");
                                 assertThat(algorithmProperties.getCryptoFunctions())
@@ -352,8 +352,8 @@ class AlgorithmTest extends TestBase {
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
                                 assertThat(component.getName())
                                         .satisfiesAnyOf(
-                                                s -> assertThat(s).isEqualTo("SHA256"),
-                                                s -> assertThat(s).isEqualTo("SHA384"));
+                                                s -> assertThat(s).isEqualTo("SHA-256"),
+                                                s -> assertThat(s).isEqualTo("SHA-384"));
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.OTHER)) {
                                 assertThat(component.getName()).isEqualTo("MGF1");
                                 assertThat(cryptoProperties.getOid())

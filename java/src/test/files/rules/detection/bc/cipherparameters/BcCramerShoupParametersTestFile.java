@@ -13,7 +13,7 @@ public class BcCramerShoupParametersTestFile {
         // Create a block cipher engine
         BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}
 
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         CramerShoupParameters parameters =
                 new CramerShoupParameters(
                         new BigInteger("1"), new BigInteger("1"), new BigInteger("1"), digest);
@@ -25,7 +25,7 @@ public class BcCramerShoupParametersTestFile {
         // Create a block cipher engine
         BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}
 
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         CramerShoupParameters base =
                 new CramerShoupParameters(
                         new BigInteger("1"), new BigInteger("1"), new BigInteger("1"), digest);
@@ -46,7 +46,7 @@ public class BcCramerShoupParametersTestFile {
         // Create a block cipher engine
         BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}
 
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         CramerShoupParameters base =
                 new CramerShoupParameters(
                         new BigInteger("1"), new BigInteger("1"), new BigInteger("1"), digest);

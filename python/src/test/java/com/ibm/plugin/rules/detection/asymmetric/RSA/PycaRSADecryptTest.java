@@ -161,7 +161,7 @@ class PycaRSADecryptTest extends TestBase {
             INode messageDigestNode = paddingNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Oid under MessageDigest under Padding under Signature under PrivateKey
             INode oidNode1 = messageDigestNode.getChildren().get(Oid.class);
@@ -206,7 +206,7 @@ class PycaRSADecryptTest extends TestBase {
                     maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(4);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA384");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-384");
 
             // Oid under MessageDigest under MaskGenerationFunction under Padding under Signature
             // under PrivateKey

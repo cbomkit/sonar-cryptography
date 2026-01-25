@@ -23,11 +23,11 @@ public class BcIESEngineTestFile {
 
         // Set up the key derivation function
         // Here, we use a simple SHA-256 based derivation function
-        DerivationFunction kdf = new KDF1BytesGenerator(new SHA256Digest()); // Noncompliant {{(KeyDerivationFunction) KDF1}} {{(MessageDigest) SHA256}}
+        DerivationFunction kdf = new KDF1BytesGenerator(new SHA256Digest()); // Noncompliant {{(KeyDerivationFunction) KDF1}} {{(MessageDigest) SHA-256}}
 
         // Set up the MAC (Message Authentication Code)
         // Here, we use HMAC with SHA-512
-        HMac mac = new HMac(new SHA512Digest()); // Noncompliant {{(Mac) HMAC-SHA512}} {{(MessageDigest) SHA512}}
+        HMac mac = new HMac(new SHA512Digest()); // Noncompliant {{(Mac) HMAC-SHA-512}} {{(MessageDigest) SHA-512}}
 
         // Initialize the IESEngine
         IESEngine engine = new IESEngine(agreement, kdf, mac); // Noncompliant {{(PublicKeyEncryption) IES}}

@@ -91,7 +91,7 @@ class PycaEllipticCurveSign2Test extends TestBase {
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // Oid under MessageDigest under Signature under PrivateKey
             INode oidNode = messageDigestNode.getChildren().get(Oid.class);

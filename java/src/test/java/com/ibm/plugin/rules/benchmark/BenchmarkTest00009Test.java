@@ -76,7 +76,7 @@ class BenchmarkTest00009Test extends TestBase {
         INode messageDigestNode1 = nodes.get(0);
         assertThat(messageDigestNode1.getKind()).isEqualTo(MessageDigest.class);
         assertThat(messageDigestNode1.getChildren()).hasSize(4);
-        assertThat(messageDigestNode1.asString()).isEqualTo("SHA384");
+        assertThat(messageDigestNode1.asString()).isEqualTo("SHA-384");
 
         // BlockSize under MessageDigest
         INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);

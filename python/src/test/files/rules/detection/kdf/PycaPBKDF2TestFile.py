@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 salt = os.urandom(16)
 
 # derive
-kdf = PBKDF2HMAC( # Noncompliant {{(PasswordBasedKeyDerivationFunction) PBKDF2-SHA256}}
+kdf = PBKDF2HMAC( # Noncompliant {{(PasswordBasedKeyDerivationFunction) PBKDF2-SHA-256}}
     algorithm=hashes.SHA256(),
     length=32,
     salt=salt,

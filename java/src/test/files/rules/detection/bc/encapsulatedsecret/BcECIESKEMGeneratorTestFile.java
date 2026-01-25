@@ -15,9 +15,9 @@ public class BcECIESKEMGeneratorTestFile {
 
         SecureRandom rnd = new SecureRandom(); // Secure random number generator
 
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
-        DerivationFunction kdf = new HKDFBytesGenerator(digest); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA256}}
+        DerivationFunction kdf = new HKDFBytesGenerator(digest); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
 
         // Initialize the ECIESKEMGenerator
         ECIESKEMGenerator kemGenerator =

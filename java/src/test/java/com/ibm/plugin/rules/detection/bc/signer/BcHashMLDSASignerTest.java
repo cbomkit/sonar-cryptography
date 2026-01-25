@@ -98,7 +98,7 @@ class BcHashMLDSASignerTest extends TestBase {
         INode signatureNode = nodes.get(0);
         assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
         assertThat(signatureNode.getChildren()).hasSize(4);
-        assertThat(signatureNode.asString()).isEqualTo("SHA512withML-DSA-44");
+        assertThat(signatureNode.asString()).isEqualTo("SHA-512withML-DSA-44");
 
         // Oid under Signature
         INode oidNode = signatureNode.getChildren().get(Oid.class);
@@ -123,7 +123,7 @@ class BcHashMLDSASignerTest extends TestBase {
         INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
         // DigestSize under MessageDigest under Signature
         INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

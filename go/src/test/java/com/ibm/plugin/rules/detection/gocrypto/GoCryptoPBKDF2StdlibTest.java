@@ -124,7 +124,7 @@ class GoCryptoPBKDF2StdlibTest extends TestBase {
         INode kdfNode = nodes.get(0);
         assertThat(kdfNode.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
         assertThat(kdfNode.getChildren()).hasSize(4);
-        assertThat(kdfNode.asString()).isEqualTo("PBKDF2-SHA256");
+        assertThat(kdfNode.asString()).isEqualTo("PBKDF2-SHA-256");
 
         // NumberOfIterations under PBKDF2
         INode iterationsNode = kdfNode.getChildren().get(NumberOfIterations.class);
@@ -145,7 +145,7 @@ class GoCryptoPBKDF2StdlibTest extends TestBase {
         INode messageDigestNode = kdfNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // Digest under MessageDigest
         INode digestNode = messageDigestNode.getChildren().get(Digest.class);

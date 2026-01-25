@@ -149,7 +149,7 @@ class GoCryptoRSAEncryptOAEPTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest under PublicKeyEncryption
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);

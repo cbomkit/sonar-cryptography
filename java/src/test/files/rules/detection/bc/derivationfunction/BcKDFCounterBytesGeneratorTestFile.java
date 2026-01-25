@@ -10,8 +10,8 @@ public class BcKDFCounterBytesGeneratorTestFile {
 
     public static void main(String[] args) {
         // Define the MAC algorithm to be used (e.g., HMAC with SHA-256)
-        Digest hash = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
-        Mac mac = new HMac(hash); // Noncompliant {{(Mac) HMAC-SHA256}}
+        Digest hash = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
+        Mac mac = new HMac(hash); // Noncompliant {{(Mac) HMAC-SHA-256}}
 
         // Input keying material (IKM) - your input key
         byte[] ikm = Hex.decode("0123456789ABCDEF0123456789ABCDEF");
@@ -24,7 +24,7 @@ public class BcKDFCounterBytesGeneratorTestFile {
 
         // Create the KDFCounterBytesGenerator
         KDFCounterBytesGenerator kdfGenerator =
-                new KDFCounterBytesGenerator(mac); // Noncompliant {{(KeyDerivationFunction) KDF in Counter Mode}}
+                new KDFCounterBytesGenerator(mac); // Noncompliant {{(KeyDerivationFunction) SP800-108-CounterKDF}}
 
         // Initialize the generator with parameters
         kdfGenerator.init(new KDFCounterParameters(ikm, fixedInput, 128));

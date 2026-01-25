@@ -129,7 +129,7 @@ class BcIESEngineTest extends TestBase {
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest under KeyDerivationFunction
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -174,7 +174,7 @@ class BcIESEngineTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -228,7 +228,7 @@ class BcIESEngineTest extends TestBase {
             INode macNode = nodes.get(0);
             assertThat(macNode.getKind()).isEqualTo(Mac.class);
             assertThat(macNode.getChildren()).hasSize(3);
-            assertThat(macNode.asString()).isEqualTo("HMAC-SHA512");
+            assertThat(macNode.asString()).isEqualTo("HMAC-SHA-512");
 
             // Tag under Mac
             INode tagNode = macNode.getChildren().get(Tag.class);
@@ -240,7 +240,7 @@ class BcIESEngineTest extends TestBase {
             INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest under Mac
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -291,7 +291,7 @@ class BcIESEngineTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -354,7 +354,7 @@ class BcIESEngineTest extends TestBase {
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest under KeyDerivationFunction under PublicKeyEncryption
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -396,7 +396,7 @@ class BcIESEngineTest extends TestBase {
             INode macNode = publicKeyEncryptionNode.getChildren().get(Mac.class);
             assertThat(macNode).isNotNull();
             assertThat(macNode.getChildren()).hasSize(4);
-            assertThat(macNode.asString()).isEqualTo("HMAC-SHA512");
+            assertThat(macNode.asString()).isEqualTo("HMAC-SHA-512");
 
             // Tag under Mac under PublicKeyEncryption
             INode tagNode = macNode.getChildren().get(Tag.class);
@@ -414,7 +414,7 @@ class BcIESEngineTest extends TestBase {
             INode messageDigestNode1 = macNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(4);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest under Mac under PublicKeyEncryption
             INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);
@@ -524,7 +524,7 @@ class BcIESEngineTest extends TestBase {
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest under KeyDerivationFunction under PublicKeyEncryption
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -566,7 +566,7 @@ class BcIESEngineTest extends TestBase {
             INode macNode = publicKeyEncryptionNode.getChildren().get(Mac.class);
             assertThat(macNode).isNotNull();
             assertThat(macNode.getChildren()).hasSize(4);
-            assertThat(macNode.asString()).isEqualTo("HMAC-SHA512");
+            assertThat(macNode.asString()).isEqualTo("HMAC-SHA-512");
 
             // Tag under Mac under PublicKeyEncryption
             INode tagNode = macNode.getChildren().get(Tag.class);
@@ -584,7 +584,7 @@ class BcIESEngineTest extends TestBase {
             INode messageDigestNode1 = macNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(4);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest under Mac under PublicKeyEncryption
             INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);

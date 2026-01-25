@@ -121,19 +121,20 @@ class JcaPBEKeySpecTest extends TestBase {
                 secretKeyNode.getChildren().get(PasswordBasedKeyDerivationFunction.class);
         assertThat(passwordBasedKeyDerivationFunctionNode).isNotNull();
         assertThat(passwordBasedKeyDerivationFunctionNode.getChildren()).hasSize(2);
-        assertThat(passwordBasedKeyDerivationFunctionNode.asString()).isEqualTo("PBKDF2-HMAC-SHA1");
+        assertThat(passwordBasedKeyDerivationFunctionNode.asString())
+                .isEqualTo("PBKDF2-HMAC-SHA-1");
 
         // Mac under PasswordBasedKeyDerivationFunction under SecretKey
         INode macNode = passwordBasedKeyDerivationFunctionNode.getChildren().get(Mac.class);
         assertThat(macNode).isNotNull();
         assertThat(macNode.getChildren()).hasSize(3);
-        assertThat(macNode.asString()).isEqualTo("HMAC-SHA1");
+        assertThat(macNode.asString()).isEqualTo("HMAC-SHA-1");
 
         // MessageDigest under Mac under PasswordBasedKeyDerivationFunction under SecretKey
         INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA1");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-1");
 
         // BlockSize under MessageDigest under Mac under PasswordBasedKeyDerivationFunction under
         // SecretKey

@@ -117,7 +117,7 @@ class PycaChaCha20Poly1305Test extends TestBase {
                 secretKeyNode.getChildren().get(AuthenticatedEncryption.class);
         assertThat(authenticatedEncryptionNode).isNotNull();
         assertThat(authenticatedEncryptionNode.getChildren()).hasSize(1);
-        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("ChaCha20Poly1305");
+        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("ChaCha20-Poly1305");
 
         // MessageDigest under AuthenticatedEncryption under SecretKey
         INode messageDigestNode =

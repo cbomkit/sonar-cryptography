@@ -145,7 +145,7 @@ class BcBufferedAsymmetricBlockCipherTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
 
             // Digest under MessageDigest under PublicKeyEncryption
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -172,7 +172,7 @@ class BcBufferedAsymmetricBlockCipherTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -249,7 +249,7 @@ class BcBufferedAsymmetricBlockCipherTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
 
             // Digest under MessageDigest under PublicKeyEncryption
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

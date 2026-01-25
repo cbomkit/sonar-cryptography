@@ -90,7 +90,7 @@ class PycaConcatKDFHashTest extends TestBase {
         INode messageDigestNode = keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // BlockSize under MessageDigest under KeyDerivationFunction
         INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);

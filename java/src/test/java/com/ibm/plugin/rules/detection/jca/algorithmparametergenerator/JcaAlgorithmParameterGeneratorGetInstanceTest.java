@@ -70,6 +70,6 @@ class JcaAlgorithmParameterGeneratorGetInstanceTest extends TestBase {
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(PublicKeyEncryption.class);
         assertThat(node).isInstanceOf(DH.class);
-        assertThat(node.asString()).isEqualTo("DH-3072");
+        assertThat(node.asString()).isEqualTo("FFDH-3072");
     }
 }

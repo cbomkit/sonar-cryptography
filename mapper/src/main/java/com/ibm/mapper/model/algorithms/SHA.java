@@ -28,6 +28,20 @@ import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
+/**
+ *
+ *
+ * <h2>SHA-1 (Secure Hash Algorithm 1)</h2>
+ *
+ * <p>
+ *
+ * <h3>Specification</h3>
+ *
+ * <ul>
+ *   <li>https://csrc.nist.gov/projects/hash-functions
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SHA-1)
+ * </ul>
+ */
 public final class SHA extends Algorithm implements MessageDigest {
 
     public SHA(@Nonnull DetectionLocation detectionLocation) {
@@ -37,7 +51,7 @@ public final class SHA extends Algorithm implements MessageDigest {
     public SHA(
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull DetectionLocation detectionLocation) {
-        super("SHA1", asKind, detectionLocation);
+        super("SHA-1", asKind, detectionLocation);
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new DigestSize(160, detectionLocation));
         this.put(new Oid("1.3.14.3.2.26", detectionLocation));

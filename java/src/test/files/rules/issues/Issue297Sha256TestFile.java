@@ -10,7 +10,7 @@ public class Issue297Sha256TestFile {
     private static final int staticEntropy4 = initStaticEntropy();
 
     void test() {
-        SHA256Digest d = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        SHA256Digest d = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         d.update((byte)staticEntropy1);
         d.update((byte)staticEntropy2);
         d.update((byte)staticEntropy3);

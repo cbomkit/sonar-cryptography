@@ -68,7 +68,7 @@ public class BenchmarkTest00003 extends HttpServlet {
             benchmarkprops.load(
                     this.getClass().getClassLoader().getResourceAsStream("benchmark.properties"));
             String algorithm = benchmarkprops.getProperty("hashAlg1", "SHA512");
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance(algorithm); // Noncompliant {{(MessageDigest) SHA512}}
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance(algorithm); // Noncompliant {{(MessageDigest) SHA-512}}
             byte[] input = {(byte) '?'};
             Object inputParam = param;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();

@@ -84,7 +84,7 @@ class BcRSAKEMExtractorTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -138,14 +138,14 @@ class BcRSAKEMExtractorTest extends TestBase {
             INode keyDerivationFunctionNode = nodes.get(0);
             assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode.getChildren()).hasSize(1);
-            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA256");
+            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA-256");
 
             // MessageDigest under KeyDerivationFunction
             INode messageDigestNode =
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under KeyDerivationFunction
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -226,14 +226,14 @@ class BcRSAKEMExtractorTest extends TestBase {
                     keyEncapsulationMechanismNode.getChildren().get(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode).isNotNull();
             assertThat(keyDerivationFunctionNode.getChildren()).hasSize(1);
-            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA256");
+            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA-256");
 
             // MessageDigest under KeyDerivationFunction under KeyEncapsulationMechanism
             INode messageDigestNode =
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under KeyDerivationFunction under
             // KeyEncapsulationMechanism

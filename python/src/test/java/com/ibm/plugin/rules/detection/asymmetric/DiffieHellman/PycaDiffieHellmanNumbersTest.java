@@ -72,14 +72,14 @@ class PycaDiffieHellmanNumbersTest extends TestBase {
         INode publicKeyNode1 = nodes.get(0);
         assertThat(publicKeyNode1.getKind()).isEqualTo(PublicKey.class);
         assertThat(publicKeyNode1.getChildren()).hasSize(2);
-        assertThat(publicKeyNode1.asString()).isEqualTo("DH");
+        assertThat(publicKeyNode1.asString()).isEqualTo("FFDH");
 
         // PublicKeyEncryption under PublicKey
         INode publicKeyEncryptionNode1 =
                 publicKeyNode1.getChildren().get(PublicKeyEncryption.class);
         assertThat(publicKeyEncryptionNode1).isNotNull();
         assertThat(publicKeyEncryptionNode1.getChildren()).hasSize(1);
-        assertThat(publicKeyEncryptionNode1.asString()).isEqualTo("DH");
+        assertThat(publicKeyEncryptionNode1.asString()).isEqualTo("FFDH");
 
         // Oid under PublicKeyEncryption under PublicKey
         INode oidNode1 = publicKeyEncryptionNode1.getChildren().get(Oid.class);

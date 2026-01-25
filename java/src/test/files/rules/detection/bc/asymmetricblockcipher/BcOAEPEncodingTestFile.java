@@ -22,7 +22,7 @@ public class BcOAEPEncodingTestFile {
             // TODO: Using intermediate variables should also work
             // Digest digest = new ShortenedDigest(new SHA3Digest(), 16);
             // Digest digest = new SHA3Digest();
-            OAEPEncoding cipher = new OAEPEncoding(engine, new ShortenedDigest(new SHA3Digest(), 16)); // Noncompliant  {{(MessageDigest) SHA3}} {{(PublicKeyEncryption) RSA-OAEP}}
+            OAEPEncoding cipher = new OAEPEncoding(engine, new ShortenedDigest(new SHA3Digest(), 16)); // Noncompliant  {{(MessageDigest) SHA-3}} {{(PublicKeyEncryption) RSA-OAEP}}
 
             BigInteger mod = pub.getModulus();
             BigInteger exp = pub.getPublicExponent();
@@ -48,7 +48,7 @@ public class BcOAEPEncodingTestFile {
             // This detection should optimally not happen once RSA has been detected as a child finding of OAEPEncoding
             AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{(PublicKeyEncryption) RSA}}
 
-            OAEPEncoding cipher = new OAEPEncoding(engine, new NonMemoableDigest(new SHA3Digest()), new SHA512Digest(), new byte[16]); // Noncompliant {{(MessageDigest) SHA3}} {{(MessageDigest) SHA3}} {{(MessageDigest) SHA512}} {{(PublicKeyEncryption) RSA-OAEP}}
+            OAEPEncoding cipher = new OAEPEncoding(engine, new NonMemoableDigest(new SHA3Digest()), new SHA512Digest(), new byte[16]); // Noncompliant {{(MessageDigest) SHA-3}} {{(MessageDigest) SHA-3}} {{(MessageDigest) SHA-512}} {{(PublicKeyEncryption) RSA-OAEP}}
 
             BigInteger mod = pub.getModulus();
             BigInteger exp = pub.getPublicExponent();

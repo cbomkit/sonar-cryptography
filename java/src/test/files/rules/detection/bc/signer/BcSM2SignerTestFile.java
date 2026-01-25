@@ -10,7 +10,7 @@ public class BcSM2SignerTestFile {
     public static void test() {
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Initialize SM2Signer
         SM2Signer signer = new SM2Signer(new StandardDSAEncoding(), digest);

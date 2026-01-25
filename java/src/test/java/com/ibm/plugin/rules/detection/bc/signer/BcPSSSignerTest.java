@@ -85,7 +85,7 @@ class BcPSSSignerTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -130,7 +130,7 @@ class BcPSSSignerTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest
             INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
@@ -217,7 +217,7 @@ class BcPSSSignerTest extends TestBase {
             assertThat(probabilisticSignatureSchemeNode.getKind())
                     .isEqualTo(ProbabilisticSignatureScheme.class);
             assertThat(probabilisticSignatureSchemeNode.getChildren()).hasSize(5);
-            assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSASSA-PSS");
+            assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSA-PSS");
 
             // Sign under ProbabilisticSignatureScheme
             INode signNode = probabilisticSignatureSchemeNode.getChildren().get(Sign.class);
@@ -245,7 +245,7 @@ class BcPSSSignerTest extends TestBase {
                     maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest under MaskGenerationFunction under
             // ProbabilisticSignatureScheme
@@ -299,7 +299,7 @@ class BcPSSSignerTest extends TestBase {
                     probabilisticSignatureSchemeNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(4);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-256");
 
             // BlockSize under MessageDigest under ProbabilisticSignatureScheme
             INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);

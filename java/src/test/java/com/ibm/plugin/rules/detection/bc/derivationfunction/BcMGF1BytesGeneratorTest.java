@@ -80,7 +80,7 @@ class BcMGF1BytesGeneratorTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -142,7 +142,7 @@ class BcMGF1BytesGeneratorTest extends TestBase {
                     maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest under MaskGenerationFunction
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

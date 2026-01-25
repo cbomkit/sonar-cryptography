@@ -68,7 +68,7 @@ class JcaSignatureMapperTest {
         assertThat(signatureOptional.get().getDigest()).isPresent();
         MessageDigest messageDigest = signatureOptional.get().getDigest().get();
         assertThat(messageDigest).isInstanceOf(SHA2.class);
-        assertThat(messageDigest.getName()).isEqualTo("SHA384");
+        assertThat(messageDigest.getName()).isEqualTo("SHA-384");
         assertThat(messageDigest.getDigestSize()).isPresent();
         assertThat(messageDigest.getDigestSize().get().getValue()).isEqualTo(384);
     }
@@ -89,7 +89,7 @@ class JcaSignatureMapperTest {
         assertThat(signatureOptional.get().getDigest()).isPresent();
         MessageDigest messageDigest = signatureOptional.get().getDigest().get();
         assertThat(messageDigest).isInstanceOf(SHA3.class);
-        assertThat(messageDigest.getName()).isEqualTo("SHA3-224");
+        assertThat(messageDigest.getName()).isEqualTo("SHA-3-224");
         assertThat(messageDigest.getDigestSize()).isPresent();
         assertThat(messageDigest.getDigestSize().get().getValue()).isEqualTo(224);
     }
@@ -111,7 +111,7 @@ class JcaSignatureMapperTest {
         assertThat(signatureOptional.get().getDigest()).isPresent();
         MessageDigest messageDigest = signatureOptional.get().getDigest().get();
         assertThat(messageDigest).isInstanceOf(SHA.class);
-        assertThat(messageDigest.getName()).isEqualTo("SHA1");
+        assertThat(messageDigest.getName()).isEqualTo("SHA-1");
         assertThat(messageDigest.getDigestSize()).isPresent();
         assertThat(messageDigest.getDigestSize().get().getValue()).isEqualTo(160);
     }
@@ -128,7 +128,7 @@ class JcaSignatureMapperTest {
         assertThat(signatureOptional).isPresent();
         assertThat(signatureOptional.get()).isInstanceOf(RSAssaPSS.class);
         assertThat(signatureOptional.get().is(ProbabilisticSignatureScheme.class)).isTrue();
-        assertThat(signatureOptional.get().getName()).isEqualTo("RSASSA-PSS");
+        assertThat(signatureOptional.get().getName()).isEqualTo("RSA-PSS");
         assertThat(signatureOptional.get().getFormat()).isEmpty();
     }
 }

@@ -118,7 +118,7 @@ class GoCryptoEd25519SignTest extends TestBase {
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // Digest under MessageDigest under Signature
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -213,7 +213,7 @@ class GoCryptoEd25519SignTest extends TestBase {
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
 
             // Digest under MessageDigest under Signature
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
