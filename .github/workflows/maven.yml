@@ -37,7 +37,7 @@ jobs:
       # Persist CBOM after a job has completed and share
       # that CBOM with another job in the same workflow.
     - name: Commit changes to new branch
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: "CBOM"
         path: ${{ steps.cbom.outputs.pattern }}
