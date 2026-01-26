@@ -12,6 +12,6 @@ func main() {
 	keyLen := 32
 
 	// PBKDF2 Key derivation
-	key := pbkdf2.Key(password, salt, iterations, keyLen, sha256.New) // Noncompliant {{(PasswordBasedKeyDerivationFunction) PBKDF2-SHA256}}
+	key := pbkdf2.Key(password, salt, iterations, keyLen, sha256.New) // Noncompliant {{(PasswordBasedKeyDerivationFunction) PBKDF2-SHA-256}}
 	_ = key
 }

@@ -117,13 +117,13 @@ class PycaFernetEncryptTest extends TestBase {
         INode macNode = authenticatedEncryptionNode.getChildren().get(Mac.class);
         assertThat(macNode).isNotNull();
         assertThat(macNode.getChildren()).hasSize(3);
-        assertThat(macNode.asString()).isEqualTo("HMAC-SHA256");
+        assertThat(macNode.asString()).isEqualTo("HMAC-SHA-256");
 
         // MessageDigest under Mac under AuthenticatedEncryption under SecretKey
         INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // Digest under MessageDigest under Mac under AuthenticatedEncryption under SecretKey
         INode digestNode = messageDigestNode.getChildren().get(Digest.class);

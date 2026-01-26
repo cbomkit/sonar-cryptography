@@ -145,13 +145,13 @@ class JcaGCMParameterSpecTest extends TestBase {
             assertThat(passwordBasedKeyDerivationFunctionNode).isNotNull();
             assertThat(passwordBasedKeyDerivationFunctionNode.getChildren()).hasSize(2);
             assertThat(passwordBasedKeyDerivationFunctionNode.asString())
-                    .isEqualTo("PBKDF2-HMAC-SHA256");
+                    .isEqualTo("PBKDF2-HMAC-SHA-256");
 
             // Mac under PasswordBasedKeyDerivationFunction under SecretKey
             INode macNode = passwordBasedKeyDerivationFunctionNode.getChildren().get(Mac.class);
             assertThat(macNode).isNotNull();
             assertThat(macNode.getChildren()).hasSize(3);
-            assertThat(macNode.asString()).isEqualTo("HMAC-SHA256");
+            assertThat(macNode.asString()).isEqualTo("HMAC-SHA-256");
 
             // Oid under Mac under PasswordBasedKeyDerivationFunction under SecretKey
             INode oidNode = macNode.getChildren().get(Oid.class);
@@ -163,7 +163,7 @@ class JcaGCMParameterSpecTest extends TestBase {
             INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Oid under MessageDigest under Mac under PasswordBasedKeyDerivationFunction under
             // SecretKey

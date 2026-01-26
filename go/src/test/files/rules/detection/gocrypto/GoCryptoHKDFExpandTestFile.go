@@ -14,6 +14,6 @@ func main() {
 	prk := hkdf.Extract(sha256.New, secret, salt)
 
 	// HKDF Expand step
-	reader := hkdf.Expand(sha256.New, prk, info, 32) // Noncompliant {{(KeyDerivationFunction) HKDF-SHA256}}
+	reader := hkdf.Expand(sha256.New, prk, info, 32) // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
 	_ = reader
 }

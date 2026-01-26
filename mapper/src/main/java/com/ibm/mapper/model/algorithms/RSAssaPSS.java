@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
 /**
  *
  *
- * <h2>{@value #NAME}</h2>
+ * <h2>RSA-PSS (RSA Probabilistic Signature Scheme)</h2>
  *
  * <p>
  *
@@ -35,16 +35,18 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>https://www.cryptosys.net/pki/manpki/pki_rsaschemes.html
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: RSA-PSS)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
  *
  * <ul>
+ *   <li>RSASSA-PSS
  * </ul>
  */
 public final class RSAssaPSS extends Algorithm implements ProbabilisticSignatureScheme {
 
     public RSAssaPSS(@Nonnull DetectionLocation detectionLocation) {
-        super("RSASSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
+        super("RSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
     }
 }

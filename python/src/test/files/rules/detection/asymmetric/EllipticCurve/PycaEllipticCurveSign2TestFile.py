@@ -17,7 +17,7 @@ public_key.verify(signature, b"my authenticated message")
 # 
 # PrivateKey EC
 #   Signature EdDSA
-#       MessageDigest SHA512
+#       MessageDigest SHA-512
 #       EllipticCurveAlgorithm EC
 #           EllipticCurve Curve25519
 #       Sign SIGN

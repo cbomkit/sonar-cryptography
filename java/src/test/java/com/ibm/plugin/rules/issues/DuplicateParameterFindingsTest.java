@@ -145,7 +145,7 @@ class DuplicateParameterFindingsTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
 
             // Digest under MessageDigest under PublicKeyEncryption
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -171,7 +171,7 @@ class DuplicateParameterFindingsTest extends TestBase {
                     maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(4);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA512");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-512");
 
             // BlockSize under MessageDigest under MaskGenerationFunction under PublicKeyEncryption
             INode blockSizeNode = messageDigestNode1.getChildren().get(BlockSize.class);
@@ -217,7 +217,7 @@ class DuplicateParameterFindingsTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

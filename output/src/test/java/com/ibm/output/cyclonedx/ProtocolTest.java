@@ -97,7 +97,7 @@ class ProtocolTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("SHA256withDSA", "SHA256", "AES256-CBC", "TLS", "DH");
+                            .contains("SHA-256withDSA", "SHA-256", "AES256-CBC", "TLS", "FFDH");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -109,17 +109,17 @@ class ProtocolTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("SHA256withDSA");
+                                assertThat(component.getName()).isEqualTo("SHA-256withDSA");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.3.2");
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
-                                assertThat(component.getName()).isEqualTo("SHA256");
+                                assertThat(component.getName()).isEqualTo("SHA-256");
                                 assertThat(algorithmProperties.getParameterSetIdentifier())
                                         .isEqualTo("256");
                             } else if (algorithmProperties
                                     .getPrimitive()
                                     .equals(Primitive.KEY_AGREE)) {
-                                assertThat(component.getName()).isEqualTo("DH");
+                                assertThat(component.getName()).isEqualTo("FFDH");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("1.2.840.113549.1.3.1");
                             } else if (algorithmProperties
@@ -182,7 +182,7 @@ class ProtocolTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("SHA256withDSA", "SHA256", "AES256-CBC", "TLSv1.3", "DH");
+                            .contains("SHA-256withDSA", "SHA-256", "AES256-CBC", "TLSv1.3", "FFDH");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -194,17 +194,17 @@ class ProtocolTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("SHA256withDSA");
+                                assertThat(component.getName()).isEqualTo("SHA-256withDSA");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.3.2");
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
-                                assertThat(component.getName()).isEqualTo("SHA256");
+                                assertThat(component.getName()).isEqualTo("SHA-256");
                                 assertThat(algorithmProperties.getParameterSetIdentifier())
                                         .isEqualTo("256");
                             } else if (algorithmProperties
                                     .getPrimitive()
                                     .equals(Primitive.KEY_AGREE)) {
-                                assertThat(component.getName()).isEqualTo("DH");
+                                assertThat(component.getName()).isEqualTo("FFDH");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("1.2.840.113549.1.3.1");
                             } else if (algorithmProperties

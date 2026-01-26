@@ -11,7 +11,7 @@ public class BcDSADigestSignerTestFile {
     public static void test() {
 
         // Initialize the Digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Initialize DSASginer
         DSASigner dsa = new DSASigner(); // Noncompliant {{(Signature) DSA}}
@@ -19,7 +19,7 @@ public class BcDSADigestSignerTestFile {
         // Initialize DSADigestSigner
         DSADigestSigner signer =
                 new DSADigestSigner(dsa, digest, new StandardDSAEncoding());
-        // Noncompliant@-1 {{(Signature) SHA256withDSA}}
+        // Noncompliant@-1 {{(Signature) SHA-256withDSA}}
 
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
 

@@ -84,7 +84,7 @@ class JcaSignatureSetParameterTest extends TestBase {
         assertThat(probabilisticSignatureSchemeNode.getKind())
                 .isEqualTo(ProbabilisticSignatureScheme.class);
         assertThat(probabilisticSignatureSchemeNode.getChildren()).hasSize(2);
-        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSASSA-PSS");
+        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSA-PSS");
 
         // SaltLength under ProbabilisticSignatureScheme
         INode saltLengthNode = probabilisticSignatureSchemeNode.getChildren().get(SaltLength.class);

@@ -103,7 +103,7 @@ class JcaSignatureSetParameter3Test extends TestBase {
         assertThat(probabilisticSignatureSchemeNode.getKind())
                 .isEqualTo(ProbabilisticSignatureScheme.class);
         assertThat(probabilisticSignatureSchemeNode.getChildren()).hasSize(4);
-        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSASSA-PSS");
+        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSA-PSS");
 
         // SaltLength under ProbabilisticSignatureScheme
         INode saltLengthNode = probabilisticSignatureSchemeNode.getChildren().get(SaltLength.class);
@@ -116,7 +116,7 @@ class JcaSignatureSetParameter3Test extends TestBase {
                 probabilisticSignatureSchemeNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA3-256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-3-256");
 
         // DigestSize under MessageDigest under ProbabilisticSignatureScheme
         INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -154,7 +154,7 @@ class JcaSignatureSetParameter3Test extends TestBase {
                 maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode1).isNotNull();
         assertThat(messageDigestNode1.getChildren()).hasSize(4);
-        assertThat(messageDigestNode1.asString()).isEqualTo("SHA1");
+        assertThat(messageDigestNode1.asString()).isEqualTo("SHA-1");
 
         // DigestSize under MessageDigest under MaskGenerationFunction under
         // ProbabilisticSignatureScheme

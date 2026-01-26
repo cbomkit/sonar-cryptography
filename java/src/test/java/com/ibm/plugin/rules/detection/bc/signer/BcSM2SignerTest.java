@@ -82,7 +82,7 @@ class BcSM2SignerTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
@@ -158,7 +158,7 @@ class BcSM2SignerTest extends TestBase {
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under Signature
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

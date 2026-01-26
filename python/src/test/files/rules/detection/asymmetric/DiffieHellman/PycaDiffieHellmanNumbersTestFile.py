@@ -8,6 +8,6 @@ def generate_dh_key_from_parameters(
     """
     Generates a DH private key from parameters p, g, x, and y.
     """
-    public_numbers = dh.DHPublicNumbers(y, p, g) # Noncompliant {{(PublicKey) DH}}
-    private_numbers = DHPrivateNumbers(x, public_numbers) # Noncompliant {{(PublicKey) DH}}
+    public_numbers = dh.DHPublicNumbers(y, p, g) # Noncompliant {{(PublicKey) FFDH}}
+    private_numbers = DHPrivateNumbers(x, public_numbers) # Noncompliant {{(PublicKey) FFDH}}
     return private_numbers.private_key(default_backend())

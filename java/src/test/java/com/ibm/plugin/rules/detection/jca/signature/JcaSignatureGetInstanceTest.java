@@ -78,7 +78,7 @@ class JcaSignatureGetInstanceTest extends TestBase {
         INode signatureNode = nodes.get(0);
         assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
         assertThat(signatureNode.getChildren()).hasSize(3);
-        assertThat(signatureNode.asString()).isEqualTo("SHA384withDSA");
+        assertThat(signatureNode.asString()).isEqualTo("SHA-384withDSA");
 
         // KeyLength under Signature
         INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);
@@ -96,7 +96,7 @@ class JcaSignatureGetInstanceTest extends TestBase {
         INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA384");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-384");
 
         // Oid under MessageDigest under Signature
         INode oidNode1 = messageDigestNode.getChildren().get(Oid.class);

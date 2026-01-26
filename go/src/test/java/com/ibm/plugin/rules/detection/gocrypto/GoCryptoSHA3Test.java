@@ -73,17 +73,17 @@ class GoCryptoSHA3Test extends TestBase {
             case 0 -> {
                 // sha3.New256()
                 assertThat(value0.asString()).isEqualTo("SHA3-256");
-                assertThat(digestNode.asString()).isEqualTo("SHA3-256");
+                assertThat(digestNode.asString()).isEqualTo("SHA-3-256");
             }
             case 1 -> {
                 // sha3.New512()
                 assertThat(value0.asString()).isEqualTo("SHA3-512");
-                assertThat(digestNode.asString()).isEqualTo("SHA3-512");
+                assertThat(digestNode.asString()).isEqualTo("SHA-3-512");
             }
             case 2 -> {
                 // sha3.Sum256()
                 assertThat(value0.asString()).isEqualTo("SHA3-256");
-                assertThat(digestNode.asString()).isEqualTo("SHA3-256");
+                assertThat(digestNode.asString()).isEqualTo("SHA-3-256");
             }
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

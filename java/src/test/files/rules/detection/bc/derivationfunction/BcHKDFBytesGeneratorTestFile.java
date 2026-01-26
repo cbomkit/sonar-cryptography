@@ -9,7 +9,7 @@ public class BcHKDFBytesGeneratorTestFile {
 
     public static void test1() {
         // Define the digest algorithm to be used (e.g., SHA-256)
-        Digest hash = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest hash = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Input keying material (IKM) - your input key
         byte[] ikm = Hex.decode("0123456789ABCDEF0123456789ABCDEF");
@@ -25,7 +25,7 @@ public class BcHKDFBytesGeneratorTestFile {
 
         // Create the HKDFBytesGenerator
         HKDFBytesGenerator hkdfGenerator =
-                new HKDFBytesGenerator(hash); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA256}}
+                new HKDFBytesGenerator(hash); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
 
         // Initialize the generator with parameters
         hkdfGenerator.init(new HKDFParameters(ikm, salt, info));
@@ -55,7 +55,7 @@ public class BcHKDFBytesGeneratorTestFile {
 
         // Create the HKDFBytesGenerator
         HKDFBytesGenerator hkdfGenerator =
-                new HKDFBytesGenerator(new SHA512Digest()); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA512}} {{(MessageDigest) SHA512}}
+                new HKDFBytesGenerator(new SHA512Digest()); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-512}} {{(MessageDigest) SHA-512}}
 
         // Initialize the generator with parameters
         hkdfGenerator.init(new HKDFParameters(ikm, salt, info));

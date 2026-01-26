@@ -135,7 +135,7 @@ class PycaRSASign1Test extends TestBase {
                 privateKeyNode.getChildren().get(ProbabilisticSignatureScheme.class);
         assertThat(probabilisticSignatureSchemeNode).isNotNull();
         assertThat(probabilisticSignatureSchemeNode.getChildren()).hasSize(3);
-        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSASSA-PSS");
+        assertThat(probabilisticSignatureSchemeNode.asString()).isEqualTo("RSA-PSS");
 
         // MaskGenerationFunction under ProbabilisticSignatureScheme under PrivateKey
         INode maskGenerationFunctionNode =
@@ -149,7 +149,7 @@ class PycaRSASign1Test extends TestBase {
         INode messageDigestNode = maskGenerationFunctionNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
         // BlockSize under MessageDigest under MaskGenerationFunction under
         // ProbabilisticSignatureScheme under PrivateKey
@@ -190,7 +190,7 @@ class PycaRSASign1Test extends TestBase {
                 probabilisticSignatureSchemeNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode1).isNotNull();
         assertThat(messageDigestNode1.getChildren()).hasSize(4);
-        assertThat(messageDigestNode1.asString()).isEqualTo("SHA384");
+        assertThat(messageDigestNode1.asString()).isEqualTo("SHA-384");
 
         // BlockSize under MessageDigest under ProbabilisticSignatureScheme under PrivateKey
         INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);

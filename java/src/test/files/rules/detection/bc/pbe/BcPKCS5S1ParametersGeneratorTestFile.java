@@ -13,7 +13,7 @@ public class BcPKCS5S1ParametersGeneratorTestFile {
         int keyLength = 128; // in bits
 
         // Create a digest (SHA-256 in this example)
-        SHA256Digest sha256Digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        SHA256Digest sha256Digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Create the PKCS5S1ParametersGenerator with the digest
         PKCS5S1ParametersGenerator generator =

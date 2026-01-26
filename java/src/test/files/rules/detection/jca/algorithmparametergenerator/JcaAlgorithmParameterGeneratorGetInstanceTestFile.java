@@ -6,6 +6,6 @@ import java.security.NoSuchAlgorithmException;
 public class JcaAlgorithmParameterGeneratorGetInstanceTestFile {
 
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator.getInstance("DiffieHellman"); // Noncompliant {{(PublicKeyEncryption) DH-3072}}
+        AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator.getInstance("DiffieHellman"); // Noncompliant {{(PublicKeyEncryption) FFDH-3072}}
     }
 }

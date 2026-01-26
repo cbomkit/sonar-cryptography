@@ -12,7 +12,7 @@ def exchange(public_key):
         ec.ECDH(), public_key)
     
     # Perform key derivation. // TODO: How should this key derivation be linked to the private key?
-    derived_key = HKDF( # Noncompliant {{(KeyDerivationFunction) HKDF-SHA256}}
+    derived_key = HKDF( # Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
          algorithm=hashes.SHA256(),
          length=32,
          salt=None,

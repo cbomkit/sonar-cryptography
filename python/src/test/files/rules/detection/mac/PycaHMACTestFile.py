@@ -6,7 +6,7 @@ def generate_hmac(key, data):
     algorithm = hashes.SHA256()
     
     # Creating the HMAC context
-    hmac_ctx = hmac.HMAC(key, algorithm) # Noncompliant {{(Mac) HMAC-SHA256}}
+    hmac_ctx = hmac.HMAC(key, algorithm) # Noncompliant {{(Mac) HMAC-SHA-256}}
     
     # Updating the context with the data
     hmac_ctx.update(data)

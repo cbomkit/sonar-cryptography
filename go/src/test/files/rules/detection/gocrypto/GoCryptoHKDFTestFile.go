@@ -11,6 +11,6 @@ func main() {
 	info := []byte("info")
 
 	// HKDF Key derivation
-	reader := hkdf.New(sha256.New, secret, salt, info) // Noncompliant {{(KeyDerivationFunction) HKDF-SHA256}}
+	reader := hkdf.New(sha256.New, secret, salt, info) // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
 	_ = reader
 }

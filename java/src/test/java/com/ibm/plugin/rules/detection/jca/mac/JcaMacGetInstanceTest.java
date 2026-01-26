@@ -79,13 +79,13 @@ class JcaMacGetInstanceTest extends TestBase {
         INode macNode = nodes.get(0);
         assertThat(macNode.getKind()).isEqualTo(Mac.class);
         assertThat(macNode.getChildren()).hasSize(3);
-        assertThat(macNode.asString()).isEqualTo("HMAC-SHA3-384");
+        assertThat(macNode.asString()).isEqualTo("HMAC-SHA-3-384");
 
         // MessageDigest under Mac
         INode messageDigestNode = macNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA3-384");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA-3-384");
 
         // Digest under MessageDigest under Mac
         INode digestNode = messageDigestNode.getChildren().get(Digest.class);

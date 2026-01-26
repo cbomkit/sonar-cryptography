@@ -10,10 +10,10 @@ public class BcHMacTestFile {
         byte[] key = "0123456789abcdef".getBytes(StandardCharsets.UTF_8);
 
         // Initialize SHA-256 digest
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         // Initialize HMac with the digest
-        HMac hmac = new HMac(digest); // Noncompliant {{(Mac) HMAC-SHA256}}
+        HMac hmac = new HMac(digest); // Noncompliant {{(Mac) HMAC-SHA-256}}
 
         // Compute HMAC
         hmac.init(new KeyParameter(key)); // Initialize MAC with the same key as the cipher

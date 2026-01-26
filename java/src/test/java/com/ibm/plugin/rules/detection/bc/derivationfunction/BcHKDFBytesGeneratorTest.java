@@ -80,7 +80,7 @@ class BcHKDFBytesGeneratorTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -134,14 +134,14 @@ class BcHKDFBytesGeneratorTest extends TestBase {
             INode keyDerivationFunctionNode = nodes.get(0);
             assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode.getChildren()).hasSize(1);
-            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA256");
+            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA-256");
 
             // MessageDigest under KeyDerivationFunction
             INode messageDigestNode =
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under KeyDerivationFunction
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

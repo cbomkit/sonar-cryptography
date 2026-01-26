@@ -96,6 +96,6 @@ class SSLServerSocketSetEnabledCipherSuitesTest extends TestBase {
         INode assetCollectionNode = cipherSuiteNode.getChildren().get(AssetCollection.class);
         assertThat(assetCollectionNode).isNotNull();
         assertThat(assetCollectionNode.getChildren()).isEmpty();
-        assertThat(assetCollectionNode.asString()).isEqualTo("[DH, AES256-CBC, SHA256withDSA]");
+        assertThat(assetCollectionNode.asString()).isEqualTo("[FFDH, AES256-CBC, SHA-256withDSA]");
     }
 }

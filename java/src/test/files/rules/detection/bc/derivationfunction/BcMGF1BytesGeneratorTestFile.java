@@ -6,7 +6,7 @@ public class BcMGF1BytesGeneratorTestFile {
 
     public static void main(String[] args) {
 
-        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+        Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         MGF1BytesGenerator mgfFunction = new MGF1BytesGenerator(digest);
         // Noncompliant@-1 {{(MaskGenerationFunction) MGF1}}
 

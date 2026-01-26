@@ -55,7 +55,7 @@ class JcaPRNGMapperTest {
                 jcaPRNGMapper.parse("SHA1PRNG", testDetectionLocation);
         assertThat(prngOptional).isPresent();
         assertThat(prngOptional.get()).isInstanceOf(PseudorandomNumberGenerator.class);
-        assertThat(prngOptional.get().getName()).isEqualTo("SHA1");
+        assertThat(prngOptional.get().getName()).isEqualTo("SHA-1");
         assertThat(prngOptional.get().hasChildren()).isTrue();
     }
 }

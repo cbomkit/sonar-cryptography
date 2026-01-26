@@ -14,9 +14,9 @@ public class BcPSSSignerTestFile {
 
         // Initialize the necessary parameters
         Digest contentDigest =
-                new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA256}}
+                new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
         Digest mgfDigest =
-                new SHA512Digest(); // Noncompliant {{(MessageDigest) SHA512}}
+                new SHA512Digest(); // Noncompliant {{(MessageDigest) SHA-512}}
         byte[] salt = new byte[20]; // Salt for the PSS padding
         byte trailer = 0x01; // Trailer field value
 
@@ -25,7 +25,7 @@ public class BcPSSSignerTestFile {
 
         // Initialize PSSSigner
         PSSSigner signer = new PSSSigner(cipher, contentDigest, mgfDigest, salt, trailer);
-        // Noncompliant@-1 {{(ProbabilisticSignatureScheme) RSASSA-PSS}}
+        // Noncompliant@-1 {{(ProbabilisticSignatureScheme) RSA-PSS}}
 
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
 

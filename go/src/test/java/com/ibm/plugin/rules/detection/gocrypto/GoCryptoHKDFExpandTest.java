@@ -100,7 +100,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
             INode keyDerivationFunctionNode = nodes.get(0);
             assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode.getChildren()).hasSize(3);
-            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA256");
+            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("HKDF-SHA-256");
 
             // KeyLength under KeyDerivationFunction
             INode keyLengthNode = keyDerivationFunctionNode.getChildren().get(KeyLength.class);
@@ -113,7 +113,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
                     keyDerivationFunctionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest under KeyDerivationFunction
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -162,7 +162,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
                     keyDerivationFunctionNode1.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(2);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-256");
 
             // Digest under MessageDigest under KeyDerivationFunction
             INode digestNode1 = messageDigestNode1.getChildren().get(Digest.class);
