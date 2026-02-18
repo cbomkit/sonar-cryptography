@@ -26,12 +26,12 @@ import com.ibm.mapper.model.Version;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SSLVersionMapperTest {
 
     @Test
-    public void test1() {
+    public void tlsv12IsParsedAsVersion1_2() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -44,7 +44,7 @@ public class SSLVersionMapperTest {
     }
 
     @Test
-    public void test2() {
+    public void tlsv1WithoutPatchIsParsedAsVersion1_0() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -57,7 +57,7 @@ public class SSLVersionMapperTest {
     }
 
     @Test
-    public void test3() {
+    public void tlsv13LowercaseIsParsedAsVersion1_3() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -67,5 +67,15 @@ public class SSLVersionMapperTest {
         assertThat(version).isPresent();
         assertThat(version.get().is(Version.class)).isTrue();
         assertThat(version.get().asString()).isEqualTo("1.3");
+    }
+
+    @Test
+    public void testDtlsVersionReturnsEmpty() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final SSLVersionMapper mapper = new SSLVersionMapper();
+        assertThat(mapper.parse("DTLSv1.2", testDetectionLocation)).isEmpty();
+        assertThat(mapper.parse("DTLSv1.0", testDetectionLocation)).isEmpty();
     }
 }
