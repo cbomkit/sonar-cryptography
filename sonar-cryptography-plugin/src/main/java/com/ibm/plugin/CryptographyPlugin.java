@@ -51,6 +51,9 @@ public class CryptographyPlugin implements Plugin {
                 // csharp
                 CSharpScannerRuleDefinition.class, // Define C# rules
                 CryptoCSharpSensor.class, // Custom sensor (sonar-csharp has no CheckRegistrar API)
+                // cpp
+                CxxScannerRuleDefinition.class, // Define C++ rules
+                CxxCheckRegistrar.class, // Register C++ rules by sonar-cxx sensor
                 // general
                 OutputFileJob.class);
     }

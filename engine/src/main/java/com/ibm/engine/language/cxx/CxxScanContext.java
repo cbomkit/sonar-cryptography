@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2026 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,31 +17,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.engine.language.go.tree;
+package com.ibm.engine.language.cxx;
 
-import java.util.List;
+import com.ibm.engine.language.IScanContext;
+import com.sonar.cxx.sslr.api.AstNode;
+import com.sonar.cxx.sslr.api.Grammar;
 import javax.annotation.Nonnull;
-import org.sonar.go.impl.BaseTreeImpl;
-import org.sonar.plugins.go.api.BlockTree;
-import org.sonar.plugins.go.api.Tree;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
+import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-public class TreeWithBlock extends BaseTreeImpl implements ITreeWithBlock {
-    private final BlockTree blockTree;
-    private final List<Tree> children;
-
-    public TreeWithBlock(@Nonnull Tree tree, @Nonnull BlockTree blockTree) {
-        super(tree.metaData());
-        this.children = tree.children();
-        this.blockTree = blockTree;
-    }
+public record CxxScanContext(@Nonnull SquidAstVisitorContext<? extends Grammar> cxxVisitorContext)
+        implements IScanContext<SquidCheck<?>, AstNode> {
 
     @Override
-    public List<Tree> children() {
-        return children;
+    public void reportIssue(
+            @Nonnull SquidCheck<?> currentRule, @Nonnull AstNode tree, @Nonnull String message) {
+        currentRule.addIssue(tree, message);
     }
 
+    @Nonnull
     @Override
-    public @Nonnull BlockTree blockTree() {
-        return blockTree;
+    public InputFile getInputFile() {
+        return this.cxxVisitorContext.getInputFile();
+    }
+
+    @Nonnull
+    @Override
+    public String getFilePath() {
+        return this.cxxVisitorContext.getInputFile().uri().getPath();
     }
 }

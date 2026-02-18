@@ -14,6 +14,7 @@
         <module>python</module>
         <module>go</module>
         <module>csharp</module>
+        <module>cpp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
@@ -51,6 +52,8 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.16.0.29940</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
+        <!-- sonar-cxx (community plugin) version -->
+        <sonar.cxx.version>2.2.2-SNAPSHOT</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
@@ -131,6 +134,17 @@
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
+        </dependency>
+        <!-- sonar-cxx (community plugin for C/C++ support) -->
+        <dependency>
+            <groupId>org.sonarsource.sonarqube-plugins.cxx</groupId>
+            <artifactId>cxx-squid-bridge</artifactId>
+            <version>${sonar.cxx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.sonarsource.sonarqube-plugins.cxx</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
         </dependency>
 
         <!-- unit tests -->

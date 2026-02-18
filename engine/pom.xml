@@ -29,6 +29,11 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>4.13.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.sonarsource.sonarqube-plugins.cxx</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

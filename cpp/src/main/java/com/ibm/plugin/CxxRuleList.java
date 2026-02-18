@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2026 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,31 +17,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.engine.language.go.tree;
+package com.ibm.plugin;
 
+import com.ibm.plugin.rules.CxxInventoryRule;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.sonar.go.impl.BaseTreeImpl;
-import org.sonar.plugins.go.api.BlockTree;
-import org.sonar.plugins.go.api.Tree;
 
-public class TreeWithBlock extends BaseTreeImpl implements ITreeWithBlock {
-    private final BlockTree blockTree;
-    private final List<Tree> children;
+public final class CxxRuleList {
 
-    public TreeWithBlock(@Nonnull Tree tree, @Nonnull BlockTree blockTree) {
-        super(tree.metaData());
-        this.children = tree.children();
-        this.blockTree = blockTree;
+    private CxxRuleList() {}
+
+    public static @Nonnull List<Class<?>> getChecks() {
+        List<Class<?>> checks = new ArrayList<>();
+        checks.addAll(getCxxChecks());
+        checks.addAll(getCxxTestChecks());
+        return Collections.unmodifiableList(checks);
     }
 
-    @Override
-    public List<Tree> children() {
-        return children;
+    /** These rules are going to target MAIN code only */
+    public static @Nonnull List<Class<?>> getCxxChecks() {
+        return List.of(CxxInventoryRule.class);
     }
 
-    @Override
-    public @Nonnull BlockTree blockTree() {
-        return blockTree;
+    /** These rules are going to target TEST code only */
+    public static @Nonnull List<Class<?>> getCxxTestChecks() {
+        return List.of();
     }
 }
