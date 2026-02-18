@@ -10,13 +10,12 @@ name: Java CI with Maven
 
 permissions:
   contents: write
-  packages: write
 
 on:
   push:
-    branches: [ "main", "dev/*" ]
+    branches: ["main", "dev/*"]
   pull_request:
-    branches: [ "main", "dev/*" ]
+    branches: ["main", "dev/*"]
 
 jobs:
   build:
