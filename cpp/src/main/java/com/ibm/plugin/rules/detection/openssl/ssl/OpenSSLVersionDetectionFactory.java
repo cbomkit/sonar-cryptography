@@ -17,35 +17,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.mapper.ssl;
+package com.ibm.plugin.rules.detection.openssl.ssl;
 
-import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.Version;
-import com.ibm.mapper.utils.DetectionLocation;
+import com.ibm.engine.model.IAction;
+import com.ibm.engine.model.factory.IActionFactory;
+import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public final class SSLVersionMapper implements IMapper {
+/**
+ * Factory for creating OpenSSL version detection values.
+ *
+ * <p>This factory creates {@link OpenSSLVersionValue} instances which extract and resolve version
+ * parameters from SSL_CTX_set_min/max_proto_version function calls.
+ *
+ * <p>Used as a workaround for C++ detection engine limitations with parameter extraction via the
+ * builder API.
+ */
+public final class OpenSSLVersionDetectionFactory implements IActionFactory<AstNode> {
+
+    @Nonnull private final String kind; // "MIN" or "MAX"
+
+    public OpenSSLVersionDetectionFactory(@Nonnull String kind) {
+        this.kind = kind;
+    }
+
     @Nonnull
     @Override
-    public Optional<Version> parse(
-            @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
-        if (str == null) {
-            return Optional.empty();
-        }
-
-        Pattern pattern = Pattern.compile("^tlsv(\\d+(\\.\\d+)?)");
-        Matcher matcher = pattern.matcher(str.toLowerCase());
-        if (matcher.find()) {
-            String number = matcher.group(1);
-            if (number.equals("1")) {
-                number = "1.0";
-            }
-            return Optional.of(new Version(number, detectionLocation));
-        }
-        return Optional.empty();
+    public Optional<IAction<AstNode>> apply(@Nonnull AstNode astNode) {
+        return Optional.of(new OpenSSLVersionValue(kind, astNode));
     }
 }

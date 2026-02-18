@@ -17,35 +17,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.mapper.ssl;
+package com.ibm.mapper.model.algorithms;
 
-import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.Version;
+import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public final class SSLVersionMapper implements IMapper {
-    @Nonnull
-    @Override
-    public Optional<Version> parse(
-            @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
-        if (str == null) {
-            return Optional.empty();
-        }
+/**
+ *
+ *
+ * <h2>{@value #NAME}</h2>
+ *
+ * <p>Hybrid post-quantum key encapsulation mechanism combining ECDH P-384 (secp384r1, NIST P-384)
+ * with ML-KEM-1024 (post-quantum KEM).
+ *
+ * <p>TLS Named Group: 0x11ED
+ *
+ * <p>Also known as SecP384r1Kyber1024Draft00 (earlier draft name). Provides high-security
+ * quantum-safe key exchange for TLS 1.3.
+ */
+public final class SecP384r1MLKEM1024 extends Algorithm implements KeyEncapsulationMechanism {
 
-        Pattern pattern = Pattern.compile("^tlsv(\\d+(\\.\\d+)?)");
-        Matcher matcher = pattern.matcher(str.toLowerCase());
-        if (matcher.find()) {
-            String number = matcher.group(1);
-            if (number.equals("1")) {
-                number = "1.0";
-            }
-            return Optional.of(new Version(number, detectionLocation));
-        }
-        return Optional.empty();
+    private static final String NAME = "SecP384r1MLKEM1024";
+
+    public SecP384r1MLKEM1024(@Nonnull DetectionLocation detectionLocation) {
+        super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
 }
