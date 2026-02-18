@@ -24,17 +24,17 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.Unknown;
-import com.ibm.mapper.model.algorithms.Dilithium;
 import com.ibm.mapper.model.algorithms.Falcon;
 import com.ibm.mapper.model.algorithms.GMSS;
 import com.ibm.mapper.model.algorithms.GeMSS;
 import com.ibm.mapper.model.algorithms.HSS;
 import com.ibm.mapper.model.algorithms.LMS;
+import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.Picnic;
 import com.ibm.mapper.model.algorithms.QTESLA;
 import com.ibm.mapper.model.algorithms.Rainbow;
+import com.ibm.mapper.model.algorithms.SLHDSA;
 import com.ibm.mapper.model.algorithms.SPHINCS;
-import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.model.algorithms.XMSS;
 import com.ibm.mapper.model.algorithms.XMSSMT;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -58,7 +58,7 @@ public class BcMessageSignerMapper implements IMapper {
     private Optional<? extends INode> map(
             @Nonnull String signerString, @Nonnull DetectionLocation detectionLocation) {
         return switch (signerString) {
-            case "DilithiumSigner" -> Optional.of(new Dilithium(detectionLocation));
+            case "DilithiumSigner" -> Optional.of(new MLDSA(detectionLocation));
             case "FalconSigner" -> Optional.of(new Falcon(detectionLocation));
             case "GeMSSSigner" -> Optional.of(new GeMSS(detectionLocation));
             case "GMSSSigner" -> Optional.of(new GMSS(detectionLocation));
@@ -67,7 +67,7 @@ public class BcMessageSignerMapper implements IMapper {
             case "PicnicSigner" -> Optional.of(new Picnic(detectionLocation));
             case "QTESLASigner" -> Optional.of(new QTESLA(detectionLocation));
             case "RainbowSigner" -> Optional.of(new Rainbow(detectionLocation));
-            case "SPHINCSPlusSigner" -> Optional.of(new SPHINCSPlus(detectionLocation));
+            case "SPHINCSPlusSigner" -> Optional.of(new SLHDSA(detectionLocation));
             case "SPHINCS256Signer" -> Optional.of(new SPHINCS(256, detectionLocation));
             /* StateAwareMessageSigner subinterface */
             case "XMSSMTSigner" -> Optional.of(new XMSSMT(detectionLocation));
