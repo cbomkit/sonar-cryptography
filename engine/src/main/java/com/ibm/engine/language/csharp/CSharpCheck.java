@@ -17,28 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.engine.language.csharp;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
+import javax.annotation.Nonnull;
 
-class PluginTest {
+/**
+ * Marker interface for C# cryptography detection checks.
+ *
+ * <p>Since sonar-csharp exposes no custom rule registration API (unlike Java's CheckRegistrar or
+ * Python's PythonCustomRuleRepository), {@link CryptoCSharpSensor} calls {@link #scan} directly for
+ * every method body it encounters during ANTLR4-based parsing.
+ */
+public interface CSharpCheck {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
-    }
+    /**
+     * Invoked once per method body found in a C# source file.
+     *
+     * @param scanContext the current scan context (input file, sensor context, repository key)
+     * @param blockTree the method body to analyse
+     */
+    void scan(@Nonnull CSharpScanContext scanContext, @Nonnull CSharpBlockTree blockTree);
 }

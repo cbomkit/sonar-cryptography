@@ -66,6 +66,7 @@ public final class ScannerManager {
         nodes.addAll(JavaAggregator.getDetectedNodes());
         nodes.addAll(PythonAggregator.getDetectedNodes());
         nodes.addAll(GoAggregator.getDetectedNodes());
+        nodes.addAll(CSharpAggregator.getDetectedNodes());
         return nodes;
     }
 
@@ -73,5 +74,6 @@ public final class ScannerManager {
         JavaAggregator.reset();
         PythonAggregator.reset();
         GoAggregator.reset();
+        CSharpAggregator.reset();
     }
 }
