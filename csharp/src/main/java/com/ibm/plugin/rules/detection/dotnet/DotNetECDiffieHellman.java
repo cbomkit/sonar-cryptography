@@ -52,17 +52,6 @@ public final class DotNetECDiffieHellman {
                     .forObjectTypes("ECDiffieHellman")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
-                    .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
-
-    private static final IDetectionRule<CSharpTree> ECDH_CREATE_WITH_CURVE =
-            new DetectionRuleBuilder<CSharpTree>()
-                    .createDetectionRule()
-                    .forObjectTypes("ECDiffieHellman")
-                    .forMethods("Create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "DotNet")
@@ -81,6 +70,6 @@ public final class DotNetECDiffieHellman {
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
-        return List.of(ECDH_CREATE, ECDH_CREATE_WITH_CURVE, ECDH_CNG);
+        return List.of(ECDH_CREATE, ECDH_CNG);
     }
 }

@@ -52,17 +52,6 @@ public final class DotNetECDsa {
                     .forObjectTypes("ECDsa")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
-                    .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
-
-    private static final IDetectionRule<CSharpTree> ECDSA_CREATE_WITH_CURVE =
-            new DetectionRuleBuilder<CSharpTree>()
-                    .createDetectionRule()
-                    .forObjectTypes("ECDsa")
-                    .forMethods("Create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "DotNet")
@@ -81,6 +70,6 @@ public final class DotNetECDsa {
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
-        return List.of(ECDSA_CREATE, ECDSA_CREATE_WITH_CURVE, ECDSA_CNG);
+        return List.of(ECDSA_CREATE, ECDSA_CNG);
     }
 }

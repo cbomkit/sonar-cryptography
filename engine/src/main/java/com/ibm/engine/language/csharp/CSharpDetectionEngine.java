@@ -55,6 +55,20 @@ import javax.annotation.Nullable;
  * <p>Symbol resolution is intentionally minimal: ANTLR4 provides no semantic type inference, so
  * only literal values ({@link CSharpLiteralTree}), enum-style member accesses ({@link
  * CSharpMemberAccessTree}), and direct identifiers ({@link CSharpIdentifierTree}) are resolved.
+ *
+ * <p><b>Known limitation — variable tracking:</b> This engine does not track assignments across
+ * statements. As a result, patterns like the following are <em>not</em> detected:
+ *
+ * <pre>{@code
+ * var aes = Aes.Create();
+ * aes.Mode = CipherMode.CBC;   // property assignment is invisible
+ * aes.KeySize = 256;           // property assignment is invisible
+ * aes.GenerateKey();           // method call on variable is not linked to creation
+ * }</pre>
+ *
+ * <p>Only the creation site ({@code Aes.Create()}) is detected. Subsequent property assignments and
+ * method calls on the same variable are not associated with the finding. A full symbol table (e.g.
+ * from Roslyn) would be required to resolve this limitation.
  */
 @SuppressWarnings("java:S3776")
 public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree, CSharpSymbol> {
@@ -374,15 +388,35 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     @Override
     public boolean isInvocationOnVariable(
             CSharpTree methodInvocation, @Nonnull TraceSymbol<CSharpSymbol> variableSymbol) {
-        // Requires variable tracking across statements — not supported in first PR
-        return false;
+        if (!(methodInvocation instanceof CSharpMethodInvocationTree invocation)) {
+            return false;
+        }
+        CSharpSymbol sym = variableSymbol.getSymbol();
+        if (sym == null) {
+            return false;
+        }
+        // The objectTypeName holds the receiver — matches when it equals the variable name
+        // (e.g. "aes" in aes.Encrypt(...) matches TraceSymbol("aes"))
+        return invocation.getObjectTypeName().equals(sym.getName());
     }
 
     @Override
     public boolean isInitForVariable(
             CSharpTree newClass, @Nonnull TraceSymbol<CSharpSymbol> variableSymbol) {
-        // Requires variable tracking — not supported in first PR
-        return false;
+        String assignedId = null;
+        if (newClass instanceof CSharpMethodInvocationTree invocation) {
+            assignedId = invocation.getAssignedIdentifier();
+        } else if (newClass instanceof CSharpObjectCreationTree creation) {
+            assignedId = creation.getAssignedIdentifier();
+        }
+        if (assignedId == null) {
+            return false;
+        }
+        CSharpSymbol sym = variableSymbol.getSymbol();
+        if (sym == null) {
+            return false;
+        }
+        return assignedId.equals(sym.getName());
     }
 
     @Nullable @Override

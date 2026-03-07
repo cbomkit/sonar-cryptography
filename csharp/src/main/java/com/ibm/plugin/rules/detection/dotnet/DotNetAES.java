@@ -83,25 +83,27 @@ public final class DotNetAES {
                     .withDependingDetectionRules(List.of());
 
     // new AesGcm(key) — GCM authenticated encryption
+    // TODO: capture key parameter (byte[] key) to extract key length as a known gap
     private static final IDetectionRule<CSharpTree> AES_GCM =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("AesGcm")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withoutParameters()
+                    .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(List.of());
 
     // new AesCcm(key) — CCM authenticated encryption
+    // TODO: capture key parameter (byte[] key) to extract key length as a known gap
     private static final IDetectionRule<CSharpTree> AES_CCM =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("AesCcm")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withoutParameters()
+                    .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(List.of());

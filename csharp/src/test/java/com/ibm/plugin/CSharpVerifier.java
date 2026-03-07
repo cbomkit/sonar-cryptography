@@ -21,9 +21,10 @@ package com.ibm.plugin;
 
 import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpScanContext;
+import com.ibm.engine.language.csharp.CSharpTreeConverter;
+import com.ibm.engine.language.csharp.antlr.CSharpLexer;
+import com.ibm.engine.language.csharp.antlr.CSharpParser;
 import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
-import com.ibm.plugin.antlr.CSharpLexer;
-import com.ibm.plugin.antlr.CSharpParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

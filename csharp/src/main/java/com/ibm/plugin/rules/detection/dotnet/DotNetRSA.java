@@ -53,34 +53,12 @@ public final class DotNetRSA {
                     .forObjectTypes("RSA")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
-                    .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
-
-    private static final IDetectionRule<CSharpTree> RSA_CREATE_WITH_SIZE =
-            new DetectionRuleBuilder<CSharpTree>()
-                    .createDetectionRule()
-                    .forObjectTypes("RSA")
-                    .forMethods("Create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "RSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(List.of());
 
     private static final IDetectionRule<CSharpTree> RSA_CRYPTO_SERVICE_PROVIDER =
-            new DetectionRuleBuilder<CSharpTree>()
-                    .createDetectionRule()
-                    .forObjectTypes("RSACryptoServiceProvider")
-                    .forMethods("<init>")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withoutParameters()
-                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
-                    .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
-
-    private static final IDetectionRule<CSharpTree> RSA_CRYPTO_SERVICE_PROVIDER_WITH_SIZE =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("RSACryptoServiceProvider")
@@ -93,10 +71,6 @@ public final class DotNetRSA {
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
-        return List.of(
-                RSA_CREATE,
-                RSA_CREATE_WITH_SIZE,
-                RSA_CRYPTO_SERVICE_PROVIDER,
-                RSA_CRYPTO_SERVICE_PROVIDER_WITH_SIZE);
+        return List.of(RSA_CREATE, RSA_CRYPTO_SERVICE_PROVIDER);
     }
 }

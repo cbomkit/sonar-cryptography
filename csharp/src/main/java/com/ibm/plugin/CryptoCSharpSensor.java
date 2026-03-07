@@ -21,9 +21,10 @@ package com.ibm.plugin;
 
 import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpScanContext;
+import com.ibm.engine.language.csharp.CSharpTreeConverter;
+import com.ibm.engine.language.csharp.antlr.CSharpLexer;
+import com.ibm.engine.language.csharp.antlr.CSharpParser;
 import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
-import com.ibm.plugin.antlr.CSharpLexer;
-import com.ibm.plugin.antlr.CSharpParser;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -135,10 +136,12 @@ public class CryptoCSharpSensor implements Sensor {
             CSharpLexer lexer =
                     new CSharpLexer(CharStreams.fromString(content, inputFile.toString()));
             lexer.removeErrorListeners();
+            lexer.addErrorListener(new CSharpParserErrorListener(inputFile));
 
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             CSharpParser parser = new CSharpParser(tokens);
             parser.removeErrorListeners();
+            parser.addErrorListener(new CSharpParserErrorListener(inputFile));
 
             return parser.compilation_unit();
         } catch (RuntimeException e) {
