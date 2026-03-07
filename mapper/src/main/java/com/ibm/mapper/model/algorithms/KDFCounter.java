@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>See 4.1 in https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-108r1-upd1.pdf
- *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SP800-108-CounterKDF)
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SP800_108_CounterKDF)
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
@@ -46,8 +46,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class KDFCounter extends Algorithm implements KeyDerivationFunction {
-
-    private static final String NAME = "SP800-108-CounterKDF";
+    private static final String NAME = "SP800_108_CounterKDF";
 
     public KDFCounter(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);

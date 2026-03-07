@@ -60,7 +60,7 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
     public @Nonnull String asString() {
         if (this.is(Signature.class)) {
             return this.hasChildOfType(MessageDigest.class)
-                    .map(node -> node.asString() + "with" + this.name)
+                    .map(node -> node.asString() + "-" + this.name)
                     .orElse(this.name);
         } else if (this.is(PublicKeyEncryption.class)) {
             Optional<INode> keyLength = this.hasChildOfType(KeyLength.class);

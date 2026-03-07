@@ -52,7 +52,7 @@ public final class LMS extends Algorithm implements Signature, MessageDigest {
     @Override
     public @Nonnull String asString() {
         return this.hasChildOfType(MessageDigest.class)
-                .map(node -> node.asString() + "with" + this.name)
+                .map(node -> node.asString() + "_" + this.name)
                 .orElse(this.name);
     }
 

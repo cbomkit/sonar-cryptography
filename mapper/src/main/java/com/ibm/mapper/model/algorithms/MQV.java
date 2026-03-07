@@ -43,7 +43,7 @@ import javax.annotation.Nonnull;
  *   <li>Menezes-Qu-Vanstone
  * </ul>
  */
-public final class MQV extends Algorithm implements KeyAgreement {
+public class MQV extends Algorithm implements KeyAgreement {
 
     private static final String NAME = "MQV";
 

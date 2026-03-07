@@ -48,7 +48,7 @@ import javax.annotation.Nonnull;
  *   <li>Standardized version of Dilithium
  * </ul>
  */
-public class MLDSA extends Algorithm implements Signature {
+public final class MLDSA extends Algorithm implements Signature {
     private static final String NAME = "ML-DSA";
 
     /** Returns a name of the form "ML-DSA-XXX" where XXX is the parameter set identifer */
@@ -58,7 +58,7 @@ public class MLDSA extends Algorithm implements Signature {
         StringBuilder builtName =
                 new StringBuilder(
                         this.hasChildOfType(MessageDigest.class)
-                                .map(node -> node.asString() + "with" + this.name)
+                                .map(node -> node.asString() + "-" + this.name)
                                 .orElse(this.name));
         Optional<INode> parameterSetIdentifier = this.hasChildOfType(ParameterSetIdentifier.class);
         parameterSetIdentifier.ifPresent(node -> builtName.append("-").append(node.asString()));

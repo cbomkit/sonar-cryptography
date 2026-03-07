@@ -17,22 +17,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.model;
+package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.Cipher;
+import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Mac;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PasswordBasedEncryption;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
-public class PBES1 extends Algorithm implements PasswordBasedEncryption {
-    // https://datatracker.ietf.org/doc/html/rfc2898#section-6.1
-    // https://datatracker.ietf.org/doc/html/rfc2898#appendix-A.3
+/**
+ *
+ *
+ * <h2>{@value #NAME}</h2>
+ *
+ * <p>
+ *
+ * <h3>Specification</h3>
+ *
+ * <ul>
+ *   <li><a href="https://doi.org/10.17487/RFC8018">RFC8018</a>
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>PKCS#5
+ * </ul>
+ */
+public final class PBES2 extends Algorithm implements PasswordBasedEncryption {
+    private static final String NAME = "PBES2"; // id-PBES2
 
-    private static final String NAME = "PBES1";
-
-    /**
-     * Returns a name of the form "pbeWithXXXAndYYY" where XXX is a hash function and YYY is a block
-     * cipher
-     */
     @Override
     @Nonnull
     public String asString() {
@@ -40,48 +60,38 @@ public class PBES1 extends Algorithm implements PasswordBasedEncryption {
         final Optional<INode> mac = this.hasChildOfType(Mac.class);
         final Optional<INode> cipher = this.hasChildOfType(BlockCipher.class);
 
-        if (messageDigest.isPresent() && cipher.isPresent() && cipher.get() instanceof Cipher c) {
-            return "pbeWith" + messageDigest.get().asString() + "And" + c.getName();
-        } else if (mac.isPresent()) {
-            String n = "pbeWith" + changeHMACNameing(mac.get().asString());
-            return cipher.map(node -> n + "And" + node.asString()).orElse(n);
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
+
+        if (cipher.isPresent()) {
+            stringBuilder.append("-").append(cipher.get().asString());
+            if (mac.isPresent()) {
+                stringBuilder.append("-").append(mac.get().asString());
+            } else
+                messageDigest.ifPresent(
+                        iNode -> stringBuilder.append("-").append(iNode.asString()));
         }
-        return this.name;
+        return stringBuilder.toString();
     }
 
-    public PBES1(@Nonnull DetectionLocation detectionLocation) {
+    public PBES2(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedEncryption.class, detectionLocation);
-        /*
-         * TODO: add OIDs from the RFC. See also:
-         * https://www.alvestrand.no/objectid/1.2.840.113549.1.5.html
-         * https://www.alvestrand.no/objectid/1.2.840.113549.1.12.1.html
-         */
+        this.put(new Oid("1.2.840.113549.1.5", detectionLocation));
     }
 
-    // example: PBEWithHmacSHA1AndAES_128
-    public PBES1(@Nonnull Mac mac, @Nonnull Cipher cipher) {
+    public PBES2(@Nonnull Mac mac, @Nonnull Cipher cipher) {
         this(mac.getDetectionContext());
         this.put(mac);
         this.put(cipher);
     }
 
-    // example: PBEWithMD5AndDES
-    public PBES1(@Nonnull MessageDigest digest, @Nonnull Cipher cipher) {
+    public PBES2(@Nonnull MessageDigest digest, @Nonnull Cipher cipher) {
         this(digest.getDetectionContext());
         this.put(digest);
         this.put(cipher);
     }
 
-    // example: PBEWithHmacSHA1
-    public PBES1(@Nonnull Mac mac) {
+    public PBES2(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
-    }
-
-    private @Nonnull String changeHMACNameing(@Nonnull String hmacName) {
-        if (!hmacName.contains("HMAC-")) {
-            return hmacName;
-        }
-        return hmacName.replace("HMAC-", "Hmac");
     }
 }

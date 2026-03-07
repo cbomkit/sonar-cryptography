@@ -17,12 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.model;
+package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.Cipher;
+import com.ibm.mapper.model.Mac;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.PasswordBasedEncryption;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
-public class PKCS12PBE extends Algorithm implements PasswordBasedEncryption {
+public final class PKCS12PBE extends Algorithm implements PasswordBasedEncryption {
     // https://www.rfc-editor.org/rfc/rfc7292#appendix-B
 
     private static final String NAME = "PKCS12"; // id-PKCS12PBE

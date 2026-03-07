@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
  * <ul>
  * </ul>
  */
-public class Picnic extends Algorithm implements Signature {
+public final class Picnic extends Algorithm implements Signature {
 
     private static final String NAME = "Picnic";
 

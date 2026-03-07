@@ -19,7 +19,12 @@
  */
 package com.ibm.mapper.model.algorithms.ies;
 
+import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.KeyDerivationFunction;
+import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -43,8 +48,28 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public class ECIES extends IES {
-
     private static final String NAME = "ECIES";
+
+    @Nonnull
+    @Override
+    public String asString() {
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
+
+        this.hasChildOfType(EllipticCurve.class)
+                .ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        this.hasChildOfType(KeyDerivationFunction.class)
+                .ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        // both ciphers
+        this.hasChildOfType(BlockCipher.class)
+                .ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        this.hasChildOfType(StreamCipher.class)
+                .ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+
+        this.hasChildOfType(Mac.class)
+                .ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+
+        return stringBuilder.toString();
+    }
 
     public ECIES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PublicKeyEncryption.class, detectionLocation);

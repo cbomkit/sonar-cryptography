@@ -19,7 +19,6 @@
  */
 package com.ibm.mapper.model.algorithms;
 
-import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -44,7 +43,7 @@ import javax.annotation.Nonnull;
  *   <li>elliptic curve MQV
  * </ul>
  */
-public final class ECMQV extends Algorithm implements KeyAgreement {
+public final class ECMQV extends MQV {
 
     private static final String NAME = "ECMQV"; // elliptic curve MQV
 

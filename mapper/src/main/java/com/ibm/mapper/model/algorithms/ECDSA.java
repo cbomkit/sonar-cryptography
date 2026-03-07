@@ -50,9 +50,13 @@ public final class ECDSA extends Algorithm implements Signature {
     @Nonnull
     @Override
     public String asString() {
-        return this.hasChildOfType(MessageDigest.class)
-                .map(node -> node.asString() + "with" + this.name)
-                .orElse(this.name);
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
+
+        this.hasChildOfType(EllipticCurve.class)
+                .ifPresent(iNode -> stringBuilder.append("-").append(iNode.asString()));
+        this.hasChildOfType(MessageDigest.class)
+                .ifPresent(iNode -> stringBuilder.append("-").append(iNode.asString()));
+        return stringBuilder.toString();
     }
 
     public ECDSA(@Nonnull DetectionLocation detectionLocation) {
