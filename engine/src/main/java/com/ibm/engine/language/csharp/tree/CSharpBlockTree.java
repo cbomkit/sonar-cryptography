@@ -38,6 +38,14 @@ public final class CSharpBlockTree implements CSharpTree {
         this.line = line;
         this.column = column;
         this.statements = statements;
+        // Back-patch each statement so getEnclosingMethod() can navigate back to this block
+        for (CSharpTree statement : statements) {
+            if (statement instanceof CSharpMethodInvocationTree inv) {
+                inv.setEnclosingBlock(this);
+            } else if (statement instanceof CSharpObjectCreationTree creation) {
+                creation.setEnclosingBlock(this);
+            }
+        }
     }
 
     @Override

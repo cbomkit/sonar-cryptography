@@ -45,7 +45,7 @@ public final class CSharpObjectCreationTree implements CSharpTree {
     @Nullable private final String assignedIdentifier;
 
     /** The enclosing block tree (for depending rule context). */
-    @Nullable private final CSharpBlockTree enclosingBlock;
+    @Nullable private CSharpBlockTree enclosingBlock;
 
     public CSharpObjectCreationTree(
             int line,
@@ -94,5 +94,10 @@ public final class CSharpObjectCreationTree implements CSharpTree {
 
     @Nullable public CSharpBlockTree getEnclosingBlock() {
         return enclosingBlock;
+    }
+
+    /** Back-patched by {@link CSharpBlockTree} once the block is fully constructed. */
+    public void setEnclosingBlock(@Nonnull CSharpBlockTree enclosingBlock) {
+        this.enclosingBlock = enclosingBlock;
     }
 }

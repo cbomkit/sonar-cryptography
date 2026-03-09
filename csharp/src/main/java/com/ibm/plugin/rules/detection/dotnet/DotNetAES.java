@@ -19,8 +19,13 @@
  */
 package com.ibm.plugin.rules.detection.dotnet;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.ModeFactory;
+import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -46,6 +51,45 @@ public final class DotNetAES {
         // nothing
     }
 
+    // aes.Mode = CipherMode.CBC  →  synthetic set_Mode(CipherMode.CBC)
+    private static final IDetectionRule<CSharpTree> AES_SET_MODE =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("set_Mode")
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new ModeFactory<>())
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.KeySize = 256  →  synthetic set_KeySize(256)
+    private static final IDetectionRule<CSharpTree> AES_SET_KEY_SIZE =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("set_KeySize")
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.Padding = PaddingMode.PKCS7  →  synthetic set_Padding(PaddingMode.PKCS7)
+    private static final IDetectionRule<CSharpTree> AES_SET_PADDING =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("set_Padding")
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    private static final List<IDetectionRule<CSharpTree>> PROPERTY_SETTER_RULES =
+            List.of(AES_SET_MODE, AES_SET_KEY_SIZE, AES_SET_PADDING);
+
     // Aes.Create() — abstract factory
     private static final IDetectionRule<CSharpTree> AES_CREATE =
             new DetectionRuleBuilder<CSharpTree>()
@@ -56,7 +100,7 @@ public final class DotNetAES {
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
+                    .withDependingDetectionRules(PROPERTY_SETTER_RULES);
 
     // new AesManaged() — legacy concrete class
     private static final IDetectionRule<CSharpTree> AES_MANAGED =
@@ -68,7 +112,7 @@ public final class DotNetAES {
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
+                    .withDependingDetectionRules(PROPERTY_SETTER_RULES);
 
     // new AesCng() — CNG-backed implementation
     private static final IDetectionRule<CSharpTree> AES_CNG =
@@ -80,7 +124,7 @@ public final class DotNetAES {
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
-                    .withDependingDetectionRules(List.of());
+                    .withDependingDetectionRules(PROPERTY_SETTER_RULES);
 
     // new AesGcm(key) — GCM authenticated encryption
     // TODO: capture key parameter (byte[] key) to extract key length as a known gap

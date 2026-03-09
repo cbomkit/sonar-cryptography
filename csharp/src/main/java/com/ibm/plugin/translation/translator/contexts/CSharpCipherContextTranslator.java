@@ -22,12 +22,16 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.model.BlockSize;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
+import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.OperationMode;
+import com.ibm.engine.model.Padding;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
+import com.ibm.mapper.mapper.jca.JcaModeMapper;
+import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
@@ -82,6 +86,14 @@ public final class CSharpCipherContextTranslator
             return operationModeMapper
                     .parse(operationMode.asString(), detectionLocation)
                     .map(f -> f);
+        } else if (value instanceof Mode<?> mode) {
+            // From set_Mode property setter: CipherMode.CBC → "CBC"
+            JcaModeMapper modeMapper = new JcaModeMapper();
+            return modeMapper.parse(mode.asString(), detectionLocation).map(m -> m);
+        } else if (value instanceof Padding<?> padding) {
+            // From set_Padding property setter: PaddingMode.PKCS7 → "PKCS7"
+            JcaPaddingMapper paddingMapper = new JcaPaddingMapper();
+            return paddingMapper.parse(padding.asString(), detectionLocation).map(p -> p);
         }
 
         return Optional.empty();

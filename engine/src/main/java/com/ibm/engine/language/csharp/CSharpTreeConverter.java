@@ -149,6 +149,86 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
         }
 
         /**
+         * Handles property-setter assignments of the form {@code obj.Property = value}.
+         *
+         * <p>Emits a synthetic {@link CSharpMethodInvocationTree} with method name {@code
+         * set_<Property>} (e.g. {@code set_Mode}) and the RHS as the sole argument. This mirrors
+         * the underlying CLR semantics — C# properties compile to {@code get_X}/{@code set_X}
+         * accessor methods. The synthetic node is then picked up by {@code isInvocationOnVariable}
+         * + {@code withDependingDetectionRules} in the detection engine.
+         *
+         * <p>Stops recursion so that neither the LHS nor the RHS {@code primary_expression} nodes
+         * are visited separately.
+         */
+        @Override
+        public Void visitAssignment(CSharpParser.AssignmentContext ctx) {
+            // Only handle simple assignment (=), not compound (+=, -=, etc.)
+            if (ctx.assignment_operator() == null
+                    || ctx.assignment_operator().ASSIGNMENT() == null) {
+                return null;
+            }
+
+            // Find primary_expression inside the LHS unary_expression
+            CSharpParser.Primary_expressionContext lhsPrimary =
+                    findPrimaryExpression(ctx.unary_expression());
+            if (lhsPrimary == null) {
+                return null;
+            }
+
+            List<ParseTree> children = lhsPrimary.children;
+            if (children == null || children.size() < 2) {
+                return null;
+            }
+
+            CSharpParser.Primary_expression_startContext start =
+                    lhsPrimary.primary_expression_start();
+            if (!(start instanceof CSharpParser.SimpleNameExpressionContext simpleCtx)) {
+                return null;
+            }
+
+            // LHS must be exactly: identifier.PropertyName — one member_access, no method
+            // invocation
+            String propertyName = null;
+            for (int i = 1; i < children.size(); i++) {
+                if (children.get(i) instanceof CSharpParser.Member_accessContext memberCtx) {
+                    if (propertyName != null) {
+                        return null; // chained access like a.b.c — skip
+                    }
+                    propertyName = memberCtx.identifier().getText();
+                } else if (children.get(i) instanceof CSharpParser.Method_invocationContext) {
+                    return null; // method call, not a property assignment
+                }
+            }
+            if (propertyName == null) {
+                return null;
+            }
+
+            String variableName = simpleCtx.identifier().getText();
+            String setterName = "set_" + propertyName;
+
+            // Convert RHS expression to the setter argument
+            CSharpParser.ExpressionContext rhs = ctx.expression();
+            if (rhs == null) {
+                return null;
+            }
+            CSharpTree rhsTree = convertExpression(rhs);
+            List<CSharpTree> args =
+                    rhsTree != null ? Collections.singletonList(rhsTree) : Collections.emptyList();
+
+            statements.add(
+                    new CSharpMethodInvocationTree(
+                            ctx.getStart().getLine(),
+                            ctx.getStart().getCharPositionInLine(),
+                            variableName,
+                            setterName,
+                            args,
+                            null, // property setters are not themselves assigned to a variable
+                            null)); // enclosingBlock set by CSharpBlockTree constructor
+
+            return null; // do NOT visit children — prevents double-counting LHS / RHS nodes
+        }
+
+        /**
          * Converts the primary_expression and adds it to the statement list. Does NOT recurse
          * further to avoid double-counting nested primary_expressions. Consumes {@link
          * #pendingAssignedIdentifier} so it is applied to the outermost call only.

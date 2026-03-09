@@ -56,19 +56,17 @@ import javax.annotation.Nullable;
  * only literal values ({@link CSharpLiteralTree}), enum-style member accesses ({@link
  * CSharpMemberAccessTree}), and direct identifiers ({@link CSharpIdentifierTree}) are resolved.
  *
- * <p><b>Known limitation — variable tracking:</b> This engine does not track assignments across
- * statements. As a result, patterns like the following are <em>not</em> detected:
+ * <p><b>Variable tracking — property setters:</b> Property assignments on a detected variable (e.g.
+ * {@code aes.Mode = CipherMode.CBC}) are supported via synthetic method invocations emitted by
+ * {@link CSharpTreeConverter}. Each assignment {@code obj.Prop = val} is converted to a synthetic
+ * {@code CSharpMethodInvocationTree} with method name {@code set_Prop} and {@code val} as the
+ * argument. The detection engine's {@code isInvocationOnVariable} then matches these synthetic
+ * nodes against the tracked variable, and {@code withDependingDetectionRules} chains fire the
+ * appropriate detection rule.
  *
- * <pre>{@code
- * var aes = Aes.Create();
- * aes.Mode = CipherMode.CBC;   // property assignment is invisible
- * aes.KeySize = 256;           // property assignment is invisible
- * aes.GenerateKey();           // method call on variable is not linked to creation
- * }</pre>
- *
- * <p>Only the creation site ({@code Aes.Create()}) is detected. Subsequent property assignments and
- * method calls on the same variable are not associated with the finding. A full symbol table (e.g.
- * from Roslyn) would be required to resolve this limitation.
+ * <p>Only single-level property assignments on simple local variables are tracked (e.g. {@code
+ * aes.Mode = ...}). Chained access ({@code aes.Inner.Mode = ...}) and method calls ({@code
+ * aes.GenerateKey()}) on the variable are <em>not</em> linked to the creation finding.
  */
 @SuppressWarnings("java:S3776")
 public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree, CSharpSymbol> {
@@ -98,9 +96,13 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     public void run(@Nonnull TraceSymbol<CSharpSymbol> traceSymbol, @Nonnull CSharpTree tree) {
         if (tree instanceof CSharpBlockTree blockTree) {
             for (CSharpTree statement : blockTree.getStatements()) {
-                processStatement(statement, blockTree);
+                processStatement(traceSymbol, statement);
             }
         } else if (tree instanceof CSharpMethodInvocationTree invocation) {
+            if (traceSymbol.is(TraceSymbol.State.SYMBOL)
+                    && !isInvocationOnVariable(invocation, traceSymbol)) {
+                return;
+            }
             handler.addCallToCallStack(invocation, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
@@ -108,6 +110,10 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
                 analyseMethodInvocation(invocation);
             }
         } else if (tree instanceof CSharpObjectCreationTree creation) {
+            if (traceSymbol.is(TraceSymbol.State.SYMBOL)
+                    && !isInitForVariable(creation, traceSymbol)) {
+                return;
+            }
             handler.addCallToCallStack(creation, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
@@ -117,10 +123,20 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
     }
 
-    /** Dispatches a single statement within a block for detection. */
+    /**
+     * Dispatches a single statement within a block for detection.
+     *
+     * <p>When {@code traceSymbol} has state {@link TraceSymbol.State#SYMBOL} (i.e. we are scanning
+     * for depending rules on a tracked variable), only statements that are invocations on that
+     * variable are processed.
+     */
     private void processStatement(
-            @Nonnull CSharpTree statement, @Nonnull CSharpBlockTree enclosingBlock) {
+            @Nonnull TraceSymbol<CSharpSymbol> traceSymbol, @Nonnull CSharpTree statement) {
         if (statement instanceof CSharpMethodInvocationTree invocation) {
+            if (traceSymbol.is(TraceSymbol.State.SYMBOL)
+                    && !isInvocationOnVariable(invocation, traceSymbol)) {
+                return;
+            }
             handler.addCallToCallStack(invocation, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
@@ -128,6 +144,10 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
                 analyseMethodInvocation(invocation);
             }
         } else if (statement instanceof CSharpObjectCreationTree creation) {
+            if (traceSymbol.is(TraceSymbol.State.SYMBOL)
+                    && !isInitForVariable(creation, traceSymbol)) {
+                return;
+            }
             handler.addCallToCallStack(creation, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
