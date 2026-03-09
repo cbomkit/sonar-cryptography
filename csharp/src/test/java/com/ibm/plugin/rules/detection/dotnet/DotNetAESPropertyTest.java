@@ -110,7 +110,7 @@ class DotNetAESPropertyTest extends TestBase {
                 assertThat(nodes).hasSize(1);
                 INode node = nodes.get(0);
                 assertThat(node.getKind()).isEqualTo(BlockCipher.class);
-                assertThat(node.asString()).isEqualTo("AES");
+                assertThat(node.asString()).isEqualTo("AES256-CBC-PKCS7");
                 INode keyLength = node.getChildren().get(KeyLength.class);
                 assertThat(keyLength).isNotNull();
                 assertThat(keyLength.asString()).isEqualTo("256");
@@ -144,7 +144,7 @@ class DotNetAESPropertyTest extends TestBase {
                 assertThat(nodes).hasSize(1);
                 INode node = nodes.get(0);
                 assertThat(node.getKind()).isEqualTo(BlockCipher.class);
-                assertThat(node.asString()).isEqualTo("AES");
+                assertThat(node.asString()).isEqualTo("AES128-ECB");
             }
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
