@@ -350,13 +350,9 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
         @Nullable private CSharpTree convertObjectCreationFromStart(
                 @Nonnull CSharpParser.ObjectCreationExpressionContext objCreationCtx,
                 @Nullable String assignedIdentifier) {
-            CSharpParser.Object_creation_expressionContext objExpr =
-                    objCreationCtx.object_creation_expression();
-            if (objExpr == null) {
-                return null;
-            }
-
-            CSharpParser.Type_Context typeCtx = objExpr.type_();
+            // In v7 grammar, type_ is directly on ObjectCreationExpressionContext
+            // (not nested inside object_creation_expression as in the old simplified grammar)
+            CSharpParser.Type_Context typeCtx = objCreationCtx.type_();
             if (typeCtx == null) {
                 return null;
             }
@@ -367,15 +363,18 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
                 typeName = typeName.substring(0, ltIdx);
             }
 
+            // In v7, object_creation_expression holds (OPEN_PARENS argument_list? CLOSE_PARENS)
+            // directly — there is no object_creation_args wrapper
             List<CSharpTree> args = Collections.emptyList();
-            CSharpParser.Object_creation_argsContext argsCtx = objExpr.object_creation_args();
-            if (argsCtx != null) {
-                args = convertArgumentList(argsCtx.argument_list());
+            CSharpParser.Object_creation_expressionContext objExpr =
+                    objCreationCtx.object_creation_expression();
+            if (objExpr != null) {
+                args = convertArgumentList(objExpr.argument_list());
             }
 
             return new CSharpObjectCreationTree(
-                    objExpr.getStart().getLine(),
-                    objExpr.getStart().getCharPositionInLine(),
+                    objCreationCtx.getStart().getLine(),
+                    objCreationCtx.getStart().getCharPositionInLine(),
                     typeName,
                     args,
                     assignedIdentifier,
@@ -504,7 +503,7 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             if (literalCtx.boolean_literal() != null) {
                 return new CSharpLiteralTree(line, col, CSharpLiteralTree.Kind.BOOLEAN, text);
             }
-            if (literalCtx.NULL() != null) {
+            if (literalCtx.NULL_() != null) {
                 return new CSharpLiteralTree(line, col, CSharpLiteralTree.Kind.NULL, "null");
             }
             return new CSharpLiteralTree(line, col, CSharpLiteralTree.Kind.STRING, text);
