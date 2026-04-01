@@ -24,7 +24,7 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.sonarsource.sonarqube-plugins.cxx</groupId>
+            <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
             <artifactId>cxx-squid</artifactId>
             <version>${sonar.cxx.version}</version>
         </dependency>
