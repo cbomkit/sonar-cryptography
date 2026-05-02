@@ -43,6 +43,11 @@ public class OutputFileJob implements PostJob {
                         .get(Constants.CBOM_OUTPUT_NAME)
                         .orElse(Constants.CBOM_OUTPUT_NAME_DEFAULT);
         ScannerManager scannerManager = new ScannerManager(new CBOMOutputFileFactory());
+        if (!scannerManager.hasResults()) {
+            LOGGER.info("No cryptography assets were detected. CBOM will not be generated.");
+            scannerManager.reset();
+            return;
+        }
         final File cbom = new File(cbomFilename + ".json");
         scannerManager.getOutputFile().saveTo(cbom);
         LOGGER.info("CBOM was successfully generated '{}'.", cbom.getAbsolutePath());
