@@ -32,6 +32,7 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
+import com.ibm.mapper.model.algorithms.MLKEM;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -57,6 +58,7 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                 case "ECDH" -> Optional.of(new ECDH(detectionLocation));
                 case "DSA" -> Optional.of(new DSA(detectionLocation));
                 case "KDF" -> Optional.of(new PBKDF2(detectionLocation));
+                case "MLKEM" -> Optional.of(new MLKEM(detectionLocation));
                 default -> Optional.empty();
             };
         } else if (value instanceof KeySize<?> keySize) {
