@@ -51,11 +51,6 @@ public class PBES1 extends Algorithm implements PasswordBasedEncryption {
 
     public PBES1(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedEncryption.class, detectionLocation);
-        /*
-         * TODO: add OIDs from the RFC. See also:
-         * https://www.alvestrand.no/objectid/1.2.840.113549.1.5.html
-         * https://www.alvestrand.no/objectid/1.2.840.113549.1.12.1.html
-         */
     }
 
     // example: PBEWithHmacSHA1AndAES_128
