@@ -691,7 +691,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
             Symbol symbol = symbolOptional.get();
             if (symbol.isVariableSymbol()) {
-                return symbol.name().equals(variable.name());
+                return areSymbolsEquivalent(symbol, variable);
             }
             return true;
         }
@@ -713,11 +713,34 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
             Symbol symbol = symbolOptional.get();
             if (symbol.isVariableSymbol()) {
-                return symbol.name().equals(variable.name());
+                return areSymbolsEquivalent(symbol, variable);
             }
             return true;
         }
         return false;
+    }
+
+    private boolean areSymbolsEquivalent(@Nonnull Symbol s1, @Nonnull Symbol s2) {
+        if (s1.equals(s2)) {
+            return true;
+        }
+
+        Symbol t1 = traceSymbol(s1);
+        Symbol t2 = traceSymbol(s2);
+
+        return t1.equals(t2);
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        Tree declaration = symbol.declaration();
+        if (declaration instanceof VariableTree variableTree) {
+            ExpressionTree initializer = variableTree.initializer();
+            if (initializer instanceof IdentifierTree identifierTree) {
+                return traceSymbol(identifierTree.symbol());
+            }
+        }
+        return symbol;
     }
 
     @Nonnull
