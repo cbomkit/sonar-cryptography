@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 package com.ibm.engine.language.python;
- 
+
 import com.ibm.engine.detection.*;
 import com.ibm.engine.hooks.MethodInvocationHookWithParameterResolvement;
 import com.ibm.engine.hooks.MethodInvocationHookWithReturnResolvement;
@@ -368,6 +368,10 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
     @Nonnull
     private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        // NOTE: symbol.usages() iteration order is not guaranteed. For a variable reassigned more
+        // than once (x = y; x = z; use(x)), this returns whichever ASSIGNMENT_LHS appears first in
+        // the iteration, which is non-deterministic. Ideally the assignment lexically nearest to
+        // the use site should be picked.
         for (Usage usage : symbol.usages()) {
             if (usage.kind() == Usage.Kind.ASSIGNMENT_LHS) {
                 Tree parent = usage.tree().parent();

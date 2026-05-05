@@ -39,7 +39,7 @@ import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Tree;
 
-class Issue8IntermediaryVariableTest extends TestBase {
+class Issue8MethodReceiverTest extends TestBase {
 
     static IDetectionContext detectionContext =
             new IDetectionContext() {
@@ -50,30 +50,30 @@ class Issue8IntermediaryVariableTest extends TestBase {
                 }
             };
 
+    // Child rule: detects describe() called on a SeatInterface — exercises isInvocationOnVariable
     public static List<IDetectionRule<Tree>> seatRules =
             List.of(
                     new DetectionRuleBuilder<Tree>()
                             .createDetectionRule()
                             .forObjectTypes(
-                                    "com.ibm.example.Issue8IntermediaryVariableTestFile$LeatherSeats")
-                            .forConstructor()
-                            .shouldBeDetectedAs(new ValueActionFactory<>("LeatherSeats"))
+                                    "com.ibm.example.Issue8MethodReceiverTestFile$SeatInterface")
+                            .forMethods("describe")
+                            .shouldBeDetectedAs(new ValueActionFactory<>("describe"))
                             .withoutParameters()
                             .buildForContext(detectionContext)
                             .inBundle(() -> "testBundle")
                             .withoutDependingDetectionRules());
 
-    public Issue8IntermediaryVariableTest() {
+    public Issue8MethodReceiverTest() {
         super(
                 List.of(
                         new DetectionRuleBuilder<Tree>()
                                 .createDetectionRule()
-                                .forObjectTypes(
-                                        "com.ibm.example.Issue8IntermediaryVariableTestFile$Car")
+                                .forObjectTypes("com.ibm.example.Issue8MethodReceiverTestFile$Car")
                                 .forConstructor()
                                 .shouldBeDetectedAs(new ValueActionFactory<>("Car"))
                                 .withMethodParameter(
-                                        "com.ibm.example.Issue8IntermediaryVariableTestFile$SeatInterface")
+                                        "com.ibm.example.Issue8MethodReceiverTestFile$SeatInterface")
                                 .addDependingDetectionRules(seatRules)
                                 .buildForContext(detectionContext)
                                 .inBundle(() -> "testBundle")
@@ -90,16 +90,17 @@ class Issue8IntermediaryVariableTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("Car");
 
+        // The child was found via isInvocationOnVariable: s.describe() where s traces to
+        // intermediary
         List<DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext>> stores =
                 getStoresOfValueType(ValueAction.class, detectionStore.getChildren());
-
         assertThat(stores).hasSize(1);
 
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_1 = stores.get(0);
         assertThat(store_1.getDetectionValues()).hasSize(1);
         IValue<Tree> value0_1 = store_1.getDetectionValues().get(0);
         assertThat(value0_1).isInstanceOf(ValueAction.class);
-        assertThat(value0_1.asString()).isEqualTo("LeatherSeats");
+        assertThat(value0_1.asString()).isEqualTo("describe");
     }
 
     @Override
@@ -111,16 +112,13 @@ class Issue8IntermediaryVariableTest extends TestBase {
         super.update(finding);
         finding.detectionStore()
                 .getDetectionValues()
-                .forEach(
-                        iValue -> {
-                            this.reportIssue(iValue.getLocation(), iValue.asString());
-                        });
+                .forEach(iValue -> this.reportIssue(iValue.getLocation(), iValue.asString()));
     }
 
     @Test
     void test() {
         CheckVerifier.newVerifier()
-                .onFile("src/test/files/rules/issues/Issue8IntermediaryVariableTestFile.java")
+                .onFile("src/test/files/rules/issues/Issue8MethodReceiverTestFile.java")
                 .withChecks(this)
                 .verifyIssues();
     }

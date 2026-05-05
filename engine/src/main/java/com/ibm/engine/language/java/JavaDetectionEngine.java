@@ -945,17 +945,25 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     @Nonnull
     private IdentifierTree traceVariable(@Nonnull IdentifierTree identifierTree) {
         Tree declaration = identifierTree.symbol().declaration();
-        if (declaration == null) {
+        if (declaration == null || !(declaration instanceof VariableTree variableTree)) {
             return identifierTree;
         }
-
-        if (declaration instanceof VariableTree variableTree1) {
-            ExpressionTree initTree = variableTree1.initializer();
-            if (initTree instanceof IdentifierTree identifierTree1) {
-                return traceVariable(identifierTree1);
-            }
+        ExpressionTree initTree = variableTree.initializer();
+        if (!(initTree instanceof IdentifierTree nextId)) {
+            return identifierTree;
         }
-        return identifierTree;
+        // Delegate chain-following to traceSymbol (single recursive walker)
+        Symbol finalSymbol = traceSymbol(nextId.symbol());
+        // Walk the identifier chain from nextId until we reach the identifier for finalSymbol
+        IdentifierTree current = nextId;
+        while (!current.symbol().equals(finalSymbol)) {
+            Tree decl = current.symbol().declaration();
+            if (!(decl instanceof VariableTree vt)) break;
+            ExpressionTree init = vt.initializer();
+            if (!(init instanceof IdentifierTree id)) break;
+            current = id;
+        }
+        return current;
     }
 
     /**
