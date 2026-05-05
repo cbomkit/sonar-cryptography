@@ -32,6 +32,7 @@ import com.ibm.plugin.translation.reorganizer.PythonReorganizerRules;
 import com.ibm.rules.IReportableDetectionRule;
 import com.ibm.rules.issue.Issue;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -51,7 +52,6 @@ import org.sonar.plugins.python.api.tree.DottedName;
 import org.sonar.plugins.python.api.tree.ImportFrom;
 import org.sonar.plugins.python.api.tree.Name;
 import org.sonar.plugins.python.api.tree.Tree;
-import org.sonar.python.TestPythonVisitorRunner;
 
 public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
         implements IObserver<Finding<PythonCheck, Tree, Symbol, PythonVisitorContext>>,
@@ -60,6 +60,7 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
     private final boolean isInventory;
     private final Map<String, String> functionToFile = new HashMap<>();
     private final Set<String> alreadyVisitedFiles = new HashSet<>();
+    private int scanDepth;
     @Nonnull protected final PythonTranslationProcess pythonTranslationProcess;
     @Nonnull protected final List<IDetectionRule<Tree>> detectionRules;
 
@@ -80,18 +81,29 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
 
     @Override
     public void scanFile(@Nonnull PythonVisitorContext context) {
-        String currentFilePath = normalizePath(Paths.get(context.pythonFile().uri()));
-        if (!alreadyVisitedFiles.add(currentFilePath)) {
-            return;
+        if (scanDepth == 0) {
+            // Reset per top-level scan to avoid skipping normal analysis of other files.
+            alreadyVisitedFiles.clear();
         }
 
-        Map<String, String> previousFunctionToFile = new HashMap<>(functionToFile);
-        functionToFile.clear();
+        scanDepth++;
         try {
-            super.scanFile(context);
-        } finally {
+            String currentFilePath = normalizePath(Paths.get(context.pythonFile().uri()));
+            if (!alreadyVisitedFiles.add(currentFilePath)) {
+                return;
+            }
+
+            Map<String, String> previousFunctionToFile = new HashMap<>(functionToFile);
             functionToFile.clear();
-            functionToFile.putAll(previousFunctionToFile);
+            // NOTE: Name-based resolution only; does not handle shadowing/aliases correctly.
+            try {
+                super.scanFile(context);
+            } finally {
+                functionToFile.clear();
+                functionToFile.putAll(previousFunctionToFile);
+            }
+        } finally {
+            scanDepth--;
         }
     }
 
@@ -119,6 +131,7 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
         if (functionName != null) {
             String module = functionToFile.get(functionName);
             if (module != null) {
+                // NOTE: Name-based resolution only; does not handle shadowing/aliases correctly.
                 // DEBUG: Attempting to resolve and scan imported module for function: {functionName}
                 analyzeImportedModule(module);
             }
@@ -163,6 +176,7 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
 
             // NOTE: Simple resolution for same-directory modules only.
             // Does not handle complex import paths, package hierarchies, or relative imports yet.
+            // NOTE: Entire module is scanned; may include unrelated findings.
             Path importedPath = currentDirectory.resolve(module.replace('.', File.separatorChar) + ".py");
 
             File resolvedFile = importedPath.toFile();
@@ -173,13 +187,18 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
             String resolvedFilePath = normalizePath(resolvedFile.toPath());
             // Guard: Check if file has already been visited to prevent redundant scanning within the call tree
             if (!alreadyVisitedFiles.contains(resolvedFilePath)) {
-                // FIXME: Use TestPythonVisitorRunner as temporary prototype.
-                // In production, this should be replaced with proper Sonar API integration
-                // to create PythonVisitorContext for the imported file and call:
-                //   super.scanFile(context);
-                // or integrate with Sonar's InputFile and SensorContext to enable proper
-                // cross-file analysis without test utilities.
-                TestPythonVisitorRunner.scanFile(resolvedFile, this);
+                // Prototype cross-file scan (test-only utility). Guard to avoid production/runtime issues.
+                try {
+                    Class<?> runnerClass = Class.forName("org.sonar.python.TestPythonVisitorRunner");
+                    Method scanFile = runnerClass.getMethod("scanFile", File.class, PythonCheck[].class);
+                    scanFile.invoke(null, resolvedFile, new PythonCheck[] {this});
+                } catch (ClassNotFoundException e) {
+                    // Not available in production classpath; skip cross-file analysis for now.
+                    // TODO: Replace with Sonar InputFile/SensorContext-based scanning.
+                } catch (ReflectiveOperationException e) {
+                    // DEBUG: Failed to invoke prototype cross-file scan.
+                    // Gracefully continue without cross-file resolution for this module.
+                }
             }
         } catch (Exception e) {
             // DEBUG: Failed to analyze imported module. This may indicate unresolved import paths or missing files.
