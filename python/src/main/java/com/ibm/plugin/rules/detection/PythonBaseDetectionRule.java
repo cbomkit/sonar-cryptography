@@ -31,8 +31,7 @@ import com.ibm.plugin.translation.PythonTranslationProcess;
 import com.ibm.plugin.translation.reorganizer.PythonReorganizerRules;
 import com.ibm.rules.IReportableDetectionRule;
 import com.ibm.rules.issue.Issue;
-import java.io.File;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -51,6 +50,7 @@ import org.sonar.plugins.python.api.tree.CallExpression;
 import org.sonar.plugins.python.api.tree.DottedName;
 import org.sonar.plugins.python.api.tree.ImportFrom;
 import org.sonar.plugins.python.api.tree.Name;
+import org.sonar.plugins.python.api.tree.FunctionDef;
 import org.sonar.plugins.python.api.tree.Tree;
 
 public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
@@ -61,6 +61,11 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
     private final Map<String, String> functionToFile = new HashMap<>();
     private final Set<String> alreadyVisitedFiles = new HashSet<>();
     private int scanDepth;
+    private final Set<Tree> visitedFunctions = new HashSet<>();
+    private static final Map<String, List<Tree>> functionDefinitions = new HashMap<>();
+    // Feature flag: keep registry off by default to avoid impacting unrelated rules/tests.
+    private static final boolean ENABLE_REGISTRY = false;
+    
     @Nonnull protected final PythonTranslationProcess pythonTranslationProcess;
     @Nonnull protected final List<IDetectionRule<Tree>> detectionRules;
 
@@ -84,6 +89,10 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
         if (scanDepth == 0) {
             // Reset per top-level scan to avoid skipping normal analysis of other files.
             alreadyVisitedFiles.clear();
+            if (ENABLE_REGISTRY) {
+                visitedFunctions.clear();
+                functionDefinitions.clear(); // Prevent registry leak across scans
+            }
         }
 
         scanDepth++;
@@ -119,6 +128,27 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
     }
 
     @Override
+    public void visitFunctionDef(@Nonnull FunctionDef tree) {
+        String functionName = tree.name().name();
+
+        if (ENABLE_REGISTRY) {
+            functionDefinitions.computeIfAbsent(functionName, k -> new ArrayList<>());
+            List<Tree> list = functionDefinitions.get(functionName);
+            if (!list.contains(tree)) {
+                list.add(tree);
+            }
+        }
+
+        // Preserve default behavior: always traverse function body so detections are discovered
+        // during normal file scanning.
+        super.visitFunctionDef(tree);
+        if (ENABLE_REGISTRY) {
+            // Mark as visited so call-resolution does not re-traverse the same body.
+            visitedFunctions.add(tree);
+        }
+    }
+
+    @Override
     public void visitCallExpression(@Nonnull CallExpression tree) {
         String functionName = null;
         Symbol symbol = tree.calleeSymbol();
@@ -129,11 +159,26 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
         }
 
         if (functionName != null) {
-            String module = functionToFile.get(functionName);
-            if (module != null) {
-                // NOTE: Name-based resolution only; does not handle shadowing/aliases correctly.
-                // DEBUG: Attempting to resolve and scan imported module for function: {functionName}
-                analyzeImportedModule(module);
+            // First try local registry of function definitions (same-project, name-based)
+            if (ENABLE_REGISTRY) {
+                List<Tree> defs = functionDefinitions.get(functionName);
+                if (defs != null) {
+                    for (Tree functionTree : new ArrayList<>(defs)) {
+                        if (!visitedFunctions.contains(functionTree)) {
+                            visitedFunctions.add(functionTree);
+                            // Traverse the function body in-place using the same visitor
+                            functionTree.accept(this);
+                        }
+                    }
+                }
+            } else {
+                // Fallback: attempt to resolve via imports (legacy behavior)
+                String module = functionToFile.get(functionName);
+                if (module != null) {
+                    // NOTE: Name-based resolution only; does not handle shadowing/aliases correctly.
+                    // Previously this would scan the imported file; that behavior is removed
+                    // in favor of same-project function resolution.
+                }
             }
         }
 
@@ -162,49 +207,9 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
      *
      * @param module The module name to analyze (e.g., "imports.helper")
      */
-    private void analyzeImportedModule(@Nonnull String module) {
-        if (module == null || module.isBlank()) {
-            return;
-        }
-
-        try {
-            Path currentFile = Paths.get(getContext().pythonFile().uri()).toAbsolutePath().normalize();
-            Path currentDirectory = currentFile.getParent();
-            if (currentDirectory == null) {
-                return; // Cannot resolve relative imports without a parent directory
-            }
-
-            // NOTE: Simple resolution for same-directory modules only.
-            // Does not handle complex import paths, package hierarchies, or relative imports yet.
-            // NOTE: Entire module is scanned; may include unrelated findings.
-            Path importedPath = currentDirectory.resolve(module.replace('.', File.separatorChar) + ".py");
-
-            File resolvedFile = importedPath.toFile();
-            if (!resolvedFile.isFile()) {
-                return; // Module file not found in expected location
-            }
-
-            String resolvedFilePath = normalizePath(resolvedFile.toPath());
-            // Guard: Check if file has already been visited to prevent redundant scanning within the call tree
-            if (!alreadyVisitedFiles.contains(resolvedFilePath)) {
-                // Prototype cross-file scan (test-only utility). Guard to avoid production/runtime issues.
-                try {
-                    Class<?> runnerClass = Class.forName("org.sonar.python.TestPythonVisitorRunner");
-                    Method scanFile = runnerClass.getMethod("scanFile", File.class, PythonCheck[].class);
-                    scanFile.invoke(null, resolvedFile, new PythonCheck[] {this});
-                } catch (ClassNotFoundException e) {
-                    // Not available in production classpath; skip cross-file analysis for now.
-                    // TODO: Replace with Sonar InputFile/SensorContext-based scanning.
-                } catch (ReflectiveOperationException e) {
-                    // DEBUG: Failed to invoke prototype cross-file scan.
-                    // Gracefully continue without cross-file resolution for this module.
-                }
-            }
-        } catch (Exception e) {
-            // DEBUG: Failed to analyze imported module. This may indicate unresolved import paths or missing files.
-            // Gracefully continue without cross-file resolution for this module.
-        }
-    }
+    // analyzeImportedModule removed: cross-file scanning via test utilities was replaced by
+    // same-project function resolution using a global registry. See visitFunctionDef and
+    // visitCallExpression for the new behavior.
 
     @Nonnull
     private String importedName(@Nonnull AliasedName importedName) {

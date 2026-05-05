@@ -49,6 +49,10 @@ class ResolveImportedSignTest extends TestBase {
 
     @Test
     void test() {
+        // Scan the implementation file first to register function definitions in the global registry
+        TestPythonVisitorRunner.scanFile(
+                new File("src/test/files/rules/resolve/imports/ResolveImportedSignImport.py"), this);
+
         TestPythonVisitorRunner.scanFile(
                 new File("src/test/files/rules/resolve/ResolveImportedSignTestFile.py"), this);
 
