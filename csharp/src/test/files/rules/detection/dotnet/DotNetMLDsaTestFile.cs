@@ -4,16 +4,16 @@ public class DotNetMLDsaTest
 {
     public void TestMLDsa44()
     {
-        var key = MLDsa44.GenerateKey(); // Noncompliant
+        var key = MLDsa.GenerateKey(MLDsaAlgorithm.MLDsa44); // Noncompliant
     }
 
     public void TestMLDsa65()
     {
-        var key = MLDsa65.GenerateKey(); // Noncompliant
+        var key = MLDsa.GenerateKey(MLDsaAlgorithm.MLDsa65); // Noncompliant
     }
 
     public void TestMLDsa87()
     {
-        var key = MLDsa87.GenerateKey(); // Noncompliant
+        var key = MLDsa.GenerateKey(MLDsaAlgorithm.MLDsa87); // Noncompliant
     }
 }

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.dotnet;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -52,17 +53,17 @@ public final class DotNetMLDsa {
                 .forObjectTypes(className)
                 .forMethods("GenerateKey")
                 .shouldBeDetectedAs(new ValueActionFactory<>(value))
-                .withoutParameters()
+                .withMethodParameter(MethodMatcher.ANY)
                 .buildForContext(new KeyContext(Map.of("kind", "MLDSA")))
                 .inBundle(() -> "DotNet")
                 .withoutDependingDetectionRules();
     }
 
-    private static final IDetectionRule<CSharpTree> MLDSA_44 = mlDsaRule("MLDsa44", "MLDSA44");
+    private static final IDetectionRule<CSharpTree> MLDSA_44 = mlDsaRule("MLDsa", "MLDSA44");
 
-    private static final IDetectionRule<CSharpTree> MLDSA_65 = mlDsaRule("MLDsa65", "MLDSA65");
+    private static final IDetectionRule<CSharpTree> MLDSA_65 = mlDsaRule("MLDsa", "MLDSA65");
 
-    private static final IDetectionRule<CSharpTree> MLDSA_87 = mlDsaRule("MLDsa87", "MLDSA87");
+    private static final IDetectionRule<CSharpTree> MLDSA_87 = mlDsaRule("MLDsa", "MLDSA87");
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
