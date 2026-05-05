@@ -61,9 +61,15 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
     private final Map<String, String> functionToFile = new HashMap<>();
     private final Set<String> alreadyVisitedFiles = new HashSet<>();
     private int scanDepth;
+    // NOTE:
+    // Prototype registry for cross-file function resolution.
+    // Currently static and not scoped per analysis context.
+    // Cleared per top-level scan to avoid state leakage.
+    // Future work should move this into a context-aware component.
     private final Set<Tree> visitedFunctions = new HashSet<>();
     private static final Map<String, List<Tree>> functionDefinitions = new HashMap<>();
-    // Feature flag: keep registry off by default to avoid impacting unrelated rules/tests.
+    // Feature flag to keep behavior disabled by default.
+    // Ensures no regression in existing rules/tests while validating approach.
     private static final boolean ENABLE_REGISTRY = false;
     
     @Nonnull protected final PythonTranslationProcess pythonTranslationProcess;
@@ -159,6 +165,10 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
         }
 
         if (functionName != null) {
+            // NOTE:
+            // Resolution is name-based only.
+            // Does not handle shadowing, aliases, or imports across packages.
+            // Resolution may depend on analysis order (definitions must be visited before calls).
             // First try local registry of function definitions (same-project, name-based)
             if (ENABLE_REGISTRY) {
                 List<Tree> defs = functionDefinitions.get(functionName);
