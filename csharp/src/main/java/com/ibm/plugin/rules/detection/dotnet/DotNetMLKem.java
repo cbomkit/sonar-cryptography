@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.dotnet;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -52,18 +53,17 @@ public final class DotNetMLKem {
                 .forObjectTypes(className)
                 .forMethods("GenerateKey")
                 .shouldBeDetectedAs(new ValueActionFactory<>(value))
-                .withoutParameters()
+                .withMethodParameter(MethodMatcher.ANY)
                 .buildForContext(new KeyContext(Map.of("kind", "MLKEM")))
                 .inBundle(() -> "DotNet")
                 .withoutDependingDetectionRules();
     }
 
-    private static final IDetectionRule<CSharpTree> MLKEM_512 = mlKemRule("MLKem512", "MLKEM512");
+    private static final IDetectionRule<CSharpTree> MLKEM_512 = mlKemRule("MLKem", "MLKEM512");
 
-    private static final IDetectionRule<CSharpTree> MLKEM_768 = mlKemRule("MLKem768", "MLKEM768");
+    private static final IDetectionRule<CSharpTree> MLKEM_768 = mlKemRule("MLKem", "MLKEM768");
 
-    private static final IDetectionRule<CSharpTree> MLKEM_1024 =
-            mlKemRule("MLKem1024", "MLKEM1024");
+    private static final IDetectionRule<CSharpTree> MLKEM_1024 = mlKemRule("MLKem", "MLKEM1024");
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
