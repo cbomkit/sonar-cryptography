@@ -127,7 +127,8 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     }
 
     @Override
-    public <O> @Nonnull List<ResolvedValue<O, Tree>> resolveValuesInInnerScope(
+    @Nonnull
+    public <O> List<ResolvedValue<O, Tree>> resolveValuesInInnerScope(
             @Nonnull Class<O> clazz,
             @Nonnull Tree expression,
             @Nullable IValueFactory<Tree> valueFactory) {

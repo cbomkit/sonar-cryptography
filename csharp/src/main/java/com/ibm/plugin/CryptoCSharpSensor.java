@@ -70,6 +70,11 @@ public class CryptoCSharpSensor implements Sensor {
 
     @Override
     public void execute(@Nonnull SensorContext context) {
+        execute(context, checks);
+    }
+
+    public static void execute(
+            @Nonnull SensorContext context, @Nonnull Collection<CSharpCheck> checks) {
         if (checks.isEmpty()) {
             return;
         }
@@ -86,11 +91,14 @@ public class CryptoCSharpSensor implements Sensor {
             if (context.isCancelled()) {
                 return;
             }
-            analyzeFile(context, inputFile);
+            analyzeFile(context, checks, inputFile);
         }
     }
 
-    private void analyzeFile(@Nonnull SensorContext context, @Nonnull InputFile inputFile) {
+    private static void analyzeFile(
+            @Nonnull SensorContext context,
+            @Nonnull Collection<CSharpCheck> checks,
+            @Nonnull InputFile inputFile) {
         String content;
         try {
             content = inputFile.contents();
@@ -130,7 +138,7 @@ public class CryptoCSharpSensor implements Sensor {
         }
     }
 
-    @Nullable private CSharpParser.Compilation_unitContext parseContent(
+    @Nullable private static CSharpParser.Compilation_unitContext parseContent(
             @Nonnull String content, @Nonnull InputFile inputFile) {
         try {
             CSharpLexer lexer =
