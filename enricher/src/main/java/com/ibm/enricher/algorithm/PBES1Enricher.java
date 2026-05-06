@@ -76,6 +76,7 @@ public class PBES1Enricher implements IEnricher {
             if (cipher instanceof RC4) {
                 if (keyLength == 128) return "1.2.840.113549.1.12.1.1";
                 if (keyLength == 40) return "1.2.840.113549.1.12.1.2";
+                // No PKCS#5 OID exists for SHA1+RC4 with other key lengths; null is intentional.
             }
             if (cipher instanceof TripleDES) {
                 if (keyLength == 192 || keyLength == 168) return "1.2.840.113549.1.12.1.3";

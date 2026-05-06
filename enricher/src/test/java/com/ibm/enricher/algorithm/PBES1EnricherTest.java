@@ -22,51 +22,103 @@ package com.ibm.enricher.algorithm;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.enricher.TestBase;
+import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.PBES1;
 import com.ibm.mapper.model.algorithms.DES;
+import com.ibm.mapper.model.algorithms.MD2;
 import com.ibm.mapper.model.algorithms.MD5;
+import com.ibm.mapper.model.algorithms.RC2;
+import com.ibm.mapper.model.algorithms.RC4;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.TripleDES;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class PBES1EnricherTest extends TestBase {
 
-    @Test
-    void pkcs5() {
-        DetectionLocation testDetectionLocation =
-                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "Jca");
-        final PBES1 pbes1 =
-                new PBES1(new MD5(testDetectionLocation), new DES(testDetectionLocation));
-        this.logBefore(pbes1);
+    private static final DetectionLocation LOC =
+            new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "Jca");
 
-        final PBES1Enricher pbes1Enricher = new PBES1Enricher();
-        final INode enriched = pbes1Enricher.enrich(pbes1);
-        this.logAfter(enriched);
-
-        assertThat(enriched.hasChildOfType(Oid.class)).isPresent();
-        assertThat(enriched.hasChildOfType(Oid.class).get().asString())
-                .isEqualTo("1.2.840.113549.1.5.3");
+    static Stream<Arguments> oidTable() {
+        return Stream.of(
+                // PKCS#5
+                Arguments.of(
+                        Named.of("MD2+DES", pbes1(new MD2(LOC), new DES(LOC))),
+                        "1.2.840.113549.1.5.1"),
+                Arguments.of(
+                        Named.of("MD5+DES", pbes1(new MD5(LOC), new DES(LOC))),
+                        "1.2.840.113549.1.5.3"),
+                Arguments.of(
+                        Named.of("MD2+RC2", pbes1(new MD2(LOC), new RC2(LOC))),
+                        "1.2.840.113549.1.5.4"),
+                Arguments.of(
+                        Named.of("MD5+RC2", pbes1(new MD5(LOC), new RC2(LOC))),
+                        "1.2.840.113549.1.5.6"),
+                Arguments.of(
+                        Named.of("SHA+DES", pbes1(new SHA(LOC), new DES(LOC))),
+                        "1.2.840.113549.1.5.10"),
+                Arguments.of(
+                        Named.of("SHA+RC2(default)", pbes1(new SHA(LOC), new RC2(LOC))),
+                        "1.2.840.113549.1.5.11"),
+                // PKCS#12
+                Arguments.of(
+                        Named.of("SHA+RC4-128", pbes1(new SHA(LOC), new RC4(128, LOC))),
+                        "1.2.840.113549.1.12.1.1"),
+                Arguments.of(
+                        Named.of("SHA+RC4-40", pbes1(new SHA(LOC), new RC4(40, LOC))),
+                        "1.2.840.113549.1.12.1.2"),
+                Arguments.of(
+                        Named.of("SHA+3DES-192", pbes1(new SHA(LOC), new TripleDES(192, LOC))),
+                        "1.2.840.113549.1.12.1.3"),
+                Arguments.of(
+                        Named.of("SHA+3DES-168", pbes1(new SHA(LOC), new TripleDES(168, LOC))),
+                        "1.2.840.113549.1.12.1.3"),
+                Arguments.of(
+                        Named.of("SHA+3DES-128", pbes1(new SHA(LOC), new TripleDES(128, LOC))),
+                        "1.2.840.113549.1.12.1.4"),
+                Arguments.of(
+                        Named.of("SHA+3DES-112", pbes1(new SHA(LOC), new TripleDES(112, LOC))),
+                        "1.2.840.113549.1.12.1.4"),
+                Arguments.of(
+                        Named.of("SHA+RC2-128", pbes1(new SHA(LOC), new RC2(128, LOC))),
+                        "1.2.840.113549.1.12.1.5"),
+                Arguments.of(
+                        Named.of("SHA+RC2-40", pbes1(new SHA(LOC), new RC2(40, LOC))),
+                        "1.2.840.113549.1.12.1.6"));
     }
 
-    @Test
-    void pkcs12() {
-        DetectionLocation testDetectionLocation =
-                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "Jca");
-        final PBES1 pbes1 =
-                new PBES1(
-                        new SHA(testDetectionLocation), new TripleDES(192, testDetectionLocation));
-        this.logBefore(pbes1);
-
-        final PBES1Enricher pbes1Enricher = new PBES1Enricher();
-        final INode enriched = pbes1Enricher.enrich(pbes1);
-        this.logAfter(enriched);
+    @ParameterizedTest
+    @MethodSource("oidTable")
+    void resolvesOid(PBES1 pbes1, String expectedOid) {
+        final INode enriched = new PBES1Enricher().enrich(pbes1);
 
         assertThat(enriched.hasChildOfType(Oid.class)).isPresent();
-        assertThat(enriched.hasChildOfType(Oid.class).get().asString())
-                .isEqualTo("1.2.840.113549.1.12.1.3");
+        assertThat(enriched.hasChildOfType(Oid.class).get().asString()).isEqualTo(expectedOid);
+    }
+
+    @ParameterizedTest
+    @MethodSource("noOidTable")
+    void noOidForUnknownKeyLength(PBES1 pbes1) {
+        final INode enriched = new PBES1Enricher().enrich(pbes1);
+
+        assertThat(enriched.hasChildOfType(Oid.class)).isEmpty();
+    }
+
+    static Stream<Arguments> noOidTable() {
+        return Stream.of(
+                // No PKCS#5 OID defined for SHA1+RC4 with key lengths other than 128 or 40
+                Arguments.of(Named.of("SHA+RC4-64", pbes1(new SHA(LOC), new RC4(64, LOC)))));
+    }
+
+    private static PBES1 pbes1(MessageDigest digest, Cipher cipher) {
+        return new PBES1(digest, cipher);
     }
 }
