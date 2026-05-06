@@ -40,10 +40,12 @@ import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -733,11 +735,19 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
     @Nonnull
     private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        return traceSymbol(symbol, new HashSet<>());
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol, @Nonnull Set<Symbol> visited) {
+        if (!visited.add(symbol)) {
+            return symbol;
+        }
         Tree declaration = symbol.declaration();
         if (declaration instanceof VariableTree variableTree) {
             ExpressionTree initializer = variableTree.initializer();
             if (initializer instanceof IdentifierTree identifierTree) {
-                return traceSymbol(identifierTree.symbol());
+                return traceSymbol(identifierTree.symbol(), visited);
             }
         }
         return symbol;

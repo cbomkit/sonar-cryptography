@@ -26,9 +26,11 @@ import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.*;
 import com.ibm.engine.rule.Parameter;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.python.api.PythonCheck;
@@ -368,6 +370,14 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
     @Nonnull
     private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        return traceSymbol(symbol, new HashSet<>());
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol, @Nonnull Set<Symbol> visited) {
+        if (!visited.add(symbol)) {
+            return symbol;
+        }
         // NOTE: symbol.usages() iteration order is not guaranteed. For a variable reassigned more
         // than once (x = y; x = z; use(x)), this returns whichever ASSIGNMENT_LHS appears first in
         // the iteration, which is non-deterministic. Ideally the assignment lexically nearest to
@@ -379,8 +389,8 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     Expression rhs = assignment.assignedValue();
                     if (rhs instanceof Name name) {
                         Symbol rhsSymbol = name.symbol();
-                        if (rhsSymbol != null && !rhsSymbol.equals(symbol)) {
-                            return traceSymbol(rhsSymbol);
+                        if (rhsSymbol != null) {
+                            return traceSymbol(rhsSymbol, visited);
                         }
                     }
                 }
