@@ -202,4 +202,24 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
         }
         return Optional.empty();
     }
+
+    @Nonnull
+    @Override
+    protected Optional<INode> translateTink(
+            @Nonnull IValue<Tree> value,
+            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionLocation detectionLocation) {
+        if (value instanceof ValueAction<?>) {
+            return switch (value.asString()) {
+                case "AES128_GCM", "AES256_GCM" ->
+                        Optional.of(
+                                new com.ibm.mapper.model.algorithms.AES(
+                                        AuthenticatedEncryption.class, detectionLocation));
+                case "AES128_CTR_HMAC_SHA256", "AES256_CTR_HMAC_SHA256" ->
+                        Optional.of(new com.ibm.mapper.model.algorithms.AES(detectionLocation));
+                default -> Optional.empty();
+            };
+        }
+        return Optional.empty();
+    }
 }

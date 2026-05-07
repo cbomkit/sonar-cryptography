@@ -17,31 +17,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection;
+package com.ibm.plugin.rules.detection.tink;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.bc.BouncyCastleDetectionRules;
-import com.ibm.plugin.rules.detection.jca.JcaDetectionRules;
-import com.ibm.plugin.rules.detection.ssl.SSLDetectionRules;
-import com.ibm.plugin.rules.detection.tink.TinkDetectionRules;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JavaDetectionRules {
-    private JavaDetectionRules() {
-        // private
+/** Aggregates all Google Tink detection rule lists. */
+public final class TinkDetectionRules {
+
+    private TinkDetectionRules() {
+        // nothing
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        JcaDetectionRules.rules().stream(),
-                        BouncyCastleDetectionRules.rules().stream(),
-                        SSLDetectionRules.rules().stream(),
-                        TinkDetectionRules.rules().stream())
-                .flatMap(i -> i)
-                .toList();
+        return Stream.of(TinkAead.rules().stream()).flatMap(i -> i).toList();
     }
 }
