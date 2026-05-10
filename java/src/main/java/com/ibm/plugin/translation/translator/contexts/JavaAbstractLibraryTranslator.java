@@ -42,6 +42,7 @@ public abstract class JavaAbstractLibraryTranslator implements IContextTranslati
         return switch (bundleIdentifier.getIdentifier()) {
             case "Jca" -> translateJCA(value, detectionContext, detectionLocation);
             case "Bc" -> translateBC(value, detectionContext, detectionLocation);
+            case "Tink" -> translateTink(value, detectionContext, detectionLocation);
             default -> Optional.of(new Unknown(detectionLocation));
         };
     }
@@ -57,4 +58,12 @@ public abstract class JavaAbstractLibraryTranslator implements IContextTranslati
             @Nonnull IValue<Tree> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation);
+
+    @Nonnull
+    protected Optional<INode> translateTink(
+            @Nonnull IValue<Tree> value,
+            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionLocation detectionLocation) {
+        return Optional.empty();
+    }
 }

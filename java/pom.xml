@@ -61,6 +61,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <!-- This dependency enables IDE linting in Tink test files -->
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.21.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.5.0-jre</version>
