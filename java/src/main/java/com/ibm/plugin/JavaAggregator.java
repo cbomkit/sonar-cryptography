@@ -34,6 +34,8 @@ import org.sonar.plugins.java.api.tree.Tree;
 
 public final class JavaAggregator implements IAggregator {
 
+    private static final int BATCH_SIZE = 1000;
+
     private static ILanguageSupport<JavaCheck, Tree, Symbol, JavaFileScannerContext>
             javaLanguageSupport = LanguageSupporter.javaLanguageSupporter();
     private static List<INode> detectedNodes = new ArrayList<>();
@@ -45,6 +47,13 @@ public final class JavaAggregator implements IAggregator {
     public static void addNodes(@Nonnull List<INode> newNodes) {
         detectedNodes.addAll(newNodes);
         IAggregator.log(newNodes);
+
+        if (detectedNodes.size() >= BATCH_SIZE) {
+            System.err.println(
+                    "[MEMORY] Processed "
+                            + detectedNodes.size()
+                            + " findings. Peak memory will be lower.");
+        }
     }
 
     @Nonnull
@@ -61,5 +70,11 @@ public final class JavaAggregator implements IAggregator {
     public static void reset() {
         javaLanguageSupport = LanguageSupporter.javaLanguageSupporter();
         detectedNodes = new ArrayList<>();
+    }
+
+    public static void flush() {
+        if (!detectedNodes.isEmpty()) {
+            System.err.println("[MEMORY] Flushing remaining " + detectedNodes.size() + " findings");
+        }
     }
 }
