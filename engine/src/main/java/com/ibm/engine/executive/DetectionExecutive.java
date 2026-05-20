@@ -30,15 +30,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class DetectionExecutive<R, T, S, P>
         implements IStatusReporting<R, T, S, P>, IDomainEvent<Finding<R, T, S, P>> {
     @Nonnull private final List<IObserver<Finding<R, T, S, P>>> listeners = new ArrayList<>();
 
     @Nonnull private final DetectionStore<R, T, S, P> rootDetectionStore;
-    @Nonnull private final T tree;
+    @Nullable private T tree;
     private int expectedRuleVisits;
     private int visitedRules = 0;
+    private boolean deferredHookRegistered = false;
+    private boolean released = false;
 
     public DetectionExecutive(
             @Nonnull final T tree,
@@ -52,7 +55,11 @@ public class DetectionExecutive<R, T, S, P>
     }
 
     public void start() {
-        this.rootDetectionStore.analyse(tree);
+        try {
+            this.rootDetectionStore.analyse(tree);
+        } finally {
+            this.tree = null;
+        }
     }
 
     @Override
@@ -65,12 +72,18 @@ public class DetectionExecutive<R, T, S, P>
         if (this.expectedRuleVisits != this.visitedRules) {
             return;
         }
-        getRootStoresWithValue(rootDetectionStore)
-                .forEach(
-                        store -> {
-                            final Finding<R, T, S, P> finding = new Finding<>(store);
-                            this.notify(finding);
-                        });
+        try {
+            getRootStoresWithValue(rootDetectionStore)
+                    .forEach(
+                            store -> {
+                                final Finding<R, T, S, P> finding = new Finding<>(store);
+                                this.notify(finding);
+                            });
+        } finally {
+            if (!deferredHookRegistered) {
+                releaseResources();
+            }
+        }
     }
 
     @Override
@@ -81,6 +94,23 @@ public class DetectionExecutive<R, T, S, P>
     @Override
     public void addAdditionalExpectedRuleVisits(int number) {
         this.expectedRuleVisits += number;
+    }
+
+    @Override
+    public void onDeferredHookRegistration() {
+        this.deferredHookRegistered = true;
+    }
+
+    public boolean hasDeferredHooks() {
+        return deferredHookRegistered;
+    }
+
+    public boolean isReleased() {
+        return released;
+    }
+
+    public void releaseDeferredResources() {
+        releaseResources();
     }
 
     @Nonnull
@@ -109,5 +139,15 @@ public class DetectionExecutive<R, T, S, P>
     @Override
     public void notify(@Nonnull Finding<R, T, S, P> finding) {
         this.listeners.forEach(listener -> listener.update(finding));
+    }
+
+    private void releaseResources() {
+        if (released) {
+            return;
+        }
+        released = true;
+        rootDetectionStore.release();
+        listeners.clear();
+        tree = null;
     }
 }

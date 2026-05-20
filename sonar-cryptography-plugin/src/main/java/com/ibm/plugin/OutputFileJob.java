@@ -46,6 +46,16 @@ public class OutputFileJob implements PostJob {
         final File cbom = new File(cbomFilename + ".json");
         scannerManager.getOutputFile().saveTo(cbom);
         LOGGER.info("CBOM was successfully generated '{}'.", cbom.getAbsolutePath());
+
+        JavaScanMemoryLogger.Snapshot javaScan = JavaScanMemoryLogger.snapshot();
+        LOGGER.info(
+                "CBOM summary: javaFiles={}, used={} MB, total={} MB, max={} MB, peak={} MB",
+                javaScan.javaFilesProcessed(),
+                javaScan.usedMb(),
+                javaScan.totalMb(),
+                javaScan.maxMb(),
+                javaScan.peakUsedMb());
+
         scannerManager.getStatistics().print(LOGGER::info);
         scannerManager.reset();
     }

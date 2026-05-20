@@ -30,4 +30,8 @@ public interface IStatusReporting<R, T, S, P> {
     void incrementVisitedRules();
 
     void addAdditionalExpectedRuleVisits(int number);
+
+    default void onDeferredHookRegistration() {
+        // Optional lifecycle callback for deferred hook-based findings.
+    }
 }
