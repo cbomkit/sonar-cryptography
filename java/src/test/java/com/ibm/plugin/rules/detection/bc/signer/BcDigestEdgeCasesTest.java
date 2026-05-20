@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.bc.signer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
@@ -181,6 +182,8 @@ class BcDigestEdgeCasesTest extends TestBase {
             assertThat(digestSizeNode).isNotNull();
             assertThat(digestSizeNode.getChildren()).isEmpty();
             assertThat(digestSizeNode.asString()).isEqualTo("160");
+        } else {
+            fail("Unexpected findingId: " + findingId);
         }
     }
 }
