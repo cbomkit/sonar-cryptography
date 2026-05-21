@@ -27,6 +27,7 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.plugin.TestBase;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleJars;
@@ -75,7 +76,7 @@ class BcBIKEKEMExtractorTest extends TestBase {
         INode keyEncapsulationMechanismNode = nodes.get(0);
         assertThat(keyEncapsulationMechanismNode.getKind())
                 .isEqualTo(KeyEncapsulationMechanism.class);
-        assertThat(keyEncapsulationMechanismNode.getChildren()).hasSize(1);
+        assertThat(keyEncapsulationMechanismNode.getChildren()).hasSize(2);
         assertThat(keyEncapsulationMechanismNode.asString()).isEqualTo("BIKE");
 
         // Decapsulate under KeyEncapsulationMechanism
@@ -83,5 +84,11 @@ class BcBIKEKEMExtractorTest extends TestBase {
         assertThat(decapsulateNode).isNotNull();
         assertThat(decapsulateNode.getChildren()).isEmpty();
         assertThat(decapsulateNode.asString()).isEqualTo("DECAPSULATE");
+
+        // ParameterSetIdentifier under KeyEncapsulationMechanism
+        INode parameterSetIdentifierNode =
+                keyEncapsulationMechanismNode.getChildren().get(ParameterSetIdentifier.class);
+        assertThat(parameterSetIdentifierNode).isNotNull();
+        assertThat(parameterSetIdentifierNode.getChildren()).isEmpty();
     }
 }

@@ -19,9 +19,11 @@
  */
 package com.ibm.plugin.rules.detection.bc.digest;
 
+import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -60,8 +62,7 @@ public final class BcDigests {
          * a constructor, we use `forObjectExactTypes` in associated rules otherwise we would have several
          * detections (a class and its parent) instead of one.
          */
-        infoMap.putKey("AsconDigest");
-        infoMap.putKey("AsconXof");
+        /* AsconDigest and AsconXof are handled in parameterizedConstructors() */
         infoMap.putKey("Blake2bDigest");
         infoMap.putKey("Blake2bpDigest");
         infoMap.putKey("Blake2sDigest");
@@ -192,6 +193,48 @@ public final class BcDigests {
     }
 
     @Nonnull
+    private static List<IDetectionRule<Tree>> parameterizedConstructors(
+            @Nullable IDetectionContext detectionValueContext) {
+        List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
+        IDetectionContext context =
+                detectionValueContext != null ? detectionValueContext : new DigestContext();
+
+        // AsconDigest(AsconDigest.AsconParameters)
+        constructorsList.add(
+                new DetectionRuleBuilder<Tree>()
+                        .createDetectionRule()
+                        .forObjectExactTypes("org.bouncycastle.crypto.digests.AsconDigest")
+                        .forConstructor()
+                        .shouldBeDetectedAs(new ValueActionFactory<>("AsconDigest"))
+                        .withMethodParameter(
+                                "org.bouncycastle.crypto.digests.AsconDigest$AsconParameters")
+                        .shouldBeDetectedAs(
+                                new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.ANY))
+                        .asChildOfParameterWithId(-1)
+                        .buildForContext(context)
+                        .inBundle(() -> "Bc")
+                        .withoutDependingDetectionRules());
+
+        // AsconXof(AsconXof.AsconParameters)
+        constructorsList.add(
+                new DetectionRuleBuilder<Tree>()
+                        .createDetectionRule()
+                        .forObjectExactTypes("org.bouncycastle.crypto.digests.AsconXof")
+                        .forConstructor()
+                        .shouldBeDetectedAs(new ValueActionFactory<>("AsconXof"))
+                        .withMethodParameter(
+                                "org.bouncycastle.crypto.digests.AsconXof$AsconParameters")
+                        .shouldBeDetectedAs(
+                                new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.ANY))
+                        .asChildOfParameterWithId(-1)
+                        .buildForContext(context)
+                        .inBundle(() -> "Bc")
+                        .withoutDependingDetectionRules());
+
+        return constructorsList;
+    }
+
+    @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
         return rules(null);
     }
@@ -199,9 +242,11 @@ public final class BcDigests {
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
             @Nullable IDetectionContext detectionValueContext) {
-        return Stream.concat(
+        return Stream.of(
                         regularConstructors(detectionValueContext).stream(),
+                        parameterizedConstructors(detectionValueContext).stream(),
                         otherConstructors(detectionValueContext).stream())
+                .flatMap(i -> i)
                 .toList();
     }
 }
