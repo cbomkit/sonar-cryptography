@@ -51,6 +51,56 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 > - To add support for another language or cryptography library, see [*Extending the Sonar Cryptography Plugin to add support for another language or cryptography library*](./docs/LANGUAGE_SUPPORT.md)
 > - If you just want to know more about the syntax for writing new detection rules, see [*Writing new detection rules for the Sonar Cryptography Plugin*](./docs/DETECTION_RULE_STRUCTURE.md)
 
+## Quick Start for New Contributors
+
+This project has a modular architecture and may initially feel complex for first-time contributors. The following steps can help contributors get started quickly.
+
+### Setup
+
+1. Fork the repository
+2. Clone your fork locally
+
+```bash
+git clone https://github.com/<your-username>/sonar-cryptography.git
+cd sonar-cryptography
+```
+
+3. Add the upstream repository
+
+```bash
+git remote add upstream https://github.com/cbomkit/sonar-cryptography.git
+```
+
+4. Create a new branch
+
+```bash
+git checkout -b my-first-contribution
+```
+
+5. Build the project
+
+```bash
+mvn clean package
+```
+
+### Recommended First Contributions
+
+New contributors are encouraged to start with:
+- Documentation improvements
+- Troubleshooting fixes
+- Small test additions
+- Python support enhancements
+- Beginner-friendly issues
+
+Before starting major changes, consider opening an issue or discussing the contribution with maintainers through GitHub Discussions.
+
+### Helpful Resources
+
+- [Contribution Guidelines](CONTRIBUTING.md)
+- [Language Support Documentation](./docs/LANGUAGE_SUPPORT.md)
+- [Detection Rule Structure](./docs/DETECTION_RULE_STRUCTURE.md)
+- [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)
+
 ## Installation
 
 > [!NOTE] 
