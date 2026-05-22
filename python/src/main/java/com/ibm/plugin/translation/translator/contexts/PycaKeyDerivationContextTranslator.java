@@ -25,7 +25,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.pyca.PycaCipherMapper;
@@ -53,12 +52,11 @@ public class PycaKeyDerivationContextTranslator implements IContextTranslation<T
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof Algorithm<Tree> algorithm
-                && detectionContext instanceof DetectionContext context) {
+        if (value instanceof Algorithm<Tree> algorithm) {
             // hash algorithm
-            Optional<String> possibleKind = context.get("kind");
+            Optional<String> possibleKind = detectionContext.get("kind");
             if (possibleKind.isPresent()) {
                 final String kind = possibleKind.get();
                 return switch (kind) {

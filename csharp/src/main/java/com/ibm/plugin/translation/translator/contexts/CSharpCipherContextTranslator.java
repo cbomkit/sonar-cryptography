@@ -26,7 +26,7 @@ import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.Padding;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
@@ -55,7 +55,7 @@ public final class CSharpCipherContextTranslator
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<com.ibm.engine.language.csharp.tree.CSharpTree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
         if (value instanceof ValueAction<?>) {

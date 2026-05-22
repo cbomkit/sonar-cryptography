@@ -26,7 +26,7 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.MacSize;
 import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.TagSize;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.mapper.mapper.jca.JcaAlgorithmMapper;
 import com.ibm.mapper.mapper.jca.JcaModeMapper;
 import com.ibm.mapper.model.INode;
@@ -43,7 +43,7 @@ public final class JavaAlgorithmParameterContextTranslator extends JavaAbstractL
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree>) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -55,14 +55,14 @@ public final class JavaAlgorithmParameterContextTranslator extends JavaAbstractL
     @Nonnull
     protected Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         return translateCommon(value, detectionContext, detectionLocation);
     }
 
     private @Nonnull Optional<INode> translateCommon(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeySize<Tree> keySize) {
             KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);

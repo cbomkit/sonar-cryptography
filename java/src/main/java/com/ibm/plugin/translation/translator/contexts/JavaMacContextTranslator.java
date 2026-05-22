@@ -24,7 +24,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.MacSize;
 import com.ibm.engine.model.ParameterIdentifier;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.mapper.mapper.bc.BcMacMapper;
 import com.ibm.mapper.mapper.jca.JcaMacMapper;
 import com.ibm.mapper.model.INode;
@@ -40,7 +40,7 @@ public final class JavaMacContextTranslator extends JavaAbstractLibraryTranslato
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof com.ibm.engine.model.Algorithm<Tree>) {
             JcaMacMapper jcaMacMapper = new JcaMacMapper();
@@ -60,7 +60,7 @@ public final class JavaMacContextTranslator extends JavaAbstractLibraryTranslato
     @Override
     protected @Nonnull Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof ValueAction<Tree> valueAction) {
             BcMacMapper bcMacMapper = new BcMacMapper();

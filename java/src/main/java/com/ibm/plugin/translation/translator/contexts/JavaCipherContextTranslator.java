@@ -27,7 +27,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.mapper.mapper.bc.BcAeadEnumsMapper;
 import com.ibm.mapper.mapper.bc.BcAeadMapper;
 import com.ibm.mapper.mapper.bc.BcAsymCipherEncodingMapper;
@@ -61,7 +60,7 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
     @Nonnull
     public Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree>) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -85,12 +84,11 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
     @Nonnull
     public Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof OperationMode<Tree> operationMode
-                && detectionContext instanceof DetectionContext context) {
-            String kind = context.get("kind").orElse("");
+        if (value instanceof OperationMode<Tree> operationMode) {
+            String kind = detectionContext.get("kind").orElse("");
             return switch (kind) {
                 case "ENCRYPTION_STATUS" -> {
                     BcOperationModeEncryptionMapper bcCipherOperationModeMapper =
@@ -108,9 +106,8 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
                 }
                 default -> Optional.empty();
             };
-        } else if (value instanceof ValueAction<Tree> valueAction
-                && detectionContext instanceof DetectionContext context) {
-            String kind = context.get("kind").orElse("");
+        } else if (value instanceof ValueAction<Tree> valueAction) {
+            String kind = detectionContext.get("kind").orElse("");
             switch (kind) {
                 case "BLOCK_CIPHER_ENGINE", "HASH":
                     /* TODO: better handle the HASH case (used in `BcOCBBlockCipher`): use asKind MessageDigest? */

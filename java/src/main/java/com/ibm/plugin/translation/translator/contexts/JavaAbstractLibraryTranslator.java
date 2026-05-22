@@ -20,7 +20,7 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
@@ -37,7 +37,7 @@ public abstract class JavaAbstractLibraryTranslator implements IContextTranslati
     public Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         return switch (bundleIdentifier.getIdentifier()) {
             case "Jca" -> translateJCA(value, detectionContext, detectionLocation);
@@ -49,12 +49,12 @@ public abstract class JavaAbstractLibraryTranslator implements IContextTranslati
     @Nonnull
     protected abstract Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation);
 
     @Nonnull
     protected abstract Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation);
 }

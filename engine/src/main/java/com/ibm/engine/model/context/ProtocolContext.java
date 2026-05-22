@@ -19,9 +19,10 @@
  */
 package com.ibm.engine.model.context;
 
+import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class ProtocolContext implements IDetectionContext, ISupportKind<ProtocolContext.Kind> {
+public class ProtocolContext extends DetectionContext implements ISupportKind<ProtocolContext.Kind> {
 
     public enum Kind {
         TLS,
@@ -31,10 +32,12 @@ public class ProtocolContext implements IDetectionContext, ISupportKind<Protocol
     @Nonnull private final ProtocolContext.Kind kind;
 
     public ProtocolContext(@Nonnull ProtocolContext.Kind kind) {
+        super(Map.of("kind", kind.name()));
         this.kind = kind;
     }
 
     public ProtocolContext() {
+        super(Map.of());
         this.kind = ProtocolContext.Kind.NONE;
     }
 

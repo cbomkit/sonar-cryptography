@@ -25,7 +25,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.pyca.PycaCipherMapper;
@@ -63,12 +62,11 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         final PycaCipherMapper pycaCipherMapper = new PycaCipherMapper();
-        if (value instanceof com.ibm.engine.model.Algorithm<Tree>
-                && detectionContext instanceof DetectionContext context) {
-            if (context.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
+        if (value instanceof com.ibm.engine.model.Algorithm<Tree>) {
+            if (detectionContext.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
                 return switch (value.asString().toUpperCase().trim()) {
                     case "AESGCM" ->
                             Optional.of(new AES(new GCM(detectionLocation), detectionLocation));
@@ -85,8 +83,7 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
             }
             return pycaCipherMapper.parse(value.asString(), detectionLocation).map(i -> i);
         } else if (value instanceof ValueAction<Tree>
-                && detectionContext instanceof DetectionContext context
-                && context.get("kind").map(k -> k.equals("padding")).orElse(false) // padding case
+                && detectionContext.get("kind").map(k -> k.equals("padding")).orElse(false) // padding case
         ) {
             return switch (value.asString().toUpperCase().trim()) {
                 case "PKCS7" -> Optional.of(new PKCS7(detectionLocation));
@@ -106,13 +103,12 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
                 case "ECB" -> Optional.of(new ECB(detectionLocation));
                 default -> Optional.empty();
             };
-        } else if (value instanceof CipherAction<Tree> cipherAction
-                && detectionContext instanceof DetectionContext context) {
+        } else if (value instanceof CipherAction<Tree> cipherAction) {
             return switch (cipherAction.getAction()) {
                 case DECRYPT -> Optional.of(new Decrypt(detectionLocation));
                 case ENCRYPT -> Optional.of(new Encrypt(detectionLocation));
                 case WRAP ->
-                        context.get("algorithm")
+                        detectionContext.get("algorithm")
                                 .map(
                                         str ->
                                                 switch (str.toUpperCase().trim()) {
