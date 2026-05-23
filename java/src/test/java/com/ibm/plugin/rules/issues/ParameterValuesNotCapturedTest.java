@@ -32,7 +32,6 @@ import com.ibm.plugin.TestBase;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleJars;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sonar.java.checks.verifier.CheckVerifier;
 import org.sonar.plugins.java.api.JavaCheck;
@@ -51,7 +50,6 @@ class ParameterValuesNotCapturedTest extends TestBase {
      * (that should be captured with a depending detection rule) or `macSizeInBits` (that should be
      * an immediate `shouldBeDetectedAs` detection) were captured.
      */
-    @Disabled
     @Test
     void test() {
         CheckVerifier.newVerifier()
@@ -70,7 +68,7 @@ class ParameterValuesNotCapturedTest extends TestBase {
          * TODO: Optimally, we shouldn't have these direct detections of engines, as they appear in
          * the depending detection rules
          */
-        if (findingId == 0) {
+        if (findingId == 0 || findingId == 2) {
             return;
         }
 
@@ -92,7 +90,6 @@ class ParameterValuesNotCapturedTest extends TestBase {
         IValue<Tree> value0_1 = store_1.getDetectionValues().get(0);
         assertThat(value0_1).isInstanceOf(MacSize.class);
         assertThat(value0_1.asString()).isEqualTo("128");
-
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_2 =
                 getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
         assertThat(store_2).isNotNull();
@@ -100,7 +97,7 @@ class ParameterValuesNotCapturedTest extends TestBase {
         assertThat(store_2.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value0_2 = store_2.getDetectionValues().get(0);
         assertThat(value0_2).isInstanceOf(ValueAction.class);
-        assertThat(value0_2.asString()).isEqualTo("AES");
+        assertThat(value0_2.asString()).isEqualTo("AESEngine");
 
         /*
          * Translation

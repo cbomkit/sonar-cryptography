@@ -860,6 +860,20 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                     // scope
                     detectionStore.onDetectedDependingParameter(
                             parameter, newClassTree, DetectionStore.Scope.EXPRESSION);
+                } else if (expression
+                                instanceof
+                                org.sonar.plugins.java.api.tree.IdentifierTree identifierTree
+                        && identifierTree.symbol().isVariableSymbol()
+                        && identifierTree.symbol().declaration()
+                                instanceof org.sonar.plugins.java.api.tree.VariableTree variableTree
+                        && variableTree.initializer() == null) {
+
+                    // The variable is a method parameter -> value exists at caller site
+                    final org.sonar.plugins.java.api.tree.MethodTree methodTree =
+                            org.sonar.java.model.ExpressionUtils.getEnclosingMethod(expressionTree);
+                    if (methodTree != null) {
+                        createAMethodHook(methodTree, identifierTree, parameter);
+                    }
                 } else {
                     // handle next rules
                     detectionStore.onDetectedDependingParameter(
