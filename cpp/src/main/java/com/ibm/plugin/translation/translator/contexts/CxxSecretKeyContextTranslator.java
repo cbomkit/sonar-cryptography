@@ -20,6 +20,9 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.KeySize;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
@@ -48,8 +51,29 @@ public final class CxxSecretKeyContextTranslator implements IContextTranslation<
             @Nonnull IValue<AstNode> value,
             @Nonnull IDetectionContext detectionValueContext,
             @Nonnull DetectionLocation detectionLocation) {
-        // TODO: Implement secret key context translation based on detection value type
-        // This will be expanded when OpenSSL/other library detection rules are added
+        // Handle key sizes (bytes/bit units) → KeyLength
+        if (value instanceof KeySize<?> keySize) {
+            int bits = keySize.getValue();
+            if (keySize.getUnitType() == Size.UnitType.BYTE) {
+                bits = bits * 8;
+            }
+            return Optional.of(new com.ibm.mapper.model.KeyLength(bits, detectionLocation));
+        }
+
+        // Handle key-related actions (generation / KDF / encapsulation)
+        if (value instanceof KeyAction<?> keyAction) {
+            switch (keyAction.getAction()) {
+                case SECRET_KEY_GENERATION, GENERATION ->
+                        Optional.of(
+                                new com.ibm.mapper.model.functionality.KeyGeneration(
+                                        com.ibm.mapper.model.functionality.KeyGeneration.Specification.SECRET_KEY,
+                                        detectionLocation));
+                case KDF -> Optional.of(new com.ibm.mapper.model.functionality.KeyDerivation(detectionLocation));
+                case ENCAPSULATION -> Optional.of(new com.ibm.mapper.model.functionality.Encapsulate(detectionLocation));
+                default -> Optional.empty();
+            }
+        }
+
         return Optional.empty();
     }
 }
