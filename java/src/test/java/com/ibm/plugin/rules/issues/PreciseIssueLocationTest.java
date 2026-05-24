@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.issues;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.Algorithm;
@@ -38,36 +39,48 @@ import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Tree;
 
 /**
- * Regression test for issue #339: Detection location off - Findings reported below the actual
+ * Regression test for issue #339: Detection location off - Findings reported
+ * below the actual
  * place.
  *
- * <p>When scanning code that has methods separated by multi-line javadoc comments (like Guava's
- * Hashing.java), all findings were reported at the closing {@code * /} of the <em>next</em>
+ * <p>
+ * When scanning code that has methods separated by multi-line javadoc comments
+ * (like Guava's
+ * Hashing.java), all findings were reported at the closing {@code * /} of the
+ * <em>next</em>
  * method's javadoc comment instead of at the actual detection site.
  *
- * <p>This test verifies that:
+ * <p>
+ * This test verifies that:
  *
  * <ol>
- *   <li>Findings for {@code new SecretKeySpec(...)} are reported on the line of the constructor
- *       call, not on the javadoc comment of the following method.
- *   <li>Findings for {@code Mac.getInstance(...)} are reported on the line of the method
- *       invocation, not on the javadoc comment of the following method.
+ * <li>Findings for {@code new SecretKeySpec(...)} are reported on the line of
+ * the constructor
+ * call, not on the javadoc comment of the following method.
+ * <li>Findings for {@code Mac.getInstance(...)} are reported on the line of the
+ * method
+ * invocation, not on the javadoc comment of the following method.
  * </ol>
  *
- * <p>The test fixture {@code PreciseIssueLocationTestFile.java} reproduces the Guava Hashing.java
- * pattern exactly: each method is separated from the next by a multi-line {@code /** ... * /}
+ * <p>
+ * The test fixture {@code PreciseIssueLocationTestFile.java} reproduces the
+ * Guava Hashing.java
+ * pattern exactly: each method is separated from the next by a multi-line
+ * {@code /** ... * /}
  * javadoc block.
  */
 // https://github.com/cbomkit/sonar-cryptography/issues/339
 class PreciseIssueLocationTest extends TestBase {
 
     /**
-     * Verifies that issues are reported at the correct lines (i.e., at the {@code //Noncompliant}
-     * markers in the test fixture, which are placed on the actual call-site lines, NOT on the
+     * Verifies that issues are reported at the correct lines (i.e., at the
+     * {@code //Noncompliant}
+     * markers in the test fixture, which are placed on the actual call-site lines,
+     * NOT on the
      * closing {@code * /} of adjacent javadoc comments).
      */
     @Test
-    void test() {
+    void reportsIssuesOnCallSiteNotJavadoc() {
         CheckVerifier.newVerifier()
                 .onFile("src/test/files/rules/issues/PreciseIssueLocationTestFile.java")
                 .withChecks(this)
@@ -116,9 +129,8 @@ class PreciseIssueLocationTest extends TestBase {
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacSHA256");
             }
-            default -> {
-                // No additional findings expected
-            }
+            default -> fail(
+                    "Unexpected findingId: " + findingId);
         }
     }
 }
