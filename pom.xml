@@ -253,6 +253,7 @@
                 <configuration>
                     <includeResources>false</includeResources>
                     <includeTestResources>false</includeTestResources>
+                    <excludes>**/antlr/**</excludes>
                     <checkstyleRules>
                         <module name="Checker">
                             <property name="localeLanguage" value="en"/>
