@@ -37,27 +37,20 @@ class OutputFileJobTest {
 
     private Path tempDir;
 
-    private String originalUserDir;
-
     @BeforeEach
     void setUp() throws Exception {
         tempDir = Files.createTempDirectory("cbom-test-");
-        originalUserDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", tempDir.toAbsolutePath().toString());
-
         new ScannerManager(null).reset();
     }
 
     @AfterEach
     void tearDown() {
-        System.setProperty("user.dir", originalUserDir);
         new ScannerManager(null).reset();
     }
 
     @Test
     void noCbomFileWrittenWhenAggregatorsAreEmpty() throws Exception {
-        String cbomBaseName =
-                tempDir.resolve("cbom").toAbsolutePath().toString();
+        String cbomBaseName = tempDir.resolve("cbom").toAbsolutePath().toString();
 
         Configuration config = mock(Configuration.class);
         when(config.get(Constants.CBOM_OUTPUT_NAME)).thenReturn(Optional.of(cbomBaseName));
