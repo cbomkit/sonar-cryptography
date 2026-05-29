@@ -64,19 +64,13 @@ public class JavaLanguageTranslation implements ILanguageTranslation<Tree> {
         /*
          * ECJ Unable to resolve type junit.framework.TestCase
          *
-         * Since the implementation of Hooks the MethodMatcher and therefore this
-         * function is used to
-         * determine if a hook is invoked or not. Since Hooks persist over the whole
-         * scan (not deleted per module),
-         * this check happens even on a module switch. Sonar-java uses ECJ to be able to
-         * resolve subtypes. This will
-         * fail and throw when a hook-check is done, but the type is not part of the
-         * currently scanned module.
-         * This failure would throw an error message into the logs, which could distract
-         * a user.
+         * Since the implementation of Hooks the MethodMatcher and therefore this function is used to
+         * determine if a hook is invoked or not. Since Hooks persist over the whole scan (not deleted per module),
+         * this check happens even on a module switch. Sonar-java uses ECJ to be able to resolve subtypes. This will
+         * fail and throw when a hook-check is done, but the type is not part of the currently scanned module.
+         * This failure would throw an error message into the logs, which could distract a user.
          *
-         * Therefore, we excluded the subType check for hook invocation checks to stop
-         * the sonar-java-frontend from
+         * Therefore, we excluded the subType check for hook invocation checks to stop the sonar-java-frontend from
          * throwing those errors.
          */
         if (methodInvocation instanceof MethodInvocationTree methodInvocationTree) {

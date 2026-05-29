@@ -70,8 +70,7 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
             // Add a hook to the hook repository
             if (handler.addHookToHookRepository(hook)) {
                 /*
-                 * Subscribes to the hook detection observable for the given hook value and
-                 * attaches the new
+                 * Subscribes to the hook detection observable for the given hook value and attaches the new
                  * Detection Store to it, so that it can receive detection events.
                  */
                 handler.subscribeToHookDetectionObservable(hook, hookRootDetectionStore);
@@ -222,8 +221,7 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
                                     .visitMethodDefinition(hook.methodDefinition());
                         });
 
-        // add additional expected rule visits based on the size of the next detection
-        // rules
+        // add additional expected rule visits based on the size of the next detection rules
         statusReporting.addAdditionalExpectedRuleVisits(detectionRule.nextDetectionRules().size());
 
         detectionRule.nextDetectionRules().stream()
@@ -248,8 +246,7 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
                                     .visitMethodDefinition(hook.methodDefinition());
                         });
 
-        // emit a finding to the status report if the root detection store contains any
-        // findings
+        // emit a finding to the status report if the root detection store contains any findings
         if (!isSuccessive) {
             statusReporting.emitFinding(hookRootDetectionStore);
         }

@@ -357,17 +357,13 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                 VariableTree variableTree = (VariableTree) declaration;
                 if (variableTree.initializer() == null) {
                     /*
-                     * If the resolve context was previously inner scope (there was a detection
-                     * inside a method),
+                     * If the resolve context was previously inner scope (there was a detection inside a method),
                      * but now a depending parameter has to be resolved by the outer scope,
                      * the inner scope detection will be published.
-                     * This ensures that the inner scope detection will not get lost, even if the
-                     * depending parameter
+                     * This ensures that the inner scope detection will not get lost, even if the depending parameter
                      * cannot be resolved by the outer scope.
                      *
-                     * See test case
-                     * src/test/java/com/ibm/plugin/resolve/ResolveValueIfFunctionWasNotCalledTest.
-                     * java
+                     * See test case src/test/java/com/ibm/plugin/resolve/ResolveValueIfFunctionWasNotCalledTest.java
                      */
                     // value is not resolvable in method scope, try to find method call with
                     // arguments
@@ -417,8 +413,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                     }
                 }
             } else if (identifierTree.symbol().isMethodSymbol()) {
-                // value is not resolvable in method scope, try to find method call with
-                // arguments
+                // value is not resolvable in method scope, try to find method call with arguments
                 MethodInvocationTree methodInvocation = (MethodInvocationTree) expressionTree;
                 MethodTree methodDefinition = methodInvocation.methodSymbol().declaration();
                 if (methodDefinition != null) {
@@ -426,17 +421,13 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                 }
             } else if (identifierTree.symbol().isEnum()) {
                 /*
-                 * If the resolve context was previously inner scope (there was a detection
-                 * inside a method),
+                 * If the resolve context was previously inner scope (there was a detection inside a method),
                  * but now a depending parameter has to be resolved by the outer scope,
                  * the inner scope detection will be published.
-                 * This ensures that the inner scope detection will not get lost, even if the
-                 * depending parameter
+                 * This ensures that the inner scope detection will not get lost, even if the depending parameter
                  * cannot be resolved by the outer scope.
                  *
-                 * See test case
-                 * src/test/java/com/ibm/plugin/resolve/ResolveValueIfFunctionWasNotCalledTest.
-                 * java
+                 * See test case src/test/java/com/ibm/plugin/resolve/ResolveValueIfFunctionWasNotCalledTest.java
                  */
                 final MatchContext matchContext =
                         MatchContext.build(true, detectionStore.getDetectionRule());
@@ -754,13 +745,11 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             @Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull ExpressionTree expressionTree) {
         /*
          * This statement will check if the method invocation was already analyzed.
-         * In case the parsed code uses a builder-pattern or just chain multiple
-         * function calls, the parser
+         * In case the parsed code uses a builder-pattern or just chain multiple function calls, the parser
          * will parse the call-chain iteratively.
          * That is for 'foo().goo()' the function 'foo()' will be parsed two times.
          *
-         * Check out:
-         * src/test/java/com/ibm/plugin/resolve/ResolveBuilderPatternTest.java
+         * Check out: src/test/java/com/ibm/plugin/resolve/ResolveBuilderPatternTest.java
          */
         // check if expression is a builder pattern
         boolean isBuilderPattern = false;
@@ -818,8 +807,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             arguments = newClassTree.arguments();
         }
         /*
-         * Check if the matched method does have equal or less number of arguments
-         * compared to the index
+         * Check if the matched method does have equal or less number of arguments compared to the index
          * of interested defined in the detection rule.
          * This will prevent an index out of bound
          */
@@ -834,12 +822,9 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
             /*
              * This method resolves the detection parameter in an inner scope.
-             * It checks if the variable symbols for the method (if applicable) are
-             * connected.
-             * If they are, it attempts to get the constant value directly from the
-             * Resolver.class.
-             * If not, it falls back to resolving values in the outer scope using the
-             * provided expression and detectableParameter.
+             * It checks if the variable symbols for the method (if applicable) are connected.
+             * If they are, it attempts to get the constant value directly from the Resolver.class.
+             * If not, it falls back to resolving values in the outer scope using the provided expression and detectableParameter.
              */
             if (parameter.is(DetectableParameter.class)) {
                 DetectableParameter<Tree> detectableParameter =
