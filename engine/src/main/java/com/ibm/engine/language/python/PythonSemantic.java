@@ -114,10 +114,10 @@ public final class PythonSemantic {
                         null,
                         new LinkedList<>());
         // call would enhance the results
-        final List<Tree> results = new LinkedList<>();
-        for (ResolvedValue<Object, Tree> value : values) {
-            results.add(value.tree());
-        }
+        final List<Tree> results =
+                values.stream()
+                        .map(ResolvedValue::tree)
+                        .collect(java.util.stream.Collectors.toCollection(LinkedList::new));
 
         if (results.isEmpty()) {
             // Tries (with few hope) to obtain the type from the Symbol, otherwise returns "*"
@@ -141,9 +141,10 @@ public final class PythonSemantic {
             switch (resultTree.getKind()) {
                 case NAME:
                     final Name nameTree = (Name) resultTree;
-                    final Optional<String> fullyQualifiedNameTempOptional =
-                            Optional.of(nameTree).map(Name::symbol).map(Symbol::fullyQualifiedName);
-                    String fullyQualifiedNameTemp = fullyQualifiedNameTempOptional.orElse(null);
+                    String fullyQualifiedNameTemp =
+                            Optional.ofNullable(nameTree.symbol())
+                                    .map(Symbol::fullyQualifiedName)
+                                    .orElse(null);
                     if (fullyQualifiedNameTemp != null) {
                         if (nameTree.parent() instanceof FunctionDef) {
                             // When we want to resolve the type of a function definition, we resolve
@@ -218,15 +219,9 @@ public final class PythonSemantic {
      * @return A boolean, {@code true} if at least one IType in {@code typesList} is of type {@code
      *     stringType}
      */
-    private static Boolean resolveMultipleTypes(
+    private static boolean resolveMultipleTypes(
             @Nonnull String stringType, @Nonnull List<IType> typesList) {
-        boolean result = false;
-        for (IType iType : typesList) {
-            if (iType.is(stringType)) {
-                result = true;
-            }
-        }
-        return result;
+        return typesList.stream().anyMatch(iType -> iType.is(stringType));
     }
 
     /**
@@ -259,11 +254,10 @@ public final class PythonSemantic {
         }
 
         if (wantedStringType.endsWith(".*")) {
+            String prefix = wantedStringType.substring(0, wantedStringType.length() - 2);
             result =
-                    fullyQualifiedNameStringType.startsWith(
-                                    wantedStringType.substring(0, wantedStringType.length() - 2))
-                            || shortenedFullyQualifiedNameStringType.startsWith(
-                                    wantedStringType.substring(0, wantedStringType.length() - 2));
+                    fullyQualifiedNameStringType.startsWith(prefix)
+                            || shortenedFullyQualifiedNameStringType.startsWith(prefix);
         } else {
             result =
                     fullyQualifiedNameStringType.equals(wantedStringType)
@@ -726,17 +720,17 @@ public final class PythonSemantic {
             SubscriptionExpression subscriptionExpressionTree = (SubscriptionExpression) tree;
             List<Expression> subscriptionIndexList =
                     subscriptionExpressionTree.subscripts().expressions();
-            if (subscriptionIndexList.size()
-                    == 1) { // TODO: for now, we only resolve the precise subscription index when
-                // there is only one index
+            if (subscriptionIndexList.size() == 1) {
                 Expression currentSubscriptionIndex = subscriptionIndexList.get(0);
+
                 // The index may not be immediately an int or a string: there can be intermediary
-                // assignments, that we resolve
+                // assignments, that we resolve. Keep the current argument mappings so an index that
+                // is a parameter of the enclosing function can be resolved from the call context.
                 List<ResolvedValue<O, Tree>> resolvedSubscriptionIndexList =
                         resolveValues(
                                 clazz,
                                 currentSubscriptionIndex,
-                                new LinkedList<>(),
+                                new LinkedList<>(argsMappingList),
                                 null,
                                 returnEnclosingParam,
                                 false,
@@ -747,13 +741,12 @@ public final class PythonSemantic {
                     Tree resolvedSubscriptionIndex = resolvedValue.tree();
 
                     if (resolvedSubscriptionIndex instanceof NumericLiteral indexLiteralTree) {
-                        // Case of lists: `list[1]`
                         Object index = getNumericValue(indexLiteralTree);
                         result.addAll(
                                 resolveValues(
                                         clazz,
                                         subscriptionExpressionTree.object(),
-                                        argsMappingList,
+                                        new LinkedList<>(argsMappingList),
                                         index,
                                         returnEnclosingParam,
                                         isResolvingType,
@@ -761,13 +754,12 @@ public final class PythonSemantic {
                                         alreadyResolvedTrees));
                     } else if (resolvedSubscriptionIndex
                             instanceof StringLiteral indexLiteralTree) {
-                        // Case of dictionaries: `dict["key"]`
                         String index = (String) (indexLiteralTree.trimmedQuotesValue());
                         List<ResolvedValue<O, Tree>> resolveDictResult =
                                 resolveValues(
                                         clazz,
                                         subscriptionExpressionTree.object(),
-                                        argsMappingList,
+                                        new LinkedList<>(argsMappingList),
                                         index,
                                         returnEnclosingParam,
                                         isResolvingType,
@@ -790,9 +782,9 @@ public final class PythonSemantic {
                         }
                     } else if (returnEnclosingParam && resolvedSubscriptionIndex instanceof Name) {
                         // Case of a subscription `struct[some_var]` where some_var is an argument
-                        // of the current enclosing function
+                        // of the current enclosing function.
                         // In the case of outer scope resolution with returnEnclosingParam set to
-                        // true, we return this argument Name
+                        // true, we return this argument Name.
                         result.addAll(
                                 resolveValues(
                                         clazz,

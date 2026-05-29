@@ -25,13 +25,23 @@ import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.rule.Parameter;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public record MethodInvocationHookWithParameterResolvement<R, T, S, P>(
         @Nonnull T methodDefinition,
         @Nonnull T methodParameter,
         @Nonnull Parameter<T> parameter,
-        @Nonnull MatchContext matchContext)
+        @Nonnull MatchContext matchContext,
+        @Nullable T expressionToResolve)
         implements IMethodInvocationHook<R, T, S, P> {
+
+    public MethodInvocationHookWithParameterResolvement(
+            @Nonnull T methodDefinition,
+            @Nonnull T methodParameter,
+            @Nonnull Parameter<T> parameter,
+            @Nonnull MatchContext matchContext) {
+        this(methodDefinition, methodParameter, parameter, matchContext, null);
+    }
 
     @Nonnull
     @Override

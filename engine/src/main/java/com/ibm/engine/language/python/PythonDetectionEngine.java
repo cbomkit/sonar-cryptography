@@ -26,8 +26,11 @@ import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.*;
 import com.ibm.engine.rule.Parameter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -143,6 +146,46 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     }
 
     @Override
+    @Nonnull
+    public <O> List<ResolvedValue<O, Tree>> resolveValuesInInnerScope(
+            @Nonnull Class<O> clazz,
+            @Nonnull Tree methodDefinition,
+            @Nonnull Tree methodInvocation,
+            @Nonnull Tree expression,
+            @Nullable IValueFactory<Tree> valueFactory) {
+        if (!(methodDefinition instanceof FunctionDef methodTree)
+                || !(methodInvocation instanceof CallExpression callExpression)
+                || !(expression instanceof Expression expressionTree)) {
+            return Collections.emptyList();
+        }
+
+        ParameterList parameterList = methodTree.parameters();
+        if (parameterList == null
+                || parameterList.nonTuple().size() != callExpression.arguments().size()) {
+            return Collections.emptyList();
+        }
+
+        Map<org.sonar.plugins.python.api.tree.Parameter, Argument> argsMapping = new HashMap<>();
+        for (org.sonar.plugins.python.api.tree.Parameter parameter : parameterList.nonTuple()) {
+            Argument argument =
+                    (Argument)
+                            extractArgumentFromMethodCaller(
+                                    methodDefinition,
+                                    methodInvocation,
+                                    Objects.requireNonNull(parameter.name()));
+            if (argument != null) {
+                argsMapping.put(parameter, argument);
+            }
+        }
+
+        LinkedList<Map<org.sonar.plugins.python.api.tree.Parameter, Argument>> argsMappingList =
+                new LinkedList<>();
+        argsMappingList.add(argsMapping);
+        return PythonSemantic.resolveValues(
+                clazz, expressionTree, argsMappingList, null, false, this);
+    }
+
+    @Override
     public void resolveValuesInOuterScope(
             @Nonnull final Tree tree, @Nonnull final Parameter<Tree> detectableParameter) {
         Tree expression = tree;
@@ -171,7 +214,7 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             }
             final Tree resolvedParameter = resolvedValues.get(0).tree();
 
-            createAMethodHook(methodTree, resolvedParameter, detectableParameter);
+            createAMethodHook(methodTree, resolvedParameter, detectableParameter, expressionTree);
             // Note that compared to the Java implementation, there is no case where we call
             // `createAMethodHook` with `methodParameter == null`.
             // This is because this case is used in Java to resolve return statements, but this
@@ -183,6 +226,14 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Tree methodTree,
             @Nullable Tree methodParameter,
             @Nonnull Parameter<Tree> detectableParameter) {
+        createAMethodHook(methodTree, methodParameter, detectableParameter, null);
+    }
+
+    private void createAMethodHook(
+            @Nonnull Tree methodTree,
+            @Nullable Tree methodParameter,
+            @Nonnull Parameter<Tree> detectableParameter,
+            @Nullable Tree expressionToResolve) {
         final MatchContext matchContext =
                 MatchContext.build(true, detectionStore.getDetectionRule());
         if (methodParameter == null) {
@@ -207,7 +258,11 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         PythonCheck, Tree, Symbol, PythonVisitorContext>
                 methodInvocationHookWithParameterResolvement =
                         new MethodInvocationHookWithParameterResolvement<>(
-                                methodTree, methodParameter, detectableParameter, matchContext);
+                                methodTree,
+                                methodParameter,
+                                detectableParameter,
+                                matchContext,
+                                expressionToResolve);
         if (this.detectionStore
                 instanceof
                 final DetectionStoreWithHook<PythonCheck, Tree, Symbol, PythonVisitorContext>
