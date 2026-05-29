@@ -22,7 +22,7 @@ package com.ibm.engine.rule;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.ILanguageTranslation;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.IActionFactory;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -33,7 +33,7 @@ public record DetectionRule<T>(
         boolean shouldMatchExactTypes,
         @Nonnull List<Parameter<T>> parameters,
         @Nullable IActionFactory<T> actionFactory,
-        @Nonnull IDetectionContext detectionValueContext,
+        @Nonnull DetectionContext detectionValueContext,
         @Nonnull IBundle bundle,
         @Nonnull List<IDetectionRule<T>> nextDetectionRules)
         implements IDetectionRule<T> {

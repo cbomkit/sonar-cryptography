@@ -20,7 +20,7 @@
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -47,9 +47,9 @@ public final class BcAsymCipherEngine {
                     "RSAEngine");
 
     private static @Nonnull List<IDetectionRule<Tree>> constructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null
                         ? detectionValueContext
                         : new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE"));
@@ -76,7 +76,7 @@ public final class BcAsymCipherEngine {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         return constructors(detectionValueContext);
     }
 }

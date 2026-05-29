@@ -26,7 +26,7 @@ import com.ibm.engine.hooks.IMethodInvocationHook;
 import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.model.IAction;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.IDetectionRule;
@@ -98,7 +98,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
     }
 
     @Nonnull
-    public IDetectionContext getDetectionValueContext() {
+    public DetectionContext getDetectionValueContext() {
         return this.detectionRule.detectionValueContext();
     }
 

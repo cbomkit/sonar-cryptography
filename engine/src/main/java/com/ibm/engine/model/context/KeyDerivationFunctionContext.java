@@ -19,14 +19,13 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class KeyDerivationFunctionContext extends DetectionContext implements IDetectionContext {
+public class KeyDerivationFunctionContext extends DetectionContext {
 
     public KeyDerivationFunctionContext() {
-        super(new HashMap<>());
+        super(Map.of());
     }
 
     public KeyDerivationFunctionContext(@Nonnull Map<String, String> properties) {
@@ -34,7 +33,7 @@ public class KeyDerivationFunctionContext extends DetectionContext implements ID
     }
 
     @Override
-    public @Nonnull Class<? extends IDetectionContext> type() {
+    public @Nonnull Class<? extends DetectionContext> type() {
         return KeyDerivationFunctionContext.class;
     }
 }

@@ -42,7 +42,8 @@ public final class PycaSecretContextTranslator implements IContextTranslation<Tr
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeyAction<Tree>) {
             // action is always "generate"
-            return detectionContext.get("algorithm")
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             str ->
                                     switch (str.toUpperCase().trim()) {

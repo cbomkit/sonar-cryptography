@@ -51,7 +51,8 @@ public final class PycaSecretKeyContextTranslator implements IContextTranslation
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeySize<Tree> keySize
                 && detectionContext.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
-            return detectionContext.get("algorithm")
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             str ->
                                     switch (str.toUpperCase().trim()) {
@@ -90,7 +91,8 @@ public final class PycaSecretKeyContextTranslator implements IContextTranslation
                             });
         } else if (value instanceof KeyAction<Tree> keyAction
                 && detectionContext.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
-            return detectionContext.get("algorithm")
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             str ->
                                     switch (str.toUpperCase().trim()) {

@@ -45,7 +45,8 @@ public final class PycaPublicKeyContextTranslator implements IContextTranslation
             @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeyAction<Tree>) {
-            return detectionContext.get("algorithm")
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             algorithm ->
                                     switch (algorithm.toUpperCase().trim()) {

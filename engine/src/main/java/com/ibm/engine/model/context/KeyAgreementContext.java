@@ -19,14 +19,13 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
 public class KeyAgreementContext extends DetectionContext {
 
     public KeyAgreementContext() {
-        super(new HashMap<>());
+        super(Map.of());
     }
 
     public KeyAgreementContext(@Nonnull Map<String, String> properties) {
@@ -35,7 +34,7 @@ public class KeyAgreementContext extends DetectionContext {
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return KeyAgreementContext.class;
     }
 }

@@ -22,34 +22,28 @@ package com.ibm.engine.model.context;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class ProtocolContext extends DetectionContext implements ISupportKind<ProtocolContext.Kind> {
+public class ProtocolContext extends DetectionContext {
 
     public enum Kind {
         TLS,
         NONE,
     }
 
-    @Nonnull private final ProtocolContext.Kind kind;
-
     public ProtocolContext(@Nonnull ProtocolContext.Kind kind) {
-        super(Map.of("kind", kind.name()));
-        this.kind = kind;
+        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
     }
 
     public ProtocolContext() {
         super(Map.of());
-        this.kind = ProtocolContext.Kind.NONE;
+    }
+
+    public ProtocolContext(@Nonnull Map<String, String> properties) {
+        super(properties);
     }
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return ProtocolContext.class;
-    }
-
-    @Nonnull
-    @Override
-    public Kind kind() {
-        return this.kind;
     }
 }

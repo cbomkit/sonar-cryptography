@@ -75,8 +75,8 @@ class ResolveMethodCallTest extends TestBase {
             assertThat(curve.getDetectionValues()).hasSize(1);
             IValue<Tree> curveValue = curve.getDetectionValues().get(0);
             assertThat(curve.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-            KeyContext context = (KeyContext) curve.getDetectionValueContext();
-            assertThat(context.kind()).isEqualTo(KeyContext.Kind.EC);
+            assertThat(curve.getDetectionValueContext().get("kind"))
+                    .hasValue(KeyContext.Kind.EC.name());
             assertThat(curveValue).isInstanceOf(Curve.class);
             assertThat(curveValue.asString())
                     .satisfies(

@@ -49,7 +49,11 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
             return Optional.empty();
         }
 
-        final ProtocolContext.Kind kind = ((ProtocolContext) detectionContext).kind();
+        final ProtocolContext.Kind kind =
+                detectionContext
+                        .get("kind")
+                        .map(ProtocolContext.Kind::valueOf)
+                        .orElse(ProtocolContext.Kind.NONE);
         if (value instanceof com.ibm.engine.model.Protocol<Tree> protocol) {
             return switch (kind) {
                 case TLS ->

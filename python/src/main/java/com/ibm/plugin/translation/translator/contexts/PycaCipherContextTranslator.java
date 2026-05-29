@@ -83,7 +83,10 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
             }
             return pycaCipherMapper.parse(value.asString(), detectionLocation).map(i -> i);
         } else if (value instanceof ValueAction<Tree>
-                && detectionContext.get("kind").map(k -> k.equals("padding")).orElse(false) // padding case
+                && detectionContext
+                        .get("kind")
+                        .map(k -> k.equals("padding"))
+                        .orElse(false) // padding case
         ) {
             return switch (value.asString().toUpperCase().trim()) {
                 case "PKCS7" -> Optional.of(new PKCS7(detectionLocation));
@@ -108,7 +111,8 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
                 case DECRYPT -> Optional.of(new Decrypt(detectionLocation));
                 case ENCRYPT -> Optional.of(new Encrypt(detectionLocation));
                 case WRAP ->
-                        detectionContext.get("algorithm")
+                        detectionContext
+                                .get("algorithm")
                                 .map(
                                         str ->
                                                 switch (str.toUpperCase().trim()) {

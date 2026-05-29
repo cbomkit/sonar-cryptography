@@ -79,7 +79,10 @@ public final class PycaPrivateKeyContextTranslator implements IContextTranslatio
             }
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
         } else if (value instanceof Curve<Tree> curve
-                && detectionContext.get("algorithm").map(a -> a.equalsIgnoreCase("EC")).orElse(false)) {
+                && detectionContext
+                        .get("algorithm")
+                        .map(a -> a.equalsIgnoreCase("EC"))
+                        .orElse(false)) {
             return Optional.of(curve.asString())
                     .map(
                             str ->

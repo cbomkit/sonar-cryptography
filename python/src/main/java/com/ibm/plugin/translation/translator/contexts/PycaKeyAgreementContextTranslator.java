@@ -65,19 +65,20 @@ public class PycaKeyAgreementContextTranslator implements IContextTranslation<Tr
                             });
         } else if (value instanceof KeyAction<Tree>) {
             // key action is always "generate"
-            return detectionContext.get("algorithm")
-                        .map(
-                                algo ->
-                                        switch (algo.toUpperCase().trim()) {
-                                            case "X25519" -> new X25519(detectionLocation);
-                                            case "X448" -> new X448(detectionLocation);
-                                            default -> null;
-                                        })
-                        .map(
-                                ka -> {
-                                    ka.put(new KeyGeneration(detectionLocation));
-                                    return ka;
-                                });
+            return detectionContext
+                    .get("algorithm")
+                    .map(
+                            algo ->
+                                    switch (algo.toUpperCase().trim()) {
+                                        case "X25519" -> new X25519(detectionLocation);
+                                        case "X448" -> new X448(detectionLocation);
+                                        default -> null;
+                                    })
+                    .map(
+                            ka -> {
+                                ka.put(new KeyGeneration(detectionLocation));
+                                return ka;
+                            });
         }
         return Optional.empty();
     }

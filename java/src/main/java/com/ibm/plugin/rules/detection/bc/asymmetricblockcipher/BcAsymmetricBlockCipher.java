@@ -19,7 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IDetectionRule;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,8 +40,8 @@ public final class BcAsymmetricBlockCipher {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+            @Nullable DetectionContext encodingDetectionValueContext,
+            @Nullable DetectionContext engineDetectionValueContext) {
         return Stream.of(
                         BcPKCS1Encoding.rules(
                                 encodingDetectionValueContext, engineDetectionValueContext)

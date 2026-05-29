@@ -21,7 +21,7 @@ package com.ibm.plugin.rules.detection.bc.digest;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -106,9 +106,9 @@ public final class BcDigests {
 
     @Nonnull
     private static List<IDetectionRule<Tree>> regularConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         final List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        final IDetectionContext context =
+        final DetectionContext context =
                 detectionValueContext != null ? detectionValueContext : new DigestContext();
 
         for (Map.Entry<String, BouncyCastleInfoMap.Info> entry : infoMap.entrySet()) {
@@ -134,9 +134,9 @@ public final class BcDigests {
 
     @Nonnull
     private static List<IDetectionRule<Tree>> otherConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null ? detectionValueContext : new DigestContext();
 
         constructorsList.add(
@@ -198,7 +198,7 @@ public final class BcDigests {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         return Stream.concat(
                         regularConstructors(detectionValueContext).stream(),
                         otherConstructors(detectionValueContext).stream())

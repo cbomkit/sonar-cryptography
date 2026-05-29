@@ -19,14 +19,13 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
 public class AlgorithmParameterContext extends DetectionContext {
 
     public AlgorithmParameterContext() {
-        super(new HashMap<>());
+        super(Map.of());
     }
 
     public AlgorithmParameterContext(@Nonnull Map<String, String> properties) {
@@ -35,7 +34,7 @@ public class AlgorithmParameterContext extends DetectionContext {
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return AlgorithmParameterContext.class;
     }
 }
