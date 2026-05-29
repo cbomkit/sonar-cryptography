@@ -90,6 +90,7 @@ class ParameterValuesNotCapturedTest extends TestBase {
         IValue<Tree> value0_1 = store_1.getDetectionValues().get(0);
         assertThat(value0_1).isInstanceOf(MacSize.class);
         assertThat(value0_1.asString()).isEqualTo("128");
+
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_2 =
                 getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
         assertThat(store_2).isNotNull();
