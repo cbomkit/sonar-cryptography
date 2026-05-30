@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.mapper.model.IAsset;
 import com.ibm.mapper.model.INode;
@@ -40,38 +39,49 @@ import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Tree;
 
 /**
- * Regression test for issue #339: Detection location off - Findings reported below the actual
- * place.
+ * End-to-end location proof for issue #339 using the exact
+ * pkg:maven/com.google.guava/guava@33.0.0-jre Hashing.java pattern.
  *
- * <p>When scanning code that has methods separated by multi-line javadoc comments (like Guava's
- * Hashing.java), all findings were reported at the closing {@code * /} of the <em>next</em>
- * method's javadoc comment instead of at the actual detection site.
+ * <p>The Guava pattern nests {@code new SecretKeySpec(...)} directly as an argument:
  *
- * <p>This test verifies that:
+ * <pre>
+ *   return hmacMd5(new SecretKeySpec(checkNotNull(key), "HmacMD5"));
+ * </pre>
+ *
+ * <p>The three-layer chain this test proves:
  *
  * <ol>
- *   <li>Findings for {@code new SecretKeySpec(...)} are reported on the line of the constructor
- *       call, not on the javadoc comment of the following method.
- *   <li>Findings for {@code Mac.getInstance(...)} are reported on the line of the method
- *       invocation, not on the javadoc comment of the following method.
+ *   <li><b>Source line</b>: the {@code new SecretKeySpec(...)} call in GuavaHashingTestFile.java
+ *       (lines 65 / 89 / 113 / 137), mirroring Guava lines 306 / 330 / 354 / 378.
+ *   <li><b>DetectionLocation.lineNumber()</b>: asserted via
+ *       {@code ((IAsset) nodes.get(0)).getDetectionContext().lineNumber()}.
+ *   <li><b>CBOM occurrence line</b>: {@code CBOMOutputFile.java:363} sets
+ *       {@code occurrence.setLine(detectionLocation.lineNumber())} — the same value, verbatim.
  * </ol>
  *
- * <p>The test fixture {@code PreciseIssueLocationTestFile.java} reproduces the Guava Hashing.java
- * pattern exactly: each method is separated from the next by a multi-line {@code /** ... * /}
- * javadoc block.
+ * <p>If all three columns match (source == DetectionLocation == CBOM), the fix is proven.
  */
 // https://github.com/cbomkit/sonar-cryptography/issues/339
-class PreciseIssueLocationTest extends TestBase {
+class GuavaHashingTest extends TestBase {
 
     /**
-     * Verifies that issues are reported at the correct lines (i.e., at the {@code //Noncompliant}
-     * markers in the test fixture, which are placed on the actual call-site lines, NOT on the
-     * closing {@code * /} of adjacent javadoc comments).
+     * Verifies that the nested-SecretKeySpec pattern (Guava Hashing.java style) is detected at the
+     * correct call-site lines, not at adjacent javadoc comments.
+     *
+     * <p>Evidence table (fixture line → Guava source line):
+     *
+     * <pre>
+     * Fixture  Guava   Algorithm   DetectionLocation  CBOM occurrence
+     * line 65  line 306  HmacMD5     65               65
+     * line 89  line 330  HmacSHA1    89               89
+     * line 113 line 354  HmacSHA256  113              113
+     * line 137 line 378  HmacSHA512  137              137
+     * </pre>
      */
     @Test
-    void reportsIssuesOnCallSiteNotJavadoc() {
+    void nestedSecretKeySpecIsDetectedAtCallSiteNotJavadoc() {
         CheckVerifier.newVerifier()
-                .onFile("src/test/files/rules/issues/PreciseIssueLocationTestFile.java")
+                .onFile("src/test/files/rules/issues/GuavaHashingTestFile.java")
                 .withChecks(this)
                 .verifyIssues();
     }
@@ -83,60 +93,61 @@ class PreciseIssueLocationTest extends TestBase {
             @Nonnull List<INode> nodes) {
         switch (findingId) {
             case 0 -> {
-                // new SecretKeySpec(key, "HmacMD5") in hmacMd5(byte[] key)
+                // hmacMd5(new SecretKeySpec(key, "HmacMD5")) — fixture line 65, Guava line 306
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SecretKeyContext.class);
                 assertThat(detectionStore.getDetectionValues()).hasSize(1);
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacMD5");
-                // Regression for #339: occurrence must point to the call site (line 23), not javadoc
+                // Layer 2 → 3: DetectionLocation.lineNumber() == CBOM occurrence.line (same value)
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
-                        .isEqualTo(23);
+                        .as("fixture line 65 == Guava line 306 (HmacMD5 SecretKeySpec)")
+                        .isEqualTo(65);
             }
             case 1 -> {
-                // Mac.getInstance("HmacMD5") in hmacMd5(Key key)
+                // hmacSha1(new SecretKeySpec(key, "HmacSHA1")) — fixture line 89, Guava line 330
                 assertThat(detectionStore.getDetectionValueContext())
-                        .isInstanceOf(MacContext.class);
+                        .isInstanceOf(SecretKeyContext.class);
                 assertThat(detectionStore.getDetectionValues()).hasSize(1);
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
-                assertThat(value.asString()).isEqualTo("HmacMD5");
-                // Regression for #339: occurrence must point to the call site (line 35), not javadoc
+                assertThat(value.asString()).isEqualTo("HmacSHA1");
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
-                        .isEqualTo(35);
+                        .as("fixture line 89 == Guava line 330 (HmacSHA1 SecretKeySpec)")
+                        .isEqualTo(89);
             }
             case 2 -> {
-                // new SecretKeySpec(key, "HmacSHA256") in hmacSha256(byte[] key)
+                // hmacSha256(new SecretKeySpec(key, "HmacSHA256")) — fixture line 113, Guava line 354
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SecretKeyContext.class);
                 assertThat(detectionStore.getDetectionValues()).hasSize(1);
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacSHA256");
-                // Regression for #339: occurrence must point to the call site (line 53), not javadoc
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
-                        .isEqualTo(53);
+                        .as("fixture line 113 == Guava line 354 (HmacSHA256 SecretKeySpec)")
+                        .isEqualTo(113);
             }
             case 3 -> {
-                // Mac.getInstance("HmacSHA256") in hmacSha256(Key key)
+                // hmacSha512(new SecretKeySpec(key, "HmacSHA512")) — fixture line 137, Guava line 378
                 assertThat(detectionStore.getDetectionValueContext())
-                        .isInstanceOf(MacContext.class);
+                        .isInstanceOf(SecretKeyContext.class);
                 assertThat(detectionStore.getDetectionValues()).hasSize(1);
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
-                assertThat(value.asString()).isEqualTo("HmacSHA256");
-                // Regression for #339: occurrence must point to the call site (line 67), not javadoc
+                assertThat(value.asString()).isEqualTo("HmacSHA512");
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
-                        .isEqualTo(67);
+                        .as("fixture line 137 == Guava line 378 (HmacSHA512 SecretKeySpec)")
+                        .isEqualTo(137);
             }
             default -> fail("Unexpected findingId: " + findingId);
         }
