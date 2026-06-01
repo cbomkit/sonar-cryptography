@@ -90,7 +90,8 @@ class PreciseIssueLocationTest extends TestBase {
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacMD5");
-                // Regression for #339: occurrence must point to the call site (line 23), not javadoc
+                // Regression for #339: occurrence must point to the call site (line 23), not
+                // javadoc
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
@@ -104,7 +105,8 @@ class PreciseIssueLocationTest extends TestBase {
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacMD5");
-                // Regression for #339: occurrence must point to the call site (line 35), not javadoc
+                // Regression for #339: occurrence must point to the call site (line 35), not
+                // javadoc
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
@@ -118,7 +120,8 @@ class PreciseIssueLocationTest extends TestBase {
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacSHA256");
-                // Regression for #339: occurrence must point to the call site (line 53), not javadoc
+                // Regression for #339: occurrence must point to the call site (line 53), not
+                // javadoc
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
@@ -132,7 +135,8 @@ class PreciseIssueLocationTest extends TestBase {
                 IValue<Tree> value = detectionStore.getDetectionValues().get(0);
                 assertThat(value).isInstanceOf(Algorithm.class);
                 assertThat(value.asString()).isEqualTo("HmacSHA256");
-                // Regression for #339: occurrence must point to the call site (line 67), not javadoc
+                // Regression for #339: occurrence must point to the call site (line 67), not
+                // javadoc
                 assertThat(nodes).isNotEmpty();
                 assertThat(nodes.get(0)).isInstanceOf(IAsset.class);
                 assertThat(((IAsset) nodes.get(0)).getDetectionContext().lineNumber())
