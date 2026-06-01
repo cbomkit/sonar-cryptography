@@ -21,7 +21,7 @@ package com.ibm.plugin.rules.detection.bc.blockcipher;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -77,9 +77,9 @@ public final class BcBlockCipherEngine {
             List.of("DSTU7624Engine", "NullEngine", "RijndaelEngine", "ThreefishEngine");
 
     private static final List<IDetectionRule<Tree>> simpleConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null
                         ? detectionValueContext
                         : new CipherContext(Map.of("kind", "BLOCK_CIPHER_ENGINE"));
@@ -137,7 +137,7 @@ public final class BcBlockCipherEngine {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         return simpleConstructors(detectionValueContext);
     }
 }

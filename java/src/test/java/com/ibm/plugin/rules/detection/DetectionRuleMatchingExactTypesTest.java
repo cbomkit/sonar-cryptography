@@ -22,12 +22,13 @@ package com.ibm.plugin.rules.detection;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -68,11 +69,11 @@ class DetectionRuleMatchingExactTypesTest extends TestBase {
                                             return Optional.of(testValue);
                                         })
                                 .buildForContext(
-                                        new IDetectionContext() {
+                                        new DetectionContext(Map.of()) {
                                             @Nonnull
                                             @Override
-                                            public Class<? extends IDetectionContext> type() {
-                                                return IDetectionContext.class;
+                                            public Class<? extends DetectionContext> type() {
+                                                return DetectionContext.class;
                                             }
                                         })
                                 .inBundle(() -> "testBundle")

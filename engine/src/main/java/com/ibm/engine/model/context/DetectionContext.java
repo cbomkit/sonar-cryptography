@@ -24,11 +24,18 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-public abstract class DetectionContext implements IDetectionContext {
+public abstract class DetectionContext {
     @Nonnull private final Map<String, String> properties;
 
     protected DetectionContext(@Nonnull Map<String, String> properties) {
         this.properties = properties;
+    }
+
+    @Nonnull
+    public abstract Class<? extends DetectionContext> type();
+
+    public boolean is(@Nonnull Class<? extends DetectionContext> kind) {
+        return kind.equals(type());
     }
 
     public boolean contains(@Nonnull String key) {

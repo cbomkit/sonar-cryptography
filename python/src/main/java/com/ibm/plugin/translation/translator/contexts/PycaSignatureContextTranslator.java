@@ -23,7 +23,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
@@ -48,7 +47,7 @@ public final class PycaSignatureContextTranslator implements IContextTranslation
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof com.ibm.engine.model.Algorithm<Tree> algorithm) {
             return switch (algorithm.asString().toUpperCase().trim()) {
@@ -59,8 +58,7 @@ public final class PycaSignatureContextTranslator implements IContextTranslation
                                         new EllipticCurveAlgorithm(detectionLocation)));
                 case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
                 case "RSA" -> {
-                    if (detectionContext instanceof DetectionContext context
-                            && context.get("kind").map(k -> k.equals("PSS")).orElse(false)) {
+                    if (detectionContext.get("kind").map(k -> k.equals("PSS")).orElse(false)) {
                         yield Optional.of(
                                 new RSA(ProbabilisticSignatureScheme.class, detectionLocation));
                     }
@@ -73,9 +71,11 @@ public final class PycaSignatureContextTranslator implements IContextTranslation
                 case SIGN -> Optional.of(new Sign(detectionLocation));
                 case VERIFY -> Optional.of(new Verify(detectionLocation));
             };
-        } else if (value instanceof ValueAction<Tree>
-                && detectionContext instanceof DetectionContext context) {
-            if (context.get("kind").map(k -> k.equals("padding")).orElse(false)) { // padding case
+        } else if (value instanceof ValueAction<Tree>) {
+            if (detectionContext
+                    .get("kind")
+                    .map(k -> k.equals("padding"))
+                    .orElse(false)) { // padding case
                 return switch (value.asString().toUpperCase().trim()) {
                     case "PKCS1V15" -> Optional.empty(); // TODO
                     default -> Optional.empty();

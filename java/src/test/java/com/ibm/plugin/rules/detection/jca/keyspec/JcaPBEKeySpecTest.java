@@ -81,8 +81,8 @@ class JcaPBEKeySpecTest extends TestBase {
                 getStoreOfValueType(KeySize.class, detectionStore.getChildren());
         assertThat(store).isNotNull();
         assertThat(store.getDetectionValueContext()).isInstanceOf(SecretKeyContext.class);
-        SecretKeyContext secretKeyContext = (SecretKeyContext) store.getDetectionValueContext();
-        assertThat(secretKeyContext.kind()).isEqualTo(KeyContext.Kind.PBE);
+        assertThat(store.getDetectionValueContext().get("kind"))
+                .hasValue(KeyContext.Kind.PBE.name());
 
         assertThat(store.getDetectionValues()).hasSize(3);
         List<IValue<Tree>> values = store.getDetectionValues();

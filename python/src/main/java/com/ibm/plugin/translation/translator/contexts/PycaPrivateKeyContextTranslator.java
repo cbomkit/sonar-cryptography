@@ -24,7 +24,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
@@ -70,20 +69,20 @@ public final class PycaPrivateKeyContextTranslator implements IContextTranslatio
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof KeyAction<Tree>
-                && detectionContext instanceof DetectionContext context) {
-            return getPrivateKey(context, null, detectionLocation);
+        if (value instanceof KeyAction<Tree>) {
+            return getPrivateKey(detectionContext, null, detectionLocation);
         } else if (value instanceof KeySize<Tree> keySize) {
-            if (detectionContext instanceof DetectionContext context
-                    && context.get("algorithm").isPresent()) {
-                return getPrivateKey(context, keySize.getValue(), detectionLocation);
+            if (detectionContext.get("algorithm").isPresent()) {
+                return getPrivateKey(detectionContext, keySize.getValue(), detectionLocation);
             }
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
         } else if (value instanceof Curve<Tree> curve
-                && detectionContext instanceof DetectionContext context
-                && context.get("algorithm").map(a -> a.equalsIgnoreCase("EC")).orElse(false)) {
+                && detectionContext
+                        .get("algorithm")
+                        .map(a -> a.equalsIgnoreCase("EC"))
+                        .orElse(false)) {
             return Optional.of(curve.asString())
                     .map(
                             str ->

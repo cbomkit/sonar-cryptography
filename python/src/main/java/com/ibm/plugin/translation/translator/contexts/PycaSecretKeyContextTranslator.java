@@ -23,7 +23,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
@@ -48,12 +47,12 @@ public final class PycaSecretKeyContextTranslator implements IContextTranslation
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeySize<Tree> keySize
-                && detectionContext instanceof DetectionContext context
-                && context.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
-            return context.get("algorithm")
+                && detectionContext.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             str ->
                                     switch (str.toUpperCase().trim()) {
@@ -91,9 +90,9 @@ public final class PycaSecretKeyContextTranslator implements IContextTranslation
                                 return key;
                             });
         } else if (value instanceof KeyAction<Tree> keyAction
-                && detectionContext instanceof DetectionContext context
-                && context.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
-            return context.get("algorithm")
+                && detectionContext.get("kind").map(k -> k.equals("AEAD")).orElse(false)) {
+            return detectionContext
+                    .get("algorithm")
                     .map(
                             str ->
                                     switch (str.toUpperCase().trim()) {

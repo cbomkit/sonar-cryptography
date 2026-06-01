@@ -77,8 +77,8 @@ class JcaKeyFactoryGenerateTest extends TestBase {
         store = getStoreOfValueType(KeySize.class, store.getChildren());
         assertThat(store).isNotNull();
         assertThat(store.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        assertThat(((KeyContext) store.getDetectionValueContext()).kind())
-                .isEqualTo(KeyContext.Kind.DH);
+        assertThat(store.getDetectionValueContext().get("kind"))
+                .hasValue(KeyContext.Kind.DH.name());
         assertThat(store.getDetectionValues()).hasSize(1);
         value = store.getDetectionValues().get(0);
         assertThat(value).isInstanceOf(KeySize.class);

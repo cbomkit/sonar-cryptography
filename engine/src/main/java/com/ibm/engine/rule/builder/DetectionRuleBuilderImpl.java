@@ -20,7 +20,7 @@
 package com.ibm.engine.rule.builder;
 
 import com.ibm.engine.detection.MethodMatcher;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.IActionFactory;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.*;
@@ -46,7 +46,7 @@ final class DetectionRuleBuilderImpl<T>
     @Nullable private String[] methodNames;
     @Nonnull private LinkedList<Parameter<T>> parameters = new LinkedList<>();
     @Nullable private CapturedParameterScope capturedParameterScope;
-    @Nullable private IDetectionContext detectionValueContext;
+    @Nullable private DetectionContext detectionValueContext;
     @Nullable private IBundle bundle;
     private boolean shouldMatchExactTypes;
 
@@ -75,7 +75,7 @@ final class DetectionRuleBuilderImpl<T>
             @Nullable String[] methodNames,
             @Nonnull LinkedList<Parameter<T>> parameters,
             @Nullable CapturedParameterScope capturedParameterScope,
-            @Nullable IDetectionContext detectionValueContext,
+            @Nullable DetectionContext detectionValueContext,
             boolean shouldMatchExactTypes,
             @Nonnull LinkedList<IDetectionRule<T>> invokedObjectDependingDetectionRules,
             @Nullable String parameterType,
@@ -340,7 +340,7 @@ final class DetectionRuleBuilderImpl<T>
     @Nonnull
     @Override
     public IDetectionRule.AddBundleDetectionRuleBuilder<T> buildForContext(
-            @Nonnull IDetectionContext detectionValueContext) {
+            @Nonnull DetectionContext detectionValueContext) {
         this.detectionValueContext = detectionValueContext;
         return new DetectionRuleBuilderImpl<>(
                 objectTypes,

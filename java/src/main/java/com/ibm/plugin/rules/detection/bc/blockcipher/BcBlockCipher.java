@@ -21,7 +21,7 @@ package com.ibm.plugin.rules.detection.bc.blockcipher;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -53,9 +53,9 @@ public final class BcBlockCipher {
                     "SICBlockCipher");
 
     private static final List<IDetectionRule<Tree>> simpleConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null
                         ? detectionValueContext
                         : new CipherContext(Map.of("kind", "BLOCK_CIPHER"));
@@ -77,9 +77,9 @@ public final class BcBlockCipher {
     }
 
     private static final List<IDetectionRule<Tree>> specialConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null
                         ? detectionValueContext
                         : new CipherContext(Map.of("kind", "BLOCK_CIPHER"));
@@ -214,7 +214,7 @@ public final class BcBlockCipher {
     @Nonnull
     // Rules defined in this file (classes finishing with BlockCipher)
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         return Stream.of(
                         simpleConstructors(detectionValueContext).stream(),
                         specialConstructors(detectionValueContext).stream())
@@ -225,7 +225,7 @@ public final class BcBlockCipher {
     @Nonnull
     // All BlockCipher rules including all the engines
     public static List<IDetectionRule<Tree>> all(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         return Stream.of(
                         rules(detectionValueContext).stream(),
                         BcBlockCipherEngine.rules(detectionValueContext).stream())

@@ -22,7 +22,7 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -41,10 +41,10 @@ public final class BcPKCS1Encoding {
 
     @Nonnull
     private static List<IDetectionRule<Tree>> constructors(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+            @Nullable DetectionContext encodingDetectionValueContext,
+            @Nullable DetectionContext engineDetectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 encodingDetectionValueContext != null
                         ? encodingDetectionValueContext
                         : new CipherContext(Map.of("kind", "ENCODING"));
@@ -100,8 +100,8 @@ public final class BcPKCS1Encoding {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+            @Nullable DetectionContext encodingDetectionValueContext,
+            @Nullable DetectionContext engineDetectionValueContext) {
         return constructors(encodingDetectionValueContext, engineDetectionValueContext);
     }
 }

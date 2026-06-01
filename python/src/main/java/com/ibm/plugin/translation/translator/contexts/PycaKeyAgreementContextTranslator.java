@@ -23,7 +23,6 @@ import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
@@ -44,7 +43,7 @@ public class PycaKeyAgreementContextTranslator implements IContextTranslation<Tr
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree> algorithm) {
             return Optional.of(algorithm)
@@ -66,21 +65,20 @@ public class PycaKeyAgreementContextTranslator implements IContextTranslation<Tr
                             });
         } else if (value instanceof KeyAction<Tree>) {
             // key action is always "generate"
-            if (detectionContext instanceof DetectionContext context) {
-                return context.get("algorithm")
-                        .map(
-                                algo ->
-                                        switch (algo.toUpperCase().trim()) {
-                                            case "X25519" -> new X25519(detectionLocation);
-                                            case "X448" -> new X448(detectionLocation);
-                                            default -> null;
-                                        })
-                        .map(
-                                ka -> {
-                                    ka.put(new KeyGeneration(detectionLocation));
-                                    return ka;
-                                });
-            }
+            return detectionContext
+                    .get("algorithm")
+                    .map(
+                            algo ->
+                                    switch (algo.toUpperCase().trim()) {
+                                        case "X25519" -> new X25519(detectionLocation);
+                                        case "X448" -> new X448(detectionLocation);
+                                        default -> null;
+                                    })
+                    .map(
+                            ka -> {
+                                ka.put(new KeyGeneration(detectionLocation));
+                                return ka;
+                            });
         }
         return Optional.empty();
     }

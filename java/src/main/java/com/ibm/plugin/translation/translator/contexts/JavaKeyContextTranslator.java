@@ -28,7 +28,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
@@ -60,7 +59,7 @@ public final class JavaKeyContextTranslator extends JavaAbstractLibraryTranslato
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree> algorithm) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -122,11 +121,10 @@ public final class JavaKeyContextTranslator extends JavaAbstractLibraryTranslato
     @Override
     protected @Nonnull Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> valueAction
-                && detectionContext instanceof DetectionContext context) {
-            String kind = context.get("kind").orElse("");
+        if (value instanceof ValueAction<Tree> valueAction) {
+            String kind = detectionContext.get("kind").orElse("");
             switch (kind) {
                 case "DH":
                     BcAgreementMapper bcAgreementMapper = new BcAgreementMapper();

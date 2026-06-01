@@ -19,55 +19,31 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class SignatureContext extends DetectionContext
-        implements IDetectionContext, ISupportKind<SignatureContext.Kind> {
+public class SignatureContext extends DetectionContext {
     public enum Kind {
         PSS,
         MGF1,
         NONE
     }
 
-    @Nonnull private final Kind kind;
-
-    /**
-     * use a property map instead
-     *
-     * @deprecated
-     */
-    @Deprecated(since = "1.3.0")
     public SignatureContext(@Nonnull Kind kind) {
-        super(new HashMap<>());
-        this.kind = kind;
+        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
     }
 
     public SignatureContext() {
-        super(new HashMap<>());
-        this.kind = Kind.NONE;
+        super(Map.of());
     }
 
     public SignatureContext(@Nonnull Map<String, String> properties) {
         super(properties);
-        this.kind = Kind.NONE;
-    }
-
-    /**
-     * use a property map instead
-     *
-     * @deprecated
-     */
-    @Deprecated(since = "1.3.0")
-    @Nonnull
-    public Kind kind() {
-        return kind;
     }
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return SignatureContext.class;
     }
 }
