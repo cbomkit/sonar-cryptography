@@ -40,10 +40,12 @@ import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -691,7 +693,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
             Symbol symbol = symbolOptional.get();
             if (symbol.isVariableSymbol()) {
-                return symbol.name().equals(variable.name());
+                return areSymbolsEquivalent(symbol, variable);
             }
             return true;
         }
@@ -713,11 +715,42 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
 
             Symbol symbol = symbolOptional.get();
             if (symbol.isVariableSymbol()) {
-                return symbol.name().equals(variable.name());
+                return areSymbolsEquivalent(symbol, variable);
             }
             return true;
         }
         return false;
+    }
+
+    private boolean areSymbolsEquivalent(@Nonnull Symbol s1, @Nonnull Symbol s2) {
+        if (s1.equals(s2)) {
+            return true;
+        }
+
+        Symbol t1 = traceSymbol(s1);
+        Symbol t2 = traceSymbol(s2);
+
+        return t1.equals(t2);
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        return traceSymbol(symbol, new HashSet<>());
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol, @Nonnull Set<Symbol> visited) {
+        if (!visited.add(symbol)) {
+            return symbol;
+        }
+        Tree declaration = symbol.declaration();
+        if (declaration instanceof VariableTree variableTree) {
+            ExpressionTree initializer = variableTree.initializer();
+            if (initializer instanceof IdentifierTree identifierTree) {
+                return traceSymbol(identifierTree.symbol(), visited);
+            }
+        }
+        return symbol;
     }
 
     @Nonnull
@@ -922,17 +955,25 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     @Nonnull
     private IdentifierTree traceVariable(@Nonnull IdentifierTree identifierTree) {
         Tree declaration = identifierTree.symbol().declaration();
-        if (declaration == null) {
+        if (declaration == null || !(declaration instanceof VariableTree variableTree)) {
             return identifierTree;
         }
-
-        if (declaration instanceof VariableTree variableTree1) {
-            ExpressionTree initTree = variableTree1.initializer();
-            if (initTree instanceof IdentifierTree identifierTree1) {
-                return traceVariable(identifierTree1);
-            }
+        ExpressionTree initTree = variableTree.initializer();
+        if (!(initTree instanceof IdentifierTree nextId)) {
+            return identifierTree;
         }
-        return identifierTree;
+        // Delegate chain-following to traceSymbol (single recursive walker)
+        Symbol finalSymbol = traceSymbol(nextId.symbol());
+        // Walk the identifier chain from nextId until we reach the identifier for finalSymbol
+        IdentifierTree current = nextId;
+        while (!current.symbol().equals(finalSymbol)) {
+            Tree decl = current.symbol().declaration();
+            if (!(decl instanceof VariableTree vt)) break;
+            ExpressionTree init = vt.initializer();
+            if (!(init instanceof IdentifierTree id)) break;
+            current = id;
+        }
+        return current;
     }
 
     /**
