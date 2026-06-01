@@ -38,6 +38,7 @@ import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.PasswordLength;
 import com.ibm.mapper.model.Protocol;
+import com.ibm.mapper.model.Provider;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.functionality.Decapsulate;
@@ -164,6 +165,7 @@ public class CBOMOutputFile implements IOutputFile {
                         .primitive(node)
                         .occurrences(createOccurrenceForm(node.getDetectionContext()))
                         .oid(children.get(Oid.class))
+                        .provider(children.get(Provider.class))
                         .build();
         final Optional<String> optionalId = getIdentifierFunction().apply(algorithm);
         if (optionalId.isEmpty()) {
@@ -182,6 +184,7 @@ public class CBOMOutputFile implements IOutputFile {
         // will get the same key length associated.
         Utils.pushNodesDownToFirstMatch(
                 node, IPrimitive.getKinds(), List.of(KeyLength.class), false);
+        Utils.pushNodesDownToFirstMatch(node, IPrimitive.getKinds(), List.of(Provider.class));
 
         createRelatedCryptoMaterialComponent(parentBomRef, node);
     }

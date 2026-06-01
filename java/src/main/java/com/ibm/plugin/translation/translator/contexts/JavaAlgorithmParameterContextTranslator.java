@@ -25,6 +25,7 @@ import com.ibm.engine.model.InitializationVectorSize;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.MacSize;
 import com.ibm.engine.model.Mode;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.TagSize;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.mapper.mapper.jca.JcaAlgorithmMapper;
@@ -48,6 +49,9 @@ public final class JavaAlgorithmParameterContextTranslator extends JavaAbstractL
         if (value instanceof Algorithm<Tree>) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
             return jcaAlgorithmMapper.parse(value.asString(), detectionLocation).map(a -> a);
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         }
         return translateCommon(value, detectionContext, detectionLocation);
     }

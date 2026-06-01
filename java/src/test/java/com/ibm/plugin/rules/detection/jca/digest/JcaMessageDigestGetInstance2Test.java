@@ -30,6 +30,7 @@ import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.Provider;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -76,7 +77,6 @@ class JcaMessageDigestGetInstance2Test extends TestBase {
         // MessageDigest
         INode messageDigestNode1 = nodes.get(0);
         assertThat(messageDigestNode1.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(messageDigestNode1.getChildren()).hasSize(4);
         assertThat(messageDigestNode1.asString()).isEqualTo("SHA384");
 
         // Oid under MessageDigest
@@ -102,5 +102,17 @@ class JcaMessageDigestGetInstance2Test extends TestBase {
         assertThat(blockSizeNode1).isNotNull();
         assertThat(blockSizeNode1.getChildren()).isEmpty();
         assertThat(blockSizeNode1.asString()).isEqualTo("1024");
+
+        if (findingId == 0) {
+            // Finding from getInstance("sha-384", provider[0]): java.security.Provider object,
+            // not resolved as String, so no Provider child
+            assertThat(messageDigestNode1.getChildren()).hasSize(4);
+        } else {
+            // Finding from getInstance("sha-384", "SUN"): String provider is captured
+            assertThat(messageDigestNode1.getChildren()).hasSize(5);
+            INode providerNode1 = messageDigestNode1.getChildren().get(Provider.class);
+            assertThat(providerNode1).isNotNull();
+            assertThat(providerNode1.asString()).isEqualTo("SUN");
+        }
     }
 }

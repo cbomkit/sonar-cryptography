@@ -23,6 +23,7 @@ import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.PasswordSize;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.mapper.mapper.jca.JcaAlgorithmMapper;
@@ -62,6 +63,9 @@ public final class JavaSecretKeyContextTranslator extends JavaAbstractLibraryTra
                                 return algo;
                             })
                     .map(SecretKey::new);
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         } else if (value instanceof KeySize<Tree> keySize) {
             KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);
             return Optional.of(keyLength);

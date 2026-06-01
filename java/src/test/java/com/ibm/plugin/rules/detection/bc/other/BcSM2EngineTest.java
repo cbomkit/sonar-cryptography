@@ -35,6 +35,7 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.Provider;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Encrypt;
@@ -85,8 +86,13 @@ class BcSM2EngineTest extends TestBase {
             // Key
             INode keyNode = nodes.get(0);
             assertThat(keyNode.getKind()).isEqualTo(Key.class);
-            assertThat(keyNode.getChildren()).hasSize(1);
+            assertThat(keyNode.getChildren()).hasSize(2);
             assertThat(keyNode.asString()).isEqualTo("EC");
+
+            // Provider "BC" under Key (from KeyPairGenerator.getInstance("EC", "BC"))
+            INode providerNode = keyNode.getChildren().get(Provider.class);
+            assertThat(providerNode).isNotNull();
+            assertThat(providerNode.asString()).isEqualTo("BC");
 
             // PublicKeyEncryption under Key
             INode publicKeyEncryptionNode = keyNode.getChildren().get(PublicKeyEncryption.class);

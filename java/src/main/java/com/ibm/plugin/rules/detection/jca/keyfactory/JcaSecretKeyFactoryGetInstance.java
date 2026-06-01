@@ -24,6 +24,7 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.ProviderFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -56,6 +57,8 @@ public final class JcaSecretKeyFactoryGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
+                    .shouldBeDetectedAs(new ProviderFactory<>())
+                    .asChildOfParameterWithId(0)
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
@@ -72,6 +75,8 @@ public final class JcaSecretKeyFactoryGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
+                    .shouldBeDetectedAs(new ProviderFactory<>())
+                    .asChildOfParameterWithId(0)
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(

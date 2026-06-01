@@ -26,6 +26,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.OperationMode;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -85,6 +86,9 @@ public final class JavaKeyContextTranslator extends JavaAbstractLibraryTranslato
                                 }
                                 return key;
                             });
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         } else if (value instanceof KeySize<Tree> keySize) {
             final KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);
             return Optional.of(keyLength);

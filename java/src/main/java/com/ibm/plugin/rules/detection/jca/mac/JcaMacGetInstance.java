@@ -23,6 +23,7 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.ProviderFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -50,6 +51,8 @@ public final class JcaMacGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
+                    .shouldBeDetectedAs(new ProviderFactory<>())
+                    .asChildOfParameterWithId(0)
                     .buildForContext(new MacContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();

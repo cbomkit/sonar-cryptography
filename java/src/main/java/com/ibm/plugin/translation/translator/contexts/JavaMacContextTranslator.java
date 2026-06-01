@@ -23,6 +23,7 @@ import com.ibm.engine.model.BlockSize;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.MacSize;
 import com.ibm.engine.model.ParameterIdentifier;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.mapper.mapper.bc.BcMacMapper;
@@ -45,6 +46,9 @@ public final class JavaMacContextTranslator extends JavaAbstractLibraryTranslato
         if (value instanceof com.ibm.engine.model.Algorithm<Tree>) {
             JcaMacMapper jcaMacMapper = new JcaMacMapper();
             return jcaMacMapper.parse(value.asString(), detectionLocation).map(a -> a);
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         } else if (value instanceof MacSize<Tree> macSize) {
             TagLength tagLength = new TagLength(macSize.getValue(), detectionLocation);
             return Optional.of(tagLength);

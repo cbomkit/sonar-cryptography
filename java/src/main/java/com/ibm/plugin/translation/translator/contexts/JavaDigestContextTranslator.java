@@ -21,6 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -54,6 +55,9 @@ public final class JavaDigestContextTranslator extends JavaAbstractLibraryTransl
                                 algo.put(new Digest(detectionLocation));
                                 return algo;
                             });
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         }
         return Optional.empty();
     }

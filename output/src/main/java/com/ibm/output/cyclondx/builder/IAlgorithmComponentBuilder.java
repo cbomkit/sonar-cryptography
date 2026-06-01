@@ -54,5 +54,8 @@ public interface IAlgorithmComponentBuilder {
     IAlgorithmComponentBuilder oid(@Nullable INode oid);
 
     @Nonnull
+    IAlgorithmComponentBuilder provider(@Nullable INode provider);
+
+    @Nonnull
     Component build();
 }

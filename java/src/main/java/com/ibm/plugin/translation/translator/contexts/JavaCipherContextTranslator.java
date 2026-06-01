@@ -25,6 +25,7 @@ import com.ibm.engine.model.BlockSize;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.OperationMode;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -66,6 +67,9 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
         if (value instanceof Algorithm<Tree>) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
             return jcaAlgorithmMapper.parse(value.asString(), detectionLocation).map(a -> a);
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         } else if (value instanceof OperationMode<Tree> operationMode) {
             JcaCipherOperationModeMapper jcaCipherOperationModeMapper =
                     new JcaCipherOperationModeMapper();

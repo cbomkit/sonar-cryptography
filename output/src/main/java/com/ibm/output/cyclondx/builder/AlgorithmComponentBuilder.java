@@ -33,6 +33,7 @@ import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.PasswordBasedEncryption;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.Provider;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
@@ -60,6 +61,7 @@ import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.model.padding.PKCS7;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -88,6 +90,7 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     @Nullable private INode mode;
     @Nullable private INode padding;
     @Nullable private INode curve;
+    @Nullable private INode provider;
 
     protected AlgorithmComponentBuilder() {
         this.component = new Component();
@@ -104,7 +107,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
             @Nullable INode parameterSetIdentifier,
             @Nullable INode mode,
             @Nullable INode padding,
-            @Nullable INode curve) {
+            @Nullable INode curve,
+            @Nullable INode provider) {
         this.component = component;
         this.cryptoProperties = cryptoProperties;
         this.algorithmProperties = algorithmProperties;
@@ -113,6 +117,7 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
         this.mode = mode;
         this.padding = padding;
         this.curve = curve;
+        this.provider = provider;
     }
 
     @Nonnull
@@ -131,7 +136,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -145,7 +151,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -159,7 +166,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                     parameterSetIdentifier,
                     this.mode,
                     padding,
-                    curve);
+                    curve,
+                    provider);
         }
         this.mode = mode;
         Mode cxMode;
@@ -189,7 +197,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -203,7 +212,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                     parameterSetIdentifier,
                     mode,
                     padding,
-                    curve);
+                    curve,
+                    provider);
         }
         Primitive primitives;
         if (primitive.is(AuthenticatedEncryption.class)) {
@@ -245,7 +255,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -259,7 +270,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                     parameterSetIdentifier,
                     mode,
                     this.padding,
-                    curve);
+                    curve,
+                    provider);
         }
 
         this.padding = padding;
@@ -284,7 +296,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -301,7 +314,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -315,7 +329,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                     parameterSetIdentifier,
                     mode,
                     padding,
-                    curve);
+                    curve,
+                    provider);
         }
 
         List<CryptoFunction> functions =
@@ -361,7 +376,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -375,7 +391,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                     parameterSetIdentifier,
                     mode,
                     padding,
-                    curve);
+                    curve,
+                    provider);
         }
 
         final Evidence evidence = new Evidence();
@@ -390,7 +407,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
     }
 
     @Override
@@ -406,7 +424,30 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
                 parameterSetIdentifier,
                 mode,
                 padding,
-                curve);
+                curve,
+                provider);
+    }
+
+    @Override
+    public @Nonnull IAlgorithmComponentBuilder provider(@Nullable INode provider) {
+        if (provider instanceof Provider p) {
+            List<org.cyclonedx.model.Property> props = new ArrayList<>();
+            org.cyclonedx.model.Property prop = new org.cyclonedx.model.Property();
+            prop.setName("jca-provider");
+            prop.setValue(p.getName());
+            props.add(prop);
+            this.component.setProperties(props);
+        }
+        return new AlgorithmComponentBuilder(
+                component,
+                cryptoProperties,
+                algorithmProperties,
+                algorithm,
+                parameterSetIdentifier,
+                mode,
+                padding,
+                curve,
+                provider);
     }
 
     @Override

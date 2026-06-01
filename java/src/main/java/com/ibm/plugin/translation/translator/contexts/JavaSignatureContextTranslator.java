@@ -22,6 +22,7 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.OperationMode;
+import com.ibm.engine.model.Provider;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
@@ -52,6 +53,9 @@ public final class JavaSignatureContextTranslator extends JavaAbstractLibraryTra
         if (value instanceof com.ibm.engine.model.Algorithm<Tree>) {
             final JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
             return jcaAlgorithmMapper.parse(value.asString(), detectionLocation).map(a -> a);
+        } else if (value instanceof Provider<Tree> provider) {
+            return Optional.of(
+                    new com.ibm.mapper.model.Provider(provider.get(), detectionLocation));
         } else if (value instanceof SignatureAction<Tree> signatureAction) {
             return switch (signatureAction.getAction()) {
                 case SIGN -> Optional.of(new Sign(detectionLocation));
