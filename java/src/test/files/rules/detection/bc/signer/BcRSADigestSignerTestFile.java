@@ -16,7 +16,12 @@ public class BcRSADigestSignerTestFile {
         RSADigestSigner signer = new RSADigestSigner(digest, new ASN1ObjectIdentifier("1234"));
         // Noncompliant@-1 {{(Signature) SHA256withRSA}}
 
+        // Initialize RSADigestSigner with digest only
+        RSADigestSigner digestOnlySigner = new RSADigestSigner(digest);
+        // Noncompliant@-1 {{(Signature) SHA256withRSA}}
+
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
+        digestOnlySigner.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
 
         // Data to sign
         byte[] data = "Hello, World!".getBytes();

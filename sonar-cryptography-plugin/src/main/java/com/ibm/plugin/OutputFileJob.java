@@ -43,10 +43,6 @@ public class OutputFileJob implements PostJob {
                         .get(Constants.CBOM_OUTPUT_NAME)
                         .orElse(Constants.CBOM_OUTPUT_NAME_DEFAULT);
         ScannerManager scannerManager = new ScannerManager(new CBOMOutputFileFactory());
-        final File cbom = new File(cbomFilename + ".json");
-        scannerManager.getOutputFile().saveTo(cbom);
-        LOGGER.info("CBOM was successfully generated '{}'.", cbom.getAbsolutePath());
-
         JavaScanMemoryLogger.Snapshot javaScan = JavaScanMemoryLogger.snapshot();
         LOGGER.info(
                 "CBOM summary: javaFiles={}, used={} MB, total={} MB, max={} MB, peak={} MB",
@@ -56,7 +52,14 @@ public class OutputFileJob implements PostJob {
                 javaScan.maxMb(),
                 javaScan.peakUsedMb());
 
-        scannerManager.getStatistics().print(LOGGER::info);
+        if (scannerManager.hasResults()) {
+            final File cbom = new File(cbomFilename + ".json");
+            scannerManager.getOutputFile().saveTo(cbom);
+            LOGGER.info("CBOM was successfully generated '{}'.", cbom.getAbsolutePath());
+            scannerManager.getStatistics().print(LOGGER::info);
+        } else {
+            LOGGER.info("No cryptography assets were detected. CBOM will not be generated.");
+        }
         scannerManager.reset();
     }
 }

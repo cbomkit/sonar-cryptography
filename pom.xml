@@ -155,7 +155,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
-        </dependency> 
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
@@ -248,6 +253,7 @@
                 <configuration>
                     <includeResources>false</includeResources>
                     <includeTestResources>false</includeTestResources>
+                    <excludes>**/antlr/**</excludes>
                     <checkstyleRules>
                         <module name="Checker">
                             <property name="localeLanguage" value="en"/>
