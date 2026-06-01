@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.Provider;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.model.PasswordLength;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.MGF1;
@@ -46,6 +48,7 @@ import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.padding.OAEP;
 import org.cyclonedx.model.Component;
+import org.cyclonedx.model.Property;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
 import org.cyclonedx.model.component.crypto.RelatedCryptoMaterialProperties;
@@ -408,6 +411,29 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.KEY_AGREE);
                     assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
+                });
+    }
+
+    @Test
+    void algorithmWithJcaProvider() {
+        this.assertsNode(
+                () -> {
+                    final AES aes = new AES(detectionLocation);
+                    aes.put(new Provider("BC", detectionLocation));
+                    return aes;
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("AES");
+
+                    assertThat(component.getProperties()).isNotNull();
+                    assertThat(component.getProperties())
+                            .extracting(Property::getName)
+                            .contains("jca-provider");
+                    assertThat(component.getProperties())
+                            .extracting(Property::getValue)
+                            .contains("BC");
                 });
     }
 }

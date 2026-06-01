@@ -81,6 +81,8 @@ import org.cyclonedx.model.component.crypto.enums.Primitive;
 import org.cyclonedx.model.component.evidence.Occurrence;
 
 public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
+    private static final String JCA_PROVIDER_PROPERTY = "jca-provider";
+
     @Nonnull private final Component component;
     @Nonnull private final CryptoProperties cryptoProperties;
     @Nonnull private final AlgorithmProperties algorithmProperties;
@@ -431,9 +433,12 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     @Override
     public @Nonnull IAlgorithmComponentBuilder provider(@Nullable INode provider) {
         if (provider instanceof Provider p) {
-            List<org.cyclonedx.model.Property> props = new ArrayList<>();
+            List<org.cyclonedx.model.Property> props = this.component.getProperties();
+            if (props == null) {
+                props = new ArrayList<>();
+            }
             org.cyclonedx.model.Property prop = new org.cyclonedx.model.Property();
-            prop.setName("jca-provider");
+            prop.setName(JCA_PROVIDER_PROPERTY);
             prop.setValue(p.getName());
             props.add(prop);
             this.component.setProperties(props);
