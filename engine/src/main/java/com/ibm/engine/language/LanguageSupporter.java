@@ -19,6 +19,11 @@
  */
 package com.ibm.engine.language;
 
+import com.ibm.engine.language.csharp.CSharpCheck;
+import com.ibm.engine.language.csharp.CSharpLanguageSupport;
+import com.ibm.engine.language.csharp.CSharpScanContext;
+import com.ibm.engine.language.csharp.CSharpSymbol;
+import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.language.go.GoLanguageSupport;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.language.java.JavaLanguageSupport;
@@ -61,5 +66,11 @@ public final class LanguageSupporter {
     @Nonnull
     public static ILanguageSupport<GoCheck, Tree, Symbol, GoScanContext> goLanguageSupporter() {
         return new GoLanguageSupport();
+    }
+
+    @Nonnull
+    public static ILanguageSupport<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+            csharpLanguageSupporter() {
+        return new CSharpLanguageSupport();
     }
 }

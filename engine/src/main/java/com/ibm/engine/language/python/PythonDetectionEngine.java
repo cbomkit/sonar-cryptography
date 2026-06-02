@@ -123,8 +123,8 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         return null;
     }
 
-    @Nonnull
     @Override
+    @Nonnull
     public <O> List<ResolvedValue<O, Tree>> resolveValuesInInnerScope(
             @Nonnull Class<O> clazz,
             @Nonnull Tree expression,

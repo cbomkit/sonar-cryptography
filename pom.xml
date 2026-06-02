@@ -13,6 +13,7 @@
         <module>java</module>
         <module>python</module>
         <module>go</module>
+        <module>csharp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
@@ -47,7 +48,7 @@
         <sonar.minVersion>9.14.0.375</sonar.minVersion>
         <sonar.plugin.api.version>13.4.3.4290</sonar.plugin.api.version>
         <!-- language parser versions -->
-        <sonar.java.version>8.18.0.40025</sonar.java.version>
+        <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.16.0.29940</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
 
@@ -80,7 +81,7 @@
         <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
-          <version>1.5.18</version>
+          <version>1.5.26</version>
           <scope>test</scope>
         </dependency>
         <dependency>
@@ -102,7 +103,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
+            <version>3.20.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -154,7 +155,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
-        </dependency> 
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
@@ -163,7 +169,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.27.4</version>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -247,6 +253,7 @@
                 <configuration>
                     <includeResources>false</includeResources>
                     <includeTestResources>false</includeTestResources>
+                    <excludes>**/antlr/**</excludes>
                     <checkstyleRules>
                         <module name="Checker">
                             <property name="localeLanguage" value="en"/>

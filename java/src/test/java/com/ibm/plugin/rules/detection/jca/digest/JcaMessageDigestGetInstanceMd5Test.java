@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2025 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.benchmark;
+package com.ibm.plugin.rules.detection.jca.digest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +29,6 @@ import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -41,12 +40,13 @@ import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Tree;
 
-class BenchmarkTest00009Test extends TestBase {
+class JcaMessageDigestGetInstanceMd5Test extends TestBase {
 
     @Test
     void test() {
         CheckVerifier.newVerifier()
-                .onFile("src/test/files/rules/benchmark/BenchmarkTest00009.java")
+                .onFile(
+                        "src/test/files/rules/detection/jca/digest/JcaMessageDigestGetInstanceMd5TestFile.java")
                 .withChecks(this)
                 .verifyIssues();
     }
@@ -56,50 +56,31 @@ class BenchmarkTest00009Test extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        /*
-         * Detection Store
-         */
-
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        IValue<Tree> value = detectionStore.getDetectionValues().get(0);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
-        IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
-        assertThat(value0).isInstanceOf(Algorithm.class);
-        assertThat(value0.asString()).isEqualTo("sha-384");
-
-        /*
-         * Translation
-         */
+        assertThat(value).isInstanceOf(Algorithm.class);
+        assertThat(value.asString()).isEqualTo("MD5");
 
         assertThat(nodes).hasSize(1);
+        INode node = nodes.get(0);
+        assertThat(node).isInstanceOf(MessageDigest.class);
+        assertThat(node.getChildren()).hasSize(3);
+        assertThat(node.asString()).isEqualTo("MD5");
 
-        // MessageDigest
-        INode messageDigestNode1 = nodes.get(0);
-        assertThat(messageDigestNode1.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(messageDigestNode1.getChildren()).hasSize(4);
-        assertThat(messageDigestNode1.asString()).isEqualTo("SHA384");
+        INode digest = node.getChildren().get(Digest.class);
+        assertThat(digest).isNotNull();
+        assertThat(digest.getChildren()).isEmpty();
+        assertThat(digest.asString()).isEqualTo("DIGEST");
 
-        // BlockSize under MessageDigest
-        INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);
-        assertThat(blockSizeNode1).isNotNull();
-        assertThat(blockSizeNode1.getChildren()).isEmpty();
-        assertThat(blockSizeNode1.asString()).isEqualTo("1024");
+        INode digestSize = node.getChildren().get(DigestSize.class);
+        assertThat(digestSize).isNotNull();
+        assertThat(digestSize.getChildren()).isEmpty();
+        assertThat(digestSize.asString()).isEqualTo("128");
 
-        // DigestSize under MessageDigest
-        INode digestSizeNode1 = messageDigestNode1.getChildren().get(DigestSize.class);
-        assertThat(digestSizeNode1).isNotNull();
-        assertThat(digestSizeNode1.getChildren()).isEmpty();
-        assertThat(digestSizeNode1.asString()).isEqualTo("384");
-
-        // Digest under MessageDigest
-        INode digestNode1 = messageDigestNode1.getChildren().get(Digest.class);
-        assertThat(digestNode1).isNotNull();
-        assertThat(digestNode1.getChildren()).isEmpty();
-        assertThat(digestNode1.asString()).isEqualTo("DIGEST");
-
-        // Oid under MessageDigest
-        INode oidNode1 = messageDigestNode1.getChildren().get(Oid.class);
-        assertThat(oidNode1).isNotNull();
-        assertThat(oidNode1.getChildren()).isEmpty();
-        assertThat(oidNode1.asString()).isEqualTo("2.16.840.1.101.3.4.2.2");
+        INode blockSize = node.getChildren().get(BlockSize.class);
+        assertThat(blockSize).isNotNull();
+        assertThat(blockSize.getChildren()).isEmpty();
+        assertThat(blockSize.asString()).isEqualTo("512");
     }
 }

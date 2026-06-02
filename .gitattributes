@@ -1,0 +1,10 @@
+# Normalize line endings to LF for all text files
+* text=auto eol=lf
+
+# Force binary files to not be modified
+*.jar binary
+*.zip binary
+*.png binary
+*.pdf binary
+*.class binary
+*.min.js binary
