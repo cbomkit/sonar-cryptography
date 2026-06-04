@@ -22,17 +22,38 @@ package com.ibm.plugin;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 
+/**
+ * JVM-global Java scan memory metrics.
+ *
+ * <p>The Java analyzer keeps scan-level state in static plugin components, so these counters are
+ * intentionally process-wide observability metrics rather than per-file or per-executive state.
+ */
 public final class JavaScanMemoryLogger {
     public record Snapshot(
-            long javaFilesProcessed,
-            long successfulFileStateResets,
-            long usedMb,
-            long totalMb,
-            long maxMb,
-            long peakUsedMb) {}
+            long javaFilesProcessed, long usedMb, long totalMb, long maxMb, long peakUsedMb) {}
 
+    /**
+     * JVM-global metric — shared across all concurrent scans in this JVM. Not safe for
+     * multi-project or SonarLint daemon use without external coordination. Incremented by every
+     * {@link #logFileProgress} call; zeroed by {@link #reset()}.
+     *
+     * <p>Note: {@link #reset()} zeroes this field and {@link #PEAK_USED_MB} in two separate
+     * compare-and-set operations. A concurrent {@link #logFileProgress} call may therefore observe
+     * a transiently inconsistent snapshot (one counter reset, the other not yet). This is an
+     * acceptable observability trade-off for a metrics-only field.
+     */
     private static final AtomicLong JAVA_FILES_PROCESSED = new AtomicLong(0);
-    private static final AtomicLong SUCCESSFUL_FILE_STATE_RESETS = new AtomicLong(0);
+
+    /**
+     * JVM-global metric — shared across all concurrent scans in this JVM. Not safe for
+     * multi-project or SonarLint daemon use without external coordination. Updated by every {@link
+     * #logFileProgress} and {@link #snapshot} call via {@link #updatePeak(long)}; zeroed by {@link
+     * #reset()}.
+     *
+     * <p>Note: {@link #reset()} zeroes {@link #JAVA_FILES_PROCESSED} and this field in two separate
+     * compare-and-set operations. A concurrent caller may observe a partially-reset state between
+     * the two assignments. This is an acceptable observability trade-off for a metrics-only field.
+     */
     private static final AtomicLong PEAK_USED_MB = new AtomicLong(0);
 
     private JavaScanMemoryLogger() {
@@ -45,7 +66,6 @@ public final class JavaScanMemoryLogger {
         long totalMb = runtime.totalMemory() / (1024 * 1024);
         long maxMb = runtime.maxMemory() / (1024 * 1024);
         long javaFilesProcessed = JAVA_FILES_PROCESSED.incrementAndGet();
-        SUCCESSFUL_FILE_STATE_RESETS.incrementAndGet();
         long peakUsedMb = updatePeak(usedMb);
 
         if (every <= 1 || javaFilesProcessed % every == 0) {
@@ -63,11 +83,9 @@ public final class JavaScanMemoryLogger {
         Runtime runtime = Runtime.getRuntime();
         long usedMb = usedMb(runtime);
         long javaFilesProcessed = JAVA_FILES_PROCESSED.get();
-        long successfulFileStateResets = SUCCESSFUL_FILE_STATE_RESETS.get();
         long peakUsedMb = updatePeak(usedMb);
         return new Snapshot(
                 javaFilesProcessed,
-                successfulFileStateResets,
                 usedMb,
                 runtime.totalMemory() / (1024 * 1024),
                 runtime.maxMemory() / (1024 * 1024),
@@ -76,7 +94,6 @@ public final class JavaScanMemoryLogger {
 
     public static void reset() {
         JAVA_FILES_PROCESSED.set(0);
-        SUCCESSFUL_FILE_STATE_RESETS.set(0);
         PEAK_USED_MB.set(0);
     }
 

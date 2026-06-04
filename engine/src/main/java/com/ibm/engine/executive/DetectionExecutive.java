@@ -148,6 +148,8 @@ public class DetectionExecutive<R, T, S, P>
         released = true;
         rootDetectionStore.release();
         listeners.clear();
+        // Defensive null — start()'s finally already clears tree; retained here for safety if
+        // releaseResources() is ever called independently in future.
         tree = null;
     }
 }

@@ -112,9 +112,8 @@ class JavaScanMemoryLoggerTest {
         JavaScanMemoryLogger.reset();
         JavaScanMemoryLogger.Snapshot snapshot = JavaScanMemoryLogger.snapshot();
 
-        // File counters are cleared to zero by reset()
+        // The JVM-global file counter is cleared to zero by reset().
         assertThat(snapshot.javaFilesProcessed()).isZero();
-        assertThat(snapshot.successfulFileStateResets()).isZero();
         // peakUsedMb is not checked here: snapshot() re-samples live JVM memory and
         // immediately updates the peak, so it cannot be zero after a reset() + snapshot() call.
     }

@@ -32,8 +32,10 @@ import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -260,12 +262,23 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
     }
 
     public void release() {
-        for (DetectionStore<R, T, S, P> child : getChildren()) {
-            child.release();
+        Deque<DetectionStore<R, T, S, P>> stack = new ArrayDeque<>();
+        stack.push(this);
+        List<DetectionStore<R, T, S, P>> order = new ArrayList<>();
+        while (!stack.isEmpty()) {
+            DetectionStore<R, T, S, P> node = stack.pop();
+            order.add(node);
+            for (List<DetectionStore<R, T, S, P>> childStores : node.children.values()) {
+                childStores.forEach(stack::push);
+            }
         }
-        detectionValues.clear();
-        children.clear();
-        actionValue = null;
+        // Post-order: reverse so deepest descendants are cleared before their ancestors.
+        Collections.reverse(order);
+        for (DetectionStore<R, T, S, P> node : order) {
+            node.detectionValues.clear();
+            node.children.clear();
+            node.actionValue = null;
+        }
     }
 
     @SuppressWarnings("java:S3776")

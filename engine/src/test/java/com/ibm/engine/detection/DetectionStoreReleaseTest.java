@@ -96,7 +96,7 @@ class DetectionStoreReleaseTest {
     }
 
     @Test
-    void release_isRecursive_clearsChildDetectionValues() {
+    void release_clearsChildDetectionValues() {
         DetectionStore<Object, Object, Object, Object> child =
                 new DetectionStore<>(1, detectionRule, scanContext, handler, statusReporting);
         child.detectionValues.put(0, new ArrayList<>(List.of(mockValue)));
@@ -109,7 +109,7 @@ class DetectionStoreReleaseTest {
     }
 
     @Test
-    void release_isRecursive_clearsDeepNestedChildren() {
+    void release_clearsDeepNestedChildren() {
         DetectionStore<Object, Object, Object, Object> child =
                 new DetectionStore<>(1, detectionRule, scanContext, handler, statusReporting);
         DetectionStore<Object, Object, Object, Object> grandchild =
@@ -124,6 +124,31 @@ class DetectionStoreReleaseTest {
         assertThat(store.getChildren()).isEmpty();
         assertThat(child.getChildren()).isEmpty();
         assertThat(grandchild.getDetectionValues()).isEmpty();
+    }
+
+    @Test
+    void release_handlesDeepChainsWithoutRecursiveTraversal() {
+        DetectionStore<Object, Object, Object, Object> current = store;
+        List<DetectionStore<Object, Object, Object, Object>> chain = new ArrayList<>();
+        chain.add(store);
+
+        for (int i = 1; i <= 20_000; i++) {
+            DetectionStore<Object, Object, Object, Object> child =
+                    new DetectionStore<>(i, detectionRule, scanContext, handler, statusReporting);
+            child.detectionValues.put(0, new ArrayList<>(List.of(mockValue)));
+            current.children.put(0, new ArrayList<>(List.of(child)));
+            chain.add(child);
+            current = child;
+        }
+
+        assertThatCode(() -> store.release()).doesNotThrowAnyException();
+
+        assertThat(chain)
+                .allSatisfy(
+                        releasedStore -> {
+                            assertThat(releasedStore.getDetectionValues()).isEmpty();
+                            assertThat(releasedStore.getChildren()).isEmpty();
+                        });
     }
 
     @Test
