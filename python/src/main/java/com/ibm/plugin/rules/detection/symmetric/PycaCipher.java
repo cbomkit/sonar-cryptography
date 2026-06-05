@@ -101,8 +101,23 @@ public final class PycaCipher {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<Tree> STREAM_CIPHER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("cryptography.hazmat.primitives.ciphers")
+                    .forMethods("Cipher")
+                    .withMethodParameter("cryptography.hazmat.primitives.ciphers.algorithms.*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .addDependingDetectionRules(followingNewCipherRules())
+                    .withMethodParameter("None")
+                    .shouldBeDetectedAs(new ModeFactory<>())
+                    .asChildOfParameterWithId(0)
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "Pyca")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(NEW_CIPHER);
+        return List.of(NEW_CIPHER, STREAM_CIPHER);
     }
 }
