@@ -145,14 +145,14 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         List<AstNode> arguments;
 
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
+            arguments = extractActualArguments(methodInvocation);
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
                 AstNode expressionList =
                         newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
                 if (expressionList != null) {
-                    arguments = expressionList.getChildren();
+                    arguments = flattenInitializerList(expressionList);
                 } else {
                     arguments = Collections.emptyList();
                 }
@@ -180,6 +180,18 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         for (int i = 0; i < arguments.size(); i++) {
             AstNode argument = arguments.get(i);
             boolean exactMatch = matchMatrix.get(i);
+
+            String literalText = extractLiteralText(argument);
+            if (literalText != null) {
+                types.add(createTypeFromLiteralText(literalText));
+                continue;
+            }
+
+            String identifierName = extractIdentifierText(argument);
+            if (identifierName != null) {
+                types.add(createTypeFromLiteralText(identifierName));
+                continue;
+            }
 
             Type argType = AstNodeTypeExtension.getType(argument);
             if (argType != null && !argType.isUnknown()) {
@@ -258,6 +270,111 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Extracts actual argument nodes from a function call postfixExpression.
+     *
+     * <p>Works around sonar-cxx's {@code CxxAstNodeHelper.getFunctionCallArguments()}, which
+     * returns the children of {@code expressionList}. In sonar-cxx grammar, {@code expressionList =
+     * initializerList}, and {@code initializerList = initializerClause (',' initializerClause)*}.
+     * Walking only to {@code expressionList.getChildren()} yields a single {@code initializerList}
+     * wrapper node, not the individual argument expressions. This method descends into the {@code
+     * initializerList} and returns the actual {@code initializerClause} children (skipping comma
+     * tokens).
+     */
+    @Nonnull
+    private List<AstNode> extractActualArguments(@Nonnull AstNode methodInvocation) {
+        AstNode expressionList = methodInvocation.getFirstDescendant(CxxGrammarImpl.expressionList);
+        if (expressionList == null) {
+            return Collections.emptyList();
+        }
+        return flattenInitializerList(expressionList);
+    }
+
+    @Nonnull
+    private List<AstNode> flattenInitializerList(@Nonnull AstNode expressionList) {
+        AstNode initList = expressionList.getFirstChild(CxxGrammarImpl.initializerList);
+        if (initList == null) {
+            return expressionList.getChildren();
+        }
+        List<AstNode> out = new ArrayList<>();
+        for (AstNode child : initList.getChildren()) {
+            if (",".equals(child.getTokenValue())) {
+                continue;
+            }
+            out.add(child);
+        }
+        return out;
+    }
+
+    /**
+     * Extracts the source text of a literal argument. Returns the raw token text (with surrounding
+     * quotes for string literals) so rules can match e.g. {@code
+     * withMethodParameter("\"CTR-DRBG\"")}. Returns null when the argument is not a literal.
+     */
+    private String extractLiteralText(@Nonnull AstNode argument) {
+        AstNode literal = argument;
+        if (!literal.is(CxxGrammarImpl.LITERAL)) {
+            literal = argument.getFirstDescendant(CxxGrammarImpl.LITERAL);
+        }
+        if (literal != null) {
+            StringBuilder sb = new StringBuilder();
+            for (var token : literal.getTokens()) {
+                sb.append(token.getValue());
+            }
+            String text = sb.toString().trim();
+            if (!text.isEmpty()) {
+                return text;
+            }
+        }
+        // Fallback: check for raw STRING/NUMBER/CHARACTER tokens (used when argument is
+        // the initializerClause wrapping a literal expression directly).
+        if ("STRING".equals(String.valueOf(argument.getType()))
+                || "NUMBER".equals(String.valueOf(argument.getType()))
+                || "CHARACTER".equals(String.valueOf(argument.getType()))) {
+            String text = argument.getTokenValue();
+            return (text == null || text.isEmpty()) ? null : text;
+        }
+        // Walk down for STRING/NUMBER/CHARACTER tokens inside initializerClause.
+        for (AstNode d : argument.getDescendants()) {
+            String t = String.valueOf(d.getType());
+            if ("STRING".equals(t) || "NUMBER".equals(t) || "CHARACTER".equals(t)) {
+                String text = d.getTokenValue();
+                if (text != null && !text.isEmpty()) {
+                    return text;
+                }
+            }
+        }
+        return null;
+    }
+
+    private IType createTypeFromLiteralText(@Nonnull String literalText) {
+        return typeString -> literalText.equals(typeString);
+    }
+
+    /**
+     * Extracts the text of an IDENTIFIER argument (e.g. a macro / const / enum constant name passed
+     * as a function argument). Rules can then match by identifier name via {@code
+     * .withMethodParameter("EVP_PKEY_DH")}. Returns null if the argument is not a plain identifier
+     * expression.
+     */
+    private String extractIdentifierText(@Nonnull AstNode argument) {
+        // Only match if subtree contains a single IDENTIFIER leaf (plain identifier arg).
+        AstNode cur = argument;
+        while (cur != null && !cur.getChildren().isEmpty()) {
+            if (cur.getChildren().size() != 1) {
+                return null;
+            }
+            cur = cur.getChildren().get(0);
+        }
+        if (cur != null && "IDENTIFIER".equals(String.valueOf(cur.getType()))) {
+            String text = cur.getTokenValue();
+            if (text != null && !text.isEmpty()) {
+                return text;
+            }
+        }
+        return null;
     }
 
     private IType createTypeFromCxxType(@Nonnull Type cxxType, @Nonnull MatchContext matchContext) {
