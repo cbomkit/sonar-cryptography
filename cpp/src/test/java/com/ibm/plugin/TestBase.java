@@ -34,6 +34,8 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.event.Level;
+import org.sonar.api.testfixtures.log.LogTesterJUnit5;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
@@ -58,6 +60,12 @@ public abstract class TestBase extends CxxInventoryRule {
     @BeforeEach
     public void resetState() {
         CxxAggregator.reset();
+    }
+
+    @BeforeEach
+    public void debug() {
+        LogTesterJUnit5 logTesterJUnit5 = new LogTesterJUnit5();
+        logTesterJUnit5.setLevel(Level.DEBUG);
     }
 
     @Override
@@ -96,6 +104,22 @@ public abstract class TestBase extends CxxInventoryRule {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes);
+
+    @Nullable public DetectionStore<SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
+            getStoreWithValue(
+                    @Nonnull
+                            List<
+                                            DetectionStore<
+                                                    SquidCheck<?>,
+                                                    AstNode,
+                                                    Symbol,
+                                                    SquidAstVisitorContext<? extends Grammar>>>
+                                    detectionStores) {
+        return detectionStores.stream()
+                .filter(store -> !store.getDetectionValues().isEmpty())
+                .findFirst()
+                .orElse(null);
+    }
 
     @Nullable public DetectionStore<SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
             getStoreOfValueType(
