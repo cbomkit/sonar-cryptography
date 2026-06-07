@@ -41,7 +41,8 @@ public final class PycaDigestContextTranslator implements IContextTranslation<Tr
             @Nonnull IValue<Tree> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree>) {
+        if (value instanceof ValueAction<Tree>
+        || value instanceof com.ibm.engine.model.Algorithm) {
             final PycaDigestMapper pycaDigestMapper = new PycaDigestMapper();
             return pycaDigestMapper
                     .parse(value.asString(), detectionLocation)

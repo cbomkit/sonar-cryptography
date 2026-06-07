@@ -12,11 +12,7 @@ b = ec.ECDSA(utils.Prehashed(hashes.SHA3_224())) # TODO: The test should pass al
 utils.Prehashed(hashes.SHA3_224())
 hashes.SHA3_224()
 
-chosen_hash = hashes.SHA3_512()
-hasher = hashes.Hash(chosen_hash)
-digest = hasher.finalize()
-# sig = private_key.sign(digest, ec.ECDSA(utils.Prehashed(chosen_hash))) # TODO: test this
-# sig = private_key.sign(digest, ec.ECDSA(hashes.SHA3_512())) # This should also work
+digest = b"\x00" * 64
 sig = private_key.sign(digest, ec.ECDSA(utils.Prehashed(hashes.SHA3_512())))
 
 # TODO: Make it work when uncommented
