@@ -61,8 +61,7 @@
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
         <!-- sonar-cxx (community plugin) version -->
-        <!-- To use a specific release instead of a commit hash, replace the commit hash below with the exact release tag name (e.g., 2.3.0). -->
-        <sonar.cxx.version>d04ca9d907b5d49b1f88785fa77dc6237b4351ad</sonar.cxx.version>
+        <sonar.cxx.version>cxx-2.3.0</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
