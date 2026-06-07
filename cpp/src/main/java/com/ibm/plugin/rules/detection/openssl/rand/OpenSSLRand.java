@@ -65,17 +65,6 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> RAND_PSEUDO_BYTES =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RAND_pseudo_bytes")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND-PSEUDO"))
-                    .withAnyParameters()
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     // ====================================================================
     // EVP_RAND API - CTR-DRBG (Counter mode DRBG)
     // ====================================================================
@@ -88,6 +77,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CTR-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -100,6 +90,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES192"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CTR-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -112,6 +103,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CTR-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -128,6 +120,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HASH-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -140,6 +133,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HASH-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -152,6 +146,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA384"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HASH-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -164,6 +159,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA512"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HASH-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -180,6 +176,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -192,6 +189,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -204,6 +202,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA384"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -216,6 +215,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA512"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC-DRBG\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -232,6 +232,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-SRC"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"SEED-SRC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -244,6 +245,7 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("JITTER"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"JITTER\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -256,43 +258,70 @@ public final class OpenSSLRand {
                     .shouldBeDetectedAs(new ValueActionFactory<>("TEST-RAND"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"TEST-RAND\"")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Legacy RAND Entropy Seeding
+    // EVP_RAND context creation and seed source
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> RAND_SEED =
+    private static final IDetectionRule<AstNode> EVP_RAND_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("RAND_seed")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND-SEED"))
+                    .forMethods("EVP_RAND_CTX_new")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withAnyParameters()
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> RAND_ADD =
+    private static final IDetectionRule<AstNode> RAND_SET_SEED_SOURCE_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("RAND_add")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND-ADD"))
+                    .forMethods("RAND_set_seed_source_type")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withAnyParameters()
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> RAND_POLL =
+    // ====================================================================
+    // 3.0+ ex-variants and DRBG type selector
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> RAND_BYTES_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("RAND_poll")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND-POLL"))
-                    .withoutParameters()
+                    .forMethods("RAND_bytes_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
+                    .withAnyParameters()
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RAND_PRIV_BYTES_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RAND_priv_bytes_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
+                    .withAnyParameters()
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RAND_SET_DRBG_TYPE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RAND_set_DRBG_type")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DRBG-TYPE"))
+                    .withAnyParameters()
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -307,10 +336,6 @@ public final class OpenSSLRand {
                 // Legacy RAND API
                 RAND_BYTES,
                 RAND_PRIV_BYTES,
-                RAND_PSEUDO_BYTES,
-                RAND_SEED,
-                RAND_ADD,
-                RAND_POLL,
                 // CTR-DRBG
                 CTR_DRBG_AES128,
                 CTR_DRBG_AES192,
@@ -328,6 +353,13 @@ public final class OpenSSLRand {
                 // Entropy Sources
                 SEED_SRC,
                 JITTER,
-                TEST_RAND);
+                TEST_RAND,
+                // EVP_RAND context creation and seed source
+                EVP_RAND_CTX_NEW,
+                RAND_SET_SEED_SOURCE_TYPE,
+                // 3.0+ ex-variants + DRBG type
+                RAND_BYTES_EX,
+                RAND_PRIV_BYTES_EX,
+                RAND_SET_DRBG_TYPE);
     }
 }

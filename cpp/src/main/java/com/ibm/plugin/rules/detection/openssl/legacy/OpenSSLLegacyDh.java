@@ -19,7 +19,6 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -34,7 +33,7 @@ import javax.annotation.Nonnull;
  * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
  * are deprecated but still widely used in existing codebases.
  *
- * <p>Covers: Key/Parameter Generation, Key Agreement, Predefined Groups (RFC 5114), Size/Info
+ * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114)
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyDh {
@@ -45,17 +44,6 @@ public final class OpenSSLLegacyDh {
     // Key/Parameter Generation functions
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> DH_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -64,87 +52,6 @@ public final class OpenSSLLegacyDh {
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_CHECK =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_check")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_CHECK_PARAMS_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_check_params_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_CHECK_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_check_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_CHECK_PUB_KEY_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_check_pub_key_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Key Agreement functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY_PADDED =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_compute_key_padded")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -185,37 +92,11 @@ public final class OpenSSLLegacyDh {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // Size/Info functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DH_SIZE =
+    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_size")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_SECURITY_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_security_bits")
+                    .forMethods("DH_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
@@ -230,23 +111,11 @@ public final class OpenSSLLegacyDh {
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
                 // Key/Parameter Generation
-                DH_NEW,
                 DH_GENERATE_PARAMETERS_EX,
                 DH_GENERATE_KEY,
-                DH_CHECK,
-                DH_CHECK_PARAMS_EX,
-                DH_CHECK_EX,
-                DH_CHECK_PUB_KEY_EX,
-                // Key Agreement
-                DH_COMPUTE_KEY,
-                DH_COMPUTE_KEY_PADDED,
                 // Predefined Groups (RFC 5114)
                 DH_GET_1024_160,
                 DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Size/Info
-                DH_SIZE,
-                DH_BITS,
-                DH_SECURITY_BITS);
+                DH_GET_2048_256);
     }
 }

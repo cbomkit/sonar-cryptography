@@ -66,28 +66,6 @@ public final class OpenSSLLegacyCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> AES_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("AES_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> AES_DECRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("AES_decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> AES_ECB_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -132,23 +110,45 @@ public final class OpenSSLLegacyCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> AES_CTR128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("AES_ctr128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-CTR"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> AES_IGE_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("AES_ige_encrypt")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-IGE"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> AES_CFB1_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("AES_cfb1_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-CFB1"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> AES_CFB8_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("AES_cfb8_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-CFB8"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> AES_BI_IGE_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("AES_bi_ige_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-BI-IGE"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -239,8 +239,30 @@ public final class OpenSSLLegacyCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DES_ede3_cfb64_encrypt")
+                    .forMethods("DES_ede3_cfb64_encrypt", "DES_ede3_cfb_encrypt")
                     .shouldBeDetectedAs(new ValueActionFactory<>("3DES-CFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> DES_EDE3_OFB64_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DES_ede3_ofb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("3DES-OFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> DES_XCBC_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DES_xcbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DES-XCBC"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -520,26 +542,210 @@ public final class OpenSSLLegacyCipher {
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Legacy AES Key Wrap functions
+    // Legacy Camellia functions
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> AES_WRAP_KEY =
+    private static final IDetectionRule<AstNode> CAMELLIA_SET_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("AES_wrap_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-WRAP"))
+                    .forMethods("Camellia_set_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> AES_UNWRAP_KEY =
+    private static final IDetectionRule<AstNode> CAMELLIA_ECB_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("AES_unwrap_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("AES-WRAP"))
+                    .forMethods("Camellia_ecb_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-ECB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_CBC_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_cbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CBC"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_CFB128_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_cfb128_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB128"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_CFB1_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_cfb1_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB1"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_CFB8_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_cfb8_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB8"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_OFB128_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_ofb128_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-OFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CAMELLIA_CTR128_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("Camellia_ctr128_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CTR"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // Legacy RC5 functions
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> RC5_32_SET_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RC5_32_set_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RC5_32_ECB_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RC5_32_ecb_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-ECB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RC5_32_CBC_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RC5_32_cbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CBC"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RC5_32_CFB64_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RC5_32_cfb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> RC5_32_OFB64_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("RC5_32_ofb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-OFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // Legacy SEED functions
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> SEED_SET_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SEED_set_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> SEED_ECB_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SEED_ecb_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-ECB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> SEED_CBC_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SEED_cbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CBC"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> SEED_CFB128_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SEED_cfb128_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CFB"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> SEED_OFB128_ENCRYPT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SEED_ofb128_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-OFB"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -555,14 +761,14 @@ public final class OpenSSLLegacyCipher {
                 // AES
                 AES_SET_ENCRYPT_KEY,
                 AES_SET_DECRYPT_KEY,
-                AES_ENCRYPT,
-                AES_DECRYPT,
                 AES_ECB_ENCRYPT,
                 AES_CBC_ENCRYPT,
                 AES_CFB128_ENCRYPT,
                 AES_OFB128_ENCRYPT,
-                AES_CTR128_ENCRYPT,
                 AES_IGE_ENCRYPT,
+                AES_CFB1_ENCRYPT,
+                AES_CFB8_ENCRYPT,
+                AES_BI_IGE_ENCRYPT,
                 // DES
                 DES_SET_KEY,
                 DES_ECB_ENCRYPT,
@@ -572,6 +778,8 @@ public final class OpenSSLLegacyCipher {
                 DES_EDE3_CBC_ENCRYPT,
                 DES_EDE3_ECB_ENCRYPT,
                 DES_EDE3_CFB_ENCRYPT,
+                DES_EDE3_OFB64_ENCRYPT,
+                DES_XCBC_ENCRYPT,
                 // Blowfish
                 BF_SET_KEY,
                 BF_ECB_ENCRYPT,
@@ -600,8 +808,26 @@ public final class OpenSSLLegacyCipher {
                 IDEA_CBC_ENCRYPT,
                 IDEA_CFB64_ENCRYPT,
                 IDEA_OFB64_ENCRYPT,
-                // AES Key Wrap
-                AES_WRAP_KEY,
-                AES_UNWRAP_KEY);
+                // Camellia
+                CAMELLIA_SET_KEY,
+                CAMELLIA_ECB_ENCRYPT,
+                CAMELLIA_CBC_ENCRYPT,
+                CAMELLIA_CFB128_ENCRYPT,
+                CAMELLIA_CFB1_ENCRYPT,
+                CAMELLIA_CFB8_ENCRYPT,
+                CAMELLIA_OFB128_ENCRYPT,
+                CAMELLIA_CTR128_ENCRYPT,
+                // RC5
+                RC5_32_SET_KEY,
+                RC5_32_ECB_ENCRYPT,
+                RC5_32_CBC_ENCRYPT,
+                RC5_32_CFB64_ENCRYPT,
+                RC5_32_OFB64_ENCRYPT,
+                // SEED
+                SEED_SET_KEY,
+                SEED_ECB_ENCRYPT,
+                SEED_CBC_ENCRYPT,
+                SEED_CFB128_ENCRYPT,
+                SEED_OFB128_ENCRYPT);
     }
 }

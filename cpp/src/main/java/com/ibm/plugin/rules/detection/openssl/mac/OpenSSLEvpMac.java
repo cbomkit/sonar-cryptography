@@ -52,6 +52,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-MD5"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -64,6 +65,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -76,6 +78,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA224"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -88,6 +91,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -100,6 +104,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA384"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -112,6 +117,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA512"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -124,6 +130,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA3-224"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -136,6 +143,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA3-256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -148,6 +156,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA3-384"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -160,6 +169,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA3-512"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -172,6 +182,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA512/224"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -184,6 +195,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SHA512/256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -196,6 +208,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-RIPEMD160"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -208,6 +221,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-BLAKE2B"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -220,6 +234,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-BLAKE2S"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -232,6 +247,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-SM3"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -248,6 +264,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-AES-128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -260,6 +277,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-AES-192"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -272,6 +290,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-AES-256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -284,6 +303,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-3DES"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -296,6 +316,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-CAMELLIA-128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -308,6 +329,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-CAMELLIA-192"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -320,6 +342,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-CAMELLIA-256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -332,6 +355,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-ARIA-128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -344,6 +368,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-ARIA-192"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -356,6 +381,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-ARIA-256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -368,6 +394,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC-SM4"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -384,6 +411,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("GMAC-AES-128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"GMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -396,6 +424,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("GMAC-AES-192"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"GMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -408,6 +437,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("GMAC-AES-256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"GMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -424,6 +454,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("POLY1305"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"Poly1305\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -440,6 +471,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("SIPHASH-2-4"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"SipHash\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -452,6 +484,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("SIPHASH-4-8"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"SipHash\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -468,6 +501,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("KMAC128"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"KMAC128\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -480,6 +514,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("KMAC256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"KMAC256\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -496,6 +531,7 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2BMAC"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"BLAKE2BMAC\"")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -508,6 +544,51 @@ public final class OpenSSLEvpMac {
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2SMAC"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"BLAKE2SMAC\"")
+                    .withMethodParameter("*")
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> HMAC_FUNC =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("HMAC")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
+                    .withAnyParameters()
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> HMAC_INIT_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("HMAC_Init_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
+                    .withAnyParameters()
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> CMAC_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("CMAC_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
+                    .withAnyParameters()
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_Q_MAC =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_Q_mac")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MAC"))
+                    .withAnyParameters()
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -562,6 +643,11 @@ public final class OpenSSLEvpMac {
                 EVP_MAC_KMAC256,
                 // BLAKE2 MAC
                 EVP_MAC_BLAKE2BMAC,
-                EVP_MAC_BLAKE2SMAC);
+                EVP_MAC_BLAKE2SMAC,
+                // Legacy HMAC/CMAC
+                HMAC_FUNC,
+                HMAC_INIT_EX,
+                CMAC_INIT,
+                EVP_Q_MAC);
     }
 }

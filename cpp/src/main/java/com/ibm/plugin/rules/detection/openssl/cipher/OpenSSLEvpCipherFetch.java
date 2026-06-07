@@ -51,6 +51,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -63,6 +64,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -75,6 +77,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -91,6 +94,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-GCM-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-GCM-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -103,6 +107,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-GCM-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-GCM-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -115,6 +120,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-GCM-SIV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-GCM-SIV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -131,6 +137,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -143,6 +150,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -155,6 +163,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -171,6 +180,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-WRAP-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-WRAP-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -183,6 +193,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-WRAP-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-WRAP-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -195,6 +206,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-WRAP-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-WRAP-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -211,6 +223,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-WRAP-PAD-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-WRAP-PAD-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -223,6 +236,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-WRAP-PAD-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-WRAP-PAD-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -235,6 +249,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-WRAP-PAD-INV"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-WRAP-PAD-INV\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -251,6 +266,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-HMAC-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-HMAC-SHA1\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -263,6 +279,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-HMAC-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-HMAC-SHA256\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -275,6 +292,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-HMAC-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-HMAC-SHA1\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -287,6 +305,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-HMAC-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-HMAC-SHA256\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -299,6 +318,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-HMAC-SHA1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-HMAC-SHA1\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -311,6 +331,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-HMAC-SHA256"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-HMAC-SHA256\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -327,6 +348,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-HMAC-SHA1-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-HMAC-SHA1-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -339,6 +361,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-HMAC-SHA1-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-HMAC-SHA1-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -351,6 +374,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-HMAC-SHA1-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-HMAC-SHA1-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -363,6 +387,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-HMAC-SHA256-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-HMAC-SHA256-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -375,6 +400,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-HMAC-SHA256-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-HMAC-SHA256-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -387,6 +413,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-HMAC-SHA256-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-HMAC-SHA256-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -399,6 +426,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-128-CBC-HMAC-SHA512-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-128-CBC-HMAC-SHA512-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -411,6 +439,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-192-CBC-HMAC-SHA512-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-192-CBC-HMAC-SHA512-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -423,6 +452,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-256-CBC-HMAC-SHA512-ETM"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"AES-256-CBC-HMAC-SHA512-ETM\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -439,6 +469,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-128-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CAMELLIA-128-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -451,6 +482,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-192-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CAMELLIA-192-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -463,6 +495,7 @@ public final class OpenSSLEvpCipherFetch {
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-256-CBC-CTS"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"CAMELLIA-256-CBC-CTS\"")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

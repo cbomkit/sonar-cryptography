@@ -42,14 +42,40 @@ public final class OpenSSLLegacyDsa {
     private static final String BUNDLE = "OpenSSL";
 
     // ====================================================================
-    // Key Generation functions
+    // Signature functions
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> DSA_NEW =
+    private static final IDetectionRule<AstNode> DSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_new")
+                    .forMethods("DSA_sign")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DSA_do_sign")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // Key Generation
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
@@ -67,128 +93,6 @@ public final class OpenSSLLegacyDsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Signature functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DSA_SIGN =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SIGN_SETUP =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_sign_setup")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_VERIFY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-VERIFY"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_DO_VERIFY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_do_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-VERIFY"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Size/Utility functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DSA_SIZE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_size")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SECURITY_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_security_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Conversion functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DSA_DUP_DH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_dup_DH")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private OpenSSLLegacyDsa() {
         // nothing
     }
@@ -196,21 +100,11 @@ public final class OpenSSLLegacyDsa {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
-                // Key Generation
-                DSA_NEW,
-                DSA_GENERATE_PARAMETERS_EX,
-                DSA_GENERATE_KEY,
                 // Signatures
                 DSA_SIGN,
-                DSA_SIGN_SETUP,
-                DSA_VERIFY,
                 DSA_DO_SIGN,
-                DSA_DO_VERIFY,
-                // Size/Utility
-                DSA_SIZE,
-                DSA_BITS,
-                DSA_SECURITY_BITS,
-                // Conversion
-                DSA_DUP_DH);
+                // Key Generation
+                DSA_GENERATE_KEY,
+                DSA_GENERATE_PARAMETERS_EX);
     }
 }
