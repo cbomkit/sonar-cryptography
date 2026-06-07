@@ -55,8 +55,7 @@
         <sonar.python.version>5.25.0.34794</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
         <!-- sonar-cxx (community plugin) version -->
-        <!-- To use a specific release instead of a commit hash, replace the commit hash below with the exact release tag name (e.g., 2.3.0). -->
-        <sonar.cxx.version>d04ca9d907b5d49b1f88785fa77dc6237b4351ad</sonar.cxx.version>
+        <sonar.cxx.version>cxx-2.3.0</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
