@@ -12,10 +12,134 @@
     <artifactId>cpp</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- OpenSSL headers auto-fetched for test fixtures (see build/plugins section). -->
+        <openssl.version>3.6.2</openssl.version>
+        <openssl.download.url>https://github.com/openssl/openssl/releases/download/openssl-${openssl.version}/openssl-${openssl.version}.tar.gz</openssl.download.url>
+        <openssl.headers.dir>${project.build.directory}/test-headers/openssl-${openssl.version}/include</openssl.headers.dir>
     </properties>
+
+    <build>
+        <plugins>
+            <!--
+                Fetch OpenSSL ${openssl.version} source tarball before tests and extract
+                `include/` dir into target/test-headers/. The headers are then consumed by
+                CxxVerifier (via the `openssl.headers.dir` system property) so sonar-cxx
+                can preprocess fixtures that use `#include <openssl/*.h>` realistically.
+            -->
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.13.0</version>
+                <executions>
+                    <execution>
+                        <id>fetch-openssl-headers</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>${openssl.download.url}</url>
+                            <outputDirectory>${project.build.directory}/test-headers-download</outputDirectory>
+                            <outputFileName>openssl-${openssl.version}.tar.gz</outputFileName>
+                            <unpack>true</unpack>
+                            <skipCache>false</skipCache>
+                            <overwrite>false</overwrite>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Generate real headers from `.h.in` templates and copy the final `include/`
+                tree to a stable location. OpenSSL's source tarball ships many headers as
+                `.h.in` templates (e.g. ssl.h.in, configuration.h.in); these are rendered
+                into `.h` only after running `perl Configure && make build_generated`.
+
+                The `exec-maven-plugin` runs those two steps against the unpacked tarball.
+                Then `maven-resources-plugin` copies the fully-generated `include/` tree
+                to `${openssl.headers.dir}` which is what CxxVerifier resolves at test time.
+
+                Requires `perl` + `make` on the PATH. Already present on any OpenSSL-capable
+                build machine (and on our Ubuntu runner).
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <id>openssl-configure</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>perl</executable>
+                            <arguments>
+                                <argument>Configure</argument>
+                                <argument>no-tests</argument>
+                            </arguments>
+                            <workingDirectory>${project.build.directory}/test-headers-download/openssl-${openssl.version}</workingDirectory>
+                            <skip>${openssl.skip.configure}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>openssl-build-generated</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>make</executable>
+                            <arguments>
+                                <argument>build_generated</argument>
+                            </arguments>
+                            <workingDirectory>${project.build.directory}/test-headers-download/openssl-${openssl.version}</workingDirectory>
+                            <skip>${openssl.skip.configure}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-openssl-headers</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${openssl.headers.dir}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/test-headers-download/openssl-${openssl.version}/include</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>
+                                        <exclude>**/*.in</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Pass headers dir to surefire so CxxVerifier resolves it via System.getProperty. -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <openssl.headers.dir>${openssl.headers.dir}</openssl.headers.dir>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
