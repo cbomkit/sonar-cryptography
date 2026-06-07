@@ -40,369 +40,292 @@ public final class OpenSSLEvpKeyAgreement {
     private static final String BUNDLE = "OpenSSL";
 
     // ====================================================================
-    // Diffie-Hellman (DH)
+    // KEM / KEYEXCH fetch
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> DH_DERIVE =
+    private static final IDetectionRule<AstNode> EVP_KEYEXCH_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_derive")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("EVP_KEYEXCH_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("KEYEXCH-FETCH"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_2048 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048"))
-                    .withMethodParameter("EVP_PKEY_DH")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_3072 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-3072"))
-                    .withMethodParameter("EVP_PKEY_DH")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DH_4096 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-4096"))
-                    .withMethodParameter("EVP_PKEY_DH")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     // ====================================================================
-    // Elliptic Curve Diffie-Hellman (ECDH)
+    // EVP_PKEY derive init
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> ECDH_DERIVE =
+    private static final IDetectionRule<AstNode> EVP_PKEY_DERIVE_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_derive")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
+                    .forMethods("EVP_PKEY_derive_init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DERIVE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ECDH_P256 =
+    private static final IDetectionRule<AstNode> EVP_PKEY_DERIVE_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-P256"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_P384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-P384"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_P521 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-P521"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_SECP256K1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-SECP256K1"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_BRAINPOOLP256R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-BRAINPOOLP256R1"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_BRAINPOOLP384R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-BRAINPOOLP384R1"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDH_BRAINPOOLP512R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-BRAINPOOLP512R1"))
-                    .withMethodParameter("EVP_PKEY_EC")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // X25519 and X448 - Modern Curve25519/Curve448 key exchange
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> X25519_DERIVE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_derive")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
+                    .forMethods("EVP_PKEY_derive_init_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DERIVE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> X25519_CTX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
-                    .withMethodParameter("EVP_PKEY_X25519")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // ====================================================================
+    // ECDH / DH KDF setters
+    // ====================================================================
 
-    private static final IDetectionRule<AstNode> X448_DERIVE =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_KDF_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_derive")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X448"))
+                    .forMethods("EVP_PKEY_CTX_set_dh_kdf_type")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-KDF-TYPE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> X448_CTX =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_KDF_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_new_id")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X448"))
-                    .withMethodParameter("EVP_PKEY_X448")
+                    .forMethods("EVP_PKEY_CTX_set_dh_kdf_md")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-KDF-MD"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_ECDH_KDF_TYPE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_type")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-KDF-TYPE"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_ECDH_KDF_MD =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_md")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-KDF-MD"))
+                    .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // ML-KEM (Kyber) - Post-Quantum Key Encapsulation Mechanism
+    // DH parameter setters
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> ML_KEM_512_ENCAPS =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_prime_len")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_GENERATOR =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_generator")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_TYPE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_type")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_SUBPRIME_LEN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_subprime_len")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_NID =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_nid")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-NID"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_RFC5114 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dh_rfc5114")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-RFC5114"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DHX_RFC5114 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_set_dhx_rfc5114")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DHX-RFC5114"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // KEM fetch
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_KEM_FETCH =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KEM_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("KEM-FETCH"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // EVP_PKEY encapsulate / decapsulate
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_ENCAPSULATE_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_encapsulate_init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCAPSULATE"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_ENCAPSULATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCAPSULATE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ML_KEM_512_DECAPS =
+    private static final IDetectionRule<AstNode> EVP_PKEY_DECAPSULATE_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_decapsulate_init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DECAPSULATE"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_DECAPSULATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DECAPSULATE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ML_KEM_768_ENCAPS =
+    private static final IDetectionRule<AstNode> EVP_PKEY_AUTH_ENCAPSULATE_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-768"))
+                    .forMethods("EVP_PKEY_auth_encapsulate_init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AUTH-ENCAPSULATE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ML_KEM_768_DECAPS =
+    private static final IDetectionRule<AstNode> EVP_PKEY_AUTH_DECAPSULATE_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-768"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ML_KEM_1024_ENCAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-1024"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ML_KEM_1024_DECAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-KEM-1024"))
+                    .forMethods("EVP_PKEY_auth_decapsulate_init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AUTH-DECAPSULATE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Hybrid Post-Quantum KEMs (PQC + Classical)
+    // HPKE (Hybrid Public Key Encryption)
     // ====================================================================
 
-    // X25519MLKEM768 - X25519 + ML-KEM-768 (TLS group 0x11EC)
-    private static final IDetectionRule<AstNode> X25519MLKEM768_ENCAPS =
+    private static final IDetectionRule<AstNode> OSSL_HPKE_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519MLKEM768"))
+                    .forMethods("OSSL_HPKE_CTX_new")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> X25519MLKEM768_DECAPS =
+    private static final IDetectionRule<AstNode> OSSL_HPKE_KEYGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519MLKEM768"))
+                    .forMethods("OSSL_HPKE_keygen")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // X448MLKEM1024 - X448 + ML-KEM-1024 (TLS group 0x11EE)
-    private static final IDetectionRule<AstNode> X448MLKEM1024_ENCAPS =
+    private static final IDetectionRule<AstNode> OSSL_HPKE_STR2SUITE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X448MLKEM1024"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X448MLKEM1024_DECAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X448MLKEM1024"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // SecP256r1MLKEM768 - ECDH P-256 + ML-KEM-768 (TLS group 0x11EB)
-    private static final IDetectionRule<AstNode> SECP256R1MLKEM768_ENCAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SecP256r1MLKEM768"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SECP256R1MLKEM768_DECAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SecP256r1MLKEM768"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // SecP384r1MLKEM1024 - ECDH P-384 + ML-KEM-1024 (TLS group 0x11ED)
-    private static final IDetectionRule<AstNode> SECP384R1MLKEM1024_ENCAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SecP384r1MLKEM1024"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SECP384R1MLKEM1024_DECAPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decapsulate")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SecP384r1MLKEM1024"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // SM2 Key Exchange
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> SM2_DERIVE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_derive")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SM2"))
+                    .forMethods("OSSL_HPKE_str2suite")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
@@ -415,42 +338,38 @@ public final class OpenSSLEvpKeyAgreement {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
-                // DH
-                DH_DERIVE,
-                DH_2048,
-                DH_3072,
-                DH_4096,
-                // ECDH
-                ECDH_DERIVE,
-                ECDH_P256,
-                ECDH_P384,
-                ECDH_P521,
-                ECDH_SECP256K1,
-                ECDH_BRAINPOOLP256R1,
-                ECDH_BRAINPOOLP384R1,
-                ECDH_BRAINPOOLP512R1,
-                // X25519/X448
-                X25519_DERIVE,
-                X25519_CTX,
-                X448_DERIVE,
-                X448_CTX,
-                // ML-KEM (Post-Quantum)
-                ML_KEM_512_ENCAPS,
-                ML_KEM_512_DECAPS,
-                ML_KEM_768_ENCAPS,
-                ML_KEM_768_DECAPS,
-                ML_KEM_1024_ENCAPS,
-                ML_KEM_1024_DECAPS,
-                // Hybrid PQC KEMs
-                X25519MLKEM768_ENCAPS,
-                X25519MLKEM768_DECAPS,
-                X448MLKEM1024_ENCAPS,
-                X448MLKEM1024_DECAPS,
-                SECP256R1MLKEM768_ENCAPS,
-                SECP256R1MLKEM768_DECAPS,
-                SECP384R1MLKEM1024_ENCAPS,
-                SECP384R1MLKEM1024_DECAPS,
-                // SM2
-                SM2_DERIVE);
+                // KEM / KEYEXCH fetch
+                EVP_KEYEXCH_FETCH,
+                // EVP_PKEY derive init
+                EVP_PKEY_DERIVE_INIT,
+                EVP_PKEY_DERIVE_INIT_EX,
+                // ECDH / DH KDF setters
+                EVP_PKEY_CTX_SET_DH_KDF_TYPE,
+                EVP_PKEY_CTX_SET_DH_KDF_MD,
+                EVP_PKEY_CTX_SET_ECDH_KDF_TYPE,
+                EVP_PKEY_CTX_SET_ECDH_KDF_MD,
+                // DH parameter setters
+                EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN,
+                EVP_PKEY_CTX_SET_DH_PARAMGEN_GENERATOR,
+                EVP_PKEY_CTX_SET_DH_PARAMGEN_TYPE,
+                EVP_PKEY_CTX_SET_DH_PARAMGEN_SUBPRIME_LEN,
+                EVP_PKEY_CTX_SET_DH_NID,
+                EVP_PKEY_CTX_SET_DH_RFC5114,
+                EVP_PKEY_CTX_SET_DHX_RFC5114,
+                // KEM fetch
+                EVP_KEM_FETCH,
+                // EVP_PKEY encapsulate
+                EVP_PKEY_ENCAPSULATE_INIT,
+                EVP_PKEY_ENCAPSULATE,
+                // EVP_PKEY decapsulate
+                EVP_PKEY_DECAPSULATE_INIT,
+                EVP_PKEY_DECAPSULATE,
+                // Authenticated KEM variants
+                EVP_PKEY_AUTH_ENCAPSULATE_INIT,
+                EVP_PKEY_AUTH_DECAPSULATE_INIT,
+                // HPKE
+                OSSL_HPKE_CTX_NEW,
+                OSSL_HPKE_KEYGEN,
+                OSSL_HPKE_STR2SUITE);
     }
 }

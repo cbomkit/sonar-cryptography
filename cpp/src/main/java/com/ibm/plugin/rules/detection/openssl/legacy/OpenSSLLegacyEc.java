@@ -19,7 +19,6 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -44,76 +43,6 @@ public final class OpenSSLLegacyEc {
     private static final String BUNDLE = "OpenSSL";
 
     // ====================================================================
-    // EC Key Management functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EC_KEY_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_new_by_curve_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_CHECK_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_check_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_SET_PUBLIC_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_set_public_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_SET_PRIVATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_set_private_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
     // ECDSA Signature functions
     // ====================================================================
 
@@ -128,44 +57,11 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ECDSA_VERIFY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("ECDSA_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-VERIFY"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> ECDSA_DO_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("ECDSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_DO_VERIFY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("ECDSA_do_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-VERIFY"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SIGN_SETUP =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("ECDSA_sign_setup")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
@@ -194,35 +90,75 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> ECDSA_SIZE =
+    // ====================================================================
+    // Key Generation
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("ECDSA_size")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
+                    .forMethods("EC_KEY_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // ECDH Key Agreement functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
+    private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("ECDH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
+                    .forMethods("EC_KEY_new_by_curve_name")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // EC Group/Curve functions
-    // ====================================================================
+    private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_KEY_new_by_curve_name_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EC_KEY_SET_GROUP =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_KEY_set_group")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GFP =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_GROUP_new_curve_GFp")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GF2M =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_GROUP_new_curve_GF2m")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> EC_GROUP_NEW_BY_CURVE_NAME =
             new DetectionRuleBuilder<AstNode>()
@@ -235,48 +171,44 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GFP =
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_BY_CURVE_NAME_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_curve_GFp")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-GFP"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GF2M =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_curve_GF2m")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-GF2M"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // EC Point Operation functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EC_POINT_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_POINT_new")
+                    .forMethods("EC_GROUP_new_by_curve_name_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EC_POINT_MUL =
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_PARAMS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EC_POINT_mul")
+                    .forMethods("EC_GROUP_new_from_params")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_ECPARAMETERS =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_GROUP_new_from_ecparameters")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_ECPKPARAMETERS =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_GROUP_new_from_ecpkparameters")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
@@ -290,30 +222,22 @@ public final class OpenSSLLegacyEc {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
-                // EC Key Management
-                EC_KEY_NEW,
-                EC_KEY_NEW_BY_CURVE_NAME,
-                EC_KEY_GENERATE_KEY,
-                EC_KEY_CHECK_KEY,
-                EC_KEY_SET_PUBLIC_KEY,
-                EC_KEY_SET_PRIVATE_KEY,
                 // ECDSA Signatures
                 ECDSA_SIGN,
-                ECDSA_VERIFY,
-                ECDSA_DO_SIGN,
-                ECDSA_DO_VERIFY,
-                ECDSA_SIGN_SETUP,
                 ECDSA_SIGN_EX,
+                ECDSA_DO_SIGN,
                 ECDSA_DO_SIGN_EX,
-                ECDSA_SIZE,
-                // ECDH Key Agreement
-                ECDH_COMPUTE_KEY,
-                // EC Group/Curve
-                EC_GROUP_NEW_BY_CURVE_NAME,
+                // Key Generation
+                EC_KEY_GENERATE_KEY,
+                EC_KEY_NEW_BY_CURVE_NAME,
+                EC_KEY_NEW_BY_CURVE_NAME_EX,
+                EC_KEY_SET_GROUP,
                 EC_GROUP_NEW_CURVE_GFP,
                 EC_GROUP_NEW_CURVE_GF2M,
-                // EC Point Operations
-                EC_POINT_NEW,
-                EC_POINT_MUL);
+                EC_GROUP_NEW_BY_CURVE_NAME,
+                EC_GROUP_NEW_BY_CURVE_NAME_EX,
+                EC_GROUP_NEW_FROM_PARAMS,
+                EC_GROUP_NEW_FROM_ECPARAMETERS,
+                EC_GROUP_NEW_FROM_ECPKPARAMETERS);
     }
 }

@@ -33,7 +33,10 @@ import javax.annotation.Nonnull;
  * <p>These rules detect MAC operations using the legacy (pre-EVP) APIs. These APIs are deprecated
  * but still widely used in existing codebases.
  *
- * <p>Covers: HMAC, CMAC
+ * <p>Covers: HMAC, CMAC. Poly1305 is intentionally excluded — its {@code Poly1305_Init/
+ * Update/Final} symbols are OpenSSL-internal (declared in {@code include/crypto/poly1305.h}, not
+ * {@code include/openssl/}). Public Poly1305 access in OpenSSL 3.x is via {@code EVP_MAC_fetch(...,
+ * "POLY1305", ...)}, handled by {@link com.ibm.plugin.rules.detection.openssl.mac.OpenSSLEvpMac}.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyMac {
@@ -191,42 +194,10 @@ public final class OpenSSLLegacyMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // Legacy Poly1305 functions
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> POLY1305_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Poly1305_Init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("POLY1305"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> POLY1305_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Poly1305_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("POLY1305"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> POLY1305_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Poly1305_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("POLY1305"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // Note: Poly1305_Init/Update/Final are NOT part of OpenSSL's public API (they live in
+    // include/crypto/poly1305.h, not include/openssl/). Public access to Poly1305 in
+    // OpenSSL 3.x is via EVP_MAC_fetch(..., "POLY1305", ...), which is covered by
+    // OpenSSLEvpMac. Do not add legacy Poly1305_* rules here.
 
     private OpenSSLLegacyMac() {
         // nothing
@@ -249,10 +220,6 @@ public final class OpenSSLLegacyMac {
                 CMAC_INIT,
                 CMAC_UPDATE,
                 CMAC_FINAL,
-                CMAC_RESUME,
-                // Poly1305
-                POLY1305_INIT,
-                POLY1305_UPDATE,
-                POLY1305_FINAL);
+                CMAC_RESUME);
     }
 }

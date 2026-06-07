@@ -346,6 +346,69 @@ public final class OpenSSLEvpMessageDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // ====================================================================
+    // MD fetch + legacy lookup + init_ex
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_MD_FETCH =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_MD_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD-FETCH"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_GET_DIGESTBYNAME =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_get_digestbyname")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DIGEST-BY-NAME"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // EVP Digest init
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestInit")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DIGEST"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_INIT_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestInit_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DIGEST"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_INIT_EX2 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestInit_ex2")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DIGEST"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     private OpenSSLEvpMessageDigest() {
         // nothing
     }
@@ -386,6 +449,13 @@ public final class OpenSSLEvpMessageDigest {
                 EVP_SM3,
                 // Combined/Special
                 EVP_MD5_SHA1,
-                EVP_MD_NULL);
+                EVP_MD_NULL,
+                // MD fetch + legacy lookup
+                EVP_MD_FETCH,
+                EVP_GET_DIGESTBYNAME,
+                // EVP Digest init
+                EVP_DIGEST_INIT,
+                EVP_DIGEST_INIT_EX,
+                EVP_DIGEST_INIT_EX2);
     }
 }

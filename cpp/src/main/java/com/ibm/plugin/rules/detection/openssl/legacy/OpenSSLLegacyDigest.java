@@ -55,28 +55,6 @@ public final class OpenSSLLegacyDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> MD5_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("MD5_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> MD5_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("MD5_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> MD5 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -97,28 +75,6 @@ public final class OpenSSLLegacyDigest {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SHA1_Init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA1"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA1_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA1_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA1"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA1_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA1_Final")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA1"))
                     .withAnyParameters()
                     .buildForContext(new DigestContext())
@@ -151,28 +107,6 @@ public final class OpenSSLLegacyDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> SHA224_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA224_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA224"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA224_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA224_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA224"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> SHA224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -193,28 +127,6 @@ public final class OpenSSLLegacyDigest {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SHA256_Init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA256"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA256_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA256_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA256"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA256_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA256_Final")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA256"))
                     .withAnyParameters()
                     .buildForContext(new DigestContext())
@@ -247,28 +159,6 @@ public final class OpenSSLLegacyDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> SHA384_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA384_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA384"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA384_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA384_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA384"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> SHA384 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -289,28 +179,6 @@ public final class OpenSSLLegacyDigest {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SHA512_Init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA512"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA512_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA512_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA512"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SHA512_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SHA512_Final")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA512"))
                     .withAnyParameters()
                     .buildForContext(new DigestContext())
@@ -343,34 +211,108 @@ public final class OpenSSLLegacyDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> RIPEMD160_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RIPEMD160_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RIPEMD160_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RIPEMD160_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
-                    .withAnyParameters()
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> RIPEMD160 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RIPEMD160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // WHIRLPOOL (deprecated, legacy provider)
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> WHIRLPOOL =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("WHIRLPOOL")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> WHIRLPOOL_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("WHIRLPOOL_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // MD2 / MD4 / MDC2 (deprecated, legacy provider)
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> MD2 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MD2")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> MD2_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MD2_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> MD4 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MD4")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> MD4_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MD4_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> MDC2 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MDC2")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
+                    .withAnyParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> MDC2_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("MDC2_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
                     .withAnyParameters()
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
@@ -385,38 +327,34 @@ public final class OpenSSLLegacyDigest {
         return List.of(
                 // MD5
                 MD5_INIT,
-                MD5_UPDATE,
-                MD5_FINAL,
                 MD5,
                 // SHA-1
                 SHA1_INIT,
-                SHA1_UPDATE,
-                SHA1_FINAL,
                 SHA1,
                 // SHA-224
                 SHA224_INIT,
-                SHA224_UPDATE,
-                SHA224_FINAL,
                 SHA224,
                 // SHA-256
                 SHA256_INIT,
-                SHA256_UPDATE,
-                SHA256_FINAL,
                 SHA256,
                 // SHA-384
                 SHA384_INIT,
-                SHA384_UPDATE,
-                SHA384_FINAL,
                 SHA384,
                 // SHA-512
                 SHA512_INIT,
-                SHA512_UPDATE,
-                SHA512_FINAL,
                 SHA512,
                 // RIPEMD-160
                 RIPEMD160_INIT,
-                RIPEMD160_UPDATE,
-                RIPEMD160_FINAL,
-                RIPEMD160);
+                RIPEMD160,
+                // WHIRLPOOL
+                WHIRLPOOL,
+                WHIRLPOOL_INIT,
+                // MD2 / MD4 / MDC2
+                MD2,
+                MD2_INIT,
+                MD4,
+                MD4_INIT,
+                MDC2,
+                MDC2_INIT);
     }
 }
