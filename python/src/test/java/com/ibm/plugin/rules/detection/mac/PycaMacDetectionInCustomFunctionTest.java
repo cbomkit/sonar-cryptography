@@ -44,9 +44,9 @@ import org.sonar.plugins.python.api.tree.Tree;
 import org.sonar.python.checks.utils.PythonCheckVerifier;
 
 /**
- * Verifies that cryptographic operations inside user-defined functions are detected during
- * standard AST traversal. This test covers both positive cases (cryptographic operations) and
- * negative cases (non-cryptographic functions).
+ * Verifies that cryptographic operations inside user-defined functions are detected during standard
+ * AST traversal. This test covers both positive cases (cryptographic operations) and negative cases
+ * (non-cryptographic functions).
  */
 class PycaMacDetectionInCustomFunctionTest extends TestBase {
 
