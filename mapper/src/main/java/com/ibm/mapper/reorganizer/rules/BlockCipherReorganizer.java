@@ -73,58 +73,77 @@ public final class BlockCipherReorganizer {
                 @Nullable @Override
                 public List<INode> applyReorganization(
                         @Nonnull INode node, @Nonnull INode parent, @Nonnull List<INode> roots) {
-                    if (!(node instanceof Algorithm algA)) {
+                    if (!(node instanceof Algorithm)) {
                         return roots;
                     }
 
                     List<INode> newRoots = new ArrayList<>(roots);
-                    INode toRemove = null;
-                    INode toKeep = null;
+                    INode currentBase = node;
+                    boolean merged;
+                    do {
+                        merged = false;
+                        INode toRemove = null;
+                        INode toKeep = null;
 
-                    for (INode other : newRoots) {
-                        if (other != node && other instanceof Algorithm algB) {
+                        for (INode other : newRoots) {
+                            if (other != currentBase && other instanceof Algorithm algB) {
+                                Algorithm baseAlg = (Algorithm) currentBase;
 
-                            if (algA.getDetectionContext().equals(algB.getDetectionContext())
-                                    && isRelatedCipherFamily(algA.getName(), algB.getName())) {
+                                if (baseAlg.getDetectionContext().equals(algB.getDetectionContext())
+                                        && isRelatedCipherFamily(
+                                                baseAlg.getName(), algB.getName())) {
 
-                                String nameA = algA.getName();
-                                String nameB = algB.getName();
+                                    String nameA = baseAlg.getName().trim();
+                                    String nameB = algB.getName().trim();
 
-                                if (nameA.equalsIgnoreCase("Unknown")) {
-                                    toKeep = other;
-                                    toRemove = node;
-                                } else if (nameB.equalsIgnoreCase("Unknown")) {
-                                    toKeep = node;
-                                    toRemove = other;
-                                } else if (nameA.length() >= nameB.length()) {
-                                    toKeep = node;
-                                    toRemove = other;
-                                } else {
-                                    toKeep = other;
-                                    toRemove = node;
+                                    if (nameA.equalsIgnoreCase("Unknown") || nameA.isEmpty()) {
+                                        toKeep = other;
+                                        toRemove = currentBase;
+                                    } else if (nameB.equalsIgnoreCase("Unknown")
+                                            || nameB.isEmpty()) {
+                                        toKeep = currentBase;
+                                        toRemove = other;
+                                    } else if (nameA.length() >= nameB.length()) {
+                                        toKeep = currentBase;
+                                        toRemove = other;
+                                    } else {
+                                        toKeep = other;
+                                        toRemove = currentBase;
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
-                    }
 
-                    if (toRemove != null) {
-                        for (INode child : toRemove.getChildren().values()) {
-                            if (!toKeep.getChildren().containsKey(child.getKind())) {
-                                toKeep.put(child);
+                        if (toRemove != null) {
+                            // Merge non-conflicting children from the removed node into the
+                            // retained node. Existing children take precedence when both
+                            // nodes contain the same child kind.
+                            for (INode child : toRemove.getChildren().values()) {
+                                if (!toKeep.getChildren().containsKey(child.getKind())) {
+                                    toKeep.put(child);
+                                }
                             }
+                            newRoots.remove(toRemove);
+                            currentBase = toKeep;
+                            merged = true;
                         }
-                        newRoots.remove(toRemove);
-                    }
+                    } while (merged);
 
                     return newRoots;
                 }
 
                 private boolean isRelatedCipherFamily(String nameA, String nameB) {
-                    String safeA = nameA != null ? nameA : "Unknown";
-                    String safeB = nameB != null ? nameB : "Unknown";
+                    String safeA =
+                            (nameA != null && !nameA.trim().isEmpty())
+                                    ? nameA.trim().toUpperCase()
+                                    : "UNKNOWN";
+                    String safeB =
+                            (nameB != null && !nameB.trim().isEmpty())
+                                    ? nameB.trim().toUpperCase()
+                                    : "UNKNOWN";
 
-                    if (safeA.equalsIgnoreCase("Unknown") || safeB.equalsIgnoreCase("Unknown")) {
+                    if (safeA.equals("UNKNOWN") || safeB.equals("UNKNOWN")) {
                         return true;
                     }
 
@@ -137,6 +156,8 @@ public final class BlockCipherReorganizer {
 
                     if (longer.startsWith(shorter)) {
                         char nextChar = longer.charAt(shorter.length());
+                        // Require a non-alphanumeric separator after the shared prefix to
+                        // avoid false-positive matches between unrelated algorithm names.
                         return !Character.isLetterOrDigit(nextChar);
                     }
 

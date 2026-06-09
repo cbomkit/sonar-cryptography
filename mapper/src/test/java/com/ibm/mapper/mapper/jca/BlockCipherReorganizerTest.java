@@ -21,6 +21,7 @@ package com.ibm.mapper.mapper.jca;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.ibm.mapper.mapper.bc.BcBlockCipherEngineMapper;
 import com.ibm.mapper.mapper.bc.BcBlockCipherModeMapper;
@@ -123,5 +124,78 @@ class BlockCipherReorganizerTest {
                 .as(
                         "The merged node should retain the inner child properties (like Mode and KeyLength)")
                 .isNotEmpty();
+    }
+
+    @Test
+    @DisplayName(
+            "Edge Case: Should safely iterate and deduplicate 3+ overlapping roots into a single node")
+    void shouldDeduplicateMultipleOverlappingRoots() {
+        IReorganizerRule rule = BlockCipherReorganizer.DEDUPLICATE_OVERLAPPING_ROOTS;
+
+        Algorithm unknownWrapper = mock(Algorithm.class);
+        when(unknownWrapper.getName()).thenReturn("Unknown");
+        when(unknownWrapper.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        Algorithm aesBase = mock(Algorithm.class);
+        when(aesBase.getName()).thenReturn("AES");
+        when(aesBase.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        Algorithm aesSpecific = mock(Algorithm.class);
+        when(aesSpecific.getName()).thenReturn("AES-256");
+        when(aesSpecific.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        List<INode> roots = new ArrayList<>(List.of(unknownWrapper, aesBase, aesSpecific));
+
+        boolean isMatch = rule.match(unknownWrapper, DUMMY_PARENT, roots);
+        List<INode> optimizedRoots = rule.applyReorganization(unknownWrapper, DUMMY_PARENT, roots);
+
+        assertThat(isMatch).isTrue();
+        assertThat(optimizedRoots).hasSize(1);
+
+        Algorithm remainingAlg = (Algorithm) optimizedRoots.get(0);
+        assertThat(remainingAlg.getName()).isEqualTo("AES-256");
+    }
+
+    @Test
+    @DisplayName("Edge Case: Should NOT merge ambiguous prefixes like RC2 and RC256")
+    void shouldNotMergeAmbiguousPrefixes() {
+        IReorganizerRule rule = BlockCipherReorganizer.DEDUPLICATE_OVERLAPPING_ROOTS;
+
+        Algorithm rc2 = mock(Algorithm.class);
+        when(rc2.getName()).thenReturn("RC2");
+        when(rc2.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        Algorithm rc256 = mock(Algorithm.class);
+        when(rc256.getName()).thenReturn("RC256");
+        when(rc256.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        List<INode> roots = new ArrayList<>(List.of(rc2, rc256));
+
+        boolean isMatch = rule.match(rc2, DUMMY_PARENT, roots);
+
+        assertThat(isMatch).isFalse();
+    }
+
+    @Test
+    @DisplayName("Edge Case: Should handle empty strings and distinct case-sensitivity safely")
+    void shouldHandleEmptyStringsAndCasing() {
+        IReorganizerRule rule = BlockCipherReorganizer.DEDUPLICATE_OVERLAPPING_ROOTS;
+
+        Algorithm emptyNode = mock(Algorithm.class);
+        when(emptyNode.getName()).thenReturn("   "); // Blank spaces
+        when(emptyNode.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        Algorithm lowerCaseAes = mock(Algorithm.class);
+        when(lowerCaseAes.getName()).thenReturn("aes"); // Lowercase
+        when(lowerCaseAes.getDetectionContext()).thenReturn(SHARED_LOCATION_CONTEXT);
+
+        List<INode> roots = new ArrayList<>(List.of(emptyNode, lowerCaseAes));
+
+        boolean isMatch = rule.match(emptyNode, DUMMY_PARENT, roots);
+        List<INode> optimizedRoots = rule.applyReorganization(emptyNode, DUMMY_PARENT, roots);
+
+        assertThat(isMatch).isTrue();
+        assertThat(optimizedRoots).hasSize(1);
+        assertThat(((Algorithm) optimizedRoots.get(0)).getName()).isEqualTo("aes");
     }
 }
