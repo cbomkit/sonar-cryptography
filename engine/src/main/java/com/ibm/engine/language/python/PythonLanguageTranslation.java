@@ -90,13 +90,33 @@ public class PythonLanguageTranslation implements ILanguageTranslation<Tree> {
         if (methodInvocation instanceof CallExpression callExpression) {
             List<Argument> arguments = callExpression.arguments();
             if (!arguments.isEmpty()) {
+                // Count ALL argument types including *args and **kwargs to prevent false matches
+                // when rules specify .withoutParameters()
                 return arguments.stream()
-                        .filter(RegularArgument.class::isInstance)
-                        // Should non-regular argument types be handled?
-                        .map(
-                                argument ->
-                                        PythonSemantic.resolveTreeType(
-                                                ((RegularArgument) argument).expression()))
+                        .<Optional<IType>>map(
+                                argument -> {
+                                    if (argument instanceof RegularArgument regularArg) {
+                                        return PythonSemantic.resolveTreeType(
+                                                regularArg.expression());
+                                    } else {
+                                        // For non-regular arguments (*args, **kwargs), return a
+                                        // placeholder type
+                                        // that will never match any specific type in detection
+                                        // rules.
+                                        // This ensures they are counted as parameters without
+                                        // matching wildcards.
+                                        return Optional.<IType>of(
+                                                new IType() {
+                                                    @Override
+                                                    public boolean is(@Nonnull String type) {
+                                                        // Use unique markers that won't conflict
+                                                        // with actual types or wildcards
+                                                        return type.equals("__PYTHON_VARARGS__")
+                                                                || type.equals("__PYTHON_KWARGS__");
+                                                    }
+                                                });
+                                    }
+                                })
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .toList();

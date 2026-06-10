@@ -13,6 +13,23 @@ public_key = private_key.public_key()
 # Raises InvalidSignature if verification fails
 public_key.verify(signature, b"my authenticated message")
 
+# False positives that should NOT be detected (PR-429 fix)
+# These are unrelated generate() methods with parameters
+class VLMModel:
+    def generate(self, **gen_kwargs):
+        return [1, 2, 3]
+
+class TextModel:
+    def generate(self, *prompts):
+        return "generated text"
+
+vlm_model = VLMModel()
+text_model = TextModel()
+
+# These should NOT trigger detection (not cryptography-related)
+generated_ids = vlm_model.generate(**{"max_length": 100})
+generated_text = text_model.generate("prompt1", "prompt2")
+
 # GROUND TRUTH (translation of the 1st finding)
 # 
 # PrivateKey EC

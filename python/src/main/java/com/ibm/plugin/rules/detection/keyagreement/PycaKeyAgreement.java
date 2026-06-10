@@ -43,7 +43,7 @@ public final class PycaKeyAgreement {
                             "cryptography.hazmat.primitives.asymmetric.x25519.X25519PrivateKey")
                     .forMethods("generate")
                     .shouldBeDetectedAs(new KeyActionFactory<>(KeyAction.Action.GENERATION))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyAgreementContext(Map.of("algorithm", "x25519")))
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
@@ -54,7 +54,7 @@ public final class PycaKeyAgreement {
                     .forObjectTypes("cryptography.hazmat.primitives.asymmetric.x448.X448PrivateKey")
                     .forMethods("generate")
                     .shouldBeDetectedAs(new KeyActionFactory<>(KeyAction.Action.GENERATION))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyAgreementContext(Map.of("algorithm", "x448")))
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
