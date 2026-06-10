@@ -10,39 +10,43 @@ name: Java CI with Maven
 
 permissions:
   contents: write
-  packages: write
 
 on:
   push:
-    branches: [ "main", "dev/*" ]
+    branches: ["main", "dev/*"]
   pull_request:
-    branches: [ "main", "dev/*" ]
+    branches: ["main", "dev/*"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - name: Set up JDK 17
-      uses: actions/setup-java@v5
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn -B clean package
-    - name: Create CBOM
-      uses: cbomkit/cbomkit-action@v2.2.0
-      id: cbom
-      # Persist CBOM after a job has completed and share
-      # that CBOM with another job in the same workflow.
-    - name: Commit changes to new branch
-      uses: actions/upload-artifact@v7
-      with:
-        name: "CBOM"
-        path: ${{ steps.cbom.outputs.pattern }}
-        if-no-files-found: warn
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    #- name: Update dependency graph
-    #  uses: advanced-security/maven-dependency-submission-action@v5
-    #  if: github.event_name != 'pull_request'
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Create CBOM
+        uses: cbomkit/cbomkit-action@v2.2.0
+        id: cbom
+        # Persist CBOM after a job has completed and share
+        # that CBOM with another job in the same workflow.
+
+      - name: Upload CBOM artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: "CBOM"
+          path: ${{ steps.cbom.outputs.pattern }}
+          if-no-files-found: warn
+
+      # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
+      #- name: Update dependency graph
+      #  uses: advanced-security/maven-dependency-submission-action@v5
+      #  if: github.event_name != 'pull_request'

@@ -3,7 +3,6 @@
 [![License](https://img.shields.io/github/license/cbomkit/sonar-cryptography.svg?)](https://opensource.org/licenses/Apache-2.0) <!--- long-description-skip-begin -->
 [![Current Release](https://img.shields.io/github/release/cbomkit/sonar-cryptography.svg?logo=IBM)](https://github.com/cbomkit/sonar-cryptography/releases)
 
-
 This repository contains a SonarQube Plugin that detects cryptographic assets
 in source code and generates [CBOM](https://cyclonedx.org/capabilities/cbom/).
 It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
@@ -23,11 +22,10 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 ## Version compatibility
 
 | Plugin Version  | SonarQube Version              |
-|-----------------|--------------------------------|
+| --------------- | ------------------------------ |
 | 1.3.7 and up    | SonarQube 9.9 (LTS) and up     |
-| 1.3.2 and 1.3.6 | SonarQube 9.8 (LTS) up to 10.8 | 
-| 1.2.0 to 1.3.1  | SonarQube 9.8 (LTS) up to 10.4 |      
-
+| 1.3.2 and 1.3.6 | SonarQube 9.8 (LTS) up to 10.8 |
+| 1.2.0 to 1.3.1  | SonarQube 9.8 (LTS) up to 10.4 |
 
 ## Supported languages and libraries
 
@@ -39,53 +37,58 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 | Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
 |          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
 | C#       | [System.Security.Cryptography](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography) | In development[^4] |
-
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                           | Partial[^5]      |
 
 [^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+
 [^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
+
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
 [^4]: C# support uses an [ANTLR v7 grammar](https://github.com/antlr/grammars-v4/tree/master/csharp) to parse source files directly. The current csharp support only covers the language support and does not contain detection rules other than the rules used for verifying the detection engine. **This is not yet meant for active usage!** **Known limitations of the detection engine:** no cross-method variable tracking (only single-method scope), only works for c# v7, string-based matching (no type resolution)
 
+[^5]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Requires the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin.
+
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
-> - To add support for another language or cryptography library, see [*Extending the Sonar Cryptography Plugin to add support for another language or cryptography library*](./docs/LANGUAGE_SUPPORT.md)
-> - If you just want to know more about the syntax for writing new detection rules, see [*Writing new detection rules for the Sonar Cryptography Plugin*](./docs/DETECTION_RULE_STRUCTURE.md)
+>
+> - To add support for another language or cryptography library, see [_Extending the Sonar Cryptography Plugin to add support for another language or cryptography library_](./docs/LANGUAGE_SUPPORT.md)
+> - If you just want to know more about the syntax for writing new detection rules, see [_Writing new detection rules for the Sonar Cryptography Plugin_](./docs/DETECTION_RULE_STRUCTURE.md)
 
 ## Installation
 
-> [!NOTE] 
-> To run the plugin, you need a running SonarQube instance with one of the supported 
+> [!NOTE]
+> To run the plugin, you need a running SonarQube instance with one of the supported
 > versions. If you don't have one but want to try the plugin, you can use the
-> included Docker Compose to set up a development environment. See 
+> included Docker Compose to set up a development environment. See
 > [here](CONTRIBUTING.md#build) for instructions.
 
 Copy the plugin (the JAR file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases))
-to `$SONARQUBE_HOME/extensions/plugins` and restart 
+to `$SONARQUBE_HOME/extensions/plugins` and restart
 SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-plugin/)).
 
 ## Using
 
-The plugin provides new inventory rules (Cbomkit Cryptography Repository) regarding the use of cryptography for 
+The plugin provides new inventory rules (Cbomkit Cryptography Repository) regarding the use of cryptography for
 the supported languages.
-If you enable these rules, a source code scan creates a cryptographic inventory by creating a 
-[CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic assets and writing 
+If you enable these rules, a source code scan creates a cryptographic inventory by creating a
+[CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic assets and writing
 a `cbom.json` to the scan directory.
 
 ### Add Cryptography Rules to your Quality Profile
 
 This plugin incorporates rules specifically focused on cryptography.
 
-> To generate a Cryptography Bill of Materials (CBOM), it is mandatory to activate at 
+> To generate a Cryptography Bill of Materials (CBOM), it is mandatory to activate at
 > least one of these cryptography-related rules.
 
 ![Activate Rules Crypto Rules](docs/images/rules.png)
 
-As of the current version, the plugin contains one single rule for creating a cryptographic inventory. 
+As of the current version, the plugin contains one single rule for creating a cryptographic inventory.
 Future updates may introduce additional rules to expand functionality.
 
 ### Scan Source Code
 
-Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/) 
+Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/)
 to start your first scan.
 
 ### Visualizing your CBOM
@@ -188,6 +191,7 @@ The plugin generates a `cbom.json` file in [CycloneDX CBOM format](https://cyclo
 ```
 
 The CBOM includes:
+
 - **Algorithms**: Hash functions, ciphers, key exchange mechanisms with their parameters
 - **Keys and secrets**: Private keys, secret keys, and other cryptographic materials
 - **Evidence**: Source file locations where each asset was detected
@@ -267,10 +271,10 @@ Run with `go run gen_package.go`, then delete the script.
 
 2. **Check for dependencies**: Some packages depend on types from other packages. Common dependencies:
 
-| Package | May require |
-|---------|-------------|
-| `crypto/hmac` | `hash` |
-| `crypto/cipher` | `io` |
+| Package           | May require  |
+| ----------------- | ------------ |
+| `crypto/hmac`     | `hash`       |
+| `crypto/cipher`   | `io`         |
 | `crypto/*` (most) | `io`, `hash` |
 
 3. **Add mapping entry** to `mapping_generated.go` in alphabetical order:
@@ -283,17 +287,17 @@ Run with `go run gen_package.go`, then delete the script.
 
 ### File naming convention
 
-| Package Path | Export Data File |
-|--------------|------------------|
-| `crypto/hmac` | `crypto_hmac.o` |
-| `crypto/elliptic` | `crypto_elliptic.o` |
+| Package Path                 | Export Data File    |
+| ---------------------------- | ------------------- |
+| `crypto/hmac`                | `crypto_hmac.o`     |
+| `crypto/elliptic`            | `crypto_elliptic.o` |
 | `golang.org/x/crypto/bcrypt` | `x_crypto_bcrypt.o` |
 
 </details>
 
 ## Help and troubleshooting
 
-If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [*Testing your configuration and troubleshooting*](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
+If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [_Testing your configuration and troubleshooting_](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
 
 ## Contribution Guidelines
 

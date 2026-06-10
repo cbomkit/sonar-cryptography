@@ -1,0 +1,19 @@
+{
+  "title": "Cryptographic Inventory (CBOM)",
+  "type": "CODE_SMELL",
+  "code": {
+    "impacts": {
+      "SECURITY": "INFO"
+    },
+    "attribute": "TRUSTWORTHY"
+  },
+  "status": "ready",
+  "tags": [
+    "cryptography",
+    "cbom",
+    "cwe"
+  ],
+  "defaultSeverity": "Minor",
+  "scope": "Main",
+  "sqKey": "Inventory"
+}
