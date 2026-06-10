@@ -37,7 +37,7 @@ public final class SSLVersionMapper implements IMapper {
             return Optional.empty();
         }
 
-        Pattern pattern = Pattern.compile("tlsv(\\d+(\\.\\d+)?)");
+        Pattern pattern = Pattern.compile("^tlsv(\\d+(\\.\\d+)?)");
         Matcher matcher = pattern.matcher(str.toLowerCase());
         if (matcher.find()) {
             String number = matcher.group(1);

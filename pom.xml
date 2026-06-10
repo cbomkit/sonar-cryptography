@@ -14,6 +14,7 @@
         <module>python</module>
         <module>go</module>
         <module>csharp</module>
+        <module>cpp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
@@ -37,8 +38,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
@@ -51,9 +52,19 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.16.0.29940</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
+        <!-- sonar-cxx (community plugin) version -->
+        <!-- To use a specific release instead of a commit hash, replace the commit hash below with the exact release tag name (e.g., 2.3.0). -->
+        <sonar.cxx.version>d04ca9d907b5d49b1f88785fa77dc6237b4351ad</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
@@ -131,6 +142,17 @@
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
+        </dependency>
+        <!-- sonar-cxx (community plugin for C/C++ support) -->
+        <dependency>
+            <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
+            <artifactId>cxx-squid-bridge</artifactId>
+            <version>${sonar.cxx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
         </dependency>
 
         <!-- unit tests -->

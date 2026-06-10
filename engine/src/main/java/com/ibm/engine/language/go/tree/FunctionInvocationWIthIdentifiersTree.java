@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sonar.go.impl.FunctionInvocationTreeImpl;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.FunctionInvocationTree;
@@ -54,7 +53,7 @@ public final class FunctionInvocationWIthIdentifiersTree extends FunctionInvocat
     }
 
     @Override
-    public @NonNull BlockTree blockTree() {
+    public @Nonnull BlockTree blockTree() {
         return blockTree;
     }
 }
