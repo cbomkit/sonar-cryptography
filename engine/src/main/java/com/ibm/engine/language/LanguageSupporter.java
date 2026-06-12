@@ -19,18 +19,11 @@
  */
 package com.ibm.engine.language;
 
-import com.ibm.engine.language.csharp.CSharpCheck;
-import com.ibm.engine.language.csharp.CSharpLanguageSupport;
-import com.ibm.engine.language.csharp.CSharpScanContext;
-import com.ibm.engine.language.csharp.CSharpSymbol;
-import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.language.go.GoLanguageSupport;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.language.java.JavaLanguageSupport;
 import com.ibm.engine.language.python.PythonLanguageSupport;
 import javax.annotation.Nonnull;
-import org.sonar.go.symbols.Symbol;
-import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
@@ -64,13 +57,12 @@ public final class LanguageSupporter {
     }
 
     @Nonnull
-    public static ILanguageSupport<GoCheck, Tree, Symbol, GoScanContext> goLanguageSupporter() {
+    public static ILanguageSupport<
+                    GoCheck,
+                    org.sonar.plugins.go.api.Tree,
+                    org.sonar.go.symbols.Symbol,
+                    GoScanContext>
+            goLanguageSupporter() {
         return new GoLanguageSupport();
-    }
-
-    @Nonnull
-    public static ILanguageSupport<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-            csharpLanguageSupporter() {
-        return new CSharpLanguageSupport();
     }
 }
