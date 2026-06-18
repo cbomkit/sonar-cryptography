@@ -21,13 +21,11 @@ package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
-import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import com.ibm.plugin.rules.detection.jca.cipher.JcaCipherGetInstance;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sonar.check.Rule;
 import org.sonar.java.checks.verifier.CheckVerifier;
@@ -51,7 +49,6 @@ class DetectionWithSubRuleTest extends TestBase {
         // nothing
     }
 
-    @Disabled("")
     @Test
     void test() {
         CheckVerifier.newVerifier()
@@ -62,15 +59,18 @@ class DetectionWithSubRuleTest extends TestBase {
 
     @Override
     public void update(@Nonnull Finding<JavaCheck, Tree, Symbol, JavaFileScannerContext> finding) {
-        final DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore =
-                finding.detectionStore();
-        (new DetectionStoreLogger<JavaCheck, Tree, Symbol, JavaFileScannerContext>())
-                .print(detectionStore);
-        detectionStore
-                .getDetectionValues()
-                .forEach(
-                        iValue -> {
-                            this.reportIssue(iValue.getLocation(), iValue.asString());
-                        });
+        reportStore(finding.detectionStore());
+    }
+
+    private void reportStore(
+            DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store) {
+        if (store == null) {
+            return;
+        }
+
+        store.getDetectionValues()
+                .forEach(value -> this.reportIssue(value.getLocation(), value.asString()));
+
+        store.getChildren().forEach(this::reportStore);
     }
 }
