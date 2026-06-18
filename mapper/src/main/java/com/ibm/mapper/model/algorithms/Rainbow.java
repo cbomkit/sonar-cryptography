@@ -49,4 +49,14 @@ public class Rainbow extends Algorithm implements Signature {
     public Rainbow(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private Rainbow(@Nonnull Rainbow rainbow) {
+        super(rainbow);
+    }
+
+    @Nonnull
+    @Override
+    protected Rainbow shallowCopy() {
+        return new Rainbow(this);
+    }
 }

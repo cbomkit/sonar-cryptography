@@ -84,4 +84,14 @@ public final class Twofish extends Algorithm implements BlockCipher, Authenticat
     public Twofish(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Twofish twofish) {
         super(twofish, asKind);
     }
+
+    private Twofish(@Nonnull Twofish twofish) {
+        super(twofish);
+    }
+
+    @Nonnull
+    @Override
+    protected Twofish shallowCopy() {
+        return new Twofish(this);
+    }
 }

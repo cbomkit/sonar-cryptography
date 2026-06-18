@@ -63,4 +63,14 @@ public final class GOST341194 extends Algorithm implements MessageDigest {
             @Nonnull final Class<? extends MessageDigest> asKind, @Nonnull GOST341194 gostr341194) {
         super(gostr341194, asKind);
     }
+
+    private GOST341194(@Nonnull GOST341194 gOST341194) {
+        super(gOST341194);
+    }
+
+    @Nonnull
+    @Override
+    protected GOST341194 shallowCopy() {
+        return new GOST341194(this);
+    }
 }

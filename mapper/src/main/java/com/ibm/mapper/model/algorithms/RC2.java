@@ -80,4 +80,14 @@ public final class RC2 extends Algorithm implements BlockCipher, KeyWrap {
     public RC2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RC2 rc2) {
         super(rc2, asKind);
     }
+
+    private RC2(@Nonnull RC2 rC2) {
+        super(rC2);
+    }
+
+    @Nonnull
+    @Override
+    protected RC2 shallowCopy() {
+        return new RC2(this);
+    }
 }

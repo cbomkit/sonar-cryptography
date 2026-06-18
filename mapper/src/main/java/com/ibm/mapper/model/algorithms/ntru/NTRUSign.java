@@ -30,4 +30,14 @@ public class NTRUSign extends Algorithm implements Signature {
     public NTRUSign(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private NTRUSign(@Nonnull NTRUSign nTRUSign) {
+        super(nTRUSign);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRUSign shallowCopy() {
+        return new NTRUSign(this);
+    }
 }

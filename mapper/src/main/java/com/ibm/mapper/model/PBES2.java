@@ -49,4 +49,14 @@ public class PBES2 extends Algorithm implements PasswordBasedEncryption {
         this(mac.getDetectionContext());
         this.put(mac);
     }
+
+    private PBES2(@Nonnull PBES2 pBES2) {
+        super(pBES2);
+    }
+
+    @Nonnull
+    @Override
+    protected PBES2 shallowCopy() {
+        return new PBES2(this);
+    }
 }

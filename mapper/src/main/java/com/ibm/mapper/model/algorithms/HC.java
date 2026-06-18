@@ -67,4 +67,14 @@ public final class HC extends Algorithm implements StreamCipher {
     public HC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull HC hc) {
         super(hc, asKind);
     }
+
+    private HC(@Nonnull HC hC) {
+        super(hC);
+    }
+
+    @Nonnull
+    @Override
+    protected HC shallowCopy() {
+        return new HC(this);
+    }
 }

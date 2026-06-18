@@ -61,4 +61,14 @@ public final class NTRUEncrypt extends Algorithm implements PublicKeyEncryption 
             @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull NTRUEncrypt ntruEncrypt) {
         super(ntruEncrypt, asKind);
     }
+
+    private NTRUEncrypt(@Nonnull NTRUEncrypt nTRUEncrypt) {
+        super(nTRUEncrypt);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRUEncrypt shallowCopy() {
+        return new NTRUEncrypt(this);
+    }
 }

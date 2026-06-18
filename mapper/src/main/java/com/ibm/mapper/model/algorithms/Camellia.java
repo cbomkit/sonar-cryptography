@@ -65,4 +65,14 @@ public final class Camellia extends Algorithm
     public Camellia(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Camellia camellia) {
         super(camellia, asKind);
     }
+
+    private Camellia(@Nonnull Camellia camellia) {
+        super(camellia);
+    }
+
+    @Nonnull
+    @Override
+    protected Camellia shallowCopy() {
+        return new Camellia(this);
+    }
 }

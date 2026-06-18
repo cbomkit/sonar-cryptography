@@ -59,4 +59,14 @@ public final class MD5 extends Algorithm implements MessageDigest {
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new DigestSize(128, detectionLocation));
     }
+
+    private MD5(@Nonnull MD5 mD5) {
+        super(mD5);
+    }
+
+    @Nonnull
+    @Override
+    protected MD5 shallowCopy() {
+        return new MD5(this);
+    }
 }

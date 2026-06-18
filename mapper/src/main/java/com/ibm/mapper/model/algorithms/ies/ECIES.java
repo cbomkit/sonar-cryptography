@@ -50,4 +50,14 @@ public class ECIES extends IES {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new DH(detectionLocation));
     }
+
+    private ECIES(@Nonnull ECIES eCIES) {
+        super(eCIES);
+    }
+
+    @Nonnull
+    @Override
+    protected ECIES shallowCopy() {
+        return new ECIES(this);
+    }
 }

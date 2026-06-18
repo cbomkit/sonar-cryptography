@@ -52,4 +52,14 @@ public final class Ed25519 extends EdDSA implements Signature {
         this.put(new SHA2(512, detectionLocation));
         this.put(new Oid("1.3.101.112", detectionLocation));
     }
+
+    private Ed25519(@Nonnull Ed25519 ed25519) {
+        super(ed25519);
+    }
+
+    @Nonnull
+    @Override
+    protected Ed25519 shallowCopy() {
+        return new Ed25519(this);
+    }
 }

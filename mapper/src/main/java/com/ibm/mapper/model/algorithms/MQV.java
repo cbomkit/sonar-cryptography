@@ -50,4 +50,14 @@ public final class MQV extends Algorithm implements KeyAgreement {
     public MQV(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
     }
+
+    private MQV(@Nonnull MQV mQV) {
+        super(mQV);
+    }
+
+    @Nonnull
+    @Override
+    protected MQV shallowCopy() {
+        return new MQV(this);
+    }
 }

@@ -72,4 +72,14 @@ public final class RIPEMD extends Algorithm implements MessageDigest {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private RIPEMD(@Nonnull RIPEMD rIPEMD) {
+        super(rIPEMD);
+    }
+
+    @Nonnull
+    @Override
+    protected RIPEMD shallowCopy() {
+        return new RIPEMD(this);
+    }
 }

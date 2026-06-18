@@ -95,4 +95,14 @@ public final class DESede extends Algorithm implements BlockCipher, KeyWrap, Mac
     public DESede(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DESede desEde) {
         super(desEde, asKind);
     }
+
+    private DESede(@Nonnull DESede dESede) {
+        super(dESede);
+    }
+
+    @Nonnull
+    @Override
+    protected DESede shallowCopy() {
+        return new DESede(this);
+    }
 }

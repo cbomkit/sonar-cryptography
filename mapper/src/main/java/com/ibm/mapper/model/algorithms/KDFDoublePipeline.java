@@ -55,4 +55,14 @@ public final class KDFDoublePipeline extends Algorithm implements KeyDerivationF
         this(mac.getDetectionContext());
         this.put(mac);
     }
+
+    private KDFDoublePipeline(@Nonnull KDFDoublePipeline kDFDoublePipeline) {
+        super(kDFDoublePipeline);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFDoublePipeline shallowCopy() {
+        return new KDFDoublePipeline(this);
+    }
 }

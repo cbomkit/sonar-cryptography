@@ -51,4 +51,14 @@ public final class AsconHash extends Ascon implements MessageDigest {
         this.put(new DigestSize(256, detectionLocation));
         this.put(BlockSize.ofDefault(64, detectionLocation));
     }
+
+    private AsconHash(@Nonnull AsconHash asconHash) {
+        super(asconHash);
+    }
+
+    @Nonnull
+    @Override
+    protected AsconHash shallowCopy() {
+        return new AsconHash(this);
+    }
 }

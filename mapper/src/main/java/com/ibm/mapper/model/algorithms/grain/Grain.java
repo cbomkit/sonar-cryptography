@@ -38,4 +38,14 @@ public class Grain extends Algorithm implements StreamCipher {
             @Nonnull DetectionLocation detectionLocation) {
         super(name, asKind, detectionLocation);
     }
+
+    protected Grain(@Nonnull Grain grain) {
+        super(grain);
+    }
+
+    @Nonnull
+    @Override
+    protected Grain shallowCopy() {
+        return new Grain(this);
+    }
 }

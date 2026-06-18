@@ -49,4 +49,14 @@ public final class ANSIX931 extends Algorithm implements Signature {
     public ANSIX931(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private ANSIX931(@Nonnull ANSIX931 aNSIX931) {
+        super(aNSIX931);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX931 shallowCopy() {
+        return new ANSIX931(this);
+    }
 }

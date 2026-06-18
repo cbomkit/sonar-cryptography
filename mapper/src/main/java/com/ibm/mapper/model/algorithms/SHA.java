@@ -46,4 +46,14 @@ public final class SHA extends Algorithm implements MessageDigest {
     public SHA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SHA sha) {
         super(sha, asKind);
     }
+
+    private SHA(@Nonnull SHA sHA) {
+        super(sHA);
+    }
+
+    @Nonnull
+    @Override
+    protected SHA shallowCopy() {
+        return new SHA(this);
+    }
 }

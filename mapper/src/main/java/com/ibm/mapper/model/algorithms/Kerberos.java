@@ -52,4 +52,14 @@ public final class Kerberos extends Algorithm implements KeyAgreement {
     public Kerberos(int version, @Nonnull DetectionLocation detectionLocation) {
         super(NAME + version, KeyAgreement.class, detectionLocation);
     }
+
+    private Kerberos(@Nonnull Kerberos kerberos) {
+        super(kerberos);
+    }
+
+    @Nonnull
+    @Override
+    protected Kerberos shallowCopy() {
+        return new Kerberos(this);
+    }
 }

@@ -49,4 +49,14 @@ public class CryptoPro extends Algorithm implements KeyWrap {
     public CryptoPro(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyWrap.class, detectionLocation);
     }
+
+    private CryptoPro(@Nonnull CryptoPro cryptoPro) {
+        super(cryptoPro);
+    }
+
+    @Nonnull
+    @Override
+    protected CryptoPro shallowCopy() {
+        return new CryptoPro(this);
+    }
 }

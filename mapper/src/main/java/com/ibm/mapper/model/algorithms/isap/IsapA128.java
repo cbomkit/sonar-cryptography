@@ -32,4 +32,14 @@ public class IsapA128 extends Isap {
         this.put(BlockSize.ofDefault(64, detectionLocation));
         this.put(new InitializationVectorLength(192, detectionLocation));
     }
+
+    private IsapA128(@Nonnull IsapA128 isapA128) {
+        super(isapA128);
+    }
+
+    @Nonnull
+    @Override
+    protected IsapA128 shallowCopy() {
+        return new IsapA128(this);
+    }
 }

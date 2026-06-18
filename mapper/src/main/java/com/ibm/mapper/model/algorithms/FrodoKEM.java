@@ -49,4 +49,14 @@ public final class FrodoKEM extends Algorithm implements KeyEncapsulationMechani
     public FrodoKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private FrodoKEM(@Nonnull FrodoKEM frodoKEM) {
+        super(frodoKEM);
+    }
+
+    @Nonnull
+    @Override
+    protected FrodoKEM shallowCopy() {
+        return new FrodoKEM(this);
+    }
 }

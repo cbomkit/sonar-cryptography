@@ -149,7 +149,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
             INode keyDerivationFunctionNode1 = nodes.get(1);
             assertThat(keyDerivationFunctionNode1.getKind()).isEqualTo(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode1.getChildren()).hasSize(2);
-            assertThat(keyDerivationFunctionNode1.asString()).isEqualTo("HKDF");
+            assertThat(keyDerivationFunctionNode1.asString()).isEqualTo("HKDF-SHA256");
 
             // KeyLength under KeyDerivationFunction
             INode keyLengthNode1 = keyDerivationFunctionNode1.getChildren().get(KeyLength.class);
@@ -161,7 +161,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
             INode messageDigestNode1 =
                     keyDerivationFunctionNode1.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
-            assertThat(messageDigestNode1.getChildren()).hasSize(2);
+            assertThat(messageDigestNode1.getChildren()).hasSize(4);
             assertThat(messageDigestNode1.asString()).isEqualTo("SHA256");
 
             // Digest under MessageDigest under KeyDerivationFunction
@@ -170,11 +170,23 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(digestNode1.getChildren()).isEmpty();
             assertThat(digestNode1.asString()).isEqualTo("DIGEST");
 
+            // Oid under MessageDigest under KeyDerivationFunction
+            INode oidNode1 = messageDigestNode1.getChildren().get(Oid.class);
+            assertThat(oidNode1).isNotNull();
+            assertThat(oidNode1.getChildren()).isEmpty();
+            assertThat(oidNode1.asString()).isEqualTo("2.16.840.1.101.3.4.2.1");
+
             // DigestSize under MessageDigest under KeyDerivationFunction
             INode digestSizeNode1 = messageDigestNode1.getChildren().get(DigestSize.class);
             assertThat(digestSizeNode1).isNotNull();
             assertThat(digestSizeNode1.getChildren()).isEmpty();
             assertThat(digestSizeNode1.asString()).isEqualTo("256");
+
+            // BlockSize under MessageDigest under KeyDerivationFunction
+            INode blockSizeNode1 = messageDigestNode1.getChildren().get(BlockSize.class);
+            assertThat(blockSizeNode1).isNotNull();
+            assertThat(blockSizeNode1.getChildren()).isEmpty();
+            assertThat(blockSizeNode1.asString()).isEqualTo("512");
         }
     }
 }

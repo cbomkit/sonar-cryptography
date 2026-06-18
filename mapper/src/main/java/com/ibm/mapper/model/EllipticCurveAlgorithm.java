@@ -41,4 +41,14 @@ public class EllipticCurveAlgorithm extends Algorithm
             @Nonnull EllipticCurveAlgorithm ellipticCurveAlgorithm) {
         super(ellipticCurveAlgorithm, asKind);
     }
+
+    private EllipticCurveAlgorithm(@Nonnull EllipticCurveAlgorithm ellipticCurveAlgorithm) {
+        super(ellipticCurveAlgorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected EllipticCurveAlgorithm shallowCopy() {
+        return new EllipticCurveAlgorithm(this);
+    }
 }

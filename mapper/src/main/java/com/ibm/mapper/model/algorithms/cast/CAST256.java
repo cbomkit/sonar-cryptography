@@ -85,4 +85,14 @@ public final class CAST256 extends Algorithm implements BlockCipher {
     public CAST256(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CAST256 cast256) {
         super(cast256, asKind);
     }
+
+    private CAST256(@Nonnull CAST256 cAST256) {
+        super(cAST256);
+    }
+
+    @Nonnull
+    @Override
+    protected CAST256 shallowCopy() {
+        return new CAST256(this);
+    }
 }

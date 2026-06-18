@@ -33,4 +33,14 @@ public class Grainv1 extends Grain {
         this.put(KeyLength.ofDefault(80, detectionLocation));
         this.put(new InitializationVectorLength(64, detectionLocation));
     }
+
+    private Grainv1(@Nonnull Grainv1 grainv1) {
+        super(grainv1);
+    }
+
+    @Nonnull
+    @Override
+    protected Grainv1 shallowCopy() {
+        return new Grainv1(this);
+    }
 }

@@ -57,4 +57,14 @@ public class PhotonBeetleHash extends Algorithm implements MessageDigest {
         this(detectionLocation);
         this.put(new BlockSize(blockSize, detectionLocation));
     }
+
+    private PhotonBeetleHash(@Nonnull PhotonBeetleHash photonBeetleHash) {
+        super(photonBeetleHash);
+    }
+
+    @Nonnull
+    @Override
+    protected PhotonBeetleHash shallowCopy() {
+        return new PhotonBeetleHash(this);
+    }
 }

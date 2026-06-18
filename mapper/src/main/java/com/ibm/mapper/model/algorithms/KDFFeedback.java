@@ -55,4 +55,14 @@ public final class KDFFeedback extends Algorithm implements KeyDerivationFunctio
         this(mac.getDetectionContext());
         this.put(mac);
     }
+
+    private KDFFeedback(@Nonnull KDFFeedback kDFFeedback) {
+        super(kDFFeedback);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFFeedback shallowCopy() {
+        return new KDFFeedback(this);
+    }
 }

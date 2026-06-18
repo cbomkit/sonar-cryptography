@@ -73,4 +73,14 @@ public final class MLKEM extends Algorithm implements KeyEncapsulationMechanism 
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
     }
+
+    private MLKEM(@Nonnull MLKEM mLKEM) {
+        super(mLKEM);
+    }
+
+    @Nonnull
+    @Override
+    protected MLKEM shallowCopy() {
+        return new MLKEM(this);
+    }
 }

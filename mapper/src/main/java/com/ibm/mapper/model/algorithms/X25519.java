@@ -52,4 +52,14 @@ public final class X25519 extends Algorithm implements KeyAgreement {
         this.put(new Curve25519(detectionLocation));
         this.put(new Oid("1.3.101.110", detectionLocation));
     }
+
+    private X25519(@Nonnull X25519 x25519) {
+        super(x25519);
+    }
+
+    @Nonnull
+    @Override
+    protected X25519 shallowCopy() {
+        return new X25519(this);
+    }
 }

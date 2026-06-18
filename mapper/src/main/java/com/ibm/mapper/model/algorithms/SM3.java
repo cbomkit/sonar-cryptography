@@ -55,4 +55,14 @@ public final class SM3 extends Algorithm implements MessageDigest {
     public SM3(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SM3 sm3) {
         super(sm3, asKind);
     }
+
+    private SM3(@Nonnull SM3 sM3) {
+        super(sM3);
+    }
+
+    @Nonnull
+    @Override
+    protected SM3 shallowCopy() {
+        return new SM3(this);
+    }
 }

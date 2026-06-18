@@ -62,4 +62,14 @@ public class SPHINCSPlus extends Algorithm implements Signature {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private SPHINCSPlus(@Nonnull SPHINCSPlus sPHINCSPlus) {
+        super(sPHINCSPlus);
+    }
+
+    @Nonnull
+    @Override
+    protected SPHINCSPlus shallowCopy() {
+        return new SPHINCSPlus(this);
+    }
 }

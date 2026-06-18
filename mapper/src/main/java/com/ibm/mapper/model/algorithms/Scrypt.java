@@ -48,4 +48,14 @@ public final class Scrypt extends Algorithm implements PasswordBasedKeyDerivatio
     public Scrypt(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
     }
+
+    private Scrypt(@Nonnull Scrypt scrypt) {
+        super(scrypt);
+    }
+
+    @Nonnull
+    @Override
+    protected Scrypt shallowCopy() {
+        return new Scrypt(this);
+    }
 }

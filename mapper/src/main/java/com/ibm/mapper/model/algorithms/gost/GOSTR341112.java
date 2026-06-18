@@ -63,4 +63,14 @@ public final class GOSTR341112 extends Algorithm implements MessageDigest {
             @Nonnull GOSTR341112 gostr341112) {
         super(gostr341112, asKind);
     }
+
+    private GOSTR341112(@Nonnull GOSTR341112 gOSTR341112) {
+        super(gOSTR341112);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR341112 shallowCopy() {
+        return new GOSTR341112(this);
+    }
 }

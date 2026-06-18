@@ -55,4 +55,14 @@ public final class ParallelHash extends Algorithm implements ExtendableOutputFun
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private ParallelHash(@Nonnull ParallelHash parallelHash) {
+        super(parallelHash);
+    }
+
+    @Nonnull
+    @Override
+    protected ParallelHash shallowCopy() {
+        return new ParallelHash(this);
+    }
 }

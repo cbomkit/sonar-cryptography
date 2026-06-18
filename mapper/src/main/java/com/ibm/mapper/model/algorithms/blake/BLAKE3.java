@@ -62,4 +62,14 @@ public final class BLAKE3 extends Algorithm implements MessageDigest, KeyDerivat
     public BLAKE3(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull BLAKE3 blake) {
         super(blake, asKind);
     }
+
+    private BLAKE3(@Nonnull BLAKE3 bLAKE3) {
+        super(bLAKE3);
+    }
+
+    @Nonnull
+    @Override
+    protected BLAKE3 shallowCopy() {
+        return new BLAKE3(this);
+    }
 }

@@ -81,4 +81,14 @@ public final class Esch extends Algorithm implements MessageDigest {
             this.put(new ClassicalBitSecurityLevel(192, detectionLocation));
         }
     }
+
+    private Esch(@Nonnull Esch esch) {
+        super(esch);
+    }
+
+    @Nonnull
+    @Override
+    protected Esch shallowCopy() {
+        return new Esch(this);
+    }
 }

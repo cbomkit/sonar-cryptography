@@ -50,4 +50,14 @@ public class Dumbo extends Elephant {
         this.put(BlockSize.ofDefault(160, detectionLocation));
         this.put(new TagLength(64, detectionLocation));
     }
+
+    private Dumbo(@Nonnull Dumbo dumbo) {
+        super(dumbo);
+    }
+
+    @Nonnull
+    @Override
+    protected Dumbo shallowCopy() {
+        return new Dumbo(this);
+    }
 }

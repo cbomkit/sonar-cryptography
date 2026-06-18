@@ -83,4 +83,14 @@ public final class RC6 extends Algorithm implements BlockCipher, AuthenticatedEn
     public RC6(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RC6 rc6) {
         super(rc6, asKind);
     }
+
+    private RC6(@Nonnull RC6 rC6) {
+        super(rC6);
+    }
+
+    @Nonnull
+    @Override
+    protected RC6 shallowCopy() {
+        return new RC6(this);
+    }
 }

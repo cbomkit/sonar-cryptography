@@ -64,4 +64,14 @@ public class SPHINCS extends Algorithm implements Signature {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
     }
+
+    private SPHINCS(@Nonnull SPHINCS sPHINCS) {
+        super(sPHINCS);
+    }
+
+    @Nonnull
+    @Override
+    protected SPHINCS shallowCopy() {
+        return new SPHINCS(this);
+    }
 }

@@ -55,4 +55,14 @@ public final class ANSIX963 extends Algorithm implements KeyDerivationFunction {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private ANSIX963(@Nonnull ANSIX963 aNSIX963) {
+        super(aNSIX963);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX963 shallowCopy() {
+        return new ANSIX963(this);
+    }
 }

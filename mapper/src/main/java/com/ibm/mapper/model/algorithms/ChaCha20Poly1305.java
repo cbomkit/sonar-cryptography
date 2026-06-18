@@ -35,4 +35,14 @@ public final class ChaCha20Poly1305 extends Algorithm implements AuthenticatedEn
         super(new ChaCha20(detectionLocation), AuthenticatedEncryption.class);
         this.put(new Poly1305(detectionLocation));
     }
+
+    private ChaCha20Poly1305(@Nonnull ChaCha20Poly1305 chaCha20Poly1305) {
+        super(chaCha20Poly1305);
+    }
+
+    @Nonnull
+    @Override
+    protected ChaCha20Poly1305 shallowCopy() {
+        return new ChaCha20Poly1305(this);
+    }
 }

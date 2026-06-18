@@ -52,4 +52,14 @@ public final class X448 extends Algorithm implements KeyAgreement {
         this.put(new Curve448(detectionLocation));
         this.put(new Oid("1.3.101.111", detectionLocation));
     }
+
+    private X448(@Nonnull X448 x448) {
+        super(x448);
+    }
+
+    @Nonnull
+    @Override
+    protected X448 shallowCopy() {
+        return new X448(this);
+    }
 }

@@ -56,4 +56,14 @@ public final class KDFSession extends Algorithm implements KeyDerivationFunction
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private KDFSession(@Nonnull KDFSession kDFSession) {
+        super(kDFSession);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFSession shallowCopy() {
+        return new KDFSession(this);
+    }
 }

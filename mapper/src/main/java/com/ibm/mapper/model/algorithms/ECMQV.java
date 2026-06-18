@@ -57,4 +57,14 @@ public final class ECMQV extends Algorithm implements KeyAgreement {
         this(detectionLocation);
         this.put(ellipticCurve);
     }
+
+    private ECMQV(@Nonnull ECMQV eCMQV) {
+        super(eCMQV);
+    }
+
+    @Nonnull
+    @Override
+    protected ECMQV shallowCopy() {
+        return new ECMQV(this);
+    }
 }

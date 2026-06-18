@@ -47,4 +47,14 @@ public class PKCS12PBE extends Algorithm implements PasswordBasedEncryption {
         this(mac.getDetectionContext());
         this.put(mac);
     }
+
+    private PKCS12PBE(@Nonnull PKCS12PBE pKCS12PBE) {
+        super(pKCS12PBE);
+    }
+
+    @Nonnull
+    @Override
+    protected PKCS12PBE shallowCopy() {
+        return new PKCS12PBE(this);
+    }
 }

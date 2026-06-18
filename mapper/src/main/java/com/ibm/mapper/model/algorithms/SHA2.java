@@ -78,4 +78,14 @@ public final class SHA2 extends Algorithm implements MessageDigest {
                 .map(size -> NAME + size.asString() + "/" + digestSize)
                 .orElse(NAME + digestSize);
     }
+
+    private SHA2(@Nonnull SHA2 sHA2) {
+        super(sHA2);
+    }
+
+    @Nonnull
+    @Override
+    protected SHA2 shallowCopy() {
+        return new SHA2(this);
+    }
 }

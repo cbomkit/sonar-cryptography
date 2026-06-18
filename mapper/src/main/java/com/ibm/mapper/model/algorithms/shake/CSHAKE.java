@@ -76,4 +76,14 @@ public final class CSHAKE extends Algorithm implements ExtendableOutputFunction 
     public CSHAKE(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CSHAKE cSHAKE) {
         super(cSHAKE, asKind);
     }
+
+    private CSHAKE(@Nonnull CSHAKE cSHAKE) {
+        super(cSHAKE);
+    }
+
+    @Nonnull
+    @Override
+    protected CSHAKE shallowCopy() {
+        return new CSHAKE(this);
+    }
 }

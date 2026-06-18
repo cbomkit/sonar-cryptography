@@ -48,4 +48,14 @@ public final class DSTU4145 extends Algorithm implements Signature {
     public DSTU4145(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private DSTU4145(@Nonnull DSTU4145 dSTU4145) {
+        super(dSTU4145);
+    }
+
+    @Nonnull
+    @Override
+    protected DSTU4145 shallowCopy() {
+        return new DSTU4145(this);
+    }
 }

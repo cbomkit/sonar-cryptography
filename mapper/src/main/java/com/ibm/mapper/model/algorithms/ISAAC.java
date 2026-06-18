@@ -55,4 +55,14 @@ public final class ISAAC extends Algorithm implements StreamCipher, Pseudorandom
     public ISAAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ISAAC isaac) {
         super(isaac, asKind);
     }
+
+    private ISAAC(@Nonnull ISAAC iSAAC) {
+        super(iSAAC);
+    }
+
+    @Nonnull
+    @Override
+    protected ISAAC shallowCopy() {
+        return new ISAAC(this);
+    }
 }

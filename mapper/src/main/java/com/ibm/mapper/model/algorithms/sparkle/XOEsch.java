@@ -52,4 +52,14 @@ public final class XOEsch extends Algorithm implements MessageDigest {
         super(NAME, MessageDigest.class, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));
     }
+
+    private XOEsch(@Nonnull XOEsch xOEsch) {
+        super(xOEsch);
+    }
+
+    @Nonnull
+    @Override
+    protected XOEsch shallowCopy() {
+        return new XOEsch(this);
+    }
 }

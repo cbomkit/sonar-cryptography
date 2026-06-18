@@ -60,4 +60,14 @@ public final class Tiger extends Algorithm implements MessageDigest {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private Tiger(@Nonnull Tiger tiger) {
+        super(tiger);
+    }
+
+    @Nonnull
+    @Override
+    protected Tiger shallowCopy() {
+        return new Tiger(this);
+    }
 }

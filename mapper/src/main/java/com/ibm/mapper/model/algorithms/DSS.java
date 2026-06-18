@@ -35,4 +35,14 @@ public final class DSS extends DSA {
     public DSS(@Nonnull DetectionLocation detectionLocation) {
         super(detectionLocation);
     }
+
+    private DSS(@Nonnull DSS dSS) {
+        super(dSS);
+    }
+
+    @Nonnull
+    @Override
+    protected DSS shallowCopy() {
+        return new DSS(this);
+    }
 }

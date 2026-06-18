@@ -55,4 +55,14 @@ public final class BLAKE extends Algorithm implements MessageDigest {
     public BLAKE(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull BLAKE blake) {
         super(blake, asKind);
     }
+
+    private BLAKE(@Nonnull BLAKE bLAKE) {
+        super(bLAKE);
+    }
+
+    @Nonnull
+    @Override
+    protected BLAKE shallowCopy() {
+        return new BLAKE(this);
+    }
 }

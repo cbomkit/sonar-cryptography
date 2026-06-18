@@ -81,4 +81,14 @@ public final class LEA extends Algorithm implements BlockCipher {
     public LEA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull LEA lea) {
         super(lea, asKind);
     }
+
+    private LEA(@Nonnull LEA lEA) {
+        super(lEA);
+    }
+
+    @Nonnull
+    @Override
+    protected LEA shallowCopy() {
+        return new LEA(this);
+    }
 }

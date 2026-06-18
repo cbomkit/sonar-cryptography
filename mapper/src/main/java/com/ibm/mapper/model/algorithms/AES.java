@@ -106,4 +106,14 @@ public final class AES extends Algorithm
         super(NAME, asKind, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));
     }
+
+    private AES(@Nonnull AES aES) {
+        super(aES);
+    }
+
+    @Nonnull
+    @Override
+    protected AES shallowCopy() {
+        return new AES(this);
+    }
 }

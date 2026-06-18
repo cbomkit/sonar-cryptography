@@ -64,4 +64,14 @@ public class Isap extends Algorithm implements AuthenticatedEncryption {
         this.put(new NonceLength(128, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
     }
+
+    protected Isap(@Nonnull Isap isap) {
+        super(isap);
+    }
+
+    @Nonnull
+    @Override
+    protected Isap shallowCopy() {
+        return new Isap(this);
+    }
 }

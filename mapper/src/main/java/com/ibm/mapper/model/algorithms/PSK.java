@@ -48,4 +48,14 @@ public final class PSK extends Algorithm implements KeyAgreement {
     public PSK(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
     }
+
+    private PSK(@Nonnull PSK pSK) {
+        super(pSK);
+    }
+
+    @Nonnull
+    @Override
+    protected PSK shallowCopy() {
+        return new PSK(this);
+    }
 }

@@ -63,4 +63,14 @@ public class Picnic extends Algorithm implements Signature {
         this(detectionLocation);
         this.put(new ParameterSetIdentifier(parameterSetIdentifier, detectionLocation));
     }
+
+    private Picnic(@Nonnull Picnic picnic) {
+        super(picnic);
+    }
+
+    @Nonnull
+    @Override
+    protected Picnic shallowCopy() {
+        return new Picnic(this);
+    }
 }

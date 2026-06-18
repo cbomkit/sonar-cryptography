@@ -63,4 +63,14 @@ public final class CMAC extends Algorithm implements Mac {
                 .map(node -> ((IAlgorithm) node).getName() + "-" + this.name)
                 .orElse(this.name);
     }
+
+    private CMAC(@Nonnull CMAC cMAC) {
+        super(cMAC);
+    }
+
+    @Nonnull
+    @Override
+    protected CMAC shallowCopy() {
+        return new CMAC(this);
+    }
 }

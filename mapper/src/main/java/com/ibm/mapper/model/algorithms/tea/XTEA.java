@@ -76,4 +76,14 @@ public final class XTEA extends Algorithm implements BlockCipher {
     public XTEA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull XTEA xtea) {
         super(xtea, asKind);
     }
+
+    private XTEA(@Nonnull XTEA xTEA) {
+        super(xTEA);
+    }
+
+    @Nonnull
+    @Override
+    protected XTEA shallowCopy() {
+        return new XTEA(this);
+    }
 }

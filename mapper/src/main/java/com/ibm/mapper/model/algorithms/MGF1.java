@@ -37,4 +37,14 @@ public final class MGF1 extends Algorithm implements MaskGenerationFunction {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private MGF1(@Nonnull MGF1 mGF1) {
+        super(mGF1);
+    }
+
+    @Nonnull
+    @Override
+    protected MGF1 shallowCopy() {
+        return new MGF1(this);
+    }
 }

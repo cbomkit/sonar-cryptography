@@ -69,4 +69,14 @@ public final class HQC extends Algorithm implements KeyEncapsulationMechanism, P
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private HQC(@Nonnull HQC hQC) {
+        super(hQC);
+    }
+
+    @Nonnull
+    @Override
+    protected HQC shallowCopy() {
+        return new HQC(this);
+    }
 }

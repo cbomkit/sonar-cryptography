@@ -49,4 +49,14 @@ public class StreamlinedNTRUPrime extends Algorithm implements KeyEncapsulationM
     public StreamlinedNTRUPrime(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private StreamlinedNTRUPrime(@Nonnull StreamlinedNTRUPrime streamlinedNTRUPrime) {
+        super(streamlinedNTRUPrime);
+    }
+
+    @Nonnull
+    @Override
+    protected StreamlinedNTRUPrime shallowCopy() {
+        return new StreamlinedNTRUPrime(this);
+    }
 }

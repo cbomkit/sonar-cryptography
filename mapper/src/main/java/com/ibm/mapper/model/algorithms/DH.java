@@ -71,4 +71,14 @@ public final class DH extends Algorithm implements Signature, KeyAgreement, Publ
         super(NAME, asKind, detectionLocation);
         this.put(new Oid("1.2.840.113549.1.3.1", detectionLocation));
     }
+
+    private DH(@Nonnull DH dH) {
+        super(dH);
+    }
+
+    @Nonnull
+    @Override
+    protected DH shallowCopy() {
+        return new DH(this);
+    }
 }

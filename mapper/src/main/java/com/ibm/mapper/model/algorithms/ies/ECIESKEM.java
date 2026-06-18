@@ -50,4 +50,14 @@ public class ECIESKEM extends Algorithm implements KeyEncapsulationMechanism {
     public ECIESKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private ECIESKEM(@Nonnull ECIESKEM eCIESKEM) {
+        super(eCIESKEM);
+    }
+
+    @Nonnull
+    @Override
+    protected ECIESKEM shallowCopy() {
+        return new ECIESKEM(this);
+    }
 }

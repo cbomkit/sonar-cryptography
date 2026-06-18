@@ -62,4 +62,14 @@ public final class Fernet extends Algorithm implements AuthenticatedEncryption {
     public Fernet(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Fernet fernet) {
         super(fernet, asKind);
     }
+
+    private Fernet(@Nonnull Fernet fernet) {
+        super(fernet);
+    }
+
+    @Nonnull
+    @Override
+    protected Fernet shallowCopy() {
+        return new Fernet(this);
+    }
 }

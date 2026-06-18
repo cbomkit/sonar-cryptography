@@ -58,4 +58,14 @@ public final class KDF2 extends Algorithm implements KeyDerivationFunction {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private KDF2(@Nonnull KDF2 kDF2) {
+        super(kDF2);
+    }
+
+    @Nonnull
+    @Override
+    protected KDF2 shallowCopy() {
+        return new KDF2(this);
+    }
 }

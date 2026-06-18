@@ -62,4 +62,14 @@ public final class ElGamal extends Algorithm implements PublicKeyEncryption, Sig
     public ElGamal(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ElGamal elGamal) {
         super(elGamal, asKind);
     }
+
+    private ElGamal(@Nonnull ElGamal elGamal) {
+        super(elGamal);
+    }
+
+    @Nonnull
+    @Override
+    protected ElGamal shallowCopy() {
+        return new ElGamal(this);
+    }
 }

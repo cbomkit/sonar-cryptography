@@ -49,4 +49,14 @@ public final class BIKE extends Algorithm implements KeyEncapsulationMechanism {
     public BIKE(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private BIKE(@Nonnull BIKE bIKE) {
+        super(bIKE);
+    }
+
+    @Nonnull
+    @Override
+    protected BIKE shallowCopy() {
+        return new BIKE(this);
+    }
 }

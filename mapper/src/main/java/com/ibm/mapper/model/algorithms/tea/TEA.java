@@ -75,4 +75,14 @@ public final class TEA extends Algorithm implements BlockCipher {
     public TEA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull TEA tea) {
         super(tea, asKind);
     }
+
+    private TEA(@Nonnull TEA tEA) {
+        super(tEA);
+    }
+
+    @Nonnull
+    @Override
+    protected TEA shallowCopy() {
+        return new TEA(this);
+    }
 }

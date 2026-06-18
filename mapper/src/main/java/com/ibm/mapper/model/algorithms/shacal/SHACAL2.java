@@ -83,4 +83,14 @@ public final class SHACAL2 extends Algorithm implements BlockCipher, Authenticat
     public SHACAL2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SHACAL2 shacal2) {
         super(shacal2, asKind);
     }
+
+    private SHACAL2(@Nonnull SHACAL2 sHACAL2) {
+        super(sHACAL2);
+    }
+
+    @Nonnull
+    @Override
+    protected SHACAL2 shallowCopy() {
+        return new SHACAL2(this);
+    }
 }

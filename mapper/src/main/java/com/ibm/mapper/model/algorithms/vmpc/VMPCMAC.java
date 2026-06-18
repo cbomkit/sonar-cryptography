@@ -50,4 +50,14 @@ public final class VMPCMAC extends Algorithm implements Mac {
         super(NAME, Mac.class, detectionLocation);
         this.put(new VMPC(detectionLocation));
     }
+
+    private VMPCMAC(@Nonnull VMPCMAC vMPCMAC) {
+        super(vMPCMAC);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPCMAC shallowCopy() {
+        return new VMPCMAC(this);
+    }
 }

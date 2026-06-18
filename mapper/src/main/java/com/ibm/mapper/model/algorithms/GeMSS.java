@@ -65,4 +65,14 @@ public class GeMSS extends Algorithm implements Signature {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
     }
+
+    private GeMSS(@Nonnull GeMSS geMSS) {
+        super(geMSS);
+    }
+
+    @Nonnull
+    @Override
+    protected GeMSS shallowCopy() {
+        return new GeMSS(this);
+    }
 }

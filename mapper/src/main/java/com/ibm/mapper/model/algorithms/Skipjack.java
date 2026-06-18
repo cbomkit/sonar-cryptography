@@ -74,4 +74,14 @@ public final class Skipjack extends Algorithm implements BlockCipher {
     public Skipjack(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Skipjack skipjack) {
         super(skipjack, asKind);
     }
+
+    private Skipjack(@Nonnull Skipjack skipjack) {
+        super(skipjack);
+    }
+
+    @Nonnull
+    @Override
+    protected Skipjack shallowCopy() {
+        return new Skipjack(this);
+    }
 }

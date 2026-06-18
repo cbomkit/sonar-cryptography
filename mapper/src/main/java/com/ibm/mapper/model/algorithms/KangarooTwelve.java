@@ -58,4 +58,14 @@ public final class KangarooTwelve extends Algorithm implements ExtendableOutputF
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private KangarooTwelve(@Nonnull KangarooTwelve kangarooTwelve) {
+        super(kangarooTwelve);
+    }
+
+    @Nonnull
+    @Override
+    protected KangarooTwelve shallowCopy() {
+        return new KangarooTwelve(this);
+    }
 }

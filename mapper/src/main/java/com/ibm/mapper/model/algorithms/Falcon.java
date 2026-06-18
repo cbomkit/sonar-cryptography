@@ -64,4 +64,14 @@ public class Falcon extends Algorithm implements Signature {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
     }
+
+    private Falcon(@Nonnull Falcon falcon) {
+        super(falcon);
+    }
+
+    @Nonnull
+    @Override
+    protected Falcon shallowCopy() {
+        return new Falcon(this);
+    }
 }

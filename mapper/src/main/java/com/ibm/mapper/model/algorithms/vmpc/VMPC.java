@@ -50,4 +50,14 @@ public class VMPC extends Algorithm implements StreamCipher {
     public VMPC(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, StreamCipher.class, detectionLocation);
     }
+
+    private VMPC(@Nonnull VMPC vMPC) {
+        super(vMPC);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPC shallowCopy() {
+        return new VMPC(this);
+    }
 }

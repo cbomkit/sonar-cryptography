@@ -49,4 +49,14 @@ public final class SABER extends Algorithm implements KeyEncapsulationMechanism 
     public SABER(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private SABER(@Nonnull SABER sABER) {
+        super(sABER);
+    }
+
+    @Nonnull
+    @Override
+    protected SABER shallowCopy() {
+        return new SABER(this);
+    }
 }

@@ -36,7 +36,10 @@ public class Algorithm implements IAlgorithm {
     public Algorithm(
             @Nonnull IAlgorithm algorithm, @Nonnull final Class<? extends IPrimitive> asKind) {
         this.name = algorithm.getName();
-        this.children = algorithm.getChildren();
+        // The children map is defensively copied so callers, such as asKind reorganization,
+        // cannot mutate the source. Child INode instances remain shared; use deepCopy()
+        // for full isolation.
+        this.children = new HashMap<>(algorithm.getChildren());
         this.detectionLocation = algorithm.getDetectionContext();
         this.kind = asKind;
         this.origin = algorithm.getOrigin();
@@ -61,7 +64,7 @@ public class Algorithm implements IAlgorithm {
         this.origin = origin;
     }
 
-    private Algorithm(@Nonnull Algorithm algorithm) {
+    protected Algorithm(@Nonnull Algorithm algorithm) {
         this.children = new HashMap<>();
         this.kind = algorithm.kind;
         this.detectionLocation = algorithm.detectionLocation;
@@ -125,11 +128,24 @@ public class Algorithm implements IAlgorithm {
     @Nonnull
     @Override
     public INode deepCopy() {
-        Algorithm copy = new Algorithm(this);
+        Algorithm copy = this.shallowCopy();
         for (INode child : this.children.values()) {
             copy.children.put(child.getKind(), child.deepCopy());
         }
         return copy;
+    }
+
+    /**
+     * Creates a copy of this algorithm's metadata without copying children.
+     *
+     * <p>Subclasses must override this method to return their concrete type. Otherwise {@link
+     * #deepCopy()} will lose subtype identity by falling back to {@code Algorithm}.
+     *
+     * <p>Children are copied recursively by {@link #deepCopy()}.
+     */
+    @Nonnull
+    protected Algorithm shallowCopy() {
+        return new Algorithm(this);
     }
 
     public boolean is(@Nonnull final Class<? extends INode> type) {

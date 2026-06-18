@@ -48,4 +48,14 @@ public final class ECCPWD extends Algorithm implements KeyAgreement {
     public ECCPWD(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
     }
+
+    private ECCPWD(@Nonnull ECCPWD eCCPWD) {
+        super(eCCPWD);
+    }
+
+    @Nonnull
+    @Override
+    protected ECCPWD shallowCopy() {
+        return new ECCPWD(this);
+    }
 }

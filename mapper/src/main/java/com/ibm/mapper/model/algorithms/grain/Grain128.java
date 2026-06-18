@@ -33,4 +33,14 @@ public class Grain128 extends Grain {
         this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new InitializationVectorLength(96, detectionLocation));
     }
+
+    private Grain128(@Nonnull Grain128 grain128) {
+        super(grain128);
+    }
+
+    @Nonnull
+    @Override
+    protected Grain128 shallowCopy() {
+        return new Grain128(this);
+    }
 }

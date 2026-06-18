@@ -55,4 +55,14 @@ public final class TupleHash extends Algorithm implements ExtendableOutputFuncti
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private TupleHash(@Nonnull TupleHash tupleHash) {
+        super(tupleHash);
+    }
+
+    @Nonnull
+    @Override
+    protected TupleHash shallowCopy() {
+        return new TupleHash(this);
+    }
 }

@@ -50,4 +50,14 @@ public class HSS extends Algorithm implements Signature {
     public HSS(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private HSS(@Nonnull HSS hSS) {
+        super(hSS);
+    }
+
+    @Nonnull
+    @Override
+    protected HSS shallowCopy() {
+        return new HSS(this);
+    }
 }

@@ -79,4 +79,14 @@ public final class ChaCha20 extends Algorithm implements StreamCipher {
     public ChaCha20(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ChaCha20 chaCha20) {
         super(chaCha20, asKind);
     }
+
+    private ChaCha20(@Nonnull ChaCha20 chaCha20) {
+        super(chaCha20);
+    }
+
+    @Nonnull
+    @Override
+    protected ChaCha20 shallowCopy() {
+        return new ChaCha20(this);
+    }
 }

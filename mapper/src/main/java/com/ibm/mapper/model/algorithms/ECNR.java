@@ -58,4 +58,14 @@ public final class ECNR extends Algorithm implements Signature {
         this(detectionLocation);
         this.put(ellipticCurve);
     }
+
+    private ECNR(@Nonnull ECNR eCNR) {
+        super(eCNR);
+    }
+
+    @Nonnull
+    @Override
+    protected ECNR shallowCopy() {
+        return new ECNR(this);
+    }
 }

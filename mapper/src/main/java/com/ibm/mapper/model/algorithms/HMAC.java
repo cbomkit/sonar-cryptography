@@ -62,4 +62,14 @@ public final class HMAC extends Algorithm implements Mac {
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
     }
+
+    private HMAC(@Nonnull HMAC hMAC) {
+        super(hMAC);
+    }
+
+    @Nonnull
+    @Override
+    protected HMAC shallowCopy() {
+        return new HMAC(this);
+    }
 }

@@ -61,4 +61,14 @@ public final class SM4 extends Algorithm implements BlockCipher, AuthenticatedEn
     public SM4(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SM4 sm4) {
         super(sm4, asKind);
     }
+
+    private SM4(@Nonnull SM4 sM4) {
+        super(sM4);
+    }
+
+    @Nonnull
+    @Override
+    protected SM4 shallowCopy() {
+        return new SM4(this);
+    }
 }

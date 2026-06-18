@@ -50,4 +50,14 @@ public class NTRU extends Algorithm implements KeyEncapsulationMechanism {
     public NTRU(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private NTRU(@Nonnull NTRU nTRU) {
+        super(nTRU);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRU shallowCopy() {
+        return new NTRU(this);
+    }
 }

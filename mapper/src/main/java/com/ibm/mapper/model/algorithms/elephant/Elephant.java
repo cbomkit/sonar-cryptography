@@ -57,4 +57,14 @@ public class Elephant extends Algorithm implements AuthenticatedEncryption {
         this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new NonceLength(96, detectionLocation));
     }
+
+    protected Elephant(@Nonnull Elephant elephant) {
+        super(elephant);
+    }
+
+    @Nonnull
+    @Override
+    protected Elephant shallowCopy() {
+        return new Elephant(this);
+    }
 }

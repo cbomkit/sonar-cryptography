@@ -96,4 +96,14 @@ public final class TripleDES extends Algorithm implements BlockCipher {
             @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull TripleDES tripleDES) {
         super(tripleDES, asKind);
     }
+
+    private TripleDES(@Nonnull TripleDES tripleDES) {
+        super(tripleDES);
+    }
+
+    @Nonnull
+    @Override
+    protected TripleDES shallowCopy() {
+        return new TripleDES(this);
+    }
 }

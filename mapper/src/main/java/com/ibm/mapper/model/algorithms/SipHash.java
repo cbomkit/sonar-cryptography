@@ -57,4 +57,14 @@ public final class SipHash extends Algorithm implements Mac {
     public SipHash(@Nonnull DetectionLocation detectionLocation) {
         this(64, detectionLocation);
     }
+
+    private SipHash(@Nonnull SipHash sipHash) {
+        super(sipHash);
+    }
+
+    @Nonnull
+    @Override
+    protected SipHash shallowCopy() {
+        return new SipHash(this);
+    }
 }

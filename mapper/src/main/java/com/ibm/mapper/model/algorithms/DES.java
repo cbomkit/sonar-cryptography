@@ -106,4 +106,14 @@ public final class DES extends Algorithm implements BlockCipher, Mac {
     public DES(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DES des) {
         super(des, asKind);
     }
+
+    private DES(@Nonnull DES dES) {
+        super(dES);
+    }
+
+    @Nonnull
+    @Override
+    protected DES shallowCopy() {
+        return new DES(this);
+    }
 }

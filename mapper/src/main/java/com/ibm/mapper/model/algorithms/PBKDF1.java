@@ -79,4 +79,14 @@ public final class PBKDF1 extends Algorithm implements PasswordBasedKeyDerivatio
     public PBKDF1(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
     }
+
+    private PBKDF1(@Nonnull PBKDF1 pBKDF1) {
+        super(pBKDF1);
+    }
+
+    @Nonnull
+    @Override
+    protected PBKDF1 shallowCopy() {
+        return new PBKDF1(this);
+    }
 }

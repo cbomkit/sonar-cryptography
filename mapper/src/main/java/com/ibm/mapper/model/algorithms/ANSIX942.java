@@ -49,4 +49,14 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
     public ANSIX942(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);
     }
+
+    private ANSIX942(@Nonnull ANSIX942 aNSIX942) {
+        super(aNSIX942);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX942 shallowCopy() {
+        return new ANSIX942(this);
+    }
 }

@@ -59,4 +59,14 @@ public final class MD2 extends Algorithm implements MessageDigest {
         this.put(BlockSize.ofDefault(128, detectionLocation));
         this.put(new DigestSize(128, detectionLocation));
     }
+
+    private MD2(@Nonnull MD2 mD2) {
+        super(mD2);
+    }
+
+    @Nonnull
+    @Override
+    protected MD2 shallowCopy() {
+        return new MD2(this);
+    }
 }

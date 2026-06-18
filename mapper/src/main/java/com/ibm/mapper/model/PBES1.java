@@ -79,4 +79,14 @@ public class PBES1 extends Algorithm implements PasswordBasedEncryption {
         }
         return hmacName.replace("HMAC-", "Hmac");
     }
+
+    private PBES1(@Nonnull PBES1 pBES1) {
+        super(pBES1);
+    }
+
+    @Nonnull
+    @Override
+    protected PBES1 shallowCopy() {
+        return new PBES1(this);
+    }
 }

@@ -50,4 +50,14 @@ public class GMSS extends Algorithm implements Signature {
     public GMSS(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private GMSS(@Nonnull GMSS gMSS) {
+        super(gMSS);
+    }
+
+    @Nonnull
+    @Override
+    protected GMSS shallowCopy() {
+        return new GMSS(this);
+    }
 }

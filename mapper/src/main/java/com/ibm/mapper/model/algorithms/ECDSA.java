@@ -64,4 +64,14 @@ public final class ECDSA extends Algorithm implements Signature {
         this(detectionLocation);
         this.put(ellipticCurve);
     }
+
+    private ECDSA(@Nonnull ECDSA eCDSA) {
+        super(eCDSA);
+    }
+
+    @Nonnull
+    @Override
+    protected ECDSA shallowCopy() {
+        return new ECDSA(this);
+    }
 }

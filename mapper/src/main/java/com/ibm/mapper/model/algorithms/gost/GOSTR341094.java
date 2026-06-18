@@ -48,4 +48,14 @@ public final class GOSTR341094 extends Algorithm implements Signature {
     public GOSTR341094(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private GOSTR341094(@Nonnull GOSTR341094 gOSTR341094) {
+        super(gOSTR341094);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR341094 shallowCopy() {
+        return new GOSTR341094(this);
+    }
 }

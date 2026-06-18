@@ -55,4 +55,14 @@ public final class Ascon128 extends Ascon implements AuthenticatedEncryption {
         this.put(new TagLength(128, detectionLocation));
         this.put(BlockSize.ofDefault(64, detectionLocation));
     }
+
+    private Ascon128(@Nonnull Ascon128 ascon128) {
+        super(ascon128);
+    }
+
+    @Nonnull
+    @Override
+    protected Ascon128 shallowCopy() {
+        return new Ascon128(this);
+    }
 }

@@ -64,4 +64,14 @@ public class Dilithium extends Algorithm implements Signature {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
     }
+
+    private Dilithium(@Nonnull Dilithium dilithium) {
+        super(dilithium);
+    }
+
+    @Nonnull
+    @Override
+    protected Dilithium shallowCopy() {
+        return new Dilithium(this);
+    }
 }

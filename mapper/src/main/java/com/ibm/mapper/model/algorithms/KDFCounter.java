@@ -55,4 +55,14 @@ public final class KDFCounter extends Algorithm implements KeyDerivationFunction
         this(mac.getDetectionContext());
         this.put(mac);
     }
+
+    private KDFCounter(@Nonnull KDFCounter kDFCounter) {
+        super(kDFCounter);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFCounter shallowCopy() {
+        return new KDFCounter(this);
+    }
 }

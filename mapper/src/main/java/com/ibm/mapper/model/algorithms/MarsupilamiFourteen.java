@@ -58,4 +58,14 @@ public final class MarsupilamiFourteen extends Algorithm implements MessageDiges
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
     }
+
+    private MarsupilamiFourteen(@Nonnull MarsupilamiFourteen marsupilamiFourteen) {
+        super(marsupilamiFourteen);
+    }
+
+    @Nonnull
+    @Override
+    protected MarsupilamiFourteen shallowCopy() {
+        return new MarsupilamiFourteen(this);
+    }
 }

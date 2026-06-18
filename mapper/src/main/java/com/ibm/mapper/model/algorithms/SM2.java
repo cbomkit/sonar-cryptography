@@ -56,4 +56,14 @@ public final class SM2 extends Algorithm implements Signature, PublicKeyEncrypti
     public SM2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SM2 sm2) {
         super(sm2, asKind);
     }
+
+    private SM2(@Nonnull SM2 sM2) {
+        super(sM2);
+    }
+
+    @Nonnull
+    @Override
+    protected SM2 shallowCopy() {
+        return new SM2(this);
+    }
 }

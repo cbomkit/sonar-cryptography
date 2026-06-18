@@ -84,4 +84,14 @@ public final class KMAC extends Algorithm implements MessageDigest {
     public KMAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull KMAC kmac) {
         super(kmac, asKind);
     }
+
+    private KMAC(@Nonnull KMAC kMAC) {
+        super(kMAC);
+    }
+
+    @Nonnull
+    @Override
+    protected KMAC shallowCopy() {
+        return new KMAC(this);
+    }
 }

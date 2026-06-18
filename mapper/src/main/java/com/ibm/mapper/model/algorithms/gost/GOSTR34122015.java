@@ -66,4 +66,14 @@ public final class GOSTR34122015 extends Algorithm implements BlockCipher, Authe
             @Nonnull GOSTR34122015 gostr34122015) {
         super(gostr34122015, asKind);
     }
+
+    private GOSTR34122015(@Nonnull GOSTR34122015 gOSTR34122015) {
+        super(gOSTR34122015);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR34122015 shallowCopy() {
+        return new GOSTR34122015(this);
+    }
 }

@@ -50,4 +50,14 @@ public class Delirium extends Elephant {
         this.put(BlockSize.ofDefault(200, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
     }
+
+    private Delirium(@Nonnull Delirium delirium) {
+        super(delirium);
+    }
+
+    @Nonnull
+    @Override
+    protected Delirium shallowCopy() {
+        return new Delirium(this);
+    }
 }

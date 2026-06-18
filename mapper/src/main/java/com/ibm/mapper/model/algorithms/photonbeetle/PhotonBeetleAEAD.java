@@ -61,4 +61,14 @@ public class PhotonBeetleAEAD extends Algorithm implements AuthenticatedEncrypti
         this(detectionLocation);
         this.put(new BlockSize(rate, detectionLocation));
     }
+
+    private PhotonBeetleAEAD(@Nonnull PhotonBeetleAEAD photonBeetleAEAD) {
+        super(photonBeetleAEAD);
+    }
+
+    @Nonnull
+    @Override
+    protected PhotonBeetleAEAD shallowCopy() {
+        return new PhotonBeetleAEAD(this);
+    }
 }

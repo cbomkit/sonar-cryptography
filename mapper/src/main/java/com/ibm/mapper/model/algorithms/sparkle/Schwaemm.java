@@ -89,4 +89,14 @@ public class Schwaemm extends Algorithm implements AuthenticatedEncryption, Bloc
         this.put(new TagLength(capacity, detectionLocation));
         this.put(new NonceLength(rate, detectionLocation));
     }
+
+    private Schwaemm(@Nonnull Schwaemm schwaemm) {
+        super(schwaemm);
+    }
+
+    @Nonnull
+    @Override
+    protected Schwaemm shallowCopy() {
+        return new Schwaemm(this);
+    }
 }

@@ -64,4 +64,14 @@ public final class HKDF extends Algorithm implements KeyDerivationFunction {
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
     }
+
+    private HKDF(@Nonnull HKDF hKDF) {
+        super(hKDF);
+    }
+
+    @Nonnull
+    @Override
+    protected HKDF shallowCopy() {
+        return new HKDF(this);
+    }
 }

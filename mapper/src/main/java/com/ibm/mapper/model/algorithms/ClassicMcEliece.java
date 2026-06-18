@@ -50,4 +50,14 @@ public final class ClassicMcEliece extends Algorithm implements KeyEncapsulation
     public ClassicMcEliece(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private ClassicMcEliece(@Nonnull ClassicMcEliece classicMcEliece) {
+        super(classicMcEliece);
+    }
+
+    @Nonnull
+    @Override
+    protected ClassicMcEliece shallowCopy() {
+        return new ClassicMcEliece(this);
+    }
 }

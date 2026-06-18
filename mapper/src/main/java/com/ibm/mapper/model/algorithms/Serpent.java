@@ -86,4 +86,14 @@ public final class Serpent extends Algorithm implements BlockCipher, Authenticat
     public Serpent(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Serpent serpent) {
         super(serpent, asKind);
     }
+
+    private Serpent(@Nonnull Serpent serpent) {
+        super(serpent);
+    }
+
+    @Nonnull
+    @Override
+    protected Serpent shallowCopy() {
+        return new Serpent(this);
+    }
 }

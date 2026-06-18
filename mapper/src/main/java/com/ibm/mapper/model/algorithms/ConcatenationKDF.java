@@ -56,4 +56,14 @@ public final class ConcatenationKDF extends Algorithm implements KeyDerivationFu
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    private ConcatenationKDF(@Nonnull ConcatenationKDF concatenationKDF) {
+        super(concatenationKDF);
+    }
+
+    @Nonnull
+    @Override
+    protected ConcatenationKDF shallowCopy() {
+        return new ConcatenationKDF(this);
+    }
 }

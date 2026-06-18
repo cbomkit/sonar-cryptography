@@ -61,4 +61,14 @@ public final class Xoodyak extends Algorithm
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private Xoodyak(@Nonnull Xoodyak xoodyak) {
+        super(xoodyak);
+    }
+
+    @Nonnull
+    @Override
+    protected Xoodyak shallowCopy() {
+        return new Xoodyak(this);
+    }
 }

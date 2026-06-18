@@ -69,4 +69,14 @@ public final class LMS extends Algorithm implements Signature, MessageDigest {
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private LMS(@Nonnull LMS lMS) {
+        super(lMS);
+    }
+
+    @Nonnull
+    @Override
+    protected LMS shallowCopy() {
+        return new LMS(this);
+    }
 }

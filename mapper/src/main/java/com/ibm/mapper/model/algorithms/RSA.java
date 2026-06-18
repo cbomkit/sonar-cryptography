@@ -96,16 +96,12 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
     }
 
     private RSA(@Nonnull final RSA rsa) {
-        super(rsa.name, rsa.kind, rsa.detectionLocation);
+        super(rsa);
     }
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        RSA copy = new RSA(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected RSA shallowCopy() {
+        return new RSA(this);
     }
 }

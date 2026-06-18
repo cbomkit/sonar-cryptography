@@ -58,4 +58,14 @@ public final class XMSSMT extends Algorithm implements Signature, MessageDigest 
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private XMSSMT(@Nonnull XMSSMT xMSSMT) {
+        super(xMSSMT);
+    }
+
+    @Nonnull
+    @Override
+    protected XMSSMT shallowCopy() {
+        return new XMSSMT(this);
+    }
 }

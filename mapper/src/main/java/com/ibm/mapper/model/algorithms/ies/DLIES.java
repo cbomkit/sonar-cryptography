@@ -50,4 +50,14 @@ public class DLIES extends IES {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new DH(detectionLocation));
     }
+
+    private DLIES(@Nonnull DLIES dLIES) {
+        super(dLIES);
+    }
+
+    @Nonnull
+    @Override
+    protected DLIES shallowCopy() {
+        return new DLIES(this);
+    }
 }

@@ -50,4 +50,14 @@ public final class RSAKEM extends Algorithm implements KeyEncapsulationMechanism
     public RSAKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private RSAKEM(@Nonnull RSAKEM rSAKEM) {
+        super(rSAKEM);
+    }
+
+    @Nonnull
+    @Override
+    protected RSAKEM shallowCopy() {
+        return new RSAKEM(this);
+    }
 }

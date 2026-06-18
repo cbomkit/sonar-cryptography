@@ -46,4 +46,14 @@ public class DSA extends Algorithm implements Signature {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
     }
+
+    protected DSA(@Nonnull DSA dSA) {
+        super(dSA);
+    }
+
+    @Nonnull
+    @Override
+    protected DSA shallowCopy() {
+        return new DSA(this);
+    }
 }

@@ -48,4 +48,14 @@ public final class XDH extends Algorithm implements KeyAgreement {
     public XDH(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
     }
+
+    private XDH(@Nonnull XDH xDH) {
+        super(xDH);
+    }
+
+    @Nonnull
+    @Override
+    protected XDH shallowCopy() {
+        return new XDH(this);
+    }
 }

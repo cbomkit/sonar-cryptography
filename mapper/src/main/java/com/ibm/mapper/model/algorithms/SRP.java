@@ -48,4 +48,14 @@ public final class SRP extends Algorithm implements KeyAgreement {
     public SRP(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
     }
+
+    private SRP(@Nonnull SRP sRP) {
+        super(sRP);
+    }
+
+    @Nonnull
+    @Override
+    protected SRP shallowCopy() {
+        return new SRP(this);
+    }
 }

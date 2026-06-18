@@ -49,4 +49,14 @@ public final class AsconXof extends Ascon implements ExtendableOutputFunction {
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
         this.put(BlockSize.ofDefault(64, detectionLocation));
     }
+
+    private AsconXof(@Nonnull AsconXof asconXof) {
+        super(asconXof);
+    }
+
+    @Nonnull
+    @Override
+    protected AsconXof shallowCopy() {
+        return new AsconXof(this);
+    }
 }

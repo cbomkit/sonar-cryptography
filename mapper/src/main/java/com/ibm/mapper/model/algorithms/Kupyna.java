@@ -89,4 +89,14 @@ public final class Kupyna extends Algorithm implements MessageDigest {
     public Kupyna(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Kupyna kupyna) {
         super(kupyna, asKind);
     }
+
+    private Kupyna(@Nonnull Kupyna kupyna) {
+        super(kupyna);
+    }
+
+    @Nonnull
+    @Override
+    protected Kupyna shallowCopy() {
+        return new Kupyna(this);
+    }
 }

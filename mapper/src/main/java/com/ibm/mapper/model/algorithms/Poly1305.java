@@ -53,4 +53,14 @@ public final class Poly1305 extends Algorithm implements MessageDigest {
     public Poly1305(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Poly1305 poly1305) {
         super(poly1305, asKind);
     }
+
+    private Poly1305(@Nonnull Poly1305 poly1305) {
+        super(poly1305);
+    }
+
+    @Nonnull
+    @Override
+    protected Poly1305 shallowCopy() {
+        return new Poly1305(this);
+    }
 }

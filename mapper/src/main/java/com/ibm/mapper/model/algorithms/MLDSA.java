@@ -88,4 +88,14 @@ public class MLDSA extends Algorithm implements Signature {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), preHash.getDetectionContext()));
     }
+
+    private MLDSA(@Nonnull MLDSA mLDSA) {
+        super(mLDSA);
+    }
+
+    @Nonnull
+    @Override
+    protected MLDSA shallowCopy() {
+        return new MLDSA(this);
+    }
 }

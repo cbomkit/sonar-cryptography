@@ -51,4 +51,14 @@ public final class BLAKE2X extends Algorithm implements ExtendableOutputFunction
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
         this.put(blake2);
     }
+
+    private BLAKE2X(@Nonnull BLAKE2X bLAKE2X) {
+        super(bLAKE2X);
+    }
+
+    @Nonnull
+    @Override
+    protected BLAKE2X shallowCopy() {
+        return new BLAKE2X(this);
+    }
 }

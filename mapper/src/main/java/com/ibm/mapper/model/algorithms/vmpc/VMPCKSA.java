@@ -64,4 +64,14 @@ public class VMPCKSA extends Algorithm implements StreamCipher {
         this(detectionLocation);
         this.put(new Version(String.valueOf(version), detectionLocation));
     }
+
+    private VMPCKSA(@Nonnull VMPCKSA vMPCKSA) {
+        super(vMPCKSA);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPCKSA shallowCopy() {
+        return new VMPCKSA(this);
+    }
 }

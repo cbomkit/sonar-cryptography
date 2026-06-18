@@ -94,4 +94,14 @@ public class Kyber extends Algorithm implements KeyEncapsulationMechanism {
         this(parameterSetIdentifier, detectionLocation);
         this.put(new Version(submissionVersionNumber, detectionLocation));
     }
+
+    private Kyber(@Nonnull Kyber kyber) {
+        super(kyber);
+    }
+
+    @Nonnull
+    @Override
+    protected Kyber shallowCopy() {
+        return new Kyber(this);
+    }
 }

@@ -49,4 +49,14 @@ public class NTRULPrime extends Algorithm implements KeyEncapsulationMechanism {
     public NTRULPrime(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
     }
+
+    private NTRULPrime(@Nonnull NTRULPrime nTRULPrime) {
+        super(nTRULPrime);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRULPrime shallowCopy() {
+        return new NTRULPrime(this);
+    }
 }

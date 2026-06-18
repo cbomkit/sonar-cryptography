@@ -56,4 +56,14 @@ public final class ECDH extends Algorithm implements KeyAgreement {
         this(ellipticCurve.getDetectionContext());
         this.put(ellipticCurve);
     }
+
+    private ECDH(@Nonnull ECDH eCDH) {
+        super(eCDH);
+    }
+
+    @Nonnull
+    @Override
+    protected ECDH shallowCopy() {
+        return new ECDH(this);
+    }
 }

@@ -49,4 +49,14 @@ public class RFC3211Wrap extends Algorithm implements KeyWrap {
     public RFC3211Wrap(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyWrap.class, detectionLocation);
     }
+
+    private RFC3211Wrap(@Nonnull RFC3211Wrap rFC3211Wrap) {
+        super(rFC3211Wrap);
+    }
+
+    @Nonnull
+    @Override
+    protected RFC3211Wrap shallowCopy() {
+        return new RFC3211Wrap(this);
+    }
 }

@@ -49,4 +49,14 @@ public class QTESLA extends Algorithm implements Signature {
     public QTESLA(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
     }
+
+    private QTESLA(@Nonnull QTESLA qTESLA) {
+        super(qTESLA);
+    }
+
+    @Nonnull
+    @Override
+    protected QTESLA shallowCopy() {
+        return new QTESLA(this);
+    }
 }

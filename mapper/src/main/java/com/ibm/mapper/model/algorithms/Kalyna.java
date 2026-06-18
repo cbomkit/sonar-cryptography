@@ -84,4 +84,14 @@ public final class Kalyna extends Algorithm implements BlockCipher, Mac, KeyWrap
     public Kalyna(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Kalyna kalyna) {
         super(kalyna, asKind);
     }
+
+    private Kalyna(@Nonnull Kalyna kalyna) {
+        super(kalyna);
+    }
+
+    @Nonnull
+    @Override
+    protected Kalyna shallowCopy() {
+        return new Kalyna(this);
+    }
 }

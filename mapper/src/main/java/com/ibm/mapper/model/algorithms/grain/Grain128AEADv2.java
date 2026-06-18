@@ -52,4 +52,14 @@ public class Grain128AEADv2 extends Grain implements AuthenticatedEncryption {
         this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new InitializationVectorLength(96, detectionLocation));
     }
+
+    private Grain128AEADv2(@Nonnull Grain128AEADv2 grain128AEADv2) {
+        super(grain128AEADv2);
+    }
+
+    @Nonnull
+    @Override
+    protected Grain128AEADv2 shallowCopy() {
+        return new Grain128AEADv2(this);
+    }
 }

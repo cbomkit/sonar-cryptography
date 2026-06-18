@@ -47,4 +47,14 @@ public final class RSAssaPSS extends Algorithm implements ProbabilisticSignature
     public RSAssaPSS(@Nonnull DetectionLocation detectionLocation) {
         super("RSASSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
     }
+
+    private RSAssaPSS(@Nonnull RSAssaPSS rSAssaPSS) {
+        super(rSAssaPSS);
+    }
+
+    @Nonnull
+    @Override
+    protected RSAssaPSS shallowCopy() {
+        return new RSAssaPSS(this);
+    }
 }

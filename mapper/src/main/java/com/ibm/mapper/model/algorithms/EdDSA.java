@@ -34,4 +34,14 @@ public class EdDSA extends Algorithm implements Signature {
     public EdDSA(@Nonnull DetectionLocation detectionLocation) {
         this(NAME, detectionLocation);
     }
+
+    protected EdDSA(@Nonnull EdDSA edDSA) {
+        super(edDSA);
+    }
+
+    @Nonnull
+    @Override
+    protected EdDSA shallowCopy() {
+        return new EdDSA(this);
+    }
 }
