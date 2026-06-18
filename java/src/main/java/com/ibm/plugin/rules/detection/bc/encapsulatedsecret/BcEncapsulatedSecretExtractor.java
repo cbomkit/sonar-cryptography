@@ -44,16 +44,36 @@ public final class BcEncapsulatedSecretExtractor {
     private static final BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
     static {
-        infoMap.putKey("BIKEKEMExtractor").putType("org.bouncycastle.pqc.crypto.bike.");
-        infoMap.putKey("CMCEKEMExtractor").putType("org.bouncycastle.pqc.crypto.cmce.");
-        infoMap.putKey("FrodoKEMExtractor").putType("org.bouncycastle.pqc.crypto.frodo.");
-        infoMap.putKey("HQCKEMExtractor").putType("org.bouncycastle.pqc.crypto.hqc.");
+        infoMap.putKey("BIKEKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.bike.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.bike.BIKEPrivateKeyParameters");
+        infoMap.putKey("CMCEKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.cmce.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.cmce.CMCEPrivateKeyParameters");
+        infoMap.putKey("FrodoKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.frodo.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.frodo.FrodoKeyParameters");
+        infoMap.putKey("HQCKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.hqc.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.hqc.HQCPrivateKeyParameters");
         infoMap.putKey("KyberKEMExtractor")
-                .putType("org.bouncycastle.pqc.crypto.crystals.kyber."); // deprecated since bc 1.79
-        infoMap.putKey("NTRUKEMExtractor").putType("org.bouncycastle.pqc.crypto.ntru.");
-        infoMap.putKey("NTRULPRimeKEMExtractor").putType("org.bouncycastle.pqc.crypto.ntruprime.");
-        infoMap.putKey("SABERKEMExtractor").putType("org.bouncycastle.pqc.crypto.saber.");
-        infoMap.putKey("SNTRUPrimeKEMExtractor").putType("org.bouncycastle.pqc.crypto.ntruprime.");
+                .putType("org.bouncycastle.pqc.crypto.crystals.kyber.")
+                .putParameterClass(
+                        "org.bouncycastle.pqc.crypto.crystals.kyber.KyberPrivateKeyParameters"); // deprecated since bc 1.79
+        infoMap.putKey("NTRUKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.ntru.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.ntru.NTRUPrivateKeyParameters");
+        infoMap.putKey("NTRULPRimeKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.ntruprime.")
+                .putParameterClass(
+                        "org.bouncycastle.pqc.crypto.ntruprime.NTRULPRimePrivateKeyParameters");
+        infoMap.putKey("SABERKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.saber.")
+                .putParameterClass("org.bouncycastle.pqc.crypto.saber.SABERPrivateKeyParameters");
+        infoMap.putKey("SNTRUPrimeKEMExtractor")
+                .putType("org.bouncycastle.pqc.crypto.ntruprime.")
+                .putParameterClass(
+                        "org.bouncycastle.pqc.crypto.ntruprime.SNTRUPrimePrivateKeyParameters");
     }
 
     private static @Nonnull List<IDetectionRule<Tree>> simpleConstructors() {
@@ -62,14 +82,15 @@ public final class BcEncapsulatedSecretExtractor {
         for (Map.Entry<String, BouncyCastleInfoMap.Info> entry : infoMap.entrySet()) {
             String extractor = entry.getKey();
             String type = entry.getValue().getType();
+            String parameterClass = entry.getValue().getParameterClass();
             constructorsList.add(
                     new DetectionRuleBuilder<Tree>()
                             .createDetectionRule()
                             .forObjectTypes(type + extractor)
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(extractor))
-                            // We want to capture all possible constructors (some have arguments)
-                            .withAnyParameters()
+                            .withMethodParameter(parameterClass)
+                            .addDependingDetectionRules(BcCipherParameters.rules())
                             .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                             .inBundle(() -> "Bc")
                             .withoutDependingDetectionRules());
