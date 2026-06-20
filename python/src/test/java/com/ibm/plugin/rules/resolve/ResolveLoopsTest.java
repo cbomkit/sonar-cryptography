@@ -36,6 +36,10 @@ import org.sonar.python.checks.utils.PythonCheckVerifier;
 class ResolveLoopsTest extends TestBase {
 
     public ResolveLoopsTest() {
+        public ResolveLoopsTest() {
+    // Loop-based resolution is currently implemented as part of ResolveScopeValues.
+    super(ResolveScopeValues.rules());
+}
         super(ResolveScopeValues.rules());
     }
 
