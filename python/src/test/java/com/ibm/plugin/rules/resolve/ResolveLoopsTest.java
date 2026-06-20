@@ -34,12 +34,13 @@ import org.sonar.plugins.python.api.tree.Tree;
 import org.sonar.python.checks.utils.PythonCheckVerifier;
 
 class ResolveLoopsTest extends TestBase {
-
+    // This Test class structure allows testing a single class of rules instead of all rules defined
+    // in PythonDetectionRules.
+    // To do so, add `extends PythonBaseDetectionRule` and define a constructor using the rules you
+    // want.
+    // To use several rules, create a `rules()` method to call in the constructor.
     public ResolveLoopsTest() {
-        public ResolveLoopsTest() {
-    // Loop-based resolution is currently implemented as part of ResolveScopeValues.
-    super(ResolveScopeValues.rules());
-}
+        // Loop-based resolution is currently implemented as part of ResolveScopeValues.
         super(ResolveScopeValues.rules());
     }
 
@@ -53,7 +54,8 @@ class ResolveLoopsTest extends TestBase {
 
     @Test
     void test() {
-        PythonCheckVerifier.verify("src/test/files/rules/resolve/ResolveLoopsTestFile.py", this);
+        PythonCheckVerifier.verify(
+                "src/test/files/rules/resolve/ResolveLoopsTestFile.py", this);
     }
 
     @Override
