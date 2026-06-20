@@ -20,10 +20,17 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.KeySize;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.functionality.Encapsulate;
+import com.ibm.mapper.model.functionality.KeyDerivation;
+import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -48,8 +55,28 @@ public final class CxxSecretKeyContextTranslator implements IContextTranslation<
             @Nonnull IValue<AstNode> value,
             @Nonnull IDetectionContext detectionValueContext,
             @Nonnull DetectionLocation detectionLocation) {
-        // TODO: Implement secret key context translation based on detection value type
-        // This will be expanded when OpenSSL/other library detection rules are added
+        // Handle key sizes (bytes/bit units) → KeyLength
+        if (value instanceof KeySize<?> keySize) {
+            int bits = keySize.getValue();
+            if (keySize.getUnitType() == Size.UnitType.BYTE) {
+                bits = bits * 8;
+            }
+            return Optional.of(new KeyLength(bits, detectionLocation));
+        }
+
+        // Handle key-related actions (generation / KDF / encapsulation)
+        if (value instanceof KeyAction<?> keyAction) {
+            return switch (keyAction.getAction()) {
+                case SECRET_KEY_GENERATION, GENERATION ->
+                        Optional.of(
+                                new KeyGeneration(
+                                        KeyGeneration.Specification.SECRET_KEY, detectionLocation));
+                case KDF -> Optional.of(new KeyDerivation(detectionLocation));
+                case ENCAPSULATION -> Optional.of(new Encapsulate(detectionLocation));
+                default -> Optional.empty();
+            };
+        }
+
         return Optional.empty();
     }
 }
