@@ -29,16 +29,16 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                         | Coverage         |
-|----------|-----------------------------------------------------------------------------------------------|------------------|
-| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%             |
-|          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1]         |
-| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%             |
-| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
-|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
-| C/C++    | [OpenSSL](https://www.openssl.org/)                                                           | Partial[^5]      |
+| Language | Cryptographic Library                                                                                     | Coverage           |
+| -------- | --------------------------------------------------------------------------------------------------------- | ------------------ |
+| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html)             | 100%               |
+|          | [BouncyCastle](https://github.com/bcgit/bc-java) (_light-weight API_)                                     | 100%[^1]           |
+| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                                   | 100%               |
+| Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                                  | 100%[^2]           |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                             | Partial[^3]        |
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                       | 100%[^5]           |
 
-[^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+[^1]: We only cover the BouncyCastle _light-weight API_ according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
 
 [^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
 
