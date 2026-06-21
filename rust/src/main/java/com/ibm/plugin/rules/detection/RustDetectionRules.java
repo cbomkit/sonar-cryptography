@@ -23,6 +23,8 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.rustcrypto.RingECDH;
 import com.ibm.plugin.rules.detection.rustcrypto.RingECDSA;
 import com.ibm.plugin.rules.detection.rustcrypto.RingRSA;
+import com.ibm.plugin.rules.detection.rustcrypto.RustCryptoMLDSA;
+import com.ibm.plugin.rules.detection.rustcrypto.RustCryptoMLKEM;
 import com.ibm.plugin.rules.detection.rustcrypto.RustlsTLS;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,7 +42,9 @@ public final class RustDetectionRules {
                         RingRSA.rules().stream(),
                         RingECDSA.rules().stream(),
                         RingECDH.rules().stream(),
-                        RustlsTLS.rules().stream())
+                        RustlsTLS.rules().stream(),
+                        RustCryptoMLKEM.rules().stream(),
+                        RustCryptoMLDSA.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }
