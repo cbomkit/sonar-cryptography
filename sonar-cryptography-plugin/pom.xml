@@ -20,7 +20,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <sonar.jreMinVersion>17</sonar.jreMinVersion>
+        <sonar.jreMinVersion>21</sonar.jreMinVersion>
     </properties>
     <dependencies>
         <dependency>
@@ -70,12 +70,12 @@
                     <pluginKey>sonar-crypto-plugin</pluginKey>
                     <pluginName>Sonar Crypto Plugin</pluginName>
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
-                    <!-- This line must specify all file extensions which should be scanned by the plugin -->
-                    <requiredForLanguages>java,jsp,py,ipynb,go,cxx,cpp,c,h,hpp</requiredForLanguages>
+                    <!-- This line must specify all language keys which should be scanned by the plugin -->
+                    <requiredForLanguages>java,jsp,py,ipynb,go,cxx,cpp,c++,c</requiredForLanguages>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
-                    <jreMinVersion>17</jreMinVersion>
+                    <jreMinVersion>21</jreMinVersion>
                 </configuration>
             </plugin>
             <plugin>
@@ -170,7 +170,7 @@
                 </property>
             </activation>
             <properties>
-                <sonar.jreMinVersion>17</sonar.jreMinVersion>
+                <sonar.jreMinVersion>21</sonar.jreMinVersion>
             </properties>
         </profile>
     </profiles>

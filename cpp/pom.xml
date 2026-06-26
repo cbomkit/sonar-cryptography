@@ -16,6 +16,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- OpenSSL headers auto-fetched for test fixtures (see build/plugins section). -->
+        <openssl.skip.configure>false</openssl.skip.configure>
         <openssl.version>3.6.2</openssl.version>
         <openssl.download.url>https://github.com/openssl/openssl/releases/download/openssl-${openssl.version}/openssl-${openssl.version}.tar.gz</openssl.download.url>
         <openssl.headers.dir>${project.build.directory}/test-headers/openssl-${openssl.version}/include</openssl.headers.dir>
