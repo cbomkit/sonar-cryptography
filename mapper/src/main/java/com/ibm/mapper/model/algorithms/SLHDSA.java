@@ -51,7 +51,7 @@ import javax.annotation.Nonnull;
 public class SLHDSA extends Algorithm implements Signature {
     private static final String NAME = "SLH-DSA";
 
-    /** Returns a name of the form "SLH-DSA-XXX" where XXX is the parameter set identifer */
+    /** Returns a name of the form "SLH-DSA-XXX" where XXX is the parameter set identifier */
     @Override
     @Nonnull
     public String asString() {
