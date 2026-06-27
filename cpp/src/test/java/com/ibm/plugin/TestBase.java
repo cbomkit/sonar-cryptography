@@ -29,7 +29,9 @@ import com.ibm.plugin.rules.CxxInventoryRule;
 import com.ibm.plugin.rules.detection.CxxDetectionRules;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -178,11 +180,42 @@ public abstract class TestBase extends CxxInventoryRule {
                                                     Symbol,
                                                     SquidAstVisitorContext<? extends Grammar>>>
                                     detectionStores) {
-        return detectionStores.stream()
-                .filter(
-                        store ->
-                                store.getDetectionValues().stream()
-                                        .anyMatch(value -> value.getClass().equals(valueType)))
-                .toList();
+        List<
+                        DetectionStore<
+                                SquidCheck<?>,
+                                AstNode,
+                                Symbol,
+                                SquidAstVisitorContext<? extends Grammar>>>
+                relevantStores =
+                        detectionStores.stream()
+                                .filter(
+                                        store ->
+                                                store.getDetectionValues().stream()
+                                                        .anyMatch(
+                                                                value ->
+                                                                        value.getClass()
+                                                                                .equals(valueType)))
+                                .toList();
+        List<
+                        DetectionStore<
+                                SquidCheck<?>,
+                                AstNode,
+                                Symbol,
+                                SquidAstVisitorContext<? extends Grammar>>>
+                children =
+                        detectionStores.stream()
+                                .map(store -> getStoresOfValueType(valueType, store.getChildren()))
+                                .filter(Objects::nonNull)
+                                .flatMap(List::stream)
+                                .toList();
+        List<
+                        DetectionStore<
+                                SquidCheck<?>,
+                                AstNode,
+                                Symbol,
+                                SquidAstVisitorContext<? extends Grammar>>>
+                res = new ArrayList<>(relevantStores);
+        res.addAll(children);
+        return res;
     }
 }

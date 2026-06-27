@@ -43,7 +43,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-2048"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -54,7 +54,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-3072"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -65,7 +65,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-4096"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -80,7 +80,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-2048"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -91,7 +91,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-3072"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -106,7 +106,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-P256"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -117,7 +117,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-P384"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -128,7 +128,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-P521"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -139,7 +139,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-SECP256K1"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -150,7 +150,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP256R1"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -161,7 +161,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP384R1"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -172,7 +172,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP512R1"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -187,7 +187,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_keygen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("KEYGEN"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -198,7 +198,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_keygen_init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("KEYGEN-INIT"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -213,7 +213,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_generate")
                     .shouldBeDetectedAs(new ValueActionFactory<>("KEYGEN"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -224,7 +224,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_Q_keygen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("KEYGEN"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -235,7 +235,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_paramgen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PARAMGEN"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -246,7 +246,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_paramgen_init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PARAMGEN"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -261,7 +261,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_KEYMGMT_fetch")
                     .shouldBeDetectedAs(new ValueActionFactory<>("KEYMGMT-FETCH"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -276,7 +276,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_group_name")
                     .shouldBeDetectedAs(new ValueActionFactory<>("GROUP-NAME"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -287,7 +287,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_ec_param_enc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC-PARAM-ENC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -302,7 +302,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set1_rsa_keygen_pubexp")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PUBEXP"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -313,7 +313,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_primes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PRIMES"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -328,7 +328,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_q_bits")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-Q-BITS"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -339,7 +339,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-MD"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -350,7 +350,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md_props")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-MD"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -361,7 +361,7 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_type")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-TYPE"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 

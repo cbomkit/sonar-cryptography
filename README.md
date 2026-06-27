@@ -37,7 +37,7 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 | Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                                      | 100%[^2]            |
 |          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                                 | Partial[^3]         |
 | C#       | [System.Security.Cryptography](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography)     | In development[^4]  |
-| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                           | Partial[^5]         |
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                           | 100%[^5]            |
 
 [^1]: We only cover the BouncyCastle _light-weight API_ according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
 

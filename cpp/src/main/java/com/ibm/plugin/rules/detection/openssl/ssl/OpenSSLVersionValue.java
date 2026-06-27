@@ -28,6 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonar.cxx.parser.CxxGrammarImpl;
 import org.sonar.cxx.parser.CxxTokenType;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
 import org.sonar.cxx.utils.CxxConstantUtils;
@@ -93,11 +94,20 @@ public final class OpenSSLVersionValue implements IAction<AstNode> {
         try {
             List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(methodCallNode);
 
-            // The sonar-cxx parser collapses all arguments into a single initializerList node.
-            // Children: [0]=ctx (IDENTIFIER), [1]=, (COMMA), [2]=0x0303 (NUMBER/IDENTIFIER)
+            // sonar-cxx returns expressionList.getChildren() — always a single initializerList
+            // node.
+            // initializerList children: [0]=ctx, [1]=COMMA, [2]=version param.
+            // Guard on node type so a future sonar-cxx grammar change (e.g. adding skipIfOneChild)
+            // produces a visible warning instead of silently returning the fallback marker string.
             if (!arguments.isEmpty()) {
                 AstNode argList = arguments.get(0);
-                if (argList.getNumberOfChildren() >= 3) {
+                if (!argList.is(CxxGrammarImpl.initializerList)) {
+                    LOGGER.warn(
+                            "Unexpected AST structure for {} version: expected initializerList"
+                                    + " but got {}. sonar-cxx grammar may have changed.",
+                            kind,
+                            argList.getType());
+                } else if (argList.getNumberOfChildren() >= 3) {
                     AstNode versionParam = argList.getChildren().get(2);
                     String resolved = resolveVersionString(versionParam);
                     if (resolved != null) {

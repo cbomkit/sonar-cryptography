@@ -78,6 +78,6 @@ public final class CxxTranslationProcess
         final List<INode> enrichedValues = Enricher.enrich(reorganizedValues).stream().toList();
         Utils.printNodeTree("enriched   ", enrichedValues);
 
-        return enrichedValues.stream().toList();
+        return enrichedValues;
     }
 }

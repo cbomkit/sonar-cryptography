@@ -53,7 +53,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("ECDSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -64,7 +64,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("ECDSA_do_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -75,7 +75,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("ECDSA_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -86,7 +86,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("ECDSA_do_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -101,7 +101,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_KEY_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -112,7 +112,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_KEY_new_by_curve_name")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -123,7 +123,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_KEY_new_by_curve_name_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -134,7 +134,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_KEY_set_group")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -145,7 +145,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_curve_GFp")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -156,7 +156,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_curve_GF2m")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -167,7 +167,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_by_curve_name")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -178,7 +178,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_by_curve_name_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -189,7 +189,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_from_params")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -200,7 +200,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_from_ecparameters")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -211,7 +211,7 @@ public final class OpenSSLLegacyEc {
                     .forMethods("EC_GROUP_new_from_ecpkparameters")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
