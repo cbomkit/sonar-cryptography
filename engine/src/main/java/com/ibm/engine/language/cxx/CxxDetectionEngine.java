@@ -118,17 +118,18 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         List<AstNode> callArgs;
 
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            callArgs = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
+            // getFunctionCallArguments() returns expressionList.getChildren() which is always
+            // [initializerList] — a single wrapper, not the individual arguments.
+            // Flatten through initializerList the same way flattenConstructorArgs() does.
+            AstNode expressionList =
+                    methodInvocation.getFirstDescendant(CxxGrammarImpl.expressionList);
+            callArgs = flattenConstructorArgs(expressionList);
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
                 AstNode expressionList =
                         newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                if (expressionList != null) {
-                    callArgs = expressionList.getChildren();
-                } else {
-                    callArgs = Collections.emptyList();
-                }
+                callArgs = flattenConstructorArgs(expressionList);
             } else {
                 callArgs = Collections.emptyList();
             }
@@ -251,7 +252,35 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             @Nonnull Class<O> clazz,
             @Nonnull AstNode methodDefinition,
             @Nonnull Parameter<AstNode> parameter) {
-        throw new UnsupportedOperationException("Unimplemented method 'resolveMethodReturnValues'");
+        if (!methodDefinition.is(CxxGrammarImpl.functionDefinition)) {
+            return;
+        }
+        AstNode body = CxxAstNodeHelper.getFunctionDefinitionBody(methodDefinition);
+        if (body == null) {
+            return;
+        }
+        for (AstNode node : body.getDescendants(CxxGrammarImpl.jumpStatement)) {
+            if (!CxxAstNodeHelper.isReturnStatement(node)) {
+                continue;
+            }
+            AstNode returnExpr = CxxAstNodeHelper.getReturnExpression(node);
+            if (returnExpr == null) {
+                continue;
+            }
+            if (parameter.is(DetectableParameter.class)) {
+                @SuppressWarnings("unchecked")
+                DetectableParameter<AstNode> detectable = (DetectableParameter<AstNode>) parameter;
+                List<ResolvedValue<O, AstNode>> resolved =
+                        resolveValuesInInnerScope(clazz, returnExpr, detectable.getiValueFactory());
+                if (!resolved.isEmpty()) {
+                    resolved.stream()
+                            .map(rv -> new ValueDetection<>(rv, detectable, returnExpr, returnExpr))
+                            .forEach(detectionStore::onReceivingNewDetection);
+                    continue;
+                }
+            }
+            resolveValuesInOuterScope(returnExpr, parameter);
+        }
     }
 
     @Nullable @Override
@@ -259,7 +288,8 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             @Nonnull Class<O> clazz,
             @Nonnull AstNode enumClassDefinition,
             @Nonnull LinkedList<AstNode> selections) {
-        throw new UnsupportedOperationException("Unimplemented method 'resolveEnumValue'");
+        // C++ enum resolution not yet implemented; no current detection rule uses EnumHook
+        return null;
     }
 
     @Nonnull
@@ -292,9 +322,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             if (newInitializer != null) {
                 AstNode expressionList =
                         newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                if (expressionList != null) {
-                    return getTraceSymbol(parameter, expressionList.getChildren());
-                }
+                return getTraceSymbol(parameter, flattenConstructorArgs(expressionList));
             }
         }
         return Optional.empty();
@@ -372,11 +400,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             if (newInitializer != null) {
                 AstNode expressionList =
                         newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                if (expressionList != null) {
-                    arguments = expressionList.getChildren();
-                } else {
-                    arguments = Collections.emptyList();
-                }
+                arguments = flattenConstructorArgs(expressionList);
             } else {
                 arguments = Collections.emptyList();
             }
@@ -442,5 +466,29 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         return !(traceSymbol.is(TraceSymbol.State.DIFFERENT)
                 || (traceSymbol.is(TraceSymbol.State.SYMBOL) && !isInvocation)
                 || (traceSymbol.is(TraceSymbol.State.NO_SYMBOL) && assignedSymbol.isPresent()));
+    }
+
+    /**
+     * Extracts constructor arguments from an {@code expressionList} node, descending through the
+     * {@code initializerList} wrapper that sonar-cxx inserts between {@code expressionList} and the
+     * actual {@code initializerClause} children. Without this descent, {@code getChildren()}
+     * returns the single {@code initializerList} node instead of the argument nodes themselves.
+     */
+    @Nonnull
+    private List<AstNode> flattenConstructorArgs(@Nullable AstNode expressionList) {
+        if (expressionList == null) {
+            return Collections.emptyList();
+        }
+        AstNode initList = expressionList.getFirstChild(CxxGrammarImpl.initializerList);
+        if (initList == null) {
+            return expressionList.getChildren();
+        }
+        List<AstNode> out = new LinkedList<>();
+        for (AstNode child : initList.getChildren()) {
+            if (!",".equals(child.getTokenValue())) {
+                out.add(child);
+            }
+        }
+        return out;
     }
 }

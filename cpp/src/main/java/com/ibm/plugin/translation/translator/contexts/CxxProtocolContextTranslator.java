@@ -60,7 +60,9 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
 
         final ProtocolContext.Kind kind = ((ProtocolContext) detectionContext).kind();
 
-        // Handle OpenSSLVersionValue (custom value type with parameter extraction)
+        // OpenSSLVersionValue carries the version extracted from SSL_CTX_set_min/max_proto_version.
+        // When the context is TLS and the version string parses (e.g. "TLSv1.2" → Version("1.2")),
+        // emit a typed TLS node; otherwise emit a generic Protocol (covers DTLS, SSLv3, fallback).
         if (value instanceof OpenSSLVersionValue versionValue) {
             final String versionString = versionValue.asString();
             if (kind == ProtocolContext.Kind.TLS) {
@@ -70,7 +72,6 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
                 if (parsedVersion.isPresent()) {
                     return Optional.of(new TLS(parsedVersion.get()));
                 }
-                // Fallback to generic protocol if parsing fails
                 return Optional.of(new Protocol(versionString, detectionLocation));
             }
             return Optional.of(new Protocol(versionString, detectionLocation));
@@ -107,20 +108,20 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
                                                         suite.asString(), detectionLocation));
             };
         } else if (value instanceof ValueAction<AstNode> valueAction) {
-            // Handle ValueAction instances from ValueActionFactory
             final String stringValue = valueAction.asString();
-            if (kind == ProtocolContext.Kind.TLS) {
-                // Try to parse as SSL version first
+            if (kind == ProtocolContext.Kind.TLS
+                    && stringValue.regionMatches(true, 0, "tls", 0, 3)) {
+                // TLSv* strings: extract the version number and emit a typed TLS node.
+                // SSLv3, DTLS* and config strings (TLS-CIPHER-CONFIG etc.) share
+                // ProtocolContext.Kind.TLS but do not start with "tls" — they fall through
+                // to the generic Protocol path below.
                 final SSLVersionMapper sslVersionMapper = new SSLVersionMapper();
                 final Optional<Version> parsedVersion =
                         sslVersionMapper.parse(stringValue, detectionLocation);
                 if (parsedVersion.isPresent()) {
                     return Optional.of(new TLS(parsedVersion.get()));
                 }
-                // If not a version string, treat as generic protocol
-                return Optional.of(new Protocol(stringValue, detectionLocation));
             }
-            // For non-TLS protocols, create generic Protocol node
             return Optional.of(new Protocol(stringValue, detectionLocation));
         }
 

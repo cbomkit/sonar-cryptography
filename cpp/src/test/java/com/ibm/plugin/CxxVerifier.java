@@ -83,6 +83,9 @@ public final class CxxVerifier {
      * @param check The check (detection rule) to apply
      * @param charset The character set of the test file
      */
+    @SuppressWarnings("unchecked") // CxxAstScanner.scanSingleInputFileConfig takes
+    // SquidAstVisitor<Grammar>... varargs — passing a single typed visitor
+    // triggers a harmless generic-array creation warning
     public static void verify(
             @Nonnull String relativePath,
             @Nonnull SquidAstVisitor<Grammar> check,

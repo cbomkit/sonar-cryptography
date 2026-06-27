@@ -145,15 +145,20 @@
             <version>${sonar.go.version}</version>
         </dependency>
         <!-- sonar-cxx (community plugin for C/C++ support) -->
+        <!-- provided: sonar-cxx must be installed as a separate SonarQube plugin.
+             Bundling these into the uber-JAR causes ClassCastException at runtime
+             when both plugins are loaded by SonarQube's isolated classloaders. -->
         <dependency>
             <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
             <artifactId>cxx-squid-bridge</artifactId>
             <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
             <artifactId>cxx-squid</artifactId>
             <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- unit tests -->

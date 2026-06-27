@@ -183,15 +183,29 @@ public final class CxxSemantic {
         Object result;
         try {
             if (value.startsWith("0x") || value.startsWith("0X")) {
-                result = Integer.parseInt(value.substring(2), 16);
+                String digits = value.substring(2);
+                // Use unsigned parsing to handle values > 0x7FFFFFFF (e.g. SSL_OP_* flags)
+                result =
+                        digits.length() <= 8
+                                ? Integer.parseUnsignedInt(digits, 16)
+                                : Long.parseUnsignedLong(digits, 16);
             } else if (value.startsWith("0b") || value.startsWith("0B")) {
-                result = Integer.parseInt(value.substring(2), 2);
+                String digits = value.substring(2);
+                result =
+                        digits.length() <= 31
+                                ? Integer.parseUnsignedInt(digits, 2)
+                                : Long.parseUnsignedLong(digits, 2);
             } else if (value.startsWith("0") && value.length() > 1 && !value.contains(".")) {
-                result = Integer.parseInt(value.substring(1), 8);
+                String digits = value.substring(1);
+                result =
+                        digits.length() <= 10
+                                ? Integer.parseUnsignedInt(digits, 8)
+                                : Long.parseUnsignedLong(digits, 8);
             } else if (value.contains(".") || value.contains("e") || value.contains("E")) {
                 result = Double.parseDouble(value);
             } else {
-                result = Integer.parseInt(value);
+                long v = Long.parseLong(value);
+                result = (v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE) ? (int) v : v;
             }
         } catch (NumberFormatException e) {
             result = value;

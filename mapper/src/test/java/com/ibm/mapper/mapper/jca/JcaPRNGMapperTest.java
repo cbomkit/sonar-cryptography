@@ -30,7 +30,8 @@ import org.junit.jupiter.api.Test;
 
 class JcaPRNGMapperTest {
 
-    @Disabled
+    @Disabled(
+            "JcaPRNGMapper returns Optional.empty() for NativePRNGBlocking — mapping not yet implemented (see JcaPRNGMapper line 51)")
     @Test
     void base() {
         DetectionLocation testDetectionLocation =

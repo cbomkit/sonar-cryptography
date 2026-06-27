@@ -52,7 +52,7 @@ public final class OpenSSLLegacyDsa {
                     .forMethods("DSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -63,7 +63,7 @@ public final class OpenSSLLegacyDsa {
                     .forMethods("DSA_do_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -78,7 +78,7 @@ public final class OpenSSLLegacyDsa {
                     .forMethods("DSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -89,7 +89,7 @@ public final class OpenSSLLegacyDsa {
                     .forMethods("DSA_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 

@@ -53,7 +53,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SIGN"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -64,7 +64,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_verify")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-VERIFY"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -79,7 +79,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_padding_add_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -90,7 +90,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_padding_add_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -101,7 +101,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_verify_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -112,7 +112,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_verify_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withAnyParameters()
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.NONE))
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -179,7 +179,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -190,7 +190,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_generate_key_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -201,7 +201,7 @@ public final class OpenSSLLegacyRsa {
                     .forMethods("RSA_generate_multi_prime_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 

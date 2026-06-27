@@ -51,7 +51,7 @@ public final class OpenSSLLegacyDh {
                     .forMethods("DH_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -66,7 +66,7 @@ public final class OpenSSLLegacyDh {
                     .forMethods("DH_get_1024_160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -77,7 +77,7 @@ public final class OpenSSLLegacyDh {
                     .forMethods("DH_get_2048_224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -88,7 +88,7 @@ public final class OpenSSLLegacyDh {
                     .forMethods("DH_get_2048_256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -99,7 +99,7 @@ public final class OpenSSLLegacyDh {
                     .forMethods("DH_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 

@@ -29,14 +29,14 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                                     | Coverage           |
-| -------- | --------------------------------------------------------------------------------------------------------- | ------------------ |
-| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html)             | 100%               |
-|          | [BouncyCastle](https://github.com/bcgit/bc-java) (_light-weight API_)                                     | 100%[^1]           |
-| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                                   | 100%               |
-| Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                                  | 100%[^2]           |
-|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                             | Partial[^3]        |
-| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                       | 100%[^5]           |
+| Language | Cryptographic Library                                                                         | Coverage    |
+| -------- | --------------------------------------------------------------------------------------------- | ----------- |
+| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%        |
+|          | [BouncyCastle](https://github.com/bcgit/bc-java) (_light-weight API_)                         | 100%[^1]    |
+| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%        |
+| Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                      | 100%[^2]    |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3] |
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                           | 100%[^4]    |
 
 [^1]: We only cover the BouncyCastle _light-weight API_ according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
 
@@ -44,7 +44,7 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
 
-[^5]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Requires the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin.
+[^4]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Requires the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin.
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
