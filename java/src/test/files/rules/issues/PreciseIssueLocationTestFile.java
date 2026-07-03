@@ -64,7 +64,7 @@ public class PreciseIssueLocationTestFile {
      * @since 20.0
      */
     public static Mac hmacSha256(Key key) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256"); // Noncompliant {{(Mac) HMAC-SHA256}}
+        Mac mac = Mac.getInstance("HmacSHA256"); // Noncompliant {{(Mac) HMAC-SHA-256}}
         mac.init(key);
         return mac;
     }

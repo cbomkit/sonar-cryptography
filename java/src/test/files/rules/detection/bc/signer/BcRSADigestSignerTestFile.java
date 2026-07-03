@@ -18,7 +18,7 @@ public class BcRSADigestSignerTestFile {
 
         // Initialize RSADigestSigner with digest only
         RSADigestSigner digestOnlySigner = new RSADigestSigner(digest);
-        // Noncompliant@-1 {{(Signature) SHA256withRSA}}
+        // Noncompliant@-1 {{(Signature) RSA-PKCS1-1.5-SHA-256}}
 
         signer.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));
         digestOnlySigner.init(true, new RSAKeyParameters(true, new BigInteger("0"), new BigInteger("1")));

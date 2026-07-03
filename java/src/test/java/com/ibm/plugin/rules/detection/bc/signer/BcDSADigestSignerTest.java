@@ -154,13 +154,13 @@ class BcDSADigestSignerTest extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("SHA256withDSA");
+            assertThat(signatureNode.asString()).isEqualTo("DSA-SHA-256");
 
             // MessageDigest under Signature
             INode messageDigestNode = signatureNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(4);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA-256");
 
             // DigestSize under MessageDigest under Signature
             INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
