@@ -1,4 +1,3 @@
-import java.security.SecureRandom;
 import org.bouncycastle.crypto.macs.Poly1305;
 import org.bouncycastle.crypto.modes.ChaCha20Poly1305;
 import org.bouncycastle.crypto.params.AEADParameters;
@@ -9,8 +8,6 @@ public class BcChaCha20Poly1305TestFile {
     public static void test1() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Instantiate ChaCha20Poly1305 with constructor
         ChaCha20Poly1305 constructor = new ChaCha20Poly1305(); // Noncompliant {{(AuthenticatedEncryption) ChaCha20-Poly1305}}
@@ -24,8 +21,6 @@ public class BcChaCha20Poly1305TestFile {
     public static void test2() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Instantiate ChaCha20Poly1305 with constructor
         ChaCha20Poly1305 constructor =

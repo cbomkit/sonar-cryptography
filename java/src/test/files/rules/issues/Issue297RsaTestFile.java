@@ -1,5 +1,4 @@
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -27,8 +26,7 @@ public class Issue297RsaTestFile {
         int strength = 1024;
 
         BigInteger publicExponent = BigInteger.valueOf(0x10001);
-        SecureRandom rnd = new SecureRandom();
-        RSAKeyGenerationParameters p = new RSAKeyGenerationParameters(publicExponent, rnd, keySizeBits, strength);
+        RSAKeyGenerationParameters p = new RSAKeyGenerationParameters(publicExponent, null, keySizeBits, strength);
 
         RSAKeyPairGenerator g = new RSAKeyPairGenerator(); // Noncompliant {{(PublicKeyEncryption) RSA-2048}}
         g.init(p);

@@ -1,4 +1,3 @@
-import java.security.SecureRandom;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
@@ -23,6 +22,6 @@ public class Issue297Sha256TestFile {
 
     private static final int initStaticEntropy()
     {
-        return new SecureRandom().nextInt() & 0xff;
+        return 0;
     }
 }
