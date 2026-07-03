@@ -22,7 +22,9 @@ package com.ibm.mapper.model.algorithms;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -43,5 +45,13 @@ class AlgorithmNameCompositionTest {
     void sha3UsesSchemaTokenWithoutHyphenAfterSha() {
         SHA3 sha3 = new SHA3(256, TEST);
         assertThat(sha3.asString()).isEqualTo("SHA3-256");
+    }
+
+    @Test
+    void desComposesKeyLengthAndModeButNotPadding() {
+        Mode cbc = new CBC(TEST);
+        Padding pkcs5 = new PKCS5(TEST);
+        DES des = new DES(56, cbc, pkcs5, TEST);
+        assertThat(des.asString()).isEqualTo("DES-56-CBC");
     }
 }

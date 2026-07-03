@@ -54,11 +54,7 @@ public final class DES extends Algorithm implements BlockCipher, Mac {
 
     @Override
     public @Nonnull String asString() {
-        final StringBuilder sb = new StringBuilder(this.name);
-        this.hasChildOfType(KeyLength.class).ifPresent(k -> sb.append(k.asString()));
-        this.hasChildOfType(Mode.class).ifPresent(m -> sb.append("-").append(m.asString()));
-        this.hasChildOfType(Padding.class).ifPresent(p -> sb.append("-").append(p.asString()));
-        return sb.toString();
+        return composeName(true, true, false);
     }
 
     public DES(@Nonnull DetectionLocation detectionLocation) {
