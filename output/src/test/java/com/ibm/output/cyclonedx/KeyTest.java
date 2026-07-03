@@ -102,7 +102,7 @@ class KeyTest extends TestBase {
                         final CryptoProperties cryptoProperties = component.getCryptoProperties();
 
                         if (cryptoProperties.getAssetType().equals(AssetType.ALGORITHM)) {
-                            assertThat(component.getName()).isEqualTo("AES128-GCM");
+                            assertThat(component.getName()).isEqualTo("AES-128-GCM");
                             assertThat(cryptoProperties.getAlgorithmProperties()).isNotNull();
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();

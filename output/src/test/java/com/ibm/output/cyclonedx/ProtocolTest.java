@@ -97,7 +97,7 @@ class ProtocolTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("SHA-256withDSA", "SHA-256", "AES256-CBC", "TLS", "FFDH");
+                            .contains("DSA-SHA-256", "SHA-256", "AES-256-CBC", "TLS", "FFDH");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -109,7 +109,7 @@ class ProtocolTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("SHA-256withDSA");
+                                assertThat(component.getName()).isEqualTo("DSA-SHA-256");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.3.2");
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
@@ -125,7 +125,7 @@ class ProtocolTest extends TestBase {
                             } else if (algorithmProperties
                                     .getPrimitive()
                                     .equals(Primitive.BLOCK_CIPHER)) {
-                                assertThat(component.getName()).isEqualTo("AES256-CBC");
+                                assertThat(component.getName()).isEqualTo("AES-256-CBC");
                                 assertThat(algorithmProperties.getMode()).isEqualTo(Mode.CBC);
                                 assertThat(algorithmProperties.getParameterSetIdentifier())
                                         .isEqualTo("256");
@@ -182,7 +182,7 @@ class ProtocolTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(5);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("SHA-256withDSA", "SHA-256", "AES256-CBC", "TLSv1.3", "FFDH");
+                            .contains("DSA-SHA-256", "SHA-256", "AES-256-CBC", "TLSv1.3", "FFDH");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
@@ -194,7 +194,7 @@ class ProtocolTest extends TestBase {
                             final AlgorithmProperties algorithmProperties =
                                     cryptoProperties.getAlgorithmProperties();
                             if (algorithmProperties.getPrimitive().equals(Primitive.SIGNATURE)) {
-                                assertThat(component.getName()).isEqualTo("SHA-256withDSA");
+                                assertThat(component.getName()).isEqualTo("DSA-SHA-256");
                                 assertThat(cryptoProperties.getOid())
                                         .isEqualTo("2.16.840.1.101.3.4.3.2");
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
@@ -210,7 +210,7 @@ class ProtocolTest extends TestBase {
                             } else if (algorithmProperties
                                     .getPrimitive()
                                     .equals(Primitive.BLOCK_CIPHER)) {
-                                assertThat(component.getName()).isEqualTo("AES256-CBC");
+                                assertThat(component.getName()).isEqualTo("AES-256-CBC");
                                 assertThat(algorithmProperties.getMode()).isEqualTo(Mode.CBC);
                                 assertThat(algorithmProperties.getParameterSetIdentifier())
                                         .isEqualTo("256");
@@ -252,7 +252,7 @@ class ProtocolTest extends TestBase {
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(3);
                     assertThat(bom.getComponents().stream().map(Component::getName))
-                            .contains("AES128-CBC", "RSA", "IPSec");
+                            .contains("AES-128-CBC", "RSA", "IPSec");
 
                     for (Component component : bom.getComponents()) {
                         asserts(component.getEvidence());
