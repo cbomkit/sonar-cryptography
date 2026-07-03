@@ -19,8 +19,10 @@
  */
 package com.ibm.plugin.rules.detection.jca.cipher;
 
+import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.CIPHER_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.KEY_TYPE;
+import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
@@ -45,12 +47,25 @@ public final class JcaCipherWrap {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<Tree> CIPHER_UNWRAP_1 =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(CIPHER_TYPE)
+                    .forMethods("unwrap")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.UNWRAP))
+                    .withMethodParameter(BYTE_ARRAY_TYPE)
+                    .withMethodParameter(STRING_TYPE)
+                    .withMethodParameter("int")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "Jca")
+                    .withoutDependingDetectionRules();
+
     private JcaCipherWrap() {
         // nothing
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(CIPHER_WRAP_1);
+        return List.of(CIPHER_WRAP_1, CIPHER_UNWRAP_1);
     }
 }
