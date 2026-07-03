@@ -4,9 +4,21 @@
 [![Current Release](https://img.shields.io/github/release/cbomkit/sonar-cryptography.svg?logo=IBM)](https://github.com/cbomkit/sonar-cryptography/releases)
 
 
-This repository contains a SonarQube Plugin that detects cryptographic assets 
+This repository contains a SonarQube Plugin that detects cryptographic assets
 in source code and generates [CBOM](https://cyclonedx.org/capabilities/cbom/).
 It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
+
+## Table of Contents
+
+- [Version compatibility](#version-compatibility)
+- [Supported languages and libraries](#supported-languages-and-libraries)
+- [Installation](#installation)
+- [Using](#using)
+- [Example Output](#example-output)
+- [Build](#build)
+- [Help and troubleshooting](#help-and-troubleshooting)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
 
 ## Version compatibility
 
@@ -19,13 +31,13 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                         | Coverage |
-|----------|-----------------------------------------------------------------------------------------------|----------|
-| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%     |
-|          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1] |
-| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%     |
-| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2] |
-|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3] |
+| Language | Cryptographic Library                                                                         | Coverage         |
+|----------|-----------------------------------------------------------------------------------------------|------------------|
+| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%             |
+|          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1]         |
+| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%             |
+| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
 
 
 [^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
@@ -76,21 +88,138 @@ to start your first scan.
 
 ### Visualizing your CBOM
 
-Once you have scanned your source code with the plugin, and obtained a `cbom.json` file, you can use [Cbomkit's CBOM Viewer](https://github.com/cbomkit/cbomkit) service to know more about it.
+Once you have scanned your source code with the plugin, and obtained a `cbom.json` file, you can use [CBOMkit](https://github.com/cbomkit/cbomkit) service to know more about it.
 It provides you with general insights about the cryptography used in your source code and its compliance with post-quantum safety.
 It also allows you to explore precisely each cryptography asset and its detailed specification, and displays where it appears in your code.
 
+## Example Output
+
+The plugin generates a `cbom.json` file in [CycloneDX CBOM format](https://cyclonedx.org/capabilities/cbom/). Here's an example showing detected cryptographic assets:
+
+```json
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-01-20T10:58:39Z",
+    "tools": {
+      "services": [
+        {
+          "name": "CBOMkit",
+          "provider": { "name": "PQCA" }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "name": "SHA256",
+      "type": "cryptographic-asset",
+      "bom-ref": "0f4f522b-ef99-43b7-9f98-6e83b3b233ca",
+      "evidence": {
+        "occurrences": [
+          {
+            "line": 51,
+            "location": "src/main/java/com/example/EncryptionConfig.java",
+            "additionalContext": "java.security.MessageDigest#getInstance"
+          }
+        ]
+      },
+      "cryptoProperties": {
+        "oid": "2.16.840.1.101.3.4.2.1",
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "cryptoFunctions": ["digest"],
+          "parameterSetIdentifier": "256"
+        }
+      }
+    },
+    {
+      "name": "AES128-GCM",
+      "type": "cryptographic-asset",
+      "bom-ref": "e006c3f1-912a-4de5-8399-79bf0f350cb9",
+      "evidence": {
+        "occurrences": [
+          {
+            "line": 29,
+            "location": "src/main/java/com/example/aes/AESGCM.java",
+            "additionalContext": "javax.crypto.Cipher#getInstance"
+          }
+        ]
+      },
+      "cryptoProperties": {
+        "oid": "2.16.840.1.101.3.4.1",
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "mode": "gcm",
+          "primitive": "ae",
+          "cryptoFunctions": ["decrypt"],
+          "parameterSetIdentifier": "128"
+        }
+      }
+    },
+    {
+      "name": "RSA-OAEP",
+      "type": "cryptographic-asset",
+      "bom-ref": "ff238e09-dd3d-44c4-ad49-34350f1d9cc7",
+      "cryptoProperties": {
+        "oid": "1.2.840.113549.1.1.7",
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "mode": "ecb",
+          "padding": "oaep",
+          "primitive": "pke",
+          "parameterSetIdentifier": "2048"
+        }
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "secret-key-ref",
+      "dependsOn": ["AES128-ref"]
+    }
+  ]
+}
+```
+
+The CBOM includes:
+- **Algorithms**: Hash functions, ciphers, key exchange mechanisms with their parameters
+- **Keys and secrets**: Private keys, secret keys, and other cryptographic materials
+- **Evidence**: Source file locations where each asset was detected
+- **Dependencies**: Relationships between cryptographic assets (e.g., a secret key depending on an algorithm)
+
 ## Build
 
-### Adding packages to sonar-go-to-slang
+```bash
+# Build with tests
+mvn clean package
+
+# Build without tests (faster)
+mvn clean package -DskipTests
+
+# Build specific module
+mvn clean package -pl java
+
+# Format code (Google Java Format, AOSP style)
+mvn spotless:apply
+
+# Check formatting
+mvn spotless:check
+```
+
+<details>
+<summary><strong>Adding packages to sonar-go-to-slang (Go support)</strong></summary>
 
 Go cryptographic detection relies on [sonar-go-to-slang](https://github.com/SonarSource/sonar-go/tree/master/sonar-go-to-slang) for type resolution. The default binary includes common packages, but some cryptographic packages may require you to rebuild it with additional package export data.
 
-#### When is this needed?
+### When is this needed?
 
 If you see "undefined: \<identifier\>" errors during type checking for packages like `crypto/hmac`, `crypto/elliptic`, or `crypto/ecdsa`, you need to add the missing package export data.
 
-#### Steps to add a package
+### Steps to add a package
 
 1. **Generate the package export data file** (`.o` file):
 
@@ -150,13 +279,15 @@ Run with `go run gen_package.go`, then delete the script.
 
 4. **Rebuild the binary**: `./make.sh build`
 
-#### File naming convention
+### File naming convention
 
 | Package Path | Export Data File |
 |--------------|------------------|
 | `crypto/hmac` | `crypto_hmac.o` |
 | `crypto/elliptic` | `crypto_elliptic.o` |
 | `golang.org/x/crypto/bcrypt` | `x_crypto_bcrypt.o` |
+
+</details>
 
 ## Help and troubleshooting
 
@@ -173,12 +304,3 @@ start a discussion using [GitHub Discussions](https://github.com/cbomkit/sonar-c
 ## License
 
 [Apache License 2.0](LICENSE.txt)
-
-
-
-
-
-
-
-
-

@@ -46,6 +46,47 @@ public final class GoCryptoCipherModes {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
+    // cipher.NewGCMWithNonceSize(cipher cipher.Block, size int) (cipher.AEAD, error)
+    // Returns a new GCM mode wrapper with a custom nonce size
+    public static final IDetectionRule<Tree> NEW_GCM_WITH_NONCE_SIZE =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/cipher")
+                    .forMethods("NewGCMWithNonceSize")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("GCM"))
+                    .withMethodParameter("cipher.Block")
+                    .withMethodParameter("int")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // cipher.NewGCMWithRandomNonce(cipher cipher.Block) (cipher.AEAD, error)
+    // Returns a new GCM mode wrapper that generates random nonces (Go 1.25+)
+    public static final IDetectionRule<Tree> NEW_GCM_WITH_RANDOM_NONCE =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/cipher")
+                    .forMethods("NewGCMWithRandomNonce")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("GCM"))
+                    .withMethodParameter("cipher.Block")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
+    // cipher.NewGCMWithTagSize(cipher cipher.Block, tagSize int) (cipher.AEAD, error)
+    // Returns a new GCM mode wrapper with a custom tag size
+    public static final IDetectionRule<Tree> NEW_GCM_WITH_TAG_SIZE =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("crypto/cipher")
+                    .forMethods("NewGCMWithTagSize")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("GCM"))
+                    .withMethodParameter("cipher.Block")
+                    .withMethodParameter("int")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "GoCrypto")
+                    .withoutDependingDetectionRules();
+
     // cipher.NewCBCEncrypter(block cipher.Block, iv []byte) cipher.BlockMode
     // Returns a BlockMode which encrypts in cipher block chaining mode
     public static final IDetectionRule<Tree> NEW_CBC_ENCRYPTER =
@@ -134,6 +175,9 @@ public final class GoCryptoCipherModes {
     public static List<IDetectionRule<Tree>> rules() {
         return List.of(
                 NEW_GCM,
+                NEW_GCM_WITH_NONCE_SIZE,
+                NEW_GCM_WITH_RANDOM_NONCE,
+                NEW_GCM_WITH_TAG_SIZE,
                 NEW_CBC_ENCRYPTER,
                 NEW_CBC_DECRYPTER,
                 NEW_CFB_ENCRYPTER,

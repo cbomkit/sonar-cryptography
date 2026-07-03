@@ -46,7 +46,7 @@ public final class PycaAEAD {
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
                     .forObjectTypes(TYPE)
-                    .forMethods("decrypt")
+                    .forMethods("encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withAnyParameters()
                     .buildForContext(new CipherContext(Map.of("algorithm", "ChaCha20Poly1305")))

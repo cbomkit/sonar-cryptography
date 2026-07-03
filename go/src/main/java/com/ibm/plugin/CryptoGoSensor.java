@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FileSystem;
@@ -85,7 +84,7 @@ public class CryptoGoSensor implements Sensor {
     private final GoChecks checks;
     private final GoConverter goConverter;
 
-    public CryptoGoSensor(CheckFactory checkFactory, TempFolder tempFolder) {
+    public CryptoGoSensor(@Nonnull CheckFactory checkFactory, @Nonnull TempFolder tempFolder) {
         this.checks =
                 new GoChecks(checkFactory)
                         .addChecks(GoScannerRuleDefinition.REPOSITORY_KEY, GoRuleList.getChecks());
@@ -93,14 +92,18 @@ public class CryptoGoSensor implements Sensor {
     }
 
     @Override
-    public void describe(SensorDescriptor descriptor) {
+    public void describe(@Nonnull SensorDescriptor descriptor) {
         descriptor.onlyOnLanguage("go").name("Cryptography for Go");
     }
 
     @Override
-    public void execute(@NonNull SensorContext context) {
-        durationStatistics = new DurationStatistics(context.config());
-        memoryMonitor = new MemoryMonitor(context.config());
+    public void execute(@Nonnull SensorContext context) {
+        execute(context, this.goConverter, this.checks);
+    }
+
+    public static void execute(
+            @Nonnull SensorContext context, GoConverter goConverter, GoChecks checks) {
+        DurationStatistics durationStatistics = new DurationStatistics(context.config());
 
         Collection<GoCheck> activeChecks = checks.all();
         if (activeChecks.isEmpty()) {
@@ -132,9 +135,15 @@ public class CryptoGoSensor implements Sensor {
 
         boolean success = false;
         try {
-            var visitors = visitors(durationStatistics, goModFileDataStore);
+            // Only run ChecksVisitor with our crypto checks.
+            // Other visitors (SymbolVisitor, CpdVisitor, SyntaxHighlighter,
+            // IssueSuppressionVisitor)
+            // are handled by the official sonar-go sensor and would cause NoSuchMethodError due to
+            // shading conflicts between internal types and API types.
+            List<TreeVisitor<InputFileContext>> visitors =
+                    List.of(new ChecksVisitor(checks, durationStatistics, goModFileDataStore));
             success =
-                    analyseFiles(
+                    CryptoGoSensor.analyseFiles(
                             converter,
                             context,
                             inputFiles,
@@ -152,17 +161,7 @@ public class CryptoGoSensor implements Sensor {
         }
     }
 
-    @Nonnull
-    private List<TreeVisitor<InputFileContext>> visitors(
-            DurationStatistics statistics, GoModFileDataStore goModFileDataStore) {
-        // Only run ChecksVisitor with our crypto checks.
-        // Other visitors (SymbolVisitor, CpdVisitor, SyntaxHighlighter, IssueSuppressionVisitor)
-        // are handled by the official sonar-go sensor and would cause NoSuchMethodError due to
-        // shading conflicts between internal types and API types.
-        return List.of(new ChecksVisitor(checks, statistics, goModFileDataStore));
-    }
-
-    protected boolean analyseFiles(
+    static boolean analyseFiles(
             ASTConverter converter,
             @Nonnull SensorContext sensorContext,
             @Nonnull List<InputFile> inputFiles,

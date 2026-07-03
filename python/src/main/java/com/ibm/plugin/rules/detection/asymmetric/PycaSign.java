@@ -43,7 +43,7 @@ public final class PycaSign {
                             "cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey")
                     .forMethods("generate")
                     .shouldBeDetectedAs(new KeyActionFactory<>(KeyAction.Action.GENERATION))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new PrivateKeyContext(Map.of("algorithm", "Ed25519")))
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
@@ -55,7 +55,7 @@ public final class PycaSign {
                             "cryptography.hazmat.primitives.asymmetric.ed448.Ed448PrivateKey")
                     .forMethods("generate")
                     .shouldBeDetectedAs(new KeyActionFactory<>(KeyAction.Action.GENERATION))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new PrivateKeyContext(Map.of("algorithm", "Ed448")))
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();

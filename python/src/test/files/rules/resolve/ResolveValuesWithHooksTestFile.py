@@ -49,3 +49,13 @@ def fun17(arg17):
 def fun18():
     private_key = fun17(ec.SECP384R1()) # Noncompliant {{SECP384R1}}
     return private_key
+
+# Resolve an outer parameter that is used as a dictionary subscription index
+curve_table = {
+    b'ecdsa-sha2-nistp256': ec.SECP256R1(),
+    b'ecdsa-sha2-nistp384': ec.SECP384R1(),
+    b'ecdsa-sha2-nistp521': ec.SECP521R1(),
+}
+def fun19(curve):
+    return ec.generate_private_key(curve_table[curve])
+private_key = fun19(b'ecdsa-sha2-nistp256') # Noncompliant {{SECP256R1}}

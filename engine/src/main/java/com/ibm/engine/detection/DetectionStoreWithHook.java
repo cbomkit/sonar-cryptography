@@ -139,14 +139,35 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
         }
 
         List<ResolvedValue<Object, T>> resolvedValues;
+        T expressionToResolve = methodInvocationHookWithParameterResolvement.expressionToResolve();
         if (methodInvocationHookWithParameterResolvement.getParameter()
                 instanceof DetectableParameter<T> detectableParameter) {
-            resolvedValues =
-                    detectionEngine.resolveValuesInInnerScope(
-                            Object.class, argument, detectableParameter.getiValueFactory());
+            if (expressionToResolve != null) {
+                resolvedValues =
+                        detectionEngine.resolveValuesInInnerScope(
+                                Object.class,
+                                methodInvocationHookWithParameterResolvement.methodDefinition(),
+                                methodInvocation,
+                                expressionToResolve,
+                                detectableParameter.getiValueFactory());
+            } else {
+                resolvedValues =
+                        detectionEngine.resolveValuesInInnerScope(
+                                Object.class, argument, detectableParameter.getiValueFactory());
+            }
         } else {
-            resolvedValues =
-                    detectionEngine.resolveValuesInInnerScope(Object.class, argument, null);
+            if (expressionToResolve != null) {
+                resolvedValues =
+                        detectionEngine.resolveValuesInInnerScope(
+                                Object.class,
+                                methodInvocationHookWithParameterResolvement.methodDefinition(),
+                                methodInvocation,
+                                expressionToResolve,
+                                null);
+            } else {
+                resolvedValues =
+                        detectionEngine.resolveValuesInInnerScope(Object.class, argument, null);
+            }
         }
         if (resolvedValues.isEmpty()) {
             detectionEngine.resolveValuesInOuterScope(

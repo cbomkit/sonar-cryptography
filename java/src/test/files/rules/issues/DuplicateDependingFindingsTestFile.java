@@ -13,9 +13,9 @@ public class DuplicateDependingFindingsTestFile {
 
     public byte[] encryptCEK(final RSAPublicKey pub, final SecretKey cek)
     throws RuntimeException {
-        AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{RSA}}
+        AsymmetricBlockCipher engine = new RSAEngine(); // Noncompliant {{(PublicKeyEncryption) RSA}}
 
-        OAEPEncoding oaep = new OAEPEncoding(engine); // Noncompliant {{OAEP}}
+        OAEPEncoding oaep = new OAEPEncoding(engine); // Noncompliant {{(PublicKeyEncryption) RSA-OAEP}}
 
         oaep.init(true, new RSAKeyParameters(false, null, null));
 

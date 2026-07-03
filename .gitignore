@@ -39,3 +39,6 @@ build/
 
 ### Add binaries for testing ###
 !go/build/
+
+### Generated scan output ###
+cbom.json

@@ -45,6 +45,7 @@ public final class JavaReorganizerRules {
                 AeadBlockCipherReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,
                 AsymmetricBlockCipherReorganizer.INVERT_DIGEST_AND_ITS_SIZE,
                 AsymmetricBlockCipherReorganizer.MERGE_PKE_PARENT_AND_CHILD,
+                BlockCipherReorganizer.DEDUPLICATE_OVERLAPPING_ROOTS,
                 BlockCipherReorganizer.MERGE_BLOCK_CIPHER_PARENT_AND_CHILD,
                 CipherParameterReorganizer.MOVE_KEY_LENGTH_UNDER_TAG_LENGTH_UP,
                 CipherParameterReorganizer.MOVE_NODES_UNDER_DECRYPT_UP,

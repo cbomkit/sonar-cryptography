@@ -27,14 +27,13 @@ import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.functionality.Encrypt;
-import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.plugin.TestBase;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleJars;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sonar.java.checks.verifier.CheckVerifier;
 import org.sonar.plugins.java.api.JavaCheck;
@@ -51,12 +50,10 @@ class DuplicateDependingFindingsTest extends TestBase {
      * called (`oaep.init(...)`). The engine has the same depending detection rule, but it shouldn't
      * be triggered because it is not called for the engine (there is no `engine.init(...)`).
      *
-     * <p>The issue is here at the level of the detection store: the `init` depending detection rule
-     * is called both for the `OAEPEncoding` (expected) and for its engine (unexpected). This is not
-     * a major priority issue because this duplicate does not create confusion and can easily be
-     * removed at translation.
+     * <p>This test verifies that at the level of the detection store, the `init` depending on
+     * detection rule is correctly called only for the `OAEPEncoding` (expected) and not for its
+     * engine (unexpected), ensuring duplicate depending on findings are not propagated.
      */
-    @Disabled
     @Test
     void test() {
         CheckVerifier.newVerifier()
@@ -83,7 +80,7 @@ class DuplicateDependingFindingsTest extends TestBase {
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("OAEP");
+        assertThat(value0.asString()).isEqualTo("OAEPEncoding");
 
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_1 =
                 getStoreOfValueType(OperationMode.class, detectionStore.getChildren());
@@ -99,7 +96,7 @@ class DuplicateDependingFindingsTest extends TestBase {
         assertThat(store_2.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value0_2 = store_2.getDetectionValues().get(0);
         assertThat(value0_2).isInstanceOf(ValueAction.class);
-        assertThat(value0_2.asString()).isEqualTo("RSA");
+        assertThat(value0_2.asString()).isEqualTo("RSAEngine");
 
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_2_1 =
                 getStoreOfValueType(OperationMode.class, store_2.getChildren());
@@ -116,7 +113,7 @@ class DuplicateDependingFindingsTest extends TestBase {
         INode publicKeyEncryptionNode = nodes.get(0);
         assertThat(publicKeyEncryptionNode.getKind()).isEqualTo(PublicKeyEncryption.class);
         assertThat(publicKeyEncryptionNode.getChildren()).hasSize(3);
-        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("RSA");
+        assertThat(publicKeyEncryptionNode.asString()).isEqualTo("RSA-OAEP");
 
         // Encrypt under PublicKeyEncryption
         INode encryptNode = publicKeyEncryptionNode.getChildren().get(Encrypt.class);
@@ -126,7 +123,7 @@ class DuplicateDependingFindingsTest extends TestBase {
 
         // OptimalAsymmetricEncryptionPadding under PublicKeyEncryption
         INode optimalAsymmetricEncryptionPaddingNode =
-                publicKeyEncryptionNode.getChildren().get(OAEP.class);
+                publicKeyEncryptionNode.getChildren().get(Padding.class);
         assertThat(optimalAsymmetricEncryptionPaddingNode).isNotNull();
         assertThat(optimalAsymmetricEncryptionPaddingNode.getChildren()).isEmpty();
         assertThat(optimalAsymmetricEncryptionPaddingNode.asString()).isEqualTo("OAEP");

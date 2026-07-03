@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2025 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.benchmark;
+package com.ibm.plugin.rules.detection.hash;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,71 +35,68 @@ import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
-import org.sonar.java.checks.verifier.CheckVerifier;
-import org.sonar.plugins.java.api.JavaCheck;
-import org.sonar.plugins.java.api.JavaFileScannerContext;
-import org.sonar.plugins.java.api.semantic.Symbol;
-import org.sonar.plugins.java.api.tree.Tree;
+import org.sonar.plugins.python.api.PythonCheck;
+import org.sonar.plugins.python.api.PythonVisitorContext;
+import org.sonar.plugins.python.api.symbols.Symbol;
+import org.sonar.plugins.python.api.tree.Tree;
+import org.sonar.python.checks.utils.PythonCheckVerifier;
 
-class BenchmarkTest00003Test extends TestBase {
+class PycaHashDirectTest extends TestBase {
 
     @Test
     void test() {
-        CheckVerifier.newVerifier()
-                .onFile("src/test/files/rules/benchmark/BenchmarkTest00003.java")
-                .withChecks(this)
-                .verifyIssues();
+        PythonCheckVerifier.verify(
+                "src/test/files/rules/detection/hash/PycaHashDirectTest.py", this);
     }
 
     @Override
     public void asserts(
             int findingId,
-            @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
+            @Nonnull DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> detectionStore,
             @Nonnull List<INode> nodes) {
+
         /*
          * Detection Store
          */
-
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(Algorithm.class);
-        assertThat(value0.asString()).isEqualTo("SHA512");
+        assertThat(value0.asString()).isEqualTo("SHA256");
 
         /*
          * Translation
          */
-
         assertThat(nodes).hasSize(1);
 
-        // MessageDigest
+        // MessageDigest (SHA256)
         INode messageDigestNode = nodes.get(0);
         assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA-512");
-
-        // Oid under MessageDigest
-        INode oidNode = messageDigestNode.getChildren().get(Oid.class);
-        assertThat(oidNode).isNotNull();
-        assertThat(oidNode.getChildren()).isEmpty();
-        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.2.3");
-
-        // BlockSize under MessageDigest
-        INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
-        assertThat(blockSizeNode).isNotNull();
-        assertThat(blockSizeNode.getChildren()).isEmpty();
-        assertThat(blockSizeNode.asString()).isEqualTo("1024");
-
-        // Digest under MessageDigest
-        INode digestNode = messageDigestNode.getChildren().get(Digest.class);
-        assertThat(digestNode).isNotNull();
-        assertThat(digestNode.getChildren()).isEmpty();
-        assertThat(digestNode.asString()).isEqualTo("DIGEST");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA256");
 
         // DigestSize under MessageDigest
         INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);
         assertThat(digestSizeNode).isNotNull();
         assertThat(digestSizeNode.getChildren()).isEmpty();
-        assertThat(digestSizeNode.asString()).isEqualTo("512");
+        assertThat(digestSizeNode.asString()).isEqualTo("256");
+
+        // BlockSize under MessageDigest
+        INode blockSizeNode = messageDigestNode.getChildren().get(BlockSize.class);
+        assertThat(blockSizeNode).isNotNull();
+        assertThat(blockSizeNode.getChildren()).isEmpty();
+        assertThat(blockSizeNode.asString()).isEqualTo("512");
+
+        // Oid under MessageDigest
+        INode oidNode = messageDigestNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.2.1");
+
+        // Digest functionality under MessageDigest
+        INode digestNode = messageDigestNode.getChildren().get(Digest.class);
+        assertThat(digestNode).isNotNull();
+        assertThat(digestNode.getChildren()).isEmpty();
+        assertThat(digestNode.asString()).isEqualTo("DIGEST");
     }
 }

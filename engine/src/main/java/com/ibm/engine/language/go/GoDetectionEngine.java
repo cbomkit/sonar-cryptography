@@ -310,7 +310,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         resolveValues(clazz, valueTree, valueFactory, selections));
                             }
                         }
-                        // PARAMETER and REFERENCE types are handled by outer scope resolution
+                        // REFERENCE and PARAMETER are resolved outside
                     }
 
                     if (!result.isEmpty()) {
@@ -318,25 +318,6 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     }
                 }
             }
-
-            // Fallback: try to resolve the identifier name as a constant, but only if the
-            // identifier is not a function parameter (parameters don't have resolvable values
-            // without a concrete call site).
-            boolean isParameter =
-                    symbol != null
-                            && symbol.getUsages() != null
-                            && symbol.getUsages().stream()
-                                    .anyMatch(u -> u.type() == UsageType.PARAMETER);
-            if (!isParameter) {
-                String name = identifierTree.name();
-                if (name != null && !name.isEmpty()) {
-                    Optional<O> value = resolveConstant(clazz, name);
-                    if (value.isPresent()) {
-                        return List.of(new ResolvedValue<>(value.get(), tree));
-                    }
-                }
-            }
-            return Collections.emptyList();
         }
 
         // Handle MemberSelectTree - pkg.member or receiver.method patterns

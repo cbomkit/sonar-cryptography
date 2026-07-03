@@ -28,6 +28,7 @@ import com.ibm.plugin.rules.detection.asymmetric.PycaEllipticCurve;
 import com.ibm.plugin.rules.detection.asymmetric.PycaRSA;
 import com.ibm.plugin.rules.detection.asymmetric.PycaSign;
 import com.ibm.plugin.rules.detection.fernet.PycaFernet;
+import com.ibm.plugin.rules.detection.hash.PycaHash;
 import com.ibm.plugin.rules.detection.kdf.PycaKDF;
 import com.ibm.plugin.rules.detection.keyagreement.PycaKeyAgreement;
 import com.ibm.plugin.rules.detection.mac.PycaMAC;
@@ -56,6 +57,7 @@ public final class PythonDetectionRules {
                         PycaAEAD.rules().stream(),
                         PycaAES.rules().stream(),
                         PycaCipher.rules().stream(),
+                        PycaHash.wrapperRules().stream(),
                         PycaMAC.rules().stream(),
                         PycaWrapping.rules().stream(),
                         PycaKDF.rules().stream(),

@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.hash;
 
 import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -85,10 +86,27 @@ public final class PycaHash {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
+    // Detects hashes.Hash(hashes.SHA256()) and similar direct hash-computation usages.
+    private static final IDetectionRule<Tree> HASH_WRAPPER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("cryptography.hazmat.primitives.hashes")
+                    .forMethods("Hash")
+                    .withMethodParameter("cryptography.hazmat.primitives.hashes.*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> "Pyca")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
         final List<IDetectionRule<Tree>> hashAndPrehashRules = new LinkedList<>(hashesRules());
         hashAndPrehashRules.add(PRE_HASH);
         return hashAndPrehashRules;
+    }
+
+    @Nonnull
+    public static List<IDetectionRule<Tree>> wrapperRules() {
+        return List.of(HASH_WRAPPER);
     }
 }

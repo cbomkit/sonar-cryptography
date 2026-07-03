@@ -21,6 +21,7 @@ package com.ibm.engine.detection;
 
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.Parameter;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -84,6 +85,21 @@ public interface IDetectionEngine<T, S> {
             @Nonnull Class<O> clazz,
             @Nonnull T expression,
             @Nullable IValueFactory<T> valueFactory);
+
+    /**
+     * Resolves an expression from a method definition in the context of a specific method call. The
+     * default implementation returns no values; languages with explicit call-argument mapping can
+     * override it.
+     */
+    @Nonnull
+    default <O> List<ResolvedValue<O, T>> resolveValuesInInnerScope(
+            @Nonnull Class<O> clazz,
+            @Nonnull T methodDefinition,
+            @Nonnull T methodInvocation,
+            @Nonnull T expression,
+            @Nullable IValueFactory<T> valueFactory) {
+        return Collections.emptyList();
+    }
 
     /**
      * Resolves values in the outer scope for a given expression and parameter.

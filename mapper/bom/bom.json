@@ -1,10 +1,10 @@
 {
   "bomFormat" : "CycloneDX",
   "specVersion" : "1.5",
-  "serialNumber" : "urn:uuid:0195eb35-eeb8-3796-98bf-b8425e78bd09",
+  "serialNumber" : "urn:uuid:330c2f69-f206-30bb-b5b7-3118d748bbd5",
   "version" : 1,
   "metadata" : {
-    "timestamp" : "2024-04-12T08:16:51Z",
+    "timestamp" : "2026-01-28T14:17:33Z",
     "lifecycles" : [
       {
         "phase" : "build"
@@ -52,32 +52,32 @@
       }
     ],
     "component" : {
-      "publisher" : "IBM",
+      "publisher" : "cbomkit",
       "group" : "com.ibm",
       "name" : "mapper",
-      "version" : "1.0.3-SNAPSHOT",
+      "version" : "2.0.0-SNAPSHOT",
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "https://www.gnu.org/licenses/lgpl.txt"
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
           }
         }
       ],
-      "purl" : "pkg:maven/com.ibm/mapper@1.0.3-SNAPSHOT?type=jar",
+      "purl" : "pkg:maven/com.ibm/mapper@2.0.0-SNAPSHOT?type=jar",
       "externalReferences" : [
         {
           "type" : "distribution-intake",
-          "url" : "https://eu.artifactory.swg-devops.com/artifactory/res-cryptoagility-team-maven-local"
+          "url" : "https://maven.pkg.github.com/cbomkit/sonar-cryptography"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.ibm/mapper@1.0.3-SNAPSHOT?type=jar"
+      "bom-ref" : "pkg:maven/com.ibm/mapper@2.0.0-SNAPSHOT?type=jar"
     },
     "properties" : [
       {
         "name" : "maven.goal",
-        "value" : "makeBom"
+        "value" : "makeAggregateBom"
       },
       {
         "name" : "maven.scopes",
@@ -87,221 +87,160 @@
   },
   "components" : [
     {
-      "publisher" : "IBM",
+      "publisher" : "cbomkit",
       "group" : "com.ibm",
       "name" : "engine",
-      "version" : "1.0.3-SNAPSHOT",
+      "version" : "2.0.0-SNAPSHOT",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "67ae457c13ac566ea59b295a59cb7e95"
+          "content" : "82d71013150d0cc35b2f86c047257ea5"
         },
         {
           "alg" : "SHA-1",
-          "content" : "174f4581fdccafe44ba8b06ca8776250a7cbd6be"
+          "content" : "d8aa90c2d6a5d43a659f77c8106d2638f2fa9b46"
         },
         {
           "alg" : "SHA-256",
-          "content" : "e516d0b5fab931fc1f1c39d1ea892f2a07503ec2a245bbc9dcb1c6804adbafd2"
+          "content" : "a30d5984faeef0722b4cfc6b96e0680e11807dd0e058b791ea2ce803526851f9"
         },
         {
           "alg" : "SHA-512",
-          "content" : "914b26f230b80175d70655604c16a5d2f0c34c95be27f5eaedcb01ccd71680c4723f8978c05bf7127f74f2d56beec3cbb98c18b372dfee525d07b7a0b88cd43e"
+          "content" : "4e2c67e7f337c49c43299da83b8707bac597304ce744a08fc3105e8679a9c1d0908b06a73557ae5b33e3f3cde36dffa11bae79a63b90bccc676cf690ea46be22"
         },
         {
           "alg" : "SHA-384",
-          "content" : "0b224db460fdd73a412e39107df54b1bf11c43c424032ad00a73b7f695ba693b4e18a4cc3865f3b42d85840c703b2f1a"
+          "content" : "c259f83084de03dfb95efb15da1bb5e89a70453ca58df5929ad51fbebc3f4a46e7964249f1bcb71e099167511772bf77"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "a4980534f8d193ee0e6c984d540af540221d481fa955c7262eedccdb97afd92701478c32dec4bb874545524c95e4ae4a"
+          "content" : "aafaf842f747bd36b202cba133419618398debf30bef80ace36629d995c510f045a5227181b98e22685865fd59559080"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "b10c75d6a28044f378a59270380d20f7032b80146c669292c31e9140f1cd6548"
+          "content" : "98c5eb98fa32698d7f1070c731ed32053f8528393a9696f983ae285f9054831d"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "a93f4b34a1818b9eb6675e31b810583ff28f6e76470494819d5a7c831d987474bd4c600f297655dfb8c379d3af3861634e7668bfa22c4eddfacf2539cee17ec7"
+          "content" : "a695852c9a2886e19fde16679d404d92be3ae62617ca460852c29a16601c97385a494b3865b92864f125bed747d7e5836f13153ae86a6c3b7179317d22fa2070"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "https://www.gnu.org/licenses/lgpl.txt"
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
           }
         }
       ],
-      "purl" : "pkg:maven/com.ibm/engine@1.0.3-SNAPSHOT?type=jar",
+      "purl" : "pkg:maven/com.ibm/engine@2.0.0-SNAPSHOT?type=jar",
       "externalReferences" : [
         {
           "type" : "distribution-intake",
-          "url" : "https://eu.artifactory.swg-devops.com/artifactory/res-cryptoagility-team-maven-local"
+          "url" : "https://maven.pkg.github.com/cbomkit/sonar-cryptography"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.ibm/engine@1.0.3-SNAPSHOT?type=jar"
+      "bom-ref" : "pkg:maven/com.ibm/engine@2.0.0-SNAPSHOT?type=jar"
     },
     {
-      "publisher" : "IBM",
+      "publisher" : "cbomkit",
       "group" : "com.ibm",
       "name" : "common",
-      "version" : "1.0.3-SNAPSHOT",
+      "version" : "2.0.0-SNAPSHOT",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "6b537a90ffd838bb65c5a9c2ff371dce"
+          "content" : "0bc212a0d7a96c40a0c6792249b21ee7"
         },
         {
           "alg" : "SHA-1",
-          "content" : "76b39430ee28fd8962edae300a91d5ebc52c1076"
+          "content" : "70c6efeb7474e7b78595b6601584276bb7a90814"
         },
         {
           "alg" : "SHA-256",
-          "content" : "1c9dcb0bdef66d58f48eebc5be6b625485ceba73f8e3310d8b72f5341094acea"
+          "content" : "aff8b56a14f886f07e502bf26baa476c3b6f3b79b8b6b003da2260435cda087f"
         },
         {
           "alg" : "SHA-512",
-          "content" : "be406c24fb42f8595a51ff011041cb03271ff299d6c724961276f76ccc3c2a70a02e41726c188cd48081f064de989d16abf295658ac33a3d0f417a20eeb6c879"
+          "content" : "dcd37bc935a630965b07aa61633eb51e8ea58543a277f387edb93956a5153b447bd93a48ca2236a56ebf8df5b72b6f4e1759a4d222d1b12b480730f378ad87b1"
         },
         {
           "alg" : "SHA-384",
-          "content" : "dcdf2d7e35abc1fc724ab290bbc10952df07a9b5ccd18373fb549c56bd14da38f529de16240e1fee98e083fc025876d8"
+          "content" : "8af172d828b3415fb085293a1788e04fe53cbba7ae53c2c4911f5333dc30cea9e3a11255922852f6269b09786b9fc8b4"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "113bf691c2e686f7b92e4b8c9a4bc788d6c14e77eb448d59a2532c2a0cfa35bdb8f9a87b3a02cc72052f0b0d65fa1ac4"
+          "content" : "8b03cb2f7fd323ad12fe42836a91697c8a74689b3fc732c16353eab599f709c88ca68dc05e1a4464990990bdd14000f2"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "b1103a71a3a027ab5c74986541390192f9c3e9aacc6c05bf6500b653b3b2e387"
+          "content" : "118e266f4ab89f83ee60b405959cdfb3f114d3f2553d16d5e34cf8791f8164f5"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "b03a0a66d302c49312991dd472959472afe74e62fea2b0fe725e4c34dad295a4ac7b34e9e13bcd916141836a2e00dde967da90844a5f65dd7120da3318092130"
+          "content" : "9af3f6a7540ea1567edea928cd5a7cec4dbea9e0726f9a03de4a0dbeb8eb7e0764ac1db432a816dd2f3d182a0102c7c866fc82f79212650825253055680ba09a"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "https://www.gnu.org/licenses/lgpl.txt"
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
           }
         }
       ],
-      "purl" : "pkg:maven/com.ibm/common@1.0.3-SNAPSHOT?type=jar",
+      "purl" : "pkg:maven/com.ibm/common@2.0.0-SNAPSHOT?type=jar",
       "externalReferences" : [
         {
           "type" : "distribution-intake",
-          "url" : "https://eu.artifactory.swg-devops.com/artifactory/res-cryptoagility-team-maven-local"
+          "url" : "https://maven.pkg.github.com/cbomkit/sonar-cryptography"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.ibm/common@1.0.3-SNAPSHOT?type=jar"
-    },
-    {
-      "group" : "org.jetbrains",
-      "name" : "annotations",
-      "version" : "24.1.0",
-      "description" : "A set of annotations used for code inspection support and code documentation.",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "38673abe87d12508cd05498eff0b9731"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "7af6a669488450c4a07c2c3254e2151df42d7d04"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "27a770dc7ce50500918bb8c3c0660c98290630ec796b5e3cf6b90f403b3033c6"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "663395a885561cc97eed411c67b496c06ec9a54906185a871de8743bf53e92152f4bc7c2a0118b7f3cfe85cc0a6c408ac6d589839b8d25c851637f85880331f2"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "85779b72d864894f1d3cdd489b0a419c0620281c4fd22a061f4a3fe2aee91015681889573200cd2124c3add48a3216a6"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "0cfce80b012ba441be96368fe8af54e805100f7680fdbb7defae4dd07ff3c75cd0f89b993a61bef139a405637a73236f"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "f7c5e25c9c16aad9f5482f3853660238db4f32be72c20f40383a1d20e0306f42"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "0f74369cdb67a58c0f89033723665320eb535d1c1e66049347f6b3e25cbf7d1f80b8fa3a7b3e0b4fa8eae8d9ec8c30510b65bab581adeaff3f94651fa214105a"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://github.com/JetBrains/java-annotations"
-        },
-        {
-          "type" : "vcs",
-          "url" : "https://github.com/JetBrains/java-annotations"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar"
+      "bom-ref" : "pkg:maven/com.ibm/common@2.0.0-SNAPSHOT?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.api.plugin",
       "name" : "sonar-plugin-api",
-      "version" : "9.13.0.360",
+      "version" : "13.4.3.4290",
       "description" : "Plugin API for SonarQube, SonarCloud and SonarLint",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "b401a934655540b37bf6765778a7b759"
+          "content" : "9121c8851ff1af1153c8dd4fa94c9ce7"
         },
         {
           "alg" : "SHA-1",
-          "content" : "64b99cf118b048da0fa98a397b2e03f11c6970e9"
+          "content" : "64194b3b6336b78df92f9fa5a58682c85ec5626b"
         },
         {
           "alg" : "SHA-256",
-          "content" : "f20ae1d944f84a611583c33900d8788aa855a0d9ea66493e1046539715d53c0c"
+          "content" : "ce1c77307f81897f3c8f901d81a0169db9f2ec614d65723679bc8bfedceb56dd"
         },
         {
           "alg" : "SHA-512",
-          "content" : "f6b8fa7447300c1f95e14e9be12d36419b302d1844bd069ceaae134b3caa54d546a337be3c66e8e25ca5dd78fb95e76f92306cf5c26ba0730e3c730d443c2822"
+          "content" : "8a9f34a03acbe05d9086119287ab2b2d84c8bff43367f75d42ca5bd5f66c54e4007d1affe247f7f3a0cb710328705b6a0db0db2e211b46e8979ea9e3eee6c401"
         },
         {
           "alg" : "SHA-384",
-          "content" : "5cbdc17456d4ab1959cd8ad59d64a733224a3d03aa0f1e12968e0e7c86785e465d3f27f7c54b13c858326b4ee8bd60a7"
+          "content" : "7f1d268c151ad6fda7e5c5b21abb74b5a4b2bcb3e43fb4d3eceef01cab5e28e12b0d019d6d7da39a977f1fd8a6260ed2"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "8930616bed39525c4c5c0396f8c541268b46b1df45432ee66ca6af8609a6ebd1e904493f025ba4b045401930a3ea2a2d"
+          "content" : "c4ab8215fb558662a98375c9f347636f4e27fa912a23acadf804c5661caa2899529a6777f8c9f9a133c5a6e676ec0bf4"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "4fb1225cc1bed06656fa92422d0425b44032725e6afb8d980c4af8cd8efc4b40"
+          "content" : "acb5c5fb43a612de73d7562499398bfb7678b878de04ecb697590fac4ed2e61c"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "3a505b03e37ff9bd00248bf77344b880f206042a81b90eccbb42a78fe2496ff4f61c519f4ec77ded65d1f488b4caf6a69afae97a9a5a59f915ec8068176a0cbb"
+          "content" : "bf256b0cd721c685cc677bc5ab0af2eb68e469b7cdcd9e9bae7b60baa718b159b0e2cc9ca489a088b8d4556cef33da26d1bdf7fb1b952014b61e4b282aface76"
         }
       ],
       "licenses" : [
@@ -312,7 +251,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@9.13.0.360?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@13.4.3.4290?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -324,60 +263,62 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@9.13.0.360?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@13.4.3.4290?type=jar"
     },
     {
-      "group" : "com.google.code.findbugs",
-      "name" : "jsr305",
-      "version" : "3.0.2",
-      "description" : "JSR305 Annotations for Findbugs",
+      "publisher" : "QOS.ch",
+      "group" : "org.slf4j",
+      "name" : "slf4j-api",
+      "version" : "2.0.17",
+      "description" : "The slf4j API",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "dd83accb899363c32b07d7a1b2e4ce40"
+          "content" : "b6480d114a23683498ac3f746f959d2f"
         },
         {
           "alg" : "SHA-1",
-          "content" : "25ea2e8b0c338a877313bd4672d3fe056ea78f0d"
+          "content" : "d9e58ac9c7779ba3bf8142aff6c830617a7fe60f"
         },
         {
           "alg" : "SHA-256",
-          "content" : "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+          "content" : "7b751d952061954d5abfed7181c1f645d336091b679891591d63329c622eb832"
         },
         {
           "alg" : "SHA-512",
-          "content" : "bb09db62919a50fa5b55906013be6ca4fc7acb2e87455fac5eaf9ede2e41ce8bbafc0e5a385a561264ea4cd71bbbd3ef5a45e02d63277a201d06a0ae1636f804"
+          "content" : "9a3e79db6666a6096a3021bb2e1d918f30f589d8de51d6b600f8ebd92515a510ae2d8f87919cc2dfa8365d64f10194cac8dfa0fb950160eef0e9da06f6caaeb9"
         },
         {
           "alg" : "SHA-384",
-          "content" : "ca0b169d3eb2d0922dc031133a021f861a043bb3e405a88728215fd6ff00fa52fdc7347842dcc2031472e3726164bdc4"
+          "content" : "6ea24f814a9b6ece428cfd0535e2f3b8927005745ef61006b50fdb5a90126ee5ea05650155382b3b755c5bce38ef3944"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "9903fd7505218999f8262efedb3d935d64bcef84aae781064ab5e1b24755466b269517cada562fa140cd1d417ede57a1"
+          "content" : "9b1015052f0ec43f9be09764e131834157599611cb52f6fe591c4ac6a8ab4817518f2a4b8871e5e738c8678e93af5557"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "223fda9a89a461afaae73b177a2dc20ed4a90f2f8757f5c65f3241b0510f00ff"
+          "content" : "00559b4f4066b4917ba4fe2a6f23111eaeada321112d030910d218ced9084b5e"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "3996b5af57a5d5c6a0cd62b11773360fb051dd86a2ba968476806a2a5d32049b82d69a24a3c694e8fe4d735be6a28e41000cc500cc2a9fb577e058045855d2d6"
+          "content" : "9579c2f7e7516e177c2d493ccc9eb8150978cf19f6f09b28d116f6935239fd56dc6af2b62b3336f79b0b462445550cd1fb5377a07001a6f44aaab6a32fa2fa47"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "id" : "Apache-2.0"
+            "id" : "MIT",
+            "url" : "https://opensource.org/licenses/MIT"
           }
         }
       ],
-      "purl" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
+      "purl" : "pkg:maven/org.slf4j/slf4j-api@2.0.17?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "http://findbugs.sourceforge.net/"
+          "url" : "http://www.slf4j.org"
         },
         {
           "type" : "distribution-intake",
@@ -385,51 +326,51 @@
         },
         {
           "type" : "vcs",
-          "url" : "https://code.google.com/p/jsr-305/"
+          "url" : "https://github.com/qos-ch/slf4j/slf4j-parent/slf4j-api"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar"
+      "bom-ref" : "pkg:maven/org.slf4j/slf4j-api@2.0.17?type=jar"
     },
     {
       "publisher" : "The Apache Software Foundation",
       "group" : "org.apache.commons",
       "name" : "commons-lang3",
-      "version" : "3.14.0",
-      "description" : "Apache Commons Lang, a package of Java utility classes for the classes that are in java.lang's hierarchy, or are considered to be so standard as to justify existence in java.lang.",
+      "version" : "3.18.0",
+      "description" : "Apache Commons Lang, a package of Java utility classes for the classes that are in java.lang's hierarchy, or are considered to be so standard as to justify existence in java.lang. The code is tested using the latest revision of the JDK for supported LTS releases: 8, 11, 17 and 21 currently. See https://github.com/apache/commons-lang/blob/master/.github/workflows/maven.yml Please ensure your build environment is up-to-date and kindly report any build issues.",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "4e5c3f5e6b0b965ef241d7d72ac8971f"
+          "content" : "48b9886957920a4cdb602780ca345087"
         },
         {
           "alg" : "SHA-1",
-          "content" : "1ed471194b02f2c6cb734a0cd6f6f107c673afae"
+          "content" : "fb14946f0e39748a6571de0635acbe44e7885491"
         },
         {
           "alg" : "SHA-256",
-          "content" : "7b96bf3ee68949abb5bc465559ac270e0551596fa34523fddf890ec418dde13c"
+          "content" : "4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720"
         },
         {
           "alg" : "SHA-512",
-          "content" : "0338b50767166e5746ada6d6aa2e071e7221d699323bfb629f7f204b294c1dc4cad140610a129ed751798443b43e74e0818989c7df7d33c5915aa29742be9ba8"
+          "content" : "c2c9d497fc1be411050f4011b2407764b78aa098eb42925af8a197eabdbc25b507f09fb898805e9bed4815f35236a508ee5b096e36f363df4d407232d50fc832"
         },
         {
           "alg" : "SHA-384",
-          "content" : "908d0a22dc17aaa04caa5104cff7cad5b88b77eecb78dd5b3b3fefa22ff71ac50a4fb9e31c897ac243f9d841e4b3453d"
+          "content" : "4fb3f101106e4ce3666d5c15d276ba86f7683a0ef35f0384edfcd579ea454275edbb7400795d265ec3a38e39997e79b8"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "8a7f2e061b998780870eddd571620fbf3d3c70bcb54e24539d0db504f59d65bc6bda58136284498babe29fcc5eabb7a6"
+          "content" : "aada7e3612cf3f6190a19fa7c3db74df1e13ec56b300be9bb4317d261d5877c84ab59ba9a09168becdbd82cd41961395"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "022bf1f8039fcea717e9e34dd96eb80cfff05b43c9cbb76e9739b2421e2d027c"
+          "content" : "306d286d0bd7549c203cc802fd755d354c4f7926fa023f4e83623ba1a6261250"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "0bcbc4edce974ea970c46e2da12ec98d9fd962c2cf64f757ac97136dec5623ca52af0c225895303c17ffabb57090e6772d7bd326d5e7438cef5454f8bbaeecfa"
+          "content" : "f6f1ecc684e309d7b9fc5c343792508fee935cd2119d962721662c5af88e4864ba6f47a863e083714f315f926c156de1970cd2fb577449bdfdc7bf98a4a451fa"
         }
       ],
       "licenses" : [
@@ -440,7 +381,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
+      "purl" : "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -448,7 +389,7 @@
         },
         {
           "type" : "build-system",
-          "url" : "https://github.com/apache/commons-parent/actions"
+          "url" : "https://github.com/apache/commons-lang/actions"
         },
         {
           "type" : "distribution-intake",
@@ -464,50 +405,50 @@
         },
         {
           "type" : "vcs",
-          "url" : "https://gitbox.apache.org/repos/asf?p=commons-lang.git"
+          "url" : "https://gitbox.apache.org/repos/asf/commons-lang.git"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar"
+      "bom-ref" : "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar"
     },
     {
       "group" : "com.google.code.gson",
       "name" : "gson",
-      "version" : "2.10.1",
+      "version" : "2.13.2",
       "description" : "Gson JSON library",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "df6097815738cb31fc56391553210843"
+          "content" : "a2c47e14ce5e956105458fe455f5d542"
         },
         {
           "alg" : "SHA-1",
-          "content" : "b3add478d4382b78ea20b1671390a858002feb6c"
+          "content" : "48b8230771e573b54ce6e867a9001e75977fe78e"
         },
         {
           "alg" : "SHA-256",
-          "content" : "4241c14a7727c34feea6507ec801318a3d4a90f070e4525681079fb94ee4c593"
+          "content" : "dd0ce1b55a3ed2080cb70f9c655850cda86c206862310009dcb5e5c95265a5e0"
         },
         {
           "alg" : "SHA-512",
-          "content" : "7503e4b8d05c6cc0ecb3a94c5a2e070e049083a441003a79a0cdf474f4286699b4ba1d2a655ddabb8ba10c50e7c36a7045cccdaee465166d4630db647aba2727"
+          "content" : "8974a052656d2e5ec968b6bac2edf51413ffc62040fdc65f14f00597e738ab544d22487f8579ba90618b5a7f94ef33773510fac67b408fee6ed274b38f3d9947"
         },
         {
           "alg" : "SHA-384",
-          "content" : "48a4786bd6e1867f058ee4fb676fc82d9d9f64a6d7420d4a47ae2398504c9de73222636614aeb4a9fbf10ee143d72226"
+          "content" : "98e8afe5b23c43b84e7a57e0e27f683a182fcf97ee3eeb6a1311582f7fecd846c806ffb092b620088dc03d256d8eaf27"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "3df9a0332c2766124fe7c915cfea665d2e318ccaa7212415fabd9e93e6eb77de538725fd2ef313cde46f6d814c9566ea"
+          "content" : "d61d6b1cf6997c75287f454e536f855db8404e5fb9d0b8faa4dcc1e7a60ffefc05c2f92f3514e091808a8677b29f3619"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "d3374006d76d4f9acdf3d3a1a4f47899570f52442b2188f80c09a74f22139ecb"
+          "content" : "1c051cfe5e630b35d003f96e135de7c5d5cab145b6e1159143570cb246426a0d"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "2b10c2f4fe39d8712b430ff171823d7172c0a06685c1eb7de511e90159cec0e094fb2a9b50b747c5b039cb10f1fce9edf82ecbf9c47f76a6f31c4e3cb7586cce"
+          "content" : "55ddee7f6c1659ffa82e5c308a0181b459cfeb3442f1f9868ff7e9a3c83376bd2ad527b16d5131df442ffd03d06c35dbd64458df6b02a111c1654f01db381ba5"
         }
       ],
       "licenses" : [
@@ -518,15 +459,11 @@
           }
         }
       ],
-      "purl" : "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
+      "purl" : "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "https://github.com/google/gson/gson"
-        },
-        {
-          "type" : "distribution-intake",
-          "url" : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+          "url" : "https://github.com/google/gson"
         },
         {
           "type" : "issue-tracker",
@@ -534,67 +471,125 @@
         },
         {
           "type" : "vcs",
-          "url" : "https://github.com/google/gson/gson/"
+          "url" : "https://github.com/google/gson/"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar"
+      "bom-ref" : "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar"
     },
     {
-      "publisher" : "SonarSource",
-      "group" : "org.sonarsource.java",
-      "name" : "sonar-java-plugin",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "publisher" : "Google LLC",
+      "group" : "com.google.errorprone",
+      "name" : "error_prone_annotations",
+      "version" : "2.41.0",
+      "description" : "Error Prone is a static analysis tool for Java that catches common programming mistakes at compile-time.",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "1b7d9cc6384c6be9b2b2be09d39a4409"
+          "content" : "75e3b25da8b8a2136463c4674f5e49bf"
         },
         {
           "alg" : "SHA-1",
-          "content" : "74549fd0b22373ba0db5f5d8c9e83c4e1d4859d6"
+          "content" : "4381275efdef6ddfae38f002c31e84cd001c97f0"
         },
         {
           "alg" : "SHA-256",
-          "content" : "84d7f2cce4bf4e66bacd053fd350489792519d83c292c2f4d5d8df0404450959"
+          "content" : "a56e782b5b50811ac204073a355a21d915a2107fce13ec711331ad036f660fcc"
         },
         {
           "alg" : "SHA-512",
-          "content" : "f70839584286b4141cb252727f299be7a6f27cc8714d66b9c8b4a97d19030c5e39277ed85019cb2ffd9cd59f4b5c7780dd2bdd8cccd14d49a7aa618640069eca"
+          "content" : "e2eb4bf9f36f95a4d4c5ea344db5cd90a456e63bef8e52932b8f6f4ecfdd59cb2f6c2ce9e67b0070c82177e42885688b95afef591b16001f789b378f18afdf30"
         },
         {
           "alg" : "SHA-384",
-          "content" : "ab79904167297307834e85b850b012fbdd22d6dbb938567ca8525219f8cd1cc2b725cc9ca781bca94dbab340580130ff"
+          "content" : "43700b378624aa37197ef03a6b5ea40b5fbb6c0aa667eadf810ad36f0707dffaf3ea23471f2553327c3f5644cc875ee7"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "5b177240092d00c9399f08b3148b58a299f0bb7a2a82458e5d4f4d5d0e4b5f6eba4f8b6f82c02369e8343c4bb0aea360"
+          "content" : "8bf3293cf4b72c9a999948f8812190636ef3b0c35bab8dbf9a54c263eeab2a3b3d0774fdcab52c6d114551ff74a8aea2"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "f5829afa58615feeb89cdea0b96fa63ffda9c1401d5ac33d1420398ff42e59f9"
+          "content" : "2ca1a59f4fdc37a3c83501542c63842fa4fe40c06f69a59a2a072e4af442a16a"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "4dc73ffee4b763a67a89b13a7574c03c9b7bfd08591088c30c64f9cb2aacd028d9c1bbbb4e5a68e5751635d9a3547e798eb4577b555187f410476a38e10ed9fc"
+          "content" : "6d1f419996b15e5a2bd9b268d166046e38fe9cc6c58fe56aaacbe71b95e3db8c8fe1d226e7f549ea227956feaf3087706bdfa79930fe432298bba9ec06c26a90"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "id" : "Apache-2.0"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "http://redirect.sonarsource.com/plugins/java.html"
+          "url" : "https://errorprone.info/error_prone_annotations"
         },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/google/error-prone/error_prone_annotations"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar"
+    },
+    {
+      "publisher" : "SonarSource",
+      "group" : "org.sonarsource.java",
+      "name" : "sonar-java-plugin",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "b1a9179feade38e76fb3bd484426ed87"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "869cc6db9898899450852a5d89e77649dbc2e545"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "27dbc832bbeb28c70947d4d35fcc4a36b384911761831d8d5fc947cc1732d114"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "b38980fb48ee7720a297190197e1ff20025ccaffad858a195234d4747773f4ed2ff2806b253ccd9d2121cddc71d1ac1fcc75ece9a07365db2089df89773add48"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "700d2a57ebc1672779fc11da69c29c822f8b0382bfb07afa5ef984abd2e38863b1ce8c2129c3ad173f796abebc14af96"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "de424a453da7d8c708948d8bf9cffcabb6f00fac592f0be36b3d53fa41b95bc42ab6e1fcb4525c3c15793de00ad34478"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "3f2edc3ae30c79ac6e5db6bc7f968dd164f252b173bd3780ef1e06f68fec2962"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "73060df15758e595f9ad23967b9632b3b25584660362b8a660c699d7bfa092927edb2334ec711a2eca8394b03f0d32878e64b6b20411816b239f808747e7bcc2"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar",
+      "externalReferences" : [
         {
           "type" : "build-system",
           "url" : "https://cirrus-ci.com/github/SonarSource/sonar-java"
@@ -610,65 +605,61 @@
         {
           "type" : "mailing-list",
           "url" : "https://community.sonarsource.com"
-        },
-        {
-          "type" : "vcs",
-          "url" : "https://github.com/SonarSource/sonar-java"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-surefire",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Plugin to import JUnit report files",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "ebad97c089ab298bbf410b83645b5c91"
+          "content" : "8ec0e95937cd6bad70824f4fcbcdfd13"
         },
         {
           "alg" : "SHA-1",
-          "content" : "1d6e25230cb5a0818e76cbf250b1f443c1117fe9"
+          "content" : "74166214d6bc038b62ac39fb6068ee92a7cc2377"
         },
         {
           "alg" : "SHA-256",
-          "content" : "547a33116a008789a640ac520aca61b4aee460baf32d880f35ecbc247be17cf5"
+          "content" : "e5b3e323d65d5d1e07c67f2a3c231d976665dd36a755e4a25a529e020ecf246e"
         },
         {
           "alg" : "SHA-512",
-          "content" : "79967a8394b8bada006fe03ed3519f73f9f4856d09cfaef3db91ab1e0dbd828bb9c69178a8151b678420e95489ace27ce9a59693be65fc3511696b446118c572"
+          "content" : "5f8666b8cabc3605c88d1066b3a4f102677a4592a055cddbd0857667a4c97da0b5963d4b6e9b9443bfa9a9f8eb5122bea5230c54d1948a8829137e0adfda2c53"
         },
         {
           "alg" : "SHA-384",
-          "content" : "a3926f55e7e691e558e8fd2bed7da6f71cae00174987d108c5ccb5e4bff67052c1a7294ff83f93fecc89f0d37e72d2f2"
+          "content" : "7f91179e70d48c4f157b7c21e2d66043f197f5e77e93ca22cc514121f8aeb904f0be2d41cca33e026b79a6954b93620a"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "197a92ee27d6b823fe39f896604e292864f8e563ee9eebc8b7b8f98b5811c3bd3d31d1d991f91f305d61e78376c792fb"
+          "content" : "1181d83f7f281f38d1fd32a113cf36d0aafc3315b0f96394d1509a55cb71107a32dffc689991f08ea34d24afa146de4d"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "421298125883242fc4173246fd9f114c55e086270f0482a5b92f88462bf18f99"
+          "content" : "ee3151b15fa3040368071c28b161c21ffb9d0f0053ca3a869a8633790a8dbcb6"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "ff3c88c85a17e2983655e522450641dd191aa2f8818734af99b576778662e7025c6d635c6edc3052b3c42415693b7ba5c2137c7cac7140460d9405fb0d2780f9"
+          "content" : "94b7e5bc75cd127797485f48d5acca3853cefa2e8c433487268f12b177cd06e4aa4783f009f7a835099f406ccf1a22b69d0c3c523f3ab84fe8b348da312bd677"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-surefire@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-surefire@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -696,7 +687,7 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-surefire@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-surefire@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "FasterXML",
@@ -772,52 +763,52 @@
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-frontend",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Front-end (Java Parser)",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "43bc91e0b5a11258625288f075b54633"
+          "content" : "a30b3194ba4e4aaf19e64afaf2c0cd9d"
         },
         {
           "alg" : "SHA-1",
-          "content" : "2f748efd6e152c3526efd52a446cc8930381a16d"
+          "content" : "6c781ad5452a9f6c40efa651ec1514efd4956de0"
         },
         {
           "alg" : "SHA-256",
-          "content" : "f22c60ed403f37c5378f2241c110d5f1427d9f8ac88710236a1662887a0961a5"
+          "content" : "6da24fc369a912c40bad484b580d15e8df7fd4a603e999b79952c1e88f1a10a4"
         },
         {
           "alg" : "SHA-512",
-          "content" : "5ab1acc211dec17121948a678e59be6f050b1ba5360bf93fb724b51ff6160a29892c3847e5b0ad1deb450472bbdd5387f28403504670537b82477348dd97ca41"
+          "content" : "77fcb592867445be61fb472dc11eb2ed91e4d7675f6050728fe34fef4488bad75cf5fbb128bdbe6874820ece7e752f684065b98a6b0690bcbbc081f0efdf7a9c"
         },
         {
           "alg" : "SHA-384",
-          "content" : "9d57998dcddbcbbf9ebcf79a68b928ce6aa9c8770c2b7565771b457ed299545f5ddbcc99a13889af53ab12e391c618d6"
+          "content" : "827447252ad585c8ef98e9f737d2b5ec4529f6f68f0fd571bfae08f3264186a4a5c9d864b488b66d933877c8d13f7863"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "64b3e663d553d1c3aa38d9e3b34cad8b38d440dc937bdb6e80edab6621f3c519d38ce4ec04f5353bf7e103cf315a808b"
+          "content" : "2eaeb68497c50d4bcd38ba010ab33f4833310fdf4c057d32ce622f01febd34d37d4b353b31ad53040a6dce7b1c287bf6"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "3febae6771046e4a5909ec72a2b6cd1749f384c910f3a090443a26d4651a1953"
+          "content" : "a2c28164e5d0c37e00f10f6b5187a6b8c31f87d2d3d86b12f9721516f91034e7"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "7555011fd0167dd38b798556104d02f2c5bd4b7e035065234f44ae22c7779c1a7fef4f3b17769d49deaf0635c99d211cb219ffac05da6c50ae1313f032565526"
+          "content" : "9163b1eac48b627a86db9c7b93fe258657561540fb605d926c645cb59e82fe6f72d1fb7d97120b4bc1488e27ede2420dbacb1ed021ff76642d10a2bc3cc54612"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -845,47 +836,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "jdt-package",
-      "version" : "1.1.0.34",
-      "description" : "Parent pom of SonarSource public projects",
+      "version" : "1.6.0.160",
+      "description" : "Packaging of Eclipse JDT Core for SonarQube Java Analyzer",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "b37dc58a62e2d0cf93c0721fd974c31c"
+          "content" : "1df75f474b6bdb538899d8704b84757a"
         },
         {
           "alg" : "SHA-1",
-          "content" : "505fc262c9e9347ff10f5c2e095a008db26a538b"
+          "content" : "1f8abb9d709c6ba2ab7ce3aa933857cb3735a1ce"
         },
         {
           "alg" : "SHA-256",
-          "content" : "7ac622acdb900de5bb04529b822412731308f1f02a610e596b8a7789c28bde07"
+          "content" : "5efd84c8e2e39a310e9139b503355e9f31eeb3bcce779860ce96944096cf064f"
         },
         {
           "alg" : "SHA-512",
-          "content" : "c264a6a75e00b39325e2be6e9cc4cc9903fcbb97e1e60766f09a42bad4d00ef0bc76b741a9c76ca76bf60fe0052987362f4f564a78e0ef3a654fdad833a00cf4"
+          "content" : "fcb097a96b7c6903ed8e50c95cea915cdb4ab2f4398869b812489d8f639509f970646adcd66afc8004b0c14807e05510d4406d7215726775695b0abcbe602dc5"
         },
         {
           "alg" : "SHA-384",
-          "content" : "1f17c8e14bf19d6f93cd61f745ca681e2bf3ec5a2566a9233553e7d2c71f7896c7ee770c37db46536b98fd5cbb19f687"
+          "content" : "e500ad2d02142aa1fbbe1b9436f9e5bbb74d5c208b0c6aa0191725b126c9a3a4d2a21c708b2bd26a4f11a9ef880fbe07"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "40d04d2a79475f774b6a2b2a08b02387e2ac2c17e4b9b220fc1e59baf0554c569573d9abe22af1cff8e5fef69b4a43dd"
+          "content" : "60bd6cd889de6164963d49fe557e13456d962893e74d56bda559c6b57bd18ab1e8a065e64a2d8317e13dd754052d3f23"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "7bdaedda0da1edc3e63e8e62bcf3651b4d4169c24efa0baba01c368d2c6b7b74"
+          "content" : "32c6d9249b541d8ff7b488f8c584d8f068caace22037ec0e2340e6e850b919b7"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "11854f8cb06c601f4e54488b0943a8eac7790dfacd3355e52b274e8a39fe0aec36fd25da6c5711c7c294eaf540958c88013a4b57e7399f76c51b9e75d451c0a5"
+          "content" : "8378364906e74189f4255964961c90273743b41af7859c8bb946a092965b5787f37718ce6dccbed3cb531501361293fa96175327bd62d29a7ffe18be70caab78"
         }
       ],
       "licenses" : [
@@ -895,7 +886,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/jdt-package@1.1.0.34?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/jdt-package@1.6.0.160?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -919,7 +910,7 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/jdt-package@1.1.0.34?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/jdt-package@1.6.0.160?type=jar"
     },
     {
       "publisher" : "SonarSource",
@@ -1000,41 +991,41 @@
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.analyzer-commons",
       "name" : "sonar-regex-parsing",
-      "version" : "2.8.0.2699",
+      "version" : "2.18.0.3393",
       "description" : "Logic useful to read and analyze regular expressions",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "35a3545ee8cc01b7630817c10d3ad63b"
+          "content" : "c9c38681ffebe27c85c27119dcbac4e2"
         },
         {
           "alg" : "SHA-1",
-          "content" : "f30c693d63d35e55921b600d1cc02f6ab45fb162"
+          "content" : "887b8fb94772af059501ce252122d572da041615"
         },
         {
           "alg" : "SHA-256",
-          "content" : "83710ff002b9faf8afb413a05a08b0530a3cf8ef130815d5a46c955c478664b5"
+          "content" : "0c3ea5153be8a0766373b1992a18c91702a48b37647ca400a5cd077b2d78e9ba"
         },
         {
           "alg" : "SHA-512",
-          "content" : "0a10e363e24117e86650a1a8e9a10a637c4f99cee64405607be5da8c4bf4ecc413e67ed78acbd174b699b5c7325db5f0d623c10ded7e642a3e98f1f74e680f11"
+          "content" : "830bd069a1714fd24676db83114479961e3baea2abd4884c549f147edb6b83eafe4c9230f429818a9adfba89a0c4a21d39eddbcf4c1b937cc65a65b09d1a00ef"
         },
         {
           "alg" : "SHA-384",
-          "content" : "c3775396d6d0c3001eb244d062e0f5262b78aae72a9d0ba5760dfa8eb5310112c403d0889cc73ade62a9fafcb515c635"
+          "content" : "ab21ccd7f07b9bceac88e85180e1f1643b43c30db4d8cdff030cd7cbc53753987284bfc1d412d7def8ec5380244fcfad"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "87bd8e6f2545740da80e5ad7c17600f1a3d0bd86aab07557e5f2fc3cdeccfc5654f030b0fe11c93e084da7a1e8b1d95b"
+          "content" : "ae43098f0c1a4939136f8f285cf9ca44663c2c77fd1120dd338239e70799b713af401a1c334559565263a1dc7f8613ae"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "85d791fcc5a6001f15ca84efff8a03c55b791a88745deca215c8108c8318ad1d"
+          "content" : "546a71b50a13237407e76548bf1fe5d61bf08df21dfa086bd17c2e3a103d25a0"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "024d92e865992b92d5c29a65ebec60a706ea8f0859de1c55312377ef22188396855b4403033d1e03a05208f37c3a24ea2e948f463cb3c5c9bc53c8d4266e5e03"
+          "content" : "18dbb41e4e61ece31c96cd50cc7a1d85799119cd5a88fef79ac4553071a363f485161ada5324cd8ef8b4204d60f000f5fff39c4db0eba2d15e9babf59a01f889"
         }
       ],
       "licenses" : [
@@ -1045,7 +1036,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.8.0.2699?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.18.0.3393?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1069,137 +1060,58 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.8.0.2699?type=jar"
-    },
-    {
-      "publisher" : "SonarSource",
-      "group" : "org.sonarsource.java",
-      "name" : "java-symbolic-execution",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "232f45616c57791e1376b309b99d6bf3"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "ea12ce7dc955bbafca59c3463ea1f44ad82e42ab"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "8ac28a32e08e60c451cc153bee71bc028f3c72e4ab0e3a9c91bdc5b131ad0f57"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "6ad5b4c6b85757346f203924c26e908d5557ab4d03147afbf58e33e0f25fdb3999f94aee6973366d2441565466473c30c0861a1512c79f240cd35a9a97f0d35e"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "dbc472dd1173bcac5ba03e4a1165ed35bd7db93511cc8b99e5407aaaa65a56a92027d79c551a4df7120c2a8d87705797"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "1912414c5430f6b4711e20bb73e1076b5ad85babae3e8374fbb65f1dd3232ae380d9bc52891184befed50777dace89f9"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "a5cbfac546a7aaf0a2211c3f1beceb36e2ed3384c9d7d4ece2195d2932fba345"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "4f6974c7877b90dfb0acf4a6f8f412ea4f391164165ce3de75973c871e356a55fdc5ad4de3322a7e30e57f4d7caa87871b3671a63e19ca51a6f5b3cec949d281"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-symbolic-execution@7.33.0.35775?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "http://redirect.sonarsource.com/plugins/java.html/java-symbolic-execution"
-        },
-        {
-          "type" : "build-system",
-          "url" : "https://cirrus-ci.com/github/SonarSource/sonar-java"
-        },
-        {
-          "type" : "distribution-intake",
-          "url" : "file:./local-deployment"
-        },
-        {
-          "type" : "issue-tracker",
-          "url" : "https://jira.sonarsource.com/browse/SONARJAVA"
-        },
-        {
-          "type" : "mailing-list",
-          "url" : "https://community.sonarsource.com"
-        },
-        {
-          "type" : "vcs",
-          "url" : "https://github.com/SonarSource/sonar-java/java-symbolic-execution"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-symbolic-execution@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.18.0.3393?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-checks",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Analyzer's checks",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "eaeb082ff51df115aaf0f3116faf4b84"
+          "content" : "1ac68532191b336b9c760c596dbabf9f"
         },
         {
           "alg" : "SHA-1",
-          "content" : "f11567226d2a4c2efcadf5545c3e0b1bb5f8142c"
+          "content" : "6165e4a7c0bc4dd5bd6bdc8b74184f167bb5436b"
         },
         {
           "alg" : "SHA-256",
-          "content" : "1eeb30e79298fa3cff7e7265a0d313a5572bdd726b8d83e83dcb1d144421c24b"
+          "content" : "78b31d837169a372353c0b91ff2776590039996d8d50dbf033b774f6930d3b8c"
         },
         {
           "alg" : "SHA-512",
-          "content" : "0034e5bf2e95fb181c476a3d1a5b111efcd22131f62d75eb6daf21da645b4e3ad8e35096274e3898e042a7463d831caea46a7840f843c10442d5f48b75041687"
+          "content" : "07b461fd5a923bbd6a60379e61fc73924ad7bc3e1623257fbb16fee3390eb61e0d930dd80cb4e290da538c958546d8206a66fb433889665312df60b63aeccb1f"
         },
         {
           "alg" : "SHA-384",
-          "content" : "c2e5daa8bb17411f2ad282755de82c02d98a4940a81a76c26167713a1b5f55f7551875ae8459b5b77934d42f37f5e8e5"
+          "content" : "d1227c576fd2372fdcb0240ef2c0fc5497aaca1251df248eabf8e767765e8023ad5e727fecdd3ade31b5af2022a9f519"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "7de6a308f476947ec7a132968be161ea98ab1f135d6286129fde8ee5f8a1044a295c9febf482d7f5a5f83b65e1ccd36f"
+          "content" : "5a6b215207811609717d9b39ddaa332369918cf91fbe3bba94ebfff23408624b1bade52b5cf03062d16364fd9c792ea8"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "8033896b6e57169054031f9d386f00cc0194f1cf930782becea1b12a5f5421f7"
+          "content" : "030d53c3182415e2896ffc5898b155cac52587a006b327a51c6c5ab59714c012"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "789208a299ff2cbfe4ac9f6c647b0d703ff77040fce20e269b33a6d0712011d214704496d27ee8b63adf5778e4d8b58fde286e5a8f043f3b1813ec4c15a06fce"
+          "content" : "a5a4a3f41c1ba65066554808baeff26551c033ccb31ec561ab622e535984db16d9742107f5d07b7d3bc6f25ec92c410600eca7cdf1d9e36fd23a6246d1220db7"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-checks@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-checks@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1227,58 +1139,58 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-checks-common",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Common utilities for analyzer's checks",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "377bec0957fff4818de779185dc9d46b"
+          "content" : "5514880c7701b527cdcc574edae88dc7"
         },
         {
           "alg" : "SHA-1",
-          "content" : "64e48e3a5d4bdc7ed674b21f8ddb393e548c9947"
+          "content" : "5e3906963a6aee9229c0d5735ec5b0caba9c7a36"
         },
         {
           "alg" : "SHA-256",
-          "content" : "a5db4cf127e982760c049faf6a3df99fafccdd5e1d58b59afba30b206bde96b2"
+          "content" : "89aadedaaa0bd0e788c55b3a78a5b086fd0dbc4935e1ca9e8d15266c81dbc1eb"
         },
         {
           "alg" : "SHA-512",
-          "content" : "ebb84100013c73fd13cd502e5ea56a557568f5404b1b60d015ba5529c955c7ae70c612437cbb249068c7437d2dd4ef7f249a20f4f2090ea22c414123df062838"
+          "content" : "c7e5eea32cd08b004728418429b1b1255751a50a33f5a58712ee7ebddb2f15883cbbc9a999d3d388274662e1b398f2121bdd8e28465a7b86b5702be57a211e0a"
         },
         {
           "alg" : "SHA-384",
-          "content" : "a3e9a9cf69e639b84e22ef84a9937d8c8e829628ae2b203ec722394ad3b50e0c07fc1b6265d4bf8df3a86cac424125ef"
+          "content" : "74603a766b61c433df59fa6df8c140018dc181c84af0476242c22c4fefea6f3437cde005c253c21301be0209797ef6c8"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "abe29bc0a84ab6ec1dc55fe8d349f72e37865e46a7eb114d85328882711f00f344cb7252ef9adc449009b62a4350f7bd"
+          "content" : "a9a28120b1353f47a2aff96a032d95d8988eb0b2c940bff0bcef27dc352b19950d0b1eb0de8a521f8c232cfc0b3abea5"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "2bfc0c71aef10df37be7c91fea1ab5e1d90f018c859aa7e3f0844ce2246137fa"
+          "content" : "eeb22c67995bfa542c898dc47195590c37da85116f30df4b367bd970c162084a"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "0e7d60391152b9fbc7b7238967dbf3c4c4c32e776f065b65e456c5ba5b88550723709c82125334fb749167231d602fd6bf3c610a7e83e2d34f3e339f139f71b6"
+          "content" : "27adbd9adbd039453b3f8fc762117222650d45147cfb4ea26ad6daf65b994fd618f4b5a2173f0860fdaa5b1e096af32faa100c902377b811892d8664c094684a"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-checks-common@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-checks-common@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1306,47 +1218,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks-common@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks-common@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.analyzer-commons",
       "name" : "sonar-analyzer-recognizers",
-      "version" : "2.8.0.2699",
+      "version" : "2.18.0.3393",
       "description" : "Shared code recognizers",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "f9c0e3225c8cd152cd8385ab211c1211"
+          "content" : "c8fea2140f3d18005b73ba0cd39ac3cf"
         },
         {
           "alg" : "SHA-1",
-          "content" : "10fa0ef13f09632cc2d8a97990512a36252b2e2c"
+          "content" : "f741f10d470867172afa510990c16877ede70222"
         },
         {
           "alg" : "SHA-256",
-          "content" : "5ba42aefbd8cf715575a9f40293a53b47cc82ba67943215a5382487e4042da50"
+          "content" : "0b4ef58f3bba93170f115ec2a73eb5596276abc21219b7fa733240b6bc3f7d52"
         },
         {
           "alg" : "SHA-512",
-          "content" : "0659ad40421f8be0d492fedf4cee72c531d264d8b9aa9327e789b9277de0a5b037c0dba25a25bc1efb5a858a959941e7e6fa3c7e166ff908db1ea272b5f05486"
+          "content" : "8edf444d67195ff181307c7f27744833b7fa47ff54ee2c687c92761cd7e0900e302f71541d2ccb84a0436ac04fc28ccc79c4700452455db6c155c6ac774bf26d"
         },
         {
           "alg" : "SHA-384",
-          "content" : "7b629d1b28bab3012d347760905c7235e579c868460098c2f4e9e9127e3eef1fd08be8f8cff2400552a2f6ba3c735d18"
+          "content" : "821446711dedcdcb0a20bae33560f7f5d86ca528b7277170b3fe539bc20ab41f90096c6d6cb6cb9b67a7738cf56029fd"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "e3f76485b0c60e07e0a8d93716847e12279c8914590d06000a95df859b952d2b1348a2c1b74a434f92aa36ae711ad858"
+          "content" : "c036fd79d7730afa956adbabd42edfd0fb5473e5b4534d2ecc480b2b587099d923ee97a9ee51e40e1e027a413fb7b33d"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "af4025e146ba6f1982d1351d1adcabee0a2acb8b90f7a7e8e76f019e408adc1f"
+          "content" : "aafdbc0fc6e44a212ee7cb7eb10d9cb4b23ceb25a532ea0a6508ea32141cb581"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "ec20e48bda7e839e8c30bdb52156bd42a856f176282c3b1fd3241a268e1674b582acee92f83d72b0247a03634e46a2a740326dda9c089b704605b45c69322606"
+          "content" : "747d1f9f8a556ff1c67bfa46aa1e8e8b9c7b76114e141845751376c7bb34d841349491766e6ed221938f6d64e8aed91663515d23283668711177d076f12eb852"
         }
       ],
       "licenses" : [
@@ -1357,7 +1269,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1381,47 +1293,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar"
     },
     {
       "publisher" : "Spring IO",
       "group" : "org.springframework",
       "name" : "spring-expression",
-      "version" : "6.1.5",
+      "version" : "6.1.21",
       "description" : "Spring Expression Language (SpEL)",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "1f268a22bb7c0cb80958953ffbc21125"
+          "content" : "9ea32c5135a59a1264f13d8f8d5f355c"
         },
         {
           "alg" : "SHA-1",
-          "content" : "7e21cb1c6bbef1509e12d485b75ffc61278d9fa7"
+          "content" : "72da3b3521a6788e143a47b0f7273ce7cf98c6f0"
         },
         {
           "alg" : "SHA-256",
-          "content" : "1f37b50dcaf091a43bb10d946178fff4082674497fd821438327815da14f7fd0"
+          "content" : "29597c579b6b051d0dd2f56775c6e0078ac5252eab5c940ae687bd5e1fcafbd7"
         },
         {
           "alg" : "SHA-512",
-          "content" : "d5a13856a7f4619eaf1c9593f7739ec5cde37a555a98f0da4cb21aa591e87fb0bcdbd2a5da67d9b69a0dab0016f806c9d3f096bc8841c32bb98810daf1e5e7b7"
+          "content" : "e54e346271cbc327b138f7a16d6c086f68290688c293753cc5513bc26a20ddd91ee194de32d91122432dae785692468d9d68971202e05c0571a65a44f0a518e1"
         },
         {
           "alg" : "SHA-384",
-          "content" : "1e0c29ba819c5c8f5eb278a8f308a0119a476e81998ff5c7658b150352d357ef53c408566bd7a0b8023b7b41cabf4636"
+          "content" : "eb0349b3f3b4952f088a4243ab58b7167087e01a719babbe15e54c25d5b6cc3e8f52203542e447a465c3002a3588e6ec"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "f9cefe146557fe266e6e38bc8fbe157c7ef10fc606edafaf901d393ab140d25dabf4e60ff79c6a45a83c7eff890d3cac"
+          "content" : "a2d39ba6e734731a7588f70fac0ab312d835674427c384e7bc7fde62340d2d1c48217ec0bbdc953b3f436550aa0dc796"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "ba29e269a74f3c452a64bd9e7a680c84c5c26b96397683c22435e4fcea8ecb9e"
+          "content" : "be4aa16518c2a8cae7deb0b7f867a2a4be88a7a9b3030db00558615eae43d27c"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "8de364ab79572c8d2af2dc22ea5768d323b7268e03ae977701024f17e6fede13f03e248ef44c6789dea3007723beb1454c7795b45f3834b6040510661b6dee54"
+          "content" : "c4e3742d1ba2111bc4b72c1f9fcebff0d47c8466dd732d5f66ef2c7303a60d7da4e1a63fbf469df27075bf0f5174302dfa921722079425540151fd5e16fdfbfb"
         }
       ],
       "licenses" : [
@@ -1431,7 +1343,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.springframework/spring-expression@6.1.5?type=jar",
+      "purl" : "pkg:maven/org.springframework/spring-expression@6.1.21?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1447,47 +1359,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.springframework/spring-expression@6.1.5?type=jar"
+      "bom-ref" : "pkg:maven/org.springframework/spring-expression@6.1.21?type=jar"
     },
     {
       "publisher" : "Spring IO",
       "group" : "org.springframework",
       "name" : "spring-core",
-      "version" : "6.1.5",
+      "version" : "6.1.21",
       "description" : "Spring Core",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "6eeff94b635753591e74d979ffc2f793"
+          "content" : "3c233d75937864d95e9051eafa9205f1"
         },
         {
           "alg" : "SHA-1",
-          "content" : "6dae1b06ffacbb9abab636be2dbc6acd3b6e5d68"
+          "content" : "dcc8607ee792439389e19111d83737b6b06ca4ac"
         },
         {
           "alg" : "SHA-256",
-          "content" : "476dac28509b3f47d0b5e895a639fa75ac2218f074ce214e44832a836c469f7e"
+          "content" : "0729b69e52ac8d9a8d03991315690f632bb0984620a0595e52580d7f3557298d"
         },
         {
           "alg" : "SHA-512",
-          "content" : "067d31ab99c842a586fbc1bf7aa7ac9aad0fa36d70f0e5bdb7e355514d66b1f6106dbb74ce15959a8dff8223a3e447ae30735e40f376e67f0ef8b70ed1a85002"
+          "content" : "8d926d38d47cc510378bff4cbd59a951660e8b813a22ffe662490631eb0f85668b007a0ee6961f4a6db2a80dab75181e13196fac10076510dc155c897a6aa999"
         },
         {
           "alg" : "SHA-384",
-          "content" : "25728b0246bc11715c8b1fec2a704b74a6c2bd6e41851b44aead5c76d0ad1493929bdbcef51dee8005404099388c03ee"
+          "content" : "b8d3fff87f154bd509d1844c68a005787729112fac80512fa5d6df43d32b1f2fde0bd33e6ba6038e5d57e6265c8b97e5"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "ba98714211e0a6d8337b876cd6452216d1752b5274671f476fa06a63931da1e8ff0d7d0b4105967ab68e6f967aa8b43e"
+          "content" : "d68af409a439cedb3b7da43946892d6012fb3000e849e929221a994cdd7ed1fd2791b1fbcc2b5903415ec6612f679cb9"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "70c250de2d49aec369e3abf959c980036051ca0f54ddfc774840c95a8eabccae"
+          "content" : "2a8bcfdbaae2b6c617f4896069b188e279faf8d169932c17f90c0e0ed4223fc0"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "c4d9cb5d1a7a738f6a762bd8f9a0fbd2455f3900e702b77d5d1d76079ab1b614b7993f992473ea57639a57fdb46e985a3b29191b3d8a18215b97e82b31cdb3e7"
+          "content" : "2890d9f8375e68786ea993d22ea2d9fd7c45bcbcce07949013857d7a3ff89da0aadb22a34493180c0d1fe905e744b453510b1f87631bbce8eda84c7844389884"
         }
       ],
       "licenses" : [
@@ -1497,7 +1409,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.springframework/spring-core@6.1.5?type=jar",
+      "purl" : "pkg:maven/org.springframework/spring-core@6.1.21?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1513,47 +1425,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.springframework/spring-core@6.1.5?type=jar"
+      "bom-ref" : "pkg:maven/org.springframework/spring-core@6.1.21?type=jar"
     },
     {
       "publisher" : "Spring IO",
       "group" : "org.springframework",
       "name" : "spring-jcl",
-      "version" : "6.1.5",
+      "version" : "6.1.21",
       "description" : "Spring Commons Logging Bridge",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "4b7724c57ea12f13ce3fc49a18209b6c"
+          "content" : "0e017885cab7225c3859aaf24d3a96cb"
         },
         {
           "alg" : "SHA-1",
-          "content" : "896ae3519327731589c6e77521656b50ae32d5b3"
+          "content" : "fa75fc86c26dbbc6fb816e5b7aa5fc83f4494423"
         },
         {
           "alg" : "SHA-256",
-          "content" : "c53540419e482242c815db6d6a8cd80af85a6a895e38329b9d9bd6b4616503eb"
+          "content" : "f77ae10f41eaf02bc94a6424a3bad1d80a58b168e6af032ecb40a474d9e4f82d"
         },
         {
           "alg" : "SHA-512",
-          "content" : "0de5bdae17924ab55ed7e6e97acbfeb60406fa99b10c1fd8a391f9f81c475691638535a297636fb79b51f02cf07d98ac613049235e9fdbf1186672c8b64c5967"
+          "content" : "b0821cb6220914b2bc517f858d21c4a3b98b5a487ee94f29acf044153ba5a568a44fead4d003f71ffbad65f61791d01e33ec05859cdf2a3a1bb853469dc37753"
         },
         {
           "alg" : "SHA-384",
-          "content" : "2844ddc317d6fed2c80c5090e3b4b976a063ad5fce4bf8dbfa7c1034cb647497a830142ff7e70b7eb0c8cf742a091071"
+          "content" : "84188cf73912ff5372b4ebc58fd0bc63ecc282240c896a987ebf3cfcbbc57cfeacd1a63ea5a9cd6fbcd3ea45e11a001a"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "dfc30f87671459ea2bdc8c25aa6ed814dd53a0ab60df4b98b44eb96ab28cd7bfce358c32b5ab8255d0c0d7ebba1a28b0"
+          "content" : "a787e5682a3d41e20e726caf3e0eabd9fd0b33beff448bdd8915c5d1755eec973d7e9ea229a806b00a1d969941364614"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "a7a4153deabf0b46852c6539f1d0d63bac5963eaf9ef73209097c3bd4b2118c3"
+          "content" : "9ab47bf24ddfbb2dbe03a02e131d4b9bd7ada2da72badba7a7fadd0363895247"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "62add3aa8ea534168ba2eb4e811628e35970e17a2ae350de376fd95e8e0d70045dc9f6748075bafe4f74ebec4278bb3e36243478e08b4329840c8f068b30cde9"
+          "content" : "3d537771c6060078daca6cb556d0a1571f9a685e0287c8c186f3f8e441ce0d7460040de7368c7a51d4dd99faa0d6216baa1013c8acc7f3b981eb30e25cccdaa3"
         }
       ],
       "licenses" : [
@@ -1563,7 +1475,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.springframework/spring-jcl@6.1.5?type=jar",
+      "purl" : "pkg:maven/org.springframework/spring-jcl@6.1.21?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1579,58 +1491,58 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.springframework/spring-jcl@6.1.5?type=jar"
+      "bom-ref" : "pkg:maven/org.springframework/spring-jcl@6.1.21?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-checks-aws",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Analyzer's checks for AWS",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "14dfa924e3e61569475db951d81dff71"
+          "content" : "8aed826c7d8696ce3699588cd6ff952b"
         },
         {
           "alg" : "SHA-1",
-          "content" : "2af499d9be4ebd5d898db1eb13eb34ad3b2fb8e9"
+          "content" : "6cc1bba5a36b3eef6230e273866fc6dc309189af"
         },
         {
           "alg" : "SHA-256",
-          "content" : "62148c334e45df290a958dd438ef662ba5fd29c4023de832d425e674f7c585fd"
+          "content" : "5ee06300e5427acf74b378cf181a697b548a477ffcf1edfc216ae5345e40c1e0"
         },
         {
           "alg" : "SHA-512",
-          "content" : "f9365f6002c6a51295e7a00a4255ad9eb693d52de2e4c3aa0161e722c58f57a565f97bd3e03e53f3fcc2b1b1af3753471b0ba707e8416f6d2c21f17fcb1b7071"
+          "content" : "47ecef1096030771bb0c24c2b3c15ebe51ab8a6f66d76ae2683ea4b54821f9c914ecd694b877a186c26650db463aedfa57e9a172fe509de26ca4f0a19867be61"
         },
         {
           "alg" : "SHA-384",
-          "content" : "45f68667d8e7543d39b51ebf451513bd085a573edfcee9b89c8154a61bda72d55f7085a1ccb132b306bb2dcebcb9b899"
+          "content" : "242495b1e08269988e57a0e08730bb23d18fe614cf37af2ede8aa489a7a3ad581c0d5f970b7d25aee2db35f658649c26"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "5a6ef9e7483108b215e37833d6d4321ae9ca11f2a2df09d02563d008228dd469e2ce9d9b307679fe16fc229a1a90f588"
+          "content" : "f8f74f485da5f891e8a98701cc7d7267548ebeb2d04861239a891547abebdda1951cc16de0003c60db18fa48ad9696f9"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "2c6b29354a7077d0a34a9c742a2e0a95310e2dbc40cab29527ec59aed9ac7b22"
+          "content" : "b60ad5ee6b83beabd93c21866b2bd05eaf340ead9ef9f4d1f38492546d103d89"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "d19b4dfeca42f8ff8821621d241b12aec49fd8012cac5ccffefac6bd55ca2dca60ef40ee15a81460051fbf1797631a34c70fb4600a9e4182a581f082b8c5028e"
+          "content" : "8bd74670d07ae07f638e31a27a8f8a00eb0fabd40337f3b601595c86769e31da58b969f08ca5424dbb48adc4d7c8477503a1d795cb8eeec3179f276273997685"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-checks-aws@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-checks-aws@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1658,58 +1570,137 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks-aws@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-checks-aws@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
-      "name" : "external-reports",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "name" : "check-list",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: Generate the list of checks at build time",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "b07b7b394b1de4dadcdd41bf472bff97"
+          "content" : "523e390cec46df34c6686d8f61181bef"
         },
         {
           "alg" : "SHA-1",
-          "content" : "bc9c1e1cb3f4abca42ddb1b6ffc027eb2fd4c68e"
+          "content" : "93c3737e36e776e9c9ba43293256d3ade559e656"
         },
         {
           "alg" : "SHA-256",
-          "content" : "aabc8b03f2c9c042ad4d1d25ada8281dd029480e9f59831d98e91adca67fee08"
+          "content" : "aa62feaefd959fe9c4a75280ddbee6ffe9b59181296c521e8d876676812ddf5a"
         },
         {
           "alg" : "SHA-512",
-          "content" : "b60270c2b3d038cc3b3387ba052a79c2e5fad1b0536a5a1f2e4bfa98da3046ae451503f7837a214359dd6c6052cdbdf5d8776fbab5648bcc31ac974830a6c16d"
+          "content" : "bba574e1f4a05a5fc7a70cb5f9deb5a1f68d8bcb6b2ad4859799e94ca18f622b15075f454e00e3d8fd5ac64827c06afc660ec73bc0db1402bdc3f5e4ebb16bbe"
         },
         {
           "alg" : "SHA-384",
-          "content" : "943d62b27e66b0b7472c0115f9749fe109343ee1409eb6ba57ffd3776eddfb92bf28c4c1f664aefc08e891d29d5ea2e8"
+          "content" : "a87fc3e9946eef5166f6393ca2ee064caf3763d19e3415779f0e5269b267790a897485fb8cf085ba84f535e2112fbbe3"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "ff834b86b09d0b11bd4fd9da2245b52c76d540af4bbc858d2478f40444c2a632ca671eac45b65097c0014456a7d553ba"
+          "content" : "9e9584346c363abd4a0aad992c54f60dfec95d7a7e8c3cc2834d878c72d1b8a5460c834eaeafc6045a7115af424bcacf"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "b632f307cefea8b5fafe516db380b7160da28677ed0657db17332250ee40b26d"
+          "content" : "9ddbb48896bde9c6d4457d250d207daef592fe257f10ff0ed88cbb38990c9209"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "81ae57ff106ae7f468dfa23a5d7fd828915cbe1bcc6b21ba988a255287a7d40858979aaede906f3cf277f93117eb7ec919e003083622d061b3149a2d15eb765b"
+          "content" : "7a3b54a4fd3db04d97df4040f10c27fb9993071eed45f1caac906d989b213995fddd8b7e74b92d68c6cc99709fc69b789f1a55bd55d1226adccaf80493869b8f"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/external-reports@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/check-list@8.18.0.40025?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "http://redirect.sonarsource.com/plugins/java.html/check-list"
+        },
+        {
+          "type" : "build-system",
+          "url" : "https://cirrus-ci.com/github/SonarSource/sonar-java"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "file:./local-deployment"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://jira.sonarsource.com/browse/SONARJAVA"
+        },
+        {
+          "type" : "mailing-list",
+          "url" : "https://community.sonarsource.com"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/SonarSource/sonar-java/check-list"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.sonarsource.java/check-list@8.18.0.40025?type=jar"
+    },
+    {
+      "publisher" : "SonarSource",
+      "group" : "org.sonarsource.java",
+      "name" : "external-reports",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: External Reports Plugin",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "0a2d44b03fd1c355461dd30c436d3097"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "6374bd720414018d7ed56f80b2ed918ec94e6b2f"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "38eb3bbdd4857c485d41a0a9deab123e2c9c4cba4e187dd1997efe72cdafdccc"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "ec05b2b58d09641b89777d15383f8ec27873aa1e2d97977af5365840b322e1a3e38a8d65c71dd7bf5b87fbca59e49bfc6e71dc7400efad987c51dcc5e9bd5e89"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "dfde96d508de66a673c9e13298c958dfc2c6fb32e85c0b42450b3263ba4f3a09a254d893f08ae4b9f39d707e4cee22c7"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "41b976778dec610536e3b9eb679754ef9568cc8bb2beb7c7fe1d852c5d5879c682d8844a0c035ebe0b095626ea43203f"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "42ddf81281e703791ae6f8c8d8adcc96da58390d4cb4b49668b4d3e3d1ba4bec"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "586377b8e12c4b960ef1a3a5cf335e8e19db4da10de7346f140bf3eb56243229be4271603c2400a6bcedb87d06dce5f95cb11581e8eceb80e88a6ddb3e00a564"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/org.sonarsource.java/external-reports@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1737,58 +1728,58 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/external-reports@7.33.0.35775?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/external-reports@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.java",
       "name" : "java-jsp",
-      "version" : "7.33.0.35775",
-      "description" : "Code Analyzer for Java",
+      "version" : "8.18.0.40025",
+      "description" : "Code Analyzer for Java :: JSP parser",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "e0890ace531478ef8ac18849d78cd9e5"
+          "content" : "7ad6c8d9c8472d350359adbb1bb2a117"
         },
         {
           "alg" : "SHA-1",
-          "content" : "a8cecb5145490f15b35742712345b5919726ad89"
+          "content" : "bf1f05662d4aa017bfab919bee32c6e985aea49b"
         },
         {
           "alg" : "SHA-256",
-          "content" : "ae1ee6f32a16217667ea46a973f7c93a6f66ef7052a2d1e24d6e8f78c02f96bf"
+          "content" : "85520636a757ac333fb349873dada3386a2a89352bb6443a552612323a898e3a"
         },
         {
           "alg" : "SHA-512",
-          "content" : "b7fcefd8fa7174db020947db1a41aff0e5c25191fbd8feb8c53438a42604a50b342ac072f571eaf6b0d54915e9106dc5bc6304d5899dbee90e20dcfc08139ca9"
+          "content" : "34e2e4fd545dfab31f0f0dba626b61648a2daadfaa7f32483cb3b31aa2010e90639bcae4b2b3ac669d60ae3d0490ef59bf6d87ee61098d593c15b043ad8e43e1"
         },
         {
           "alg" : "SHA-384",
-          "content" : "39420fa5bb00153057946a5b667877475bdb65923dd9af86acc6db63f3bbb9471de9735e4ed16a03b3c3a2c6da3118df"
+          "content" : "acb14999bcc8e0347f71ee453d3c58426e60de8f576904058391dbab16da82bfb0ac7083cdd73b6f26862b2ca06912cb"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "6defb43802dfd77c5a549fd7d28ffdf85711623dd24d28520e1e2d96677e47a69c5661029a028d7ca13ea3fa75697a00"
+          "content" : "75c0fed98b9486927c2c767745222e6b93e7c8af00727abbc871380d5bb2b9d71ba9a9bede424aedfc0c057e5c564d02"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "54265f768ea5687f500b148e81ac1c3a41c0ac1d9eeb3e2154ebe4507bef46f6"
+          "content" : "3ff452bc563a50565843c16d94fd729cdd4f76ce6b1847c5fd61d6504a6fb2a7"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "8530ff5df32f8250d5d3a68e81bf4f1e0d0add2a69fe6c2de5dc94b01bbe2e99a86fec11494f4d95239040ee2f736ae305c94b23376475ea7c981cdad6054c85"
+          "content" : "96ad4a5625e3d8c3b6df8a224e75597da826ca3438e1e0c6fe805cfc0d246822ab98794250913691ed1c5ce201b9e938ca6af648e9d2f5f842efdaad78599341"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.java/java-jsp@7.33.0.35775?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.java/java-jsp@8.18.0.40025?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -1816,275 +1807,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.java/java-jsp@7.33.0.35775?type=jar"
-    },
-    {
-      "group" : "org.apache.tomcat.embed",
-      "name" : "tomcat-embed-jasper",
-      "version" : "9.0.84",
-      "description" : "Core Tomcat implementation",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "22b13ffeab24c14943b58adaee3d15f6"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "5fcf71c9c39e54c9ca51c304dd7bb2f5558e3286"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "3f08ff872bf83defa70c20274ab597aaf23ea95c1ff50f4b98e0c9a2a25c1106"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "89d83d9250be2cfc2d1471133461107dd4fdab532439f7827771f7d2ac202a4c9d57aabed5a7f84fa7a5b1474ce67b60ccdfbd08e2fd4980af1cf133ac69a2c1"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "688680dcea5c8c055cfd461a29c601f0533bf448b9659d0491ee60107c9f8080fb91e2705cc319ab83cdc791f79b916e"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "0afb2f67992e9b3d891729c4f65c1804259180f459056f9e608c29d479eb5661a2eb23b46a240ff08d834c0940068f2b"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "58917d6995c9fc52fd102c6e26dad93af8e43ef5b8ee1dee7932c2aa947d261c"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "453c585ccdeb65f90a65d3e9d7aedfc0ef6d68cd3a905f24584802d7029b1d79d7bab4a28b2b0f9d12cc41d2c395b87ddcc8e6568e98aae21fd076ed1c4b7bb7"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-jasper@9.0.84?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://tomcat.apache.org/"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-jasper@9.0.84?type=jar"
-    },
-    {
-      "group" : "org.apache.tomcat.embed",
-      "name" : "tomcat-embed-core",
-      "version" : "9.0.84",
-      "description" : "Core Tomcat implementation",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "2a5bc72d7f698bc42784cb7afa20e808"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "d0cd4045defc2ecf7ccfdc901925eed427bcba3e"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "29daf71c4b5f5ed0c0983a83ebd96ee74df905e406534b4c5412cc92c2aca2b7"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "e28752b186c5eaad6df750719e70bd9ab33f4924f293b622ed4a7198ad15fe5e998b6b7ddee230ce564e7ec0b71871fa5c2362f6c4cb65b2872e3f25ef0840e6"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "0df38c977446ce1bb1b6d17b544f3778b4891d6ef499bb1f53dfe8cca457ec8afdb8c061f17e966574d4fd9859517580"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "eb18577b10a3e3cdabd0483e4545226f4fa8d8c2c3d8eb88b9782aeee1ae9d9bc03d76d19c6b5e886b668fe795d38975"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "58006ad9c9fc8e3b18472ad550d72bcd7c9364ecdc586db3f194116694179bb8"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "bda4e7479e4b6015f78b24ffca33be9d99d0606acff96f4d18d8e713f261835e16cf26cce800657c28a279fcd1c3e8aa6e5050d5463e1850526364306e003e2a"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.84?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://tomcat.apache.org/"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.84?type=jar"
-    },
-    {
-      "group" : "org.apache.tomcat",
-      "name" : "tomcat-annotations-api",
-      "version" : "9.0.84",
-      "description" : "Annotations Package",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "f590e2b4b16de6e9bc4b7f48380a79d3"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "86186a099bb355a174243f812d58aaf113768b91"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "b801c2be650483f7a91a6c50a2a93768c0fddc7ec54d0ca0d5e69bc92ef2758a"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "bfe97892d8e218adcd01a473ca51d7bc3a59bec953fca3752e19d73519972eb7665cf9fc098a74cafb8cdff8fc773ac32424af7b3e865d6bfdaafaab59cb9fb1"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "7a97a614983641796ef33723f036bfba309c4f6d1fdf860058c795d826ebe311248822a705880de9d48e5a6d456bc471"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "4af95a177b0bd0b0477b61a15b167592cf5e8ea0973f756d7850a6792e0da215b2ac1995cdec027169f0e78dc6fa5487"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "8c4a3599140a0e684eb0f5aac9cea0857687d00d8bb3dc175cc88ae26ffe8337"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "559a0b35852d37bc7115cd09ffb1684c6613eb5fde071e7503c483b46e32be0a7e2bc62d7386a999ac9e8c9d2548fed4c8d420465d0b8125f15fc554bf659a38"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.apache.tomcat/tomcat-annotations-api@9.0.84?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://tomcat.apache.org/"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.apache.tomcat/tomcat-annotations-api@9.0.84?type=jar"
-    },
-    {
-      "group" : "org.apache.tomcat.embed",
-      "name" : "tomcat-embed-el",
-      "version" : "9.0.84",
-      "description" : "Core Tomcat implementation",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "3a0cd4945a15ee8d37f4b23cf2216e3d"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "3fc7c06e3f2c23baf8bfd64320376fa701633602"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "22370f6a152da44c9a7ea15e597f22ef6b057a8d3278f69ff50cc3452473bf97"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "3373ff62438698fc3223e7474efca16bdc2a9dc9759e5815ccb8a0e3cc722ba2d581292b60b52eb1d86beb7c705b2640c81d69dfa7162f477d6ed1be8928d748"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "7d018a18156839d5c3c92ac091a53710944e00955443f1a0b051b3cb40f0c7fc9a925efc776ab09f1f0a569102cca101"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "4f300a9fd6932daa3ff4db977860f66a7f88157e72e1481f1981d5597a4666daf76a309d5ff10312ba0968b56f0e4bbd"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "ac2d6743eafb0210717527467f014d8fd8ac97a12c5f2aaccf1922b01c4d268d"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "656900dad4ca2261cdc8ffa7febfbf4edfe87e2cb32a8a34b830f0f3248ae707a473a82f69487a70003c3b2c0e92ed998c082ec22f172c86b8565b62b7df74ad"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@9.0.84?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://tomcat.apache.org/"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@9.0.84?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.java/java-jsp@8.18.0.40025?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.analyzer-commons",
       "name" : "sonar-analyzer-commons",
-      "version" : "2.8.0.2699",
+      "version" : "2.18.0.3393",
       "description" : "Logic useful for a language plugin",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "e1a59ec0809b06b3f5e2c8e97a76b218"
+          "content" : "86c3f760a4c1790b1af5c16eb246f8e0"
         },
         {
           "alg" : "SHA-1",
-          "content" : "cada74c92a33d57d5bdb70b8178a9006754e601c"
+          "content" : "612043286321caa05aa4e7670b36dd41e826ae2d"
         },
         {
           "alg" : "SHA-256",
-          "content" : "e9e17c3b6e02624cc1981dc7c2100f9ea67b96aec66e6a785e0ed5202febd854"
+          "content" : "f7babd94546594b9d0427b1bf32cd8f60065b8e8d0a1436f6ac443b9faaa1bf0"
         },
         {
           "alg" : "SHA-512",
-          "content" : "9197a2c16edd4ccbc39a33fe75e4a4175700306d9d1df2f4e146de37728aa8483a3355993bb8e8fb77ef9ff17490427cf55566d81364d82495f3e49c62ee21f2"
+          "content" : "b1d166c1ea81d0c89afc9b27e6d9457e6cf0c45afc8de7fa37607ed14b379ddbc1cb1c31bd2ebc25be3c980f1cf145686256dc1b0217f8af73c69d5eb11bb0a3"
         },
         {
           "alg" : "SHA-384",
-          "content" : "8385239d7eb9d7bc972fbb63ed5d887b2089129844037c957f0cc5bcd34b8a20deea0531022af0832193f020e94ad5fe"
+          "content" : "1d1bde067e0de39df2d0a35bfda18e9082c4f208411d45488a632a61b0acb04270a4016ad481a7aab1107608d121b90a"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "ce192d54341470644acee6f91217ddeb62f28d1ac2da58b0f73fb8ec9e5278463457f74dc4a264349051b6fc3dc25c3a"
+          "content" : "74a471351b75abc4d02989bde9e597307c807683bbac455a3b50aa98928d7dbf3f85db1d4c090c7c7b87299603d1f568"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "a521179e465dec4a69e93e393df68d9c6719f393654a1e584bd3ff7a0cd39891"
+          "content" : "8a6c33facfe7d600d45ca3db4ef0e545e7bfa75a383ac9d05fe49df6ab695197"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "36968ac582180921cb12e613073d261111b81ca042e47624bc07176f6926c6f7a40a11077e51d5e460add84747348b4a962cda95c6b6c1ffe372e032c570ad89"
+          "content" : "68308ba7a0a3196f866436123817431cda045808cf617084af2efb84f53aa6907841ba67653fad166a347f92de0de2b2fea573e5e2fda734306cb3ca3ecf3319"
         }
       ],
       "licenses" : [
@@ -2095,7 +1858,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -2119,47 +1882,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar"
     },
     {
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.analyzer-commons",
       "name" : "sonar-xml-parsing",
-      "version" : "2.8.0.2699",
+      "version" : "2.18.0.3393",
       "description" : "Logic useful to read and analyze XML files",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "eeb2d8b488da7bd7c98cfb49b3d06830"
+          "content" : "42a57e652799b8d75ed82ed71af3e8a8"
         },
         {
           "alg" : "SHA-1",
-          "content" : "03e14b69bc7a2abbc0a595851f8f31540b208dd6"
+          "content" : "d776689581869043b0d5225d9def870872530ab9"
         },
         {
           "alg" : "SHA-256",
-          "content" : "408ec4b66b8fda3fe8a333858aed7cbb3340f570790468f8a789de4cbf2c8c91"
+          "content" : "b383b5147a2b186d91f3efcca0cfa9be9e87371e79c0e61f38332b24f152286f"
         },
         {
           "alg" : "SHA-512",
-          "content" : "35be20dfa7f82d0ba024c2614359e4b52ac295a2c416d854103b3a7f9739d04e2eb3bb927064fe9ac11ed9dbe5f91f8a266fd16a2ed40675b50c43836d132829"
+          "content" : "04334f2ed4bd53436f9ca5755f836df11147951e5e09ba375e7217a9ddb629172f550eddb978c1ecc3a9e76764db7c82aa05c925f53cb720ca6f0684c2d95197"
         },
         {
           "alg" : "SHA-384",
-          "content" : "426ea2055c0c9f6642b68a7b2eccbf4d7ee802dd3bfc010564b108a8c5cf54a3a9ce7fd3d07ab4adbbd54fa52bee64b5"
+          "content" : "5cbbd8a9a784f94c77bac285538e6894c6cf67f5e5da50745633dab13583e6027c7b2620df4c0412cdcbb4bbf7dfb33f"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "9bfe10431714c647f99ce6b8e4d8eaaa6b80862985380a5ce4da37cdcf95cf324f9008b9dd46e81e8ecaacd19fa8e1c3"
+          "content" : "3d74f27c2a90595595c59d4f3551e11037f70de03afb7669a59217a42c32e41318ccf53a4911e97c94d4ef7c5d909498"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "2c47cf7bd11d40d40d1da9406bbd00a578bee08621cf341598d8fad4c4e8f7d9"
+          "content" : "e798859717811fa3dd11cdc3e7c518593dad3f1eea35e7880250c832cdb6c51e"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "4eb5a2b0f0b527231f0bfb1bae4c798713e615a7c5929c0ac09f49b3d9fa5eb12cee0775842e6b7033d7163803a3737595fdf9f221eeaef69e43875c87b6c3bf"
+          "content" : "757eb040f0c6dc7a39dfba5f3842962b27433593e7993fc755ecd2d2ab362ee58b04c95ea9f4817b43a518f51144f18cd1e9f85875a79c6234ef0f667f1ff536"
         }
       ],
       "licenses" : [
@@ -2170,7 +1933,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -2194,7 +1957,72 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar"
+    },
+    {
+      "group" : "com.google.code.findbugs",
+      "name" : "jsr305",
+      "version" : "3.0.2",
+      "description" : "JSR305 Annotations for Findbugs",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "dd83accb899363c32b07d7a1b2e4ce40"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "25ea2e8b0c338a877313bd4672d3fe056ea78f0d"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "bb09db62919a50fa5b55906013be6ca4fc7acb2e87455fac5eaf9ede2e41ce8bbafc0e5a385a561264ea4cd71bbbd3ef5a45e02d63277a201d06a0ae1636f804"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "ca0b169d3eb2d0922dc031133a021f861a043bb3e405a88728215fd6ff00fa52fdc7347842dcc2031472e3726164bdc4"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "9903fd7505218999f8262efedb3d935d64bcef84aae781064ab5e1b24755466b269517cada562fa140cd1d417ede57a1"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "223fda9a89a461afaae73b177a2dc20ed4a90f2f8757f5c65f3241b0510f00ff"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "3996b5af57a5d5c6a0cd62b11773360fb051dd86a2ba968476806a2a5d32049b82d69a24a3c694e8fe4d735be6a28e41000cc500cc2a9fb577e058045855d2d6"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "http://findbugs.sourceforge.net/"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://code.google.com/p/jsr-305/"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar"
     },
     {
       "group" : "xerces",
@@ -2412,41 +2240,41 @@
       "publisher" : "SonarSource",
       "group" : "org.sonarsource.analyzer-commons",
       "name" : "sonar-performance-measure",
-      "version" : "2.8.0.2699",
+      "version" : "2.18.0.3393",
       "description" : "Logic to capture a hierarchy of performance measures, save it into a file, and merge files",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "bfdcb3a88a97fe66b288f61921bab1ae"
+          "content" : "1854d57f67661c6950374be29145a017"
         },
         {
           "alg" : "SHA-1",
-          "content" : "0ecfd7e49341de39ad53f9608c31f30b6a10c441"
+          "content" : "eb02954016253fd34551a4641e3215fdafc239c6"
         },
         {
           "alg" : "SHA-256",
-          "content" : "ebba386ff08f8bbe6e9a37a0666e91c8c8561af5e8b24de484a520e828ec64e7"
+          "content" : "4a3f60003f00a88695158a522cfbb7119c2c696991f13b7ca391e7c1eaf46d34"
         },
         {
           "alg" : "SHA-512",
-          "content" : "02d37166706b1a93248cfb82731318304950162814292a295f0252d0f5d7ec734cedaf4a9f960d30c85dc8bac0ee59d75089f5ae10c88212b98e4de7ef7c4d8b"
+          "content" : "f3f2cc2211f00a66c33cd81ef996557fda3ee89421b2fc4565c376dadc22dc2a25eb327e5dfa041f3c48b8fa8620b797ec6762fd74d3ddde0184e6598c211d39"
         },
         {
           "alg" : "SHA-384",
-          "content" : "84f70dfb7e80d7a6c1dad5ac31ce743f0da036e683881acf172d35f7d21ccbb3296165b88fcd4b2167cdc1234956bcdb"
+          "content" : "54138af00ebd5d85cb2f776d75d2455de1a058e657dff84d8e19a563d720fa819a1efd4d432a1d3c2dcb2fa31158c184"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "e89f15bf1b1ff83ce691bd755daab7a6ac6cfb416ccdc12ebd1a7f427da2224c4b8371062ebaa3fa63ba878473e7a8d2"
+          "content" : "7855e1aba9691493ebd9a5d79ace4cbccdc1f9fd9194a8300f6b71367014e7fdaf04a7aa9db87ed195b7d738552e6080"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "c08c9694411c5561032ace350fb1bb2201f3bfd0aa217e48047a399eb26e26c2"
+          "content" : "f65d3d9a6737a6bd62c31d2d463d011512c3aa434d0575d6e54a95dc00bc5c6e"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "a47781adf6a0dd209579e9c09ddb1f53c88bf89dadd4a7829655599eaea3399f9a71cf7e3b9c831c0f7e86904d5de2e97a6c3df8c0c0126ce8f4f4ad73cda1a3"
+          "content" : "34d64169af99b65d4ee59cfd414e189af6ea00ae5118aae5976e1ec76752631138c08eae42b96e95f9668123bbe44a17907c7556003e0dfd988723fc50db0d31"
         }
       ],
       "licenses" : [
@@ -2457,7 +2285,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -2481,58 +2309,58 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar"
     },
     {
-      "publisher" : "SonarSource and Waleri Enns",
+      "publisher" : "SonarSource",
       "group" : "org.sonarsource.python",
       "name" : "sonar-python-plugin",
-      "version" : "4.17.0.14845",
+      "version" : "5.16.0.29940",
       "description" : "Code Analyzer for Python",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "a1f37ca54b6407c29e14d6a84ef527be"
+          "content" : "96af3be952506f19faa9797702af83d2"
         },
         {
           "alg" : "SHA-1",
-          "content" : "d2a19e1624695b1a8bf7691c028be1c1d795c3b4"
+          "content" : "7358996b700859eefb489750874f6b276555ae44"
         },
         {
           "alg" : "SHA-256",
-          "content" : "4745222f0e3ff47ae4bef17fe6e6c8f50234c69d4992e81628c52217f3443564"
+          "content" : "161047717514eb4299847263ccb553df5e5be8fc9ceb081aaf4015fa834c734a"
         },
         {
           "alg" : "SHA-512",
-          "content" : "7fb3dc79348493ea5a16c8a436db16665126137f0dfcc146fd75dac317a686c26f81499e5a370341e87374fe28006670f48d7424ab2c7988e8e51a842872fc4a"
+          "content" : "09689460be8675a15d4f1c2cecb868563c94a54c311f992bdd190aef37300a80760966216f73c12824765d7a7562735799b9c08f0606f465b03c299778110b31"
         },
         {
           "alg" : "SHA-384",
-          "content" : "55bff9b2c2d2fede0efcaa6c64835bb2e42e94d4ba6196168d4d5b2f7fbd65cd8c03ae85f39937d27f873edcc359d565"
+          "content" : "bc18a99dabb6a1f04cd2bfdaffd3e1ba70688d16716b8cf40c9a751e94c6312b721b31478d7ea1baf3095da0654e6ae1"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "f38a0bc3cfd4b5d024c210e71fc0b63f41cc4bbac4bc501905fad95ceda64f81e39c3a53ca50b5c1e25250e802ce8a92"
+          "content" : "5d4803f25bb278676d6aa3ec55c6fd4db93fb42d5966fe73f0d7c6ecc2edcd2633154defacccd021b82574399e095c6c"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "2a9a49aac638a35dbc0ec3d31a79cb92a87bb148ce46ca7072bbb4d732a0cda6"
+          "content" : "b5898d3547c883a1aeaeb1175ed6bf9b691ae896210df2a0ce22b74295ddc004"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "5861b8fa999a2e4117429bf16c4ee05f765050a41ca59fd6beb2499ac24020a0693f366b6807bce569cf789be4ef075ab320aa02580712ad32d0b10a0b1b34d4"
+          "content" : "22c2445b64a2d200eb021df6bf93ef083c5487bde5c7923df897941445fd7f77eb9eac76542924195c8fdf17d43a3336a9b91f7c507ce8c36265447d8b77472c"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -2556,62 +2384,62 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar"
     },
     {
-      "publisher" : "SonarSource and Waleri Enns",
+      "publisher" : "SonarSource",
       "group" : "org.sonarsource.python",
       "name" : "python-frontend",
-      "version" : "4.17.0.14845",
+      "version" : "5.16.0.29940",
       "description" : "Parent pom of SonarSource public projects",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "c55cb48cedabf79f2877ebb9d88f6b58"
+          "content" : "af8fb4754bb34b00450e1886e6e35f24"
         },
         {
           "alg" : "SHA-1",
-          "content" : "4ff8dfa5ea7d5ad5847562d95396b919308caea3"
+          "content" : "3d29bbb908e0740432fd9e29f6f9fef3b61fa8bf"
         },
         {
           "alg" : "SHA-256",
-          "content" : "437b54530740f33ae5e46bdf8348d1440684f7d1cb318a7ee058689bd9b97c76"
+          "content" : "2bf0a615cb8804200e9de8c3b407b6a928a16b34349f43c76bf9f6c548e8000c"
         },
         {
           "alg" : "SHA-512",
-          "content" : "4928573b4dde5237b3056a25d01fdcaa0d8477f66517d0939d332ff8ba434b6a03d884095701f4b571af131b3afc6b57feee148d69d86b8e62a3a4d39d2d1001"
+          "content" : "0b42071f37c0cf8dfc46c3a3ed915bdc1d99b0bc41706200305c7f962f7b14c79e19eb42f99488b874d45267015de3f9762d903d6c03c7fb1c4bd1ac331c45d8"
         },
         {
           "alg" : "SHA-384",
-          "content" : "859f11ab3b6590bc07f6a082ef8d87775939341e064abd4c840ad326640c71b84e99a8ae281f0bece8bd5b8196db1c0d"
+          "content" : "5411758030a57ffedc16b7b9f93592107920e01b27b8b6b98c3cb0cec1bbb3eecfc0dfc36ba130b2616507a703938560"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "7dc1a501021011058c6e46cf0e069103aca9687de27aea29c42196af8d74c09ed668ec77284abafc12d635f4e0c9154e"
+          "content" : "d2054bd5b799463c0364aebef1024584f37fc63b122b0d9a137d5d052b152ef3b23ebb64961222adc72f30e49ccdbe3d"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "84a8def8e68682978bda393edba28e6caa7d4c333fffce5c09a24e54a4104d20"
+          "content" : "6eaa8027ba8e0f7c11c2a2da14084630735110429505016fd92d8292c33637f4"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "b44fdef1e3482a1f65d0d5345c69fb78ed32cee27f96abab033ae1e3e26923efd69e8b213ae7c9c367c0e9a87df3785154ecc58961a5261513dc1fb3e260d50d"
+          "content" : "35de0af96a078f4bc7709776d051b3d40c5f965647096114d33cb47c2fda0aacef5453af4475302a074e351c796b30315daa182fc69f780f515ac046a19e9ff0"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.python/python-frontend@4.17.0.14845?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "http://docs.sonarqube.org/display/PLUG/Plugin+Library/python/python-frontend"
+          "url" : "https://docs.sonarsource.com/sonarqube-server/latest/extension-guide/developing-a-plugin/plugin-basics/python/python-frontend/"
         },
         {
           "type" : "build-system",
@@ -2631,46 +2459,46 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.python/python-frontend@4.17.0.14845?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar"
     },
     {
       "group" : "com.google.protobuf",
       "name" : "protobuf-java",
-      "version" : "3.25.1",
+      "version" : "4.29.0",
       "description" : "Core Protocol Buffers library. Protocol Buffers are a way of encoding structured data in an efficient yet extensible format.",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "7dc81d3c2187ce5627d134a37df88cc0"
+          "content" : "5de9c1cc9a647278ab03d76ccfb8ff9d"
         },
         {
           "alg" : "SHA-1",
-          "content" : "2933a5c3f022456d8842323fe0d7fb2d25a7e3c7"
+          "content" : "ffea90ab158435d68de76951857ef5f8b0f98365"
         },
         {
           "alg" : "SHA-256",
-          "content" : "48a8e58a1a8f82eff141a7a388d38dfe77d7a48d5e57c9066ee37f19147e20df"
+          "content" : "16901851ebe5e89fe88aaad3c26866373695bc2e30627bb8932847e2f5fc2e76"
         },
         {
           "alg" : "SHA-512",
-          "content" : "d4adb935097c4fee13838ea7c166b41a9c34977e436d2fa5e5e92aac1a95462846463895ad994858a442079627696ca14618ff97a0039abd3fcb8671d7961d3a"
+          "content" : "ed9aae4faa56c04dc086af07078db3734f675eb4188bb2be98c94cc59a8e4e77b74195c47d70c7b697bc3b938e106fdc137ffda5358b3029795f28e7d9216d68"
         },
         {
           "alg" : "SHA-384",
-          "content" : "2fc41e52f529bcbbe4d8938d262153ee7e7a098d51fc84a2720bade27aff0247af47629c3caa630b706001d769714d1c"
+          "content" : "d204ff730ba5eff0eddd9439f05ab89e87194fc6c69d50054da593ab7537495207374840701867856ea1e9aa87ef1e14"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "9ff49c91b6ca5e5ebc8005b6179d171f3bb549b9ef667c694ea6cebe842bccbea1bedb2bab69d97e89270900915f125b"
+          "content" : "9a3dc4e7ef4e1488b6ee4a653d9f47569bb3f543012ec20fe695d1bba2a7da8e329ffe70d5ef8e43fd9da1721fe3f3c1"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "e3794da30f03c61b916aeb9aa2af625792dc7f236bf2bd16cbfffbf3ef186d59"
+          "content" : "16fec3a2d08bcc363c69d2a260a78020636d94dd4ed929050d8e8b51d37960f0"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "1d3bfb11f6cae1912bd5cd04aef53ae725d705e598fafaa185903d2c534ca2f88ad919321ec4bcdca36c9b1515097c5d47aa6868f5bd3b93732337bd564b3bb7"
+          "content" : "37c5a864aa97fd50a88a5c9b2a9c7eedd646eb4655ec041502e1892efb55b2f22e9f2292dcca120e74755a11f92dc41616e1dc6919d8906fe2c5802e25ed1187"
         }
       ],
       "licenses" : [
@@ -2681,7 +2509,7 @@
           }
         }
       ],
-      "purl" : "pkg:maven/com.google.protobuf/protobuf-java@3.25.1?type=jar",
+      "purl" : "pkg:maven/com.google.protobuf/protobuf-java@4.29.0?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -2697,62 +2525,272 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.google.protobuf/protobuf-java@3.25.1?type=jar"
+      "bom-ref" : "pkg:maven/com.google.protobuf/protobuf-java@4.29.0?type=jar"
     },
     {
-      "publisher" : "SonarSource and Waleri Enns",
-      "group" : "org.sonarsource.python",
-      "name" : "python-checks",
-      "version" : "4.17.0.14845",
-      "description" : "Parent pom of SonarSource public projects",
+      "publisher" : "FasterXML",
+      "group" : "com.fasterxml.jackson.core",
+      "name" : "jackson-databind",
+      "version" : "2.20.1",
+      "description" : "General data-binding functionality for Jackson: works on core streaming API",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "077f9306a20f8a6eca092f54a53a26e3"
+          "content" : "49d7b7226df5ed4a036e48997a03d066"
         },
         {
           "alg" : "SHA-1",
-          "content" : "ef43f45c57346b910ac422d7aff2ab4b6fe25894"
+          "content" : "9586a7fe0e1775de0e54237fa6a2c8455c93ac06"
         },
         {
           "alg" : "SHA-256",
-          "content" : "7d6e1743538dbfa7310bc54fbb7e511a6fd8633549018d7e2b4ba67019a3123e"
+          "content" : "34bbeb4526fff4f8565b12106bf85a6afcbae858966d489b54214ac46b2e26e8"
         },
         {
           "alg" : "SHA-512",
-          "content" : "f628f82e470f9af8e0da159464ef41996b5edbbab7ead94db853afc54992d8f155994becbb9acdfe4af46a41fbf5e3ae01ba6b17078d1e20861da5e4eedccafc"
+          "content" : "16906e9c2f1962649eb21de148f362fedf2ce903c7ca0e6d68a01d43dbe8402b70cc537c104f36bc40a2bed6601162e7c21663735582e25bff7e27852be1405d"
         },
         {
           "alg" : "SHA-384",
-          "content" : "43302f43c32c5b35c4f7b85e901c457ad7ce7c1d0cc8d891dceb828018d0fa06c09fd7b6a34764f187b0deb8f002db96"
+          "content" : "0591935cdfed1d65fa4a2820133ba129384f71921228ffe093f343d3ebf0b699762810d9208641726111015f0e35753b"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "2c847248451a6f0874fa6d91dedd203c7492db05161c15235d709e9e9bc6d8ff5900b7c60e0aeea74fb7566cb1a3db3e"
+          "content" : "855ccd449944e7884f8088c8c5b224e6e2f63bcd3123502618b4f5ded025e5978143af8c5d31215276932bc3bb089472"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "32f3d74c14e3918b8af6c98cc32304cc5d0b835348cd15734033307e4e871d2f"
+          "content" : "53732171c9f2bdeaa40017a34683a00ac11e8a8c1bcefaed07eb91e629e20376"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "2429a23270a66433e76eade81bb8b8acd3d91b55a587c6230ecc1282e71b2fcd61d9867d100fe04b74d387516a7c0df4124d8aa82f300c07a82dba20b4c01920"
+          "content" : "05017efae94bc3c83131aaaa7911f20e7c367502cd2cd05c6cedabc877b55724bcde2521ba1da15bf1c1c3ccb1a235124b39b2d4860142f2b89d4df197cf5c83"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "name" : "GNU LGPL 3",
-            "url" : "http://www.gnu.org/licenses/lgpl.txt"
+            "id" : "Apache-2.0"
           }
         }
       ],
-      "purl" : "pkg:maven/org.sonarsource.python/python-checks@4.17.0.14845?type=jar",
+      "purl" : "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "http://docs.sonarqube.org/display/PLUG/Plugin+Library/python/python-checks"
+          "url" : "https://github.com/FasterXML/jackson"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://central.sonatype.com/api/v1/publisher"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/FasterXML/jackson-databind/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/FasterXML/jackson-databind"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar"
+    },
+    {
+      "publisher" : "FasterXML",
+      "group" : "com.fasterxml.jackson.core",
+      "name" : "jackson-annotations",
+      "version" : "2.20",
+      "description" : "Core annotations used for value types, used by Jackson data binding package.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "b901def3c20752817f27130e4b8d6640"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "6a5e7291ea3f2b590a7ce400adb7b3aea4d7e12c"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "959a2ffb2d591436f51f183c6a521fc89347912f711bf0cae008cdf045d95319"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "8926d89bfe7f427c7793f6af619249540f23f82eae055dd03d4cb163ff603a43dd6a3ebe43528d00789aed3df0dd2f10e08552fdec53e2691849b9769f57f0c9"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "40ee4c1438a5a190624dff9deca83377f7e60690b4535359b2a79924f736bff7c8d077e5b01c6c8972735dc152f2ccf4"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "0fc0f697d03692b63c2b11fcabac51c630278ed6df15420975263ea4ad19418b3b71b7889497ed20a150035f9bcba79d"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "6bf49e384735969af020f758b255ceed26af92d4cf456f6e7b83e8de53289f93"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "3372f6c456a7f6a33ebc3ecc65daaf36288be2a14b1f2cb9fcd7387c07acab1c69ae803a366e5d12adf4934970ffd2e34017917c5f16a6d563bc94810f228ab3"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.20?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/FasterXML/jackson"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://central.sonatype.com/api/v1/publisher"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/FasterXML/jackson-annotations/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/FasterXML/jackson-annotations"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.20?type=jar"
+    },
+    {
+      "publisher" : "FasterXML",
+      "group" : "com.fasterxml.jackson.core",
+      "name" : "jackson-core",
+      "version" : "2.20.1",
+      "description" : "Core Jackson processing abstractions (aka Streaming API), implementation for JSON",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "889b2c417b61c9f4f460b06957147234"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "5734323adfece72111769b0ae38a6cf803e3d178"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "ffab4d957daa2796cf24cb66d0b78a7090f1bcbe17c3a4578f09affaaf137089"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "0463e1c2e1d8e8cfa4954dfce491583f0ec9ec1de6e6f342d1e5f0c63dcfb959673552a279ec4e6b6cc69e6ac2de6d42dd512149ceb76620b5d780db7325e6a7"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "a279b2d57d019a05f65762ce670ce23e02466b11276d8c0687f3bb5ed40a8a1854bfe6dd2dc157d0f5695186f7d9a65a"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "06b9f33e030a99fa95d171118ab668bee42e32b35b85e05750f8514128dbadc94026afde16dbadc0ff786027b09712a4"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "3e83a1a349d8ba3a4e76ee983f04b259a85263dda5090f55aae5535109c4b6c0"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "87b3a61a71a625adfc6b9b402079c26b223e19535ca5af07e4130932d479f9c22e90696911050d8ab8a09a6209651fe2f25f54d7d9a1493b6dab6f8acb76203d"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/FasterXML/jackson-core"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://central.sonatype.com/api/v1/publisher"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/FasterXML/jackson-core/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/FasterXML/jackson-core"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar"
+    },
+    {
+      "publisher" : "SonarSource",
+      "group" : "org.sonarsource.python",
+      "name" : "python-checks",
+      "version" : "5.16.0.29940",
+      "description" : "Parent pom of SonarSource public projects",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "c6a6f14dd43b2ca777639d045d371686"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "7420c64bb23358297f8fb465d194b0abc81a268d"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "8d71a04ae268809a329169124e821538409f323c25738a787f1004691830947a"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "49cc6c1c1f6d4ab7691e52ee582edc2dc4320706f0cba8b0264232bb8c648e0c1411fc349480d4126909275bc722a26ce7dc1d0442b0fe800d68e43dd502e8e0"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "0ec195c2cd805ba066715992213efab8234ad4fea211d38c11621b764ce81a82ec4eb13f372c3a6ae77663319de497ca"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "d59fe66bc7a1621385b1a8e6d9e7e9aba25f5bcd1bf7460aaeea718a9fdefa1f01d65bc6bbf08c4ea20d6ff5533321d5"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "6b6d15ca4b8e534cfb0a5b3a9dc4ea328d07647a6a5029cc5bc36cc0e33f4ae7"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "258f4367d5303ee344945915f54637c52cdfd441d3ec1a642172dd417815e38993f14b35154b0d9c7d3f49dfad666e9cb2ca26a9993f52815180b4bb6bdf8dce"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/org.sonarsource.python/python-checks@5.16.0.29940?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://docs.sonarsource.com/sonarqube-server/latest/extension-guide/developing-a-plugin/plugin-basics/python/python-checks/"
         },
         {
           "type" : "build-system",
@@ -2772,47 +2810,122 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/org.sonarsource.python/python-checks@4.17.0.14845?type=jar"
+      "bom-ref" : "pkg:maven/org.sonarsource.python/python-checks@5.16.0.29940?type=jar"
     },
     {
-      "publisher" : "The Apache Software Foundation",
-      "group" : "commons-lang",
-      "name" : "commons-lang",
-      "version" : "2.6",
-      "description" : "Commons Lang, a package of Java utility classes for the classes that are in java.lang's hierarchy, or are considered to be so standard as to justify existence in java.lang.",
+      "publisher" : "SonarSource",
+      "group" : "org.sonarsource.python",
+      "name" : "python-commons",
+      "version" : "5.16.0.29940",
+      "description" : "Parent pom of SonarSource public projects",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "4d5c1693079575b362edf41500630bbd"
+          "content" : "9d94ffb59a75cf874e054eb124bc1815"
         },
         {
           "alg" : "SHA-1",
-          "content" : "0ce1edb914c94ebc388f086c6827e8bdeec71ac2"
+          "content" : "0c4756f9dd9cc5caf3acc856171694e2fa033bcc"
         },
         {
           "alg" : "SHA-256",
-          "content" : "50f11b09f877c294d56f24463f47d28f929cf5044f648661c0f0cfbae9a2f49c"
+          "content" : "5fb75ed5d0f7767f3d5877e1fc44a2cb4498b83c482e1e4cefd5c878f118225e"
         },
         {
           "alg" : "SHA-512",
-          "content" : "4a5a3dbe4941c645e2cca068cca5c1882cfe988b02e7cd981d1e51784900767d1deab0e0e0566f559c9fcabb4a180e436d5bb948902d4f4106f37360466afb42"
+          "content" : "d8aa8345c5a55aa6a9cbcb261277e0f36e4756ea4a4d9dc99410053781a6305f9c98e1d0c2f0253e9e6140c40f6f9f19da26e7e85913407b42b20808aebfe9f0"
         },
         {
           "alg" : "SHA-384",
-          "content" : "9725bc421adc1dbcd6f937eca0f3075d186a2b353ece4cef66b0fe81bb8d3f7d7641c43e86d657ef526c719f0c2a8c90"
+          "content" : "ee39919d1c32d29c16e41ef2259b5b71f5670244c9c9b1224972eb4d38c90e963dedb6108ce8c0243e322086e585a3da"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "4bc4eaaf2580ded6d552b96ae5261c936de95f69a1d137c47279c51bf2aa1406ae44f69ccc94486267b8441e53c4bd74"
+          "content" : "ddc8bf3b9b5d30bb0916c90f676061729666587f674827a29dcb21a08fe4d59e42f5ce818c5730e2aa21f1befa74c130"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "b68d49ef037d428ea0c3e67a7a20f3d68a134bef30a1639ec08d28886b9f5629"
+          "content" : "da0ff73c07625578b2d3d55fcc5cd16406762ad670a77c46e7128f6c4e90ec3b"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "2e9ffc0608827cffc0b48b7a0f35d371c66586c99fea2910f7c2a237c7c57d9ae4d65de7c8e018362c2e4f963c2f70a9196cebf35457f1dd0cea6c65c256f673"
+          "content" : "624e8aaaee39fcad526d4e2699174f8aa9804fc1cb08418dd742374a91fdc3fd474173f59e64508a74029080e9e56d9c6c32e311b71533eba3eead882c4a736f"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/org.sonarsource.python/python-commons@5.16.0.29940?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://docs.sonarsource.com/sonarqube-server/latest/extension-guide/developing-a-plugin/plugin-basics/python/python-commons/"
+        },
+        {
+          "type" : "build-system",
+          "url" : "https://cirrus-ci.com/github/SonarSource/sonar-python"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://jira.sonarsource.com/browse/SONARPY"
+        },
+        {
+          "type" : "mailing-list",
+          "url" : "https://community.sonarsource.com"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/SonarSource/sonar-python/python-commons"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.sonarsource.python/python-commons@5.16.0.29940?type=jar"
+    },
+    {
+      "publisher" : "FasterXML",
+      "group" : "com.fasterxml.jackson.dataformat",
+      "name" : "jackson-dataformat-toml",
+      "version" : "2.20.1",
+      "description" : "Support for reading and writing TOML-encoded data via Jackson abstractions.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "f3d12c27f5c0744054e8716f3ee4b3d2"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "1f4f7249289053551eac7bc8ac6e646576d03e1a"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "3936e3fb83edd2754bb317d17a63cded43b5fac4fb82eabb4aaa502bb52f9835"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "cd31529a28ff83585d8d5944943c528d4d26e0f547c5ed804c90a8c642b0cd34553d2f4b7878903312a06d4ad86351aa6591294dba4f61b0bb03da317aeef870"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "e2f0cbd883ee0745e6c27d0cf83c1e48869f89cb444c099e553f25105d7800949b1db37fc5db5055e321fdce8b13ebde"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "fd0c36a837dd0b756c3622606b1490218cba364f30d148bac78dfee7dbb1117a9f1504a2e0cac8d83cf6cdb17f0ecf7b"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "58d572441da65e6c63de352d608a144b280bd3754a06128d1da840494c70ce6b"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "bdbc867b3d2a993b277d19c230f84dd52a8db5f6638f9a90f6d613b9eb7b2f49e3404dc78dba4877fdad3ed5bd255f27be808ec287898c833ee2347ee44a94f4"
         }
       ],
       "licenses" : [
@@ -2822,15 +2935,156 @@
           }
         }
       ],
-      "purl" : "pkg:maven/commons-lang/commons-lang@2.6?type=jar",
+      "purl" : "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-toml@2.20.1?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
-          "url" : "http://commons.apache.org/lang/"
+          "url" : "https://github.com/FasterXML/jackson-dataformats-text"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://central.sonatype.com/api/v1/publisher"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/FasterXML/jackson-dataformats-text/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/FasterXML/jackson-dataformats-text/jackson-dataformat-toml"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-toml@2.20.1?type=jar"
+    },
+    {
+      "publisher" : "FasterXML",
+      "group" : "com.fasterxml.jackson.datatype",
+      "name" : "jackson-datatype-jdk8",
+      "version" : "2.20.1",
+      "description" : "Add-on module for Jackson (https://github.com/FasterXML/jackson) to support JDK 8 data types.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "9360afe5a78d29ce5510f670b3286e77"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "6a8bbc260ba834f67220117d9f08510d69c4a3f0"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "6821cdd695e95c4e6853ec855a7432c71f2f4be318b3ca190fbbf8a2e5f981f2"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "9aceae6ea4ac56a038982fc45e91942cc15d68b7e07e044c1e75a71760b2eb02e23a344f36966093be670a2d1f656146492f11148da06a4044b4a5d78e523beb"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "c55990a25083046bd3881b656d5fa351e5d2115ce861427cc8bdc64acbf85f9a3ea739f3510eedfc0372f226ed7ebd2a"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "9556b354a7fdf5324aa22d6a00b308508bfb55555c2a31ca159c2b9f35f8a3d4e904a7eb15388f6532bb464fcc642db5"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "b4018fdef370f16380205cf366a9b84f4721b5ff0a800e72e0a1a23f4a58848a"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "9f9db93cecb859df97455ddfa61136406700ae786715a3754e0ac9f9993deb9df62c44e08233dcf463e792fcbba9a25e7472e34dba5970d9df7eecf959c71875"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.20.1?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jdk8"
+        },
+        {
+          "type" : "distribution-intake",
+          "url" : "https://central.sonatype.com/api/v1/publisher"
+        },
+        {
+          "type" : "issue-tracker",
+          "url" : "https://github.com/FasterXML/jackson-modules-java8/issues"
+        },
+        {
+          "type" : "vcs",
+          "url" : "http://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jdk8"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.20.1?type=jar"
+    },
+    {
+      "publisher" : "The Apache Software Foundation",
+      "group" : "org.apache.commons",
+      "name" : "commons-text",
+      "version" : "1.14.0",
+      "description" : "Apache Commons Text is a set of utility functions and reusable components for processing and manipulating text in a Java environment.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "54960a12a82d52df3d5548d6934d87b2"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "adcb0d4c67eabc79682604b47eb852aaff21138a"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "121fce2282910c8f0c3ba793a5436b31beb710423cbe2d574a3fb7a73c508e92"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "4975879372241025bd0a47fe540ed7d0cd3e5eba474b12af67a8c6016be0fbb4f4a3a4a0064f4d2b6aebce67d88ee814da345a5ba3a6ee4f6293b3b4e7bbd065"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "a038f1a8b58bb7ec17ba55238d3e40f5d9386dfb17870630a728b22741a9592819374e9abbbc6402a439eea4db5b739a"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "5325922bb72aa73d2d51cb3fb5592fc77097614fd3ab3ac77e3acdc0fe1dc8c18893cdd9a05768bb725fa40dd8c14527"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "31008266592ec8503bcc7f6b4e7125b0e377f57f3a697cdcb02ee7f20f84ddf1"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "385249425d8c6ab181039195a03c6337f393a1e1419527e9f072d695367bc0bd6546e752d1912df557bd8788329f7609aa1c63ce42eb135e2d27b6141ce9280f"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/org.apache.commons/commons-text@1.14.0?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "https://commons.apache.org/proper/commons-text"
         },
         {
           "type" : "build-system",
-          "url" : "http://vmbuild.apache.org/continuum/"
+          "url" : "https://github.com/apache/commons-text/actions"
         },
         {
           "type" : "distribution-intake",
@@ -2838,19 +3092,19 @@
         },
         {
           "type" : "issue-tracker",
-          "url" : "http://issues.apache.org/jira/browse/LANG"
+          "url" : "https://issues.apache.org/jira/browse/TEXT"
         },
         {
           "type" : "mailing-list",
-          "url" : "http://mail-archives.apache.org/mod_mbox/commons-user/"
+          "url" : "https://mail-archives.apache.org/mod_mbox/commons-user/"
         },
         {
           "type" : "vcs",
-          "url" : "http://svn.apache.org/viewvc/commons/proper/lang/branches/LANG_2_X"
+          "url" : "https://gitbox.apache.org/repos/asf?p=commons-text.git"
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/commons-lang/commons-lang@2.6?type=jar"
+      "bom-ref" : "pkg:maven/org.apache.commons/commons-text@1.14.0?type=jar"
     },
     {
       "publisher" : "Codehaus",
@@ -3050,54 +3304,118 @@
       "bom-ref" : "pkg:maven/org.codehaus.woodstox/stax2-api@3.1.4?type=jar"
     },
     {
-      "publisher" : "The Apache Software Foundation",
-      "group" : "commons-io",
-      "name" : "commons-io",
-      "version" : "2.11.0",
-      "description" : "The Apache Commons IO library contains utility classes, stream implementations, file filters, file comparators, endian transformation classes, and much more.",
+      "publisher" : "SonarSource",
+      "group" : "org.sonarsource.go",
+      "name" : "sonar-go-plugin",
+      "version" : "1.32.0.5128",
+      "description" : "Code Analyzer for Go",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "3b4b7ccfaeceeac240b804839ee1a1ca"
+          "content" : "ea2de97a8b1020865b993afe78aff72f"
         },
         {
           "alg" : "SHA-1",
-          "content" : "a2503f302b11ebde7ebc3df41daebe0e4eea3689"
+          "content" : "daa3ce9acfba33b2dba823c64d72bf3a0fa2b25d"
         },
         {
           "alg" : "SHA-256",
-          "content" : "961b2f6d87dbacc5d54abf45ab7a6e2495f89b75598962d8c723cea9bc210908"
+          "content" : "7ad9dd5e478be53d58ad12d060f0e4aaa5e5eb9f5fcb28411c8083da2d5e0b19"
         },
         {
           "alg" : "SHA-512",
-          "content" : "5bd78eed456ede30119319c5bed8e3e4c443b6fd7bdb3a7a5686647bd83094d0c3e2832a7575cfb60e4ef25f08106b93476939d3adcfecf5533cc030b3039e10"
+          "content" : "3176550be29c19e7fb8b90b6993b29f3b8b4b51ddfa4509bab6de91edc4d7b40e3384dc48df7731262cb671379d2c4163eef78565389a391a43d450dcba56996"
         },
         {
           "alg" : "SHA-384",
-          "content" : "114f1e324d90ad887c177876d410f5787a8e8da6c48d4b2862d365802c0efded3a88cb24046976bf6276cadad3712f0f"
+          "content" : "b1e7333047001ad10c6058a5ede6bc27651bae3335c0faadc1a6bda3ba1b66b90f45aec62389eaa9ec41eba836dc0d52"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "80288c03ad4d80d69f91d056ffc5570d49a9c76bf54ad2dff0121ecde26a560df76d05156f281f5c6db2a38ff07a873d"
+          "content" : "18184263d523ab59b12019479a129e608f201e2c096745e869d72e029c78d41409d64934307b1f1a343ab0e1475978f3"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "5adfb5ccaf5f21a549422f426118a9542673926fcd18c68390cf813e791dcf6c"
+          "content" : "3fddc018fee60147c78382440a963bf6812bf496bb1d25090b50475e185a0844"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "7573f47f0babb53cefdc7c2309a0b982d800139064537b0797da442853d081010ad7c3c74a500598a0f800639a5d540eca21963ea652c68613907059bd4278c2"
+          "content" : "c1fc155244473f90fcc327f33055b06cb2fb35a203421b832f627d12150d851640a407a84dd47498b372ad0337bb1881ffa8aeab9fec85cb5e04b924989c5db5"
         }
       ],
       "licenses" : [
         {
           "license" : {
-            "id" : "Apache-2.0"
+            "name" : "SSALv1",
+            "url" : "https://sonarsource.com/license/ssal/"
           }
         }
       ],
-      "purl" : "pkg:maven/commons-io/commons-io@2.11.0?type=jar",
+      "purl" : "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar",
+      "externalReferences" : [
+        {
+          "type" : "website",
+          "url" : "http://www.sonarqube.org/"
+        },
+        {
+          "type" : "vcs",
+          "url" : "https://github.com/SonarSource/sonar-go"
+        }
+      ],
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar"
+    },
+    {
+      "publisher" : "The Apache Software Foundation",
+      "group" : "commons-io",
+      "name" : "commons-io",
+      "version" : "2.20.0",
+      "description" : "The Apache Commons IO library contains utility classes, stream implementations, file filters, file comparators, endian transformation classes, and much more.",
+      "scope" : "required",
+      "hashes" : [
+        {
+          "alg" : "MD5",
+          "content" : "94e7e6b9b5fe82388687b584d3571081"
+        },
+        {
+          "alg" : "SHA-1",
+          "content" : "36f3474daec2849c149e877614e7f979b2082cd2"
+        },
+        {
+          "alg" : "SHA-256",
+          "content" : "df90bba0fe3cb586b7f164e78fe8f8f4da3f2dd5c27fa645f888100ccc25dd72"
+        },
+        {
+          "alg" : "SHA-512",
+          "content" : "fea08e150473673b0608eaee3ae1cb4e73834039db80d3b758710d6baf3a5840a0878a4eb64739ae9bb21ccc7148c8520fe873616a3f6d5cdb4305deabdd015c"
+        },
+        {
+          "alg" : "SHA-384",
+          "content" : "22db5e18e3512ed44474e75a124a052d5a1a6f35ce458f6a201a5ccc9510c57c10c117dba80ac6ce91745cf2b51e63f2"
+        },
+        {
+          "alg" : "SHA3-384",
+          "content" : "a70700d24df3c276ff387c359e0e940b834e413b72a49917de9a82615836eca8cca1bee1ed71790606c795da795e9151"
+        },
+        {
+          "alg" : "SHA3-256",
+          "content" : "a8d044d3a4a069d0f20d24112b6427a3a6f02a925b31b932721d1f545ff32cec"
+        },
+        {
+          "alg" : "SHA3-512",
+          "content" : "3417bf811d7e5fc1e71b8540f3379751434ea8540c421ff2c8bb5f5ce34401cd0ad8a829b65aa55e055c57141181762c4827099352c2bba453e48ad2df67526a"
+        }
+      ],
+      "licenses" : [
+        {
+          "license" : {
+            "id" : "Apache-2.0",
+            "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+          }
+        }
+      ],
+      "purl" : "pkg:maven/commons-io/commons-io@2.20.0?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
@@ -3105,7 +3423,7 @@
         },
         {
           "type" : "build-system",
-          "url" : "https://builds.apache.org/"
+          "url" : "https://github.com/apache/commons-io/actions"
         },
         {
           "type" : "distribution-intake",
@@ -3125,47 +3443,47 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/commons-io/commons-io@2.11.0?type=jar"
+      "bom-ref" : "pkg:maven/commons-io/commons-io@2.20.0?type=jar"
     },
     {
       "publisher" : "Google Inc.",
       "group" : "com.google.googlejavaformat",
       "name" : "google-java-format",
-      "version" : "1.22.0",
+      "version" : "1.28.0",
       "description" : "A Java source code formatter that follows Google Java Style.",
       "scope" : "required",
       "hashes" : [
         {
           "alg" : "MD5",
-          "content" : "fd1fbd4edf5d8eaca565217ff981b94b"
+          "content" : "8e2d4037e876b608ab0356477b5ead98"
         },
         {
           "alg" : "SHA-1",
-          "content" : "6e31a0877a51e91076c857794a0b1df7af876b2d"
+          "content" : "f57d0ad670cc32c4d4a4ffb2cbef44a3dfddeecd"
         },
         {
           "alg" : "SHA-256",
-          "content" : "4f4bdba0f2a3d7e84be47683a0c2a4ba69024d29d906d09784181f68f04af792"
+          "content" : "41dfe4d1012794ed15e0ffd70f89fd4fa65d5f15ce0bc0c70f8c2c127d6d010d"
         },
         {
           "alg" : "SHA-512",
-          "content" : "d2006def13e5144e12568298014a23c86299a62e2bb7757c63f5f25405b1adb6f60b3f2f54bed9583cdd24cae71088e9f7aa846a10a089cce2a25972e48c7649"
+          "content" : "87bf18026e543bc9135d58153f05b8bf58b48bd59cec96e774e3f68bc8d601b9789924a9917b9a4f57b8a69bbe24dd20aef0a65543a63e7101b39317469346d2"
         },
         {
           "alg" : "SHA-384",
-          "content" : "4aed1de35a09b196347064d45a5996fd7467c9b5cca0faf4655cbeb756053810cd3af2e45d74401aee626e30b1693ca7"
+          "content" : "bfd9e42e51d696fa079aa12d3541645873724ce48989615723533aba58fc3e4f77a37e9102bad2b391dc0252b449bad9"
         },
         {
           "alg" : "SHA3-384",
-          "content" : "28fc6265d1886418ca44d1c7eea8709a2f38ba5b3f8cedb6a44d1a36f676e533662b61105db8b8d1f69fc4796fbcc8bd"
+          "content" : "b48a456db7981843ffc51f60511d4a5d52072bbe89da4dda6560cee4414493236e94ad1af4c5564449fb000501ca6ef4"
         },
         {
           "alg" : "SHA3-256",
-          "content" : "08098285fccec01b2f3fce2e46ac210deb79862f21cb4ae96ff3a1a040df0809"
+          "content" : "ae18cf36a9212cdb243e3900cca7f9059273dfdf227fb97a189b5ae84cc989e4"
         },
         {
           "alg" : "SHA3-512",
-          "content" : "122e32ab36408a79ed1153660ab1ba7639212d30921ea022da9affc19f76c5d874241a8584fc5c992ce74d2f01c2e06fddc784aee11c6d4238fc645ade3a1880"
+          "content" : "ac1207d9b7d8be02a222d1f11b44a5bcf1d95924404926698c8f23ba3688cfc49fc81e594e4f48d03ebbbf0ccc638706433ed462499b5b4d083538eb7e37541e"
         }
       ],
       "licenses" : [
@@ -3175,15 +3493,11 @@
           }
         }
       ],
-      "purl" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar",
+      "purl" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar",
       "externalReferences" : [
         {
           "type" : "website",
           "url" : "https://github.com/google/google-java-format/google-java-format"
-        },
-        {
-          "type" : "distribution-intake",
-          "url" : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
         },
         {
           "type" : "issue-tracker",
@@ -3195,7 +3509,7 @@
         }
       ],
       "type" : "library",
-      "bom-ref" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar"
+      "bom-ref" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar"
     },
     {
       "group" : "com.google.guava",
@@ -3478,68 +3792,6 @@
       "bom-ref" : "pkg:maven/org.checkerframework/checker-qual@3.37.0?type=jar"
     },
     {
-      "publisher" : "Google LLC",
-      "group" : "com.google.errorprone",
-      "name" : "error_prone_annotations",
-      "version" : "2.21.1",
-      "description" : "Error Prone is a static analysis tool for Java that catches common programming mistakes at compile-time.",
-      "scope" : "required",
-      "hashes" : [
-        {
-          "alg" : "MD5",
-          "content" : "75fe4fe33d308dd6cee3b601de902d27"
-        },
-        {
-          "alg" : "SHA-1",
-          "content" : "6d9b10773b5237df178a7b3c1b4208df7d0e7f94"
-        },
-        {
-          "alg" : "SHA-256",
-          "content" : "d1f3c66aa91ac52549e00ae3b208ba4b9af7d72d68f230643553beb38e6118ac"
-        },
-        {
-          "alg" : "SHA-512",
-          "content" : "530318bcdf1ed8eeee408fc5a0775f1792cbf012b4ec55217a4498c8d2983b230a4d071b9e115565b0411faa51dd938823d9b619beb6786212c375ad3d1ebd8a"
-        },
-        {
-          "alg" : "SHA-384",
-          "content" : "88e628431966a9b5cc19f96159874cefde1558e51d2ce233a0c2d47914eb9c6256f95882605a87cc6629a21ff70b72b4"
-        },
-        {
-          "alg" : "SHA3-384",
-          "content" : "ebc750b211532fef9a84c3682d47f00b877e4082716ead1f4f883f02ab35bda8d5acfc475722215c4fe6ed9cfd54f43a"
-        },
-        {
-          "alg" : "SHA3-256",
-          "content" : "9b4f193bf2f541844c6b1b5cf2d1c7f6e9465b97804d155f34530b203184e1ae"
-        },
-        {
-          "alg" : "SHA3-512",
-          "content" : "1d76781cef387a185fd4fb69960394556062969bbbe0be74d0fb11f7c73758e5d35ff546ab04f6382c21c63705a1ffb975a549bf4d846fde54e412ecd4641485"
-        }
-      ],
-      "licenses" : [
-        {
-          "license" : {
-            "id" : "Apache-2.0"
-          }
-        }
-      ],
-      "purl" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.21.1?type=jar",
-      "externalReferences" : [
-        {
-          "type" : "website",
-          "url" : "https://errorprone.info/error_prone_annotations"
-        },
-        {
-          "type" : "vcs",
-          "url" : "https://github.com/google/error-prone/error_prone_annotations"
-        }
-      ],
-      "type" : "library",
-      "bom-ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.21.1?type=jar"
-    },
-    {
       "group" : "com.google.j2objc",
       "name" : "j2objc-annotations",
       "version" : "2.8",
@@ -3607,96 +3859,91 @@
   ],
   "dependencies" : [
     {
-      "ref" : "pkg:maven/com.ibm/mapper@1.0.3-SNAPSHOT?type=jar",
+      "ref" : "pkg:maven/com.ibm/mapper@2.0.0-SNAPSHOT?type=jar",
       "dependsOn" : [
-        "pkg:maven/com.ibm/engine@1.0.3-SNAPSHOT?type=jar",
-        "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar",
-        "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@9.13.0.360?type=jar",
-        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-        "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
-        "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar",
-        "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar"
+        "pkg:maven/com.ibm/engine@2.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@13.4.3.4290?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
+        "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar",
+        "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/com.ibm/engine@1.0.3-SNAPSHOT?type=jar",
+      "ref" : "pkg:maven/com.ibm/engine@2.0.0-SNAPSHOT?type=jar",
       "dependsOn" : [
-        "pkg:maven/com.ibm/common@1.0.3-SNAPSHOT?type=jar",
-        "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar",
-        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-        "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
-        "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar",
-        "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar"
+        "pkg:maven/com.ibm/common@2.0.0-SNAPSHOT?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
+        "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar",
+        "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/com.ibm/common@1.0.3-SNAPSHOT?type=jar",
+      "ref" : "pkg:maven/com.ibm/common@2.0.0-SNAPSHOT?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar",
-        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-        "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
-        "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar",
-        "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar"
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
+        "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar",
+        "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.jetbrains/annotations@24.1.0?type=jar",
+      "ref" : "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
-      "ref" : "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
-      "ref" : "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
-      "ref" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-surefire@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-symbolic-execution@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-checks@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-checks-aws@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/external-reports@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-jsp@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar"
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-surefire@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/org.sonarsource.java/sonar-java-plugin@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
+        "pkg:maven/org.sonarsource.java/java-surefire@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-checks@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-checks-aws@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/check-list@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/external-reports@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-jsp@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/org.sonarsource.java/java-surefire@8.18.0.40025?type=jar",
+      "dependsOn" : [
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
         "pkg:maven/com.fasterxml.staxmate/staxmate@2.4.1?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar"
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/jdt-package@1.1.0.34?type=jar",
+        "pkg:maven/org.sonarsource.java/jdt-package@1.6.0.160?type=jar",
         "pkg:maven/org.sonarsource.sslr/sslr-core@1.24.0.633?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar"
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/jdt-package@1.1.0.34?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/jdt-package@1.6.0.160?type=jar",
       "dependsOn" : [ ]
     },
     {
@@ -3706,20 +3953,24 @@
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
+      "ref" : "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.8.0.2699?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.18.0.3393?type=jar",
       "dependsOn" : [
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar",
       "dependsOn" : [
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
-        "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar"
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar"
       ]
     },
     {
@@ -3733,7 +3984,7 @@
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar",
       "dependsOn" : [
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
         "pkg:maven/xerces/xercesImpl@2.12.2?type=jar",
@@ -3758,117 +4009,97 @@
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-symbolic-execution@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/java-checks@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar"
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-checks-common@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/org.springframework/spring-expression@6.1.21?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-checks@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/java-checks-common@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-checks-common@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-symbolic-execution@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
-        "pkg:maven/org.springframework/spring-expression@6.1.5?type=jar"
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-checks-common@7.33.0.35775?type=jar",
-      "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar"
-      ]
-    },
-    {
-      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar",
       "dependsOn" : [
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.springframework/spring-expression@6.1.5?type=jar",
+      "ref" : "pkg:maven/org.springframework/spring-expression@6.1.21?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.springframework/spring-core@6.1.5?type=jar"
+        "pkg:maven/org.springframework/spring-core@6.1.21?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.springframework/spring-core@6.1.5?type=jar",
+      "ref" : "pkg:maven/org.springframework/spring-core@6.1.21?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.springframework/spring-jcl@6.1.5?type=jar"
+        "pkg:maven/org.springframework/spring-jcl@6.1.21?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.springframework/spring-jcl@6.1.5?type=jar",
+      "ref" : "pkg:maven/org.springframework/spring-jcl@6.1.21?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-checks-aws@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/java-checks-aws@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.java/java-checks-common@7.33.0.35775?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.8.0.2699?type=jar",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar"
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-checks-common@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-recognizers@2.18.0.3393?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/external-reports@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/check-list@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar"
+        "pkg:maven/org.sonarsource.java/java-checks@8.18.0.40025?type=jar",
+        "pkg:maven/org.sonarsource.java/java-checks-aws@8.18.0.40025?type=jar",
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.java/java-jsp@7.33.0.35775?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/external-reports@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.java/java-frontend@7.33.0.35775?type=jar",
-        "pkg:maven/org.apache.tomcat.embed/tomcat-embed-jasper@9.0.84?type=jar"
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-jasper@9.0.84?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.java/java-jsp@8.18.0.40025?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.84?type=jar",
-        "pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@9.0.84?type=jar"
+        "pkg:maven/org.sonarsource.java/java-frontend@8.18.0.40025?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@9.0.84?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@5.16.0.29940?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.apache.tomcat/tomcat-annotations-api@9.0.84?type=jar"
-      ]
-    },
-    {
-      "ref" : "pkg:maven/org.apache.tomcat/tomcat-annotations-api@9.0.84?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
-      "ref" : "pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@9.0.84?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
-      "ref" : "pkg:maven/org.sonarsource.python/sonar-python-plugin@4.17.0.14845?type=jar",
-      "dependsOn" : [
-        "pkg:maven/org.sonarsource.python/python-frontend@4.17.0.14845?type=jar",
-        "pkg:maven/org.sonarsource.python/python-checks@4.17.0.14845?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.8.0.2699?type=jar",
-        "pkg:maven/commons-lang/commons-lang@2.6?type=jar",
+        "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.python/python-checks@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.python/python-commons@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
         "pkg:maven/org.codehaus.staxmate/staxmate@2.0.1?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.python/python-frontend@4.17.0.14845?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar",
       "dependsOn" : [
         "pkg:maven/org.sonarsource.sslr/sslr-core@1.24.0.633?type=jar",
         "pkg:maven/com.google.guava/guava@32.1.3-jre?type=jar",
-        "pkg:maven/com.google.protobuf/protobuf-java@3.25.1?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.8.0.2699?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar"
+        "pkg:maven/com.google.protobuf/protobuf-java@4.29.0?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-regex-parsing@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar"
       ]
     },
     {
@@ -3878,7 +4109,7 @@
         "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava?type=jar",
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
         "pkg:maven/org.checkerframework/checker-qual@3.37.0?type=jar",
-        "pkg:maven/com.google.errorprone/error_prone_annotations@2.21.1?type=jar",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar",
         "pkg:maven/com.google.j2objc/j2objc-annotations@2.8?type=jar"
       ]
     },
@@ -3895,33 +4126,75 @@
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/com.google.errorprone/error_prone_annotations@2.21.1?type=jar",
-      "dependsOn" : [ ]
-    },
-    {
       "ref" : "pkg:maven/com.google.j2objc/j2objc-annotations@2.8?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/com.google.protobuf/protobuf-java@3.25.1?type=jar",
+      "ref" : "pkg:maven/com.google.protobuf/protobuf-java@4.29.0?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.python/python-checks@4.17.0.14845?type=jar",
+      "ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar",
       "dependsOn" : [
-        "pkg:maven/org.sonarsource.python/python-frontend@4.17.0.14845?type=jar",
-        "pkg:maven/commons-io/commons-io@2.11.0?type=jar",
-        "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
-        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.8.0.2699?type=jar"
+        "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.20?type=jar",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/commons-io/commons-io@2.11.0?type=jar",
+      "ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.20?type=jar",
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/commons-lang/commons-lang@2.6?type=jar",
+      "ref" : "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar",
       "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/org.sonarsource.python/python-checks@5.16.0.29940?type=jar",
+      "dependsOn" : [
+        "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar",
+        "pkg:maven/commons-io/commons-io@2.20.0?type=jar",
+        "pkg:maven/com.google.code.gson/gson@2.13.2?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/commons-io/commons-io@2.20.0?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/org.sonarsource.python/python-commons@5.16.0.29940?type=jar",
+      "dependsOn" : [
+        "pkg:maven/org.sonarsource.python/python-frontend@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.python/python-checks@5.16.0.29940?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-analyzer-commons@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-xml-parsing@2.18.0.3393?type=jar",
+        "pkg:maven/org.sonarsource.analyzer-commons/sonar-performance-measure@2.18.0.3393?type=jar",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-toml@2.20.1?type=jar",
+        "pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.20.1?type=jar",
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar",
+        "pkg:maven/org.apache.commons/commons-text@1.14.0?type=jar",
+        "pkg:maven/org.codehaus.staxmate/staxmate@2.0.1?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-toml@2.20.1?type=jar",
+      "dependsOn" : [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.20.1?type=jar",
+      "dependsOn" : [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.20.1?type=jar",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.20.1?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/org.apache.commons/commons-text@1.14.0?type=jar",
+      "dependsOn" : [
+        "pkg:maven/org.apache.commons/commons-lang3@3.18.0?type=jar"
+      ]
     },
     {
       "ref" : "pkg:maven/org.codehaus.staxmate/staxmate@2.0.1?type=jar",
@@ -3935,13 +4208,23 @@
       "dependsOn" : [ ]
     },
     {
-      "ref" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.22.0?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.go/sonar-go-plugin@1.32.0.5128?type=jar",
+      "dependsOn" : [ ]
+    },
+    {
+      "ref" : "pkg:maven/com.google.googlejavaformat/google-java-format@1.28.0?type=jar",
       "dependsOn" : [
         "pkg:maven/com.google.guava/guava@32.1.3-jre?type=jar"
       ]
     },
     {
-      "ref" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@9.13.0.360?type=jar",
+      "ref" : "pkg:maven/org.sonarsource.api.plugin/sonar-plugin-api@13.4.3.4290?type=jar",
+      "dependsOn" : [
+        "pkg:maven/org.slf4j/slf4j-api@2.0.17?type=jar"
+      ]
+    },
+    {
+      "ref" : "pkg:maven/org.slf4j/slf4j-api@2.0.17?type=jar",
       "dependsOn" : [ ]
     }
   ]
