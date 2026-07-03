@@ -27,6 +27,7 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedEncryption;
@@ -74,7 +75,8 @@ public final class CryptoBehaviorMapper {
                 node.is(BlockCipher.class)
                         || node.is(StreamCipher.class)
                         || node.is(Cipher.class)
-                        || node.is(AuthenticatedEncryption.class);
+                        || node.is(AuthenticatedEncryption.class)
+                        || node.is(KeyWrap.class);
         final boolean isKem = node.is(KeyEncapsulationMechanism.class);
         final boolean isPrng = node.is(PseudorandomNumberGenerator.class);
         final boolean isPasswordKdf =
@@ -165,6 +167,8 @@ public final class CryptoBehaviorMapper {
         } else if (node.is(KeyEncapsulationMechanism.class)) {
             behaviors.add(CryptoBehavior.EXCHANGES_KEY);
             behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
+        } else if (node.is(KeyWrap.class)) {
+            behaviors.add(CryptoBehavior.WRAPS_KEY);
         } else if (node.is(KeyAgreement.class)) {
             behaviors.add(CryptoBehavior.EXCHANGES_KEY);
         } else if (node.is(PasswordBasedKeyDerivationFunction.class)
