@@ -125,6 +125,12 @@ class AlgorithmNameCompositionTest {
     }
 
     @Test
+    void cmacPutsCipherAfterName() {
+        CMAC cmac = new CMAC(new AES(TEST));
+        assertThat(cmac.asString()).isEqualTo("CMAC-AES");
+    }
+
+    @Test
     void kdfSchemaNames() {
         assertThat(new Scrypt(TEST).asString()).isEqualTo("scrypt");
         assertThat(new KDFDoublePipeline(TEST).asString()).isEqualTo("SP800_108_DoublePipelineKDF");

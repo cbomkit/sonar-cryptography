@@ -60,7 +60,7 @@ public final class CMAC extends Algorithm implements Mac {
     @Override
     public @Nonnull String asString() {
         return this.hasChildOfType(BlockCipher.class)
-                .map(node -> ((IAlgorithm) node).getName() + "-" + this.name)
+                .map(node -> this.name + "-" + ((IAlgorithm) node).getName())
                 .orElse(this.name);
     }
 }
