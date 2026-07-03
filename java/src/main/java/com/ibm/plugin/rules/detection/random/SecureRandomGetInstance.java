@@ -20,9 +20,12 @@
 package com.ibm.plugin.rules.detection.random;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
+import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.SeedSizeFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -117,12 +120,51 @@ public final class SecureRandomGetInstance {
                     .inBundle(() -> "Random")
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<Tree> SECURE_RANDOM_GET_INSTANCE =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("java.security.SecureRandom")
+                    .forMethods("getInstance")
+                    .withMethodParameter(STRING_TYPE)
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> "Random")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SECURE_RANDOM_GET_INSTANCE_STRONG =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("java.security.SecureRandom")
+                    .forMethods("getInstanceStrong")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DRBG"))
+                    .withoutParameters()
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> "Random")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SECURE_RANDOM_NO_ARG =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("java.security.SecureRandom")
+                    .forConstructor()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("NativePRNG"))
+                    .withoutParameters()
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> "Random")
+                    .withoutDependingDetectionRules();
+
     private SecureRandomGetInstance() {
         // nothing
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(SECURE_RANDOM_1, SECURE_RANDOM_2, SECURE_RANDOM_3);
+        return List.of(
+                SECURE_RANDOM_1,
+                SECURE_RANDOM_2,
+                SECURE_RANDOM_3,
+                SECURE_RANDOM_GET_INSTANCE,
+                SECURE_RANDOM_GET_INSTANCE_STRONG,
+                SECURE_RANDOM_NO_ARG);
     }
 }

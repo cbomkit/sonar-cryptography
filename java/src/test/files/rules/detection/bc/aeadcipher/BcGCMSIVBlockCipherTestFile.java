@@ -1,4 +1,3 @@
-import java.security.SecureRandom;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.RijndaelEngine;
@@ -13,8 +12,6 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test1() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Instantiate GCMSIVBlockCipher with constructor
         GCMSIVBlockCipher constructor =
@@ -29,8 +26,6 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test2() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = new RijndaelEngine(); // Noncompliant {{(BlockCipher) AES}}
@@ -48,8 +43,6 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test3() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = new AESEngine(); // Noncompliant {{(BlockCipher) AES}}

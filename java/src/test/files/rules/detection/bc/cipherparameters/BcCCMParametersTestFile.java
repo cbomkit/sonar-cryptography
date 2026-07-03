@@ -1,4 +1,3 @@
-import java.security.SecureRandom;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.params.CCMParameters;
@@ -12,8 +11,6 @@ public class BcCCMParametersTestFile {
 
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(keyBytes);
 
         // Initialize cipher with key and parameters
         KeyParameter keyParameter = new KeyParameter(keyBytes);

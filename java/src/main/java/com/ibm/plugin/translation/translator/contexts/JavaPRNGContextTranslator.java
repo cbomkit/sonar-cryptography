@@ -19,15 +19,17 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.SeedSize;
+import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.jca.JcaPRNGMapper;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Seed;
+import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -46,16 +48,27 @@ public final class JavaPRNGContextTranslator implements IContextTranslation<Tree
             return Optional.empty();
         }
 
+        final JcaPRNGMapper jcaPRNGMapper = new JcaPRNGMapper();
+
         if (value instanceof SeedSize<Tree> seedSize) {
-            JcaPRNGMapper jcaPRNGMapper = new JcaPRNGMapper();
-            Optional<? extends IPrimitive> prngOptional =
-                    jcaPRNGMapper.parse("NativePRNG", detectionLocation);
-            return prngOptional.map(
-                    prng -> {
-                        Seed seed = new Seed(seedSize.getValue(), detectionLocation);
-                        prng.put(seed);
-                        return prng;
-                    });
+            return jcaPRNGMapper
+                    .parse("NativePRNG", detectionLocation)
+                    .map(
+                            prng -> {
+                                prng.put(new Seed(seedSize.getValue(), detectionLocation));
+                                prng.put(new Generate(detectionLocation));
+                                return (INode) prng;
+                            });
+        }
+
+        if (value instanceof Algorithm<?> || value instanceof ValueAction<?>) {
+            return jcaPRNGMapper
+                    .parse(value.asString(), detectionLocation)
+                    .map(
+                            prng -> {
+                                prng.put(new Generate(detectionLocation));
+                                return (INode) prng;
+                            });
         }
         return Optional.empty();
     }
