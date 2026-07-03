@@ -60,7 +60,7 @@ public final class ChaCha20 extends Algorithm implements StreamCipher {
     public String asString() {
         return this.hasChildOfType(Mac.class)
                 .filter(node -> node instanceof Poly1305)
-                .map(node -> this.name + ((IAlgorithm) node).getName())
+                .map(node -> this.name + "-" + ((IAlgorithm) node).getName())
                 .orElse(this.name);
     }
 

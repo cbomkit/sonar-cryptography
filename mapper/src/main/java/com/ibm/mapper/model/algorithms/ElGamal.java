@@ -50,6 +50,11 @@ public final class ElGamal extends Algorithm implements PublicKeyEncryption, Sig
 
     private static final String NAME = "ElGamal";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, false, false);
+    }
+
     public ElGamal(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
     }

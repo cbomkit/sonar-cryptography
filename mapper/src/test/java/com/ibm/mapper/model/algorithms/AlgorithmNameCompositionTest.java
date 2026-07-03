@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
@@ -74,5 +75,23 @@ class AlgorithmNameCompositionTest {
         assertThat(new TripleDES(168, cbc, TEST).asString()).isEqualTo("3DES-168-CBC");
         assertThat(new SM4(cbc, TEST).asString()).isEqualTo("SM4-CBC");
         assertThat(new IDEA(cbc, TEST).asString()).isEqualTo("IDEA-CBC");
+    }
+
+    @Test
+    void keyLengthOnlyCiphers() {
+        assertThat(new RC4(128, TEST).asString()).isEqualTo("RC4-128");
+        assertThat(new ElGamal(2048, TEST).asString()).isEqualTo("ElGamal-2048");
+    }
+
+    @Test
+    void chaCha20JoinsMacPoly1305WithHyphen() {
+        ChaCha20 c = new ChaCha20(TEST);
+        c.put(new Poly1305(Mac.class, new Poly1305(TEST)));
+        assertThat(c.asString()).isEqualTo("ChaCha20-Poly1305");
+    }
+
+    @Test
+    void chaCha20Poly1305DedicatedClassName() {
+        assertThat(new ChaCha20Poly1305(TEST).asString()).isEqualTo("ChaCha20-Poly1305");
     }
 }

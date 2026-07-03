@@ -51,6 +51,11 @@ import javax.annotation.Nonnull;
 public final class RC4 extends Algorithm implements StreamCipher {
     private static final String NAME = "RC4";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, false, false);
+    }
+
     public RC4(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, StreamCipher.class, detectionLocation);
     }
