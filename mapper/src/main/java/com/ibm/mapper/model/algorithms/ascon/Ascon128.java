@@ -46,7 +46,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class Ascon128 extends Ascon implements AuthenticatedEncryption {
-    private static final String NAME = "Ascon-128";
+    private static final String NAME = "Ascon-AEAD128";
 
     public Ascon128(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, AuthenticatedEncryption.class, detectionLocation);

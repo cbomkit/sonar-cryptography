@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class AsconHash extends Ascon implements MessageDigest {
-    private static final String NAME = "Ascon-Hash";
+    private static final String NAME = "Ascon-Hash256";
 
     public AsconHash(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);

@@ -24,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
+import com.ibm.mapper.model.algorithms.ascon.Ascon128;
+import com.ibm.mapper.model.algorithms.ascon.AsconHash;
+import com.ibm.mapper.model.algorithms.ascon.AsconXof;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.mapper.model.algorithms.cast.CAST256;
 import com.ibm.mapper.model.mode.CBC;
@@ -93,5 +96,12 @@ class AlgorithmNameCompositionTest {
     @Test
     void chaCha20Poly1305DedicatedClassName() {
         assertThat(new ChaCha20Poly1305(TEST).asString()).isEqualTo("ChaCha20-Poly1305");
+    }
+
+    @Test
+    void asconStandardizedNames() {
+        assertThat(new Ascon128(TEST).asString()).isEqualTo("Ascon-AEAD128");
+        assertThat(new AsconHash(TEST).asString()).isEqualTo("Ascon-Hash256");
+        assertThat(new AsconXof(TEST).asString()).isEqualTo("Ascon-XOF128");
     }
 }

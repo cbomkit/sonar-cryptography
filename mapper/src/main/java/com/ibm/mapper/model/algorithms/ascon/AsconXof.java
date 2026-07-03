@@ -43,7 +43,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class AsconXof extends Ascon implements ExtendableOutputFunction {
-    private static final String NAME = "Ascon-Xof";
+    private static final String NAME = "Ascon-XOF128";
 
     public AsconXof(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
