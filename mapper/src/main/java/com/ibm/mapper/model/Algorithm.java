@@ -99,6 +99,27 @@ public class Algorithm implements IAlgorithm {
         return getName();
     }
 
+    /**
+     * Composes this algorithm's name as {@code base[-keyLength][-mode][-padding]} following the
+     * CycloneDX pattern format (https://cyclonedx.org/registry/cryptography/#pattern-format). Only
+     * the parameters flagged {@code true} — and only when present as children — are appended.
+     */
+    @Nonnull
+    protected String composeName(boolean keyLength, boolean mode, boolean padding) {
+        final StringBuilder sb = new StringBuilder(this.name);
+        if (keyLength) {
+            this.hasChildOfType(KeyLength.class)
+                    .ifPresent(k -> sb.append("-").append(k.asString()));
+        }
+        if (mode) {
+            this.hasChildOfType(Mode.class).ifPresent(m -> sb.append("-").append(m.asString()));
+        }
+        if (padding) {
+            this.hasChildOfType(Padding.class).ifPresent(p -> sb.append("-").append(p.asString()));
+        }
+        return sb.toString();
+    }
+
     @Nonnull
     @Override
     public DetectionLocation getDetectionContext() {
