@@ -110,6 +110,8 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nonnull private final CryptoBehaviorMapper behaviorMapper = new CryptoBehaviorMapper();
 
+    // Intentional simplification of spec §4.4: use a fixed name because no scanned-software
+    // name is plumbed into getBom(); the ideal value would be the scanned project name.
     private static final String METADATA_COMPONENT_NAME = "application";
 
     public CBOMOutputFile() {
@@ -125,7 +127,6 @@ public class CBOMOutputFile implements IOutputFile {
     private void add(@Nullable final String parentBomRef, @Nonnull List<INode> nodes) {
         nodes.forEach(
                 node -> {
-                    this.aggregatedBehaviors.addAll(this.behaviorMapper.map(node));
                     // switch for asset
                     if (node instanceof Algorithm algorithm) {
                         createAlgorithmComponent(parentBomRef, algorithm);
@@ -149,6 +150,9 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nullable private String createAlgorithmComponent(
             @Nullable String parentBomRef, @Nonnull Algorithm node) {
+        // Accumulate behaviors here so every algorithm path is covered: top-level via add(),
+        // nested recursion, and protocol/cipher-suite constituents via direct calls.
+        this.aggregatedBehaviors.addAll(this.behaviorMapper.map(node));
         Map<Class<? extends INode>, INode> children = node.getChildren();
         Component algorithm =
                 AlgorithmComponentBuilder.create()

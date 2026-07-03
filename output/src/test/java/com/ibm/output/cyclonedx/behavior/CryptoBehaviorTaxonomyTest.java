@@ -17,12 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.output.cyclondx.behavior;
+package com.ibm.output.cyclonedx.behavior;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;

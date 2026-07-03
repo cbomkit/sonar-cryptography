@@ -22,13 +22,20 @@ package com.ibm.output.cyclonedx;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.rule.IBundle;
+import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.collections.AssetCollection;
+import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.functionality.Encrypt;
+import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.cyclondx.CBOMOutputFile;
+import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import java.util.Collections;
 import java.util.List;
 import org.cyclonedx.model.Bom;
@@ -60,7 +67,7 @@ class CryptoBehaviorMetadataTest {
 
         assertThat(metaComponent.getProperties()).hasSize(1);
         final Property property = metaComponent.getProperties().get(0);
-        assertThat(property.getName()).isEqualTo("cbomkit:crypto:behavior");
+        assertThat(property.getName()).isEqualTo(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
         assertThat(property.getValue())
                 .isEqualTo(
                         "security:cryptography:authenticates,"
@@ -76,5 +83,28 @@ class CryptoBehaviorMetadataTest {
         // and getBom() must not create a metadata.component (spec §6).
         final Bom bom = bomOf(List.of(new Encrypt(loc)));
         assertThat(bom.getMetadata().getComponent()).isNull();
+    }
+
+    @Test
+    void protocolCipherSuiteConstituentsContributeBehaviors() {
+        // Regression: algorithms nested inside TLS cipher-suites bypassed the behavior mapper
+        // because createProtocolComponent calls createAlgorithmComponent directly, not via add().
+        final TLS tls = new TLS(new Version("1.3", loc));
+        final CipherSuite cipherSuite = new CipherSuite("TLS_DHE_DSS_WITH_AES_256_CBC_SHA256", loc);
+        final AES aes = new AES(256, new CBC(loc), loc);
+        final AssetCollection assetCollection = new AssetCollection(List.of(aes));
+        cipherSuite.put(assetCollection);
+        tls.put(new CipherSuiteCollection(List.of(cipherSuite)));
+
+        final Bom bom = bomOf(List.of(tls));
+
+        // AES-256-CBC is a BlockCipher with no explicit Functionality child → fallback:
+        // encryptsData, decryptsData, ensuresConfidentiality.
+        final Component metaComponent = bom.getMetadata().getComponent();
+        assertThat(metaComponent).isNotNull();
+        final Property property = metaComponent.getProperties().get(0);
+        assertThat(property.getValue()).contains("security:cryptography:decryptsData");
+        assertThat(property.getValue()).contains("security:cryptography:encryptsData");
+        assertThat(property.getValue()).contains("security:cryptography:ensuresConfidentiality");
     }
 }
