@@ -81,6 +81,47 @@ requires `AES-256-CBC`.
   strings. Any mismatch is corrected in the component class (affects only how that token
   renders inside schema-named algorithms; document any cross-cutting effect).
 
+### Layer 2.1 — per-pattern composition rule (authoritative)
+
+**Compose exactly the parameters the schema pattern lists, in the pattern's order, and no
+others.** A parameter that a class captures as a child but that the pattern omits is NOT
+appended. Consequences:
+
+- `AES[-(128|192|256)][-mode][-{padding}][-{ivlen}]` → keyLength + mode + **padding** kept.
+- `DES[-{keyLength}][-{mode}]` / `3DES[-{keyLength}][-{mode}]` → keyLength + mode; **padding
+  dropped** (DES currently appends padding — remove it).
+- `CAST5[-{keyLength}][-{mode}]`, `RC2/RC5/RC6[-{keyLength}][-{mode}]` → keyLength + mode, no
+  padding.
+- `RC4[-{keyLength}]`, `ElGamal[-{keyLength}]` → keyLength only, no mode/padding.
+- `SM4[-{mode}][-{padding}]` → mode + padding, no keyLength.
+- `IDEA[-{mode}]` → mode only.
+- `SEED-128[-{mode}][-{padding}]` → keyLength (always default 128) + mode + padding →
+  `SEED-128-CBC`.
+- `Ascon-AEAD128`, `Ascon-Hash256`, `Ascon-XOF128` → no parameters (pattern is a fixed
+  token); rename only, compose nothing.
+- **IV length and tag length are out of scope** for this migration even where a pattern lists
+  them (e.g. AES-GCM `[-{tagLength}][-{ivLength}]`): the model does not capture them uniformly
+  and AES does not compose them today. Deferred and noted here.
+
+Block ciphers use a shared helper on `Algorithm` to avoid ~13 near-identical `asString()`
+copies (DRY, and an improvement to the existing AES/DES duplication):
+
+```java
+/** Composes name as base[-keyLength][-mode][-padding] per the CycloneDX pattern format. */
+protected @Nonnull String composeName(boolean keyLength, boolean mode, boolean padding) {
+    final StringBuilder sb = new StringBuilder(this.name);
+    if (keyLength) this.hasChildOfType(KeyLength.class).ifPresent(k -> sb.append("-").append(k.asString()));
+    if (mode) this.hasChildOfType(Mode.class).ifPresent(m -> sb.append("-").append(m.asString()));
+    if (padding) this.hasChildOfType(Padding.class).ifPresent(p -> sb.append("-").append(p.asString()));
+    return sb.toString();
+}
+```
+
+Per-class wiring: AES `composeName(true,true,true)`; DES/3DES `(true,true,false)`;
+ARIA/CAMELLIA/Twofish/Serpent/Blowfish/SEED `(true,true,true)`; CAST5/CAST6/RC2/RC5/RC6
+`(true,true,false)`; RC4/ElGamal `(true,false,false)`; SM4 `(false,true,true)`; IDEA
+`(false,true,false)`.
+
 ### Layer 3 — component ordering per class
 Several classes currently compose components in the wrong order relative to the schema and
 must be reworked (not just separator-fixed):
