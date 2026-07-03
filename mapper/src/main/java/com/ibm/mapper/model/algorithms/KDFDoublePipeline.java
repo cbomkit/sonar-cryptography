@@ -45,7 +45,7 @@ import javax.annotation.Nonnull;
  */
 public final class KDFDoublePipeline extends Algorithm implements KeyDerivationFunction {
 
-    private static final String NAME = "KDF in Double-Pipeline Mode";
+    private static final String NAME = "SP800_108_DoublePipelineKDF";
 
     public KDFDoublePipeline(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);

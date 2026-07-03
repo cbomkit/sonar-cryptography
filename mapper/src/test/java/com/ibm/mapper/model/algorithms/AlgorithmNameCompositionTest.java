@@ -104,4 +104,12 @@ class AlgorithmNameCompositionTest {
         assertThat(new AsconHash(TEST).asString()).isEqualTo("Ascon-Hash256");
         assertThat(new AsconXof(TEST).asString()).isEqualTo("Ascon-XOF128");
     }
+
+    @Test
+    void kdfSchemaNames() {
+        assertThat(new Scrypt(TEST).asString()).isEqualTo("scrypt");
+        assertThat(new KDFDoublePipeline(TEST).asString()).isEqualTo("SP800_108_DoublePipelineKDF");
+        assertThat(new ANSIX942(TEST).asString()).isEqualTo("ANSI-KDF-X9.42");
+        assertThat(new ANSIX963(TEST).asString()).isEqualTo("ANSI-KDF-X9.63");
+    }
 }

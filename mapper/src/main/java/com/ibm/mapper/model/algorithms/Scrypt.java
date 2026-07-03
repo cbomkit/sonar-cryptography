@@ -43,7 +43,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class Scrypt extends Algorithm implements PasswordBasedKeyDerivationFunction {
-    private static final String NAME = "SCRYPT";
+    private static final String NAME = "scrypt";
 
     public Scrypt(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);

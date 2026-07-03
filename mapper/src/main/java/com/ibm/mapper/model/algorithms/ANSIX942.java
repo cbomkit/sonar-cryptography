@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
  */
 public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
 
-    private static final String NAME = "ANSI X9.42";
+    private static final String NAME = "ANSI-KDF-X9.42";
 
     public ANSIX942(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);
