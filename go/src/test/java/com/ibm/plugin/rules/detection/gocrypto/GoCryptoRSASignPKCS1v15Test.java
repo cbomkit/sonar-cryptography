@@ -125,7 +125,7 @@ class GoCryptoRSASignPKCS1v15Test extends TestBase {
         // RSA (Signature)
         INode rsaNode = nodes.get(0);
         assertThat(rsaNode.getKind()).isEqualTo(Signature.class);
-        assertThat(rsaNode.asString()).isEqualTo("RSA");
+        assertThat(rsaNode.asString()).isEqualTo("RSA-PKCS1-1.5");
 
         // Oid
         INode oidNode = rsaNode.getChildren().get(Oid.class);

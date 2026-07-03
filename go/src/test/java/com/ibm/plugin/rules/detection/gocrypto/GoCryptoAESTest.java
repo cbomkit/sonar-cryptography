@@ -92,7 +92,7 @@ class GoCryptoAESTest extends TestBase {
         INode authenticatedEncryptionNode = nodes.get(0);
         assertThat(authenticatedEncryptionNode.getKind()).isEqualTo(AuthenticatedEncryption.class);
         assertThat(authenticatedEncryptionNode.getChildren()).hasSize(4);
-        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES256-GCM");
+        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES-256-GCM");
 
         // BlockSize under AuthenticatedEncryption
         INode blockSizeNode = authenticatedEncryptionNode.getChildren().get(BlockSize.class);

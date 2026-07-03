@@ -8,7 +8,7 @@ func main() {
 	key := make([]byte, 16)
 
 	// Create a new RC4 cipher with a 128-bit key
-	cipher, err := rc4.NewCipher(key) // Noncompliant {{(StreamCipher) RC4}}
+	cipher, err := rc4.NewCipher(key) // Noncompliant {{(StreamCipher) RC4-128}}
 	if err != nil {
 		panic(err)
 	}

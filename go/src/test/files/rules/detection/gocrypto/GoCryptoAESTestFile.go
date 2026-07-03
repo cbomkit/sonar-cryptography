@@ -15,7 +15,7 @@ func main() {
 	}
 
 	// Create a new AES cipher block - this should be detected
-	block, err := aes.NewCipher(key) // Noncompliant {{(AuthenticatedEncryption) AES256-GCM}}
+	block, err := aes.NewCipher(key) // Noncompliant {{(AuthenticatedEncryption) AES-256-GCM}}
 	if err != nil {
 		panic(err)
 	}

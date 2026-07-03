@@ -78,7 +78,7 @@ class GoCryptoECDSASignASN1Test extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(2);
-            assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode.asString()).isEqualTo("ECDSA-secp256r1");
 
             // PseudorandomNumberGenerator under Signature
             INode pseudorandomNumberGeneratorNode =
@@ -113,7 +113,7 @@ class GoCryptoECDSASignASN1Test extends TestBase {
             INode signatureNode1 = nodes.get(0);
             assertThat(signatureNode1.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode1.getChildren()).hasSize(3);
-            assertThat(signatureNode1.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode1.asString()).isEqualTo("ECDSA-secp256r1");
 
             // Sign under Signature
             INode signNode = signatureNode1.getChildren().get(Sign.class);

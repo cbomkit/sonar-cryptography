@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// Verify the signature using VerifyASN1
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // Noncompliant {{(Signature) ECDSA}}
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // Noncompliant {{(Signature) ECDSA-secp256r1}}
 	if err != nil {
 		panic(err)
 	}
@@ -17,6 +17,6 @@ func main() {
 
 	var hash []byte
 	var sig []byte
-	valid := ecdsa.VerifyASN1(publicKey, hash, sig) // Noncompliant {{(Signature) ECDSA}}
+	valid := ecdsa.VerifyASN1(publicKey, hash, sig) // Noncompliant {{(Signature) ECDSA-secp256r1}}
 	_ = valid
 }

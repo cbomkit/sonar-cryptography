@@ -18,7 +18,7 @@ func main() {
 	hashed := []byte("hash of message that is 32 bytes")
 
 	// Sign with RSA PKCS#1 v1.5 using SHA-256
-	sig, err2 := rsa.SignPKCS1v15(rand.Reader, priv, crypto.SHA256, hashed) // Noncompliant {{(Signature) RSA}}
+	sig, err2 := rsa.SignPKCS1v15(rand.Reader, priv, crypto.SHA256, hashed) // Noncompliant {{(Signature) RSA-PKCS1-1.5}}
 	if err2 != nil {
 		panic(err2)
 	}

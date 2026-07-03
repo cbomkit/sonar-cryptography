@@ -6,7 +6,7 @@ import (
 
 func main() {
 	key := make([]byte, 8)
-	block, err := des.NewCipher(key) // Noncompliant {{(BlockCipher) DES64}}
+	block, err := des.NewCipher(key) // Noncompliant {{(BlockCipher) DES-64}}
 	if err != nil {
 		panic(err)
 	}

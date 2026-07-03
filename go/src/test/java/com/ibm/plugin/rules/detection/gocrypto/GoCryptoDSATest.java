@@ -82,7 +82,7 @@ class GoCryptoDSATest extends TestBase {
             assertThat(nodes).hasSize(1);
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-            assertThat(signatureNode.asString()).isEqualTo("DSA");
+            assertThat(signatureNode.asString()).isEqualTo("DSA-2048");
 
             INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);
             assertThat(keyLengthNode).isNotNull();
@@ -121,7 +121,7 @@ class GoCryptoDSATest extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("DSA");
+            assertThat(signatureNode.asString()).isEqualTo("DSA-2048");
 
             // KeyLength under Signature
             INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);
@@ -170,7 +170,7 @@ class GoCryptoDSATest extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("DSA");
+            assertThat(signatureNode.asString()).isEqualTo("DSA-2048");
 
             // KeyLength under Signature
             INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);

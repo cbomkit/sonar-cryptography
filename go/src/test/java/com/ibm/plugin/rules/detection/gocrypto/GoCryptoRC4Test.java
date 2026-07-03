@@ -84,7 +84,7 @@ class GoCryptoRC4Test extends TestBase {
         INode cipherNode = nodes.get(0);
         assertThat(cipherNode.getKind()).isEqualTo(StreamCipher.class);
         assertThat(cipherNode.getChildren()).hasSize(1);
-        assertThat(cipherNode.asString()).isEqualTo("RC4");
+        assertThat(cipherNode.asString()).isEqualTo("RC4-128");
 
         // KeyLength under RC4
         INode keyLengthNode = cipherNode.getChildren().get(KeyLength.class);

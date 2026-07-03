@@ -16,19 +16,19 @@ func main() {
 	// Generate a DSA key pair
 	privateKey := new(dsa.PrivateKey)
 	privateKey.Parameters = *params
-	err = dsa.GenerateKey(privateKey, rand.Reader) // Noncompliant {{(Signature) DSA}}
+	err = dsa.GenerateKey(privateKey, rand.Reader) // Noncompliant {{(Signature) DSA-2048}}
 	if err != nil {
 		panic(err)
 	}
 
 	// Sign a hash
 	hash := []byte("test message hash")
-	r, s, err := dsa.Sign(rand.Reader, privateKey, hash) // Noncompliant {{(Signature) DSA}}
+	r, s, err := dsa.Sign(rand.Reader, privateKey, hash) // Noncompliant {{(Signature) DSA-2048}}
 	if err != nil {
 		panic(err)
 	}
 
 	// Verify the signature
-	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s) // Noncompliant {{(Signature) DSA}}
+	valid := dsa.Verify(&privateKey.PublicKey, hash, r, s) // Noncompliant {{(Signature) DSA-2048}}
 	_ = valid
 }

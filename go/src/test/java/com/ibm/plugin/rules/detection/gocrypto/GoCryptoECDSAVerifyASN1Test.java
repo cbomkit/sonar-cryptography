@@ -78,7 +78,7 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(2);
-            assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode.asString()).isEqualTo("ECDSA-secp256r1");
 
             // EllipticCurve under Signature
             INode ellipticCurveNode = signatureNode.getChildren().get(EllipticCurve.class);
@@ -122,7 +122,7 @@ class GoCryptoECDSAVerifyASN1Test extends TestBase {
             INode signatureNode = nodes.get(0);
             assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
             assertThat(signatureNode.getChildren()).hasSize(3);
-            assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+            assertThat(signatureNode.asString()).isEqualTo("ECDSA-secp256r1");
 
             // Verify under Signature
             INode verifyNode = signatureNode.getChildren().get(Verify.class);

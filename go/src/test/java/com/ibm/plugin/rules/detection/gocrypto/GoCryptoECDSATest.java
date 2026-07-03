@@ -74,6 +74,6 @@ class GoCryptoECDSATest extends TestBase {
         // Signature
         INode signatureNode = nodes.get(0);
         assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
-        assertThat(signatureNode.asString()).isEqualTo("ECDSA");
+        assertThat(signatureNode.asString()).isEqualTo("ECDSA-secp256r1");
     }
 }

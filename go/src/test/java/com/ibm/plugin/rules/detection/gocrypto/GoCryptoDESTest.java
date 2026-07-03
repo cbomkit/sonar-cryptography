@@ -84,7 +84,7 @@ class GoCryptoDESTest extends TestBase {
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode.getChildren()).hasSize(2);
-        assertThat(blockCipherNode.asString()).isEqualTo("DES64");
+        assertThat(blockCipherNode.asString()).isEqualTo("DES-64");
 
         // BlockSize under BlockCipher
         INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
