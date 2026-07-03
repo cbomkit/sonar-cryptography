@@ -47,7 +47,7 @@ import javax.annotation.Nonnull;
  */
 public final class XMSSMT extends Algorithm implements Signature, MessageDigest {
 
-    private static final String NAME = "XMSS^MT";
+    private static final String NAME = "XMSSMT";
 
     public XMSSMT(@Nonnull DetectionLocation detectionLocation) {
         this(Signature.class, detectionLocation);

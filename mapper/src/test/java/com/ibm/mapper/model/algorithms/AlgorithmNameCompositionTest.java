@@ -106,6 +106,17 @@ class AlgorithmNameCompositionTest {
     }
 
     @Test
+    void xmssmtDropsCaretSeparator() {
+        assertThat(new XMSSMT(TEST).asString()).isEqualTo("XMSSMT");
+    }
+
+    @Test
+    void mlDsaAndMlKemParameterSets() {
+        assertThat(new MLDSA(65, TEST).asString()).isEqualTo("ML-DSA-65");
+        assertThat(new MLKEM(768, TEST).asString()).isEqualTo("ML-KEM-768");
+    }
+
+    @Test
     void kdfSchemaNames() {
         assertThat(new Scrypt(TEST).asString()).isEqualTo("scrypt");
         assertThat(new KDFDoublePipeline(TEST).asString()).isEqualTo("SP800_108_DoublePipelineKDF");
