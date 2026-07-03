@@ -21,9 +21,11 @@ package com.ibm.mapper.model.algorithms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ascon.Ascon128;
 import com.ibm.mapper.model.algorithms.ascon.AsconHash;
 import com.ibm.mapper.model.algorithms.ascon.AsconXof;
@@ -122,6 +124,36 @@ class AlgorithmNameCompositionTest {
     void mlDsaAndMlKemParameterSets() {
         assertThat(new MLDSA(65, TEST).asString()).isEqualTo("ML-DSA-65");
         assertThat(new MLKEM(768, TEST).asString()).isEqualTo("ML-KEM-768");
+    }
+
+    @Test
+    void rsaSignaturePutsSchemeThenDigest() {
+        RSA rsa = new RSA(Signature.class, TEST);
+        rsa.put(new SHA2(256, TEST));
+        assertThat(rsa.asString()).isEqualTo("RSA-PKCS1-1.5-SHA-256");
+    }
+
+    @Test
+    void rsaEncryptionKeyLengthUnchanged() {
+        assertThat(new RSA(2048, TEST).asString()).isEqualTo("RSA-2048");
+    }
+
+    @Test
+    void rsaSsaPssUsesSchemaName() {
+        assertThat(new RSAssaPSS(TEST).asString()).isEqualTo("RSA-PSS");
+    }
+
+    @Test
+    void dsaPutsLengthThenHash() {
+        DSA dsa = new DSA(TEST);
+        dsa.put(new KeyLength(2048, TEST));
+        dsa.put(new SHA2(256, TEST));
+        assertThat(dsa.asString()).isEqualTo("DSA-2048-SHA-256");
+    }
+
+    @Test
+    void mqvUsesFiniteFieldName() {
+        assertThat(new MQV(TEST).asString()).isEqualTo("FFMQV");
     }
 
     @Test

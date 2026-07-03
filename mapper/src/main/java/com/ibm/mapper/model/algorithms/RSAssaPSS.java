@@ -47,6 +47,6 @@ import javax.annotation.Nonnull;
 public final class RSAssaPSS extends Algorithm implements ProbabilisticSignatureScheme {
 
     public RSAssaPSS(@Nonnull DetectionLocation detectionLocation) {
-        super("RSASSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
+        super("RSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
     }
 }

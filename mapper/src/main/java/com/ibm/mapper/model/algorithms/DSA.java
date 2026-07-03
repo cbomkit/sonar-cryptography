@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
@@ -32,9 +33,11 @@ public class DSA extends Algorithm implements Signature {
     @Nonnull
     @Override
     public String asString() {
-        return this.hasChildOfType(MessageDigest.class)
-                .map(node -> node.asString() + "-" + this.name)
-                .orElse(this.name);
+        final StringBuilder sb = new StringBuilder(this.name);
+        this.hasChildOfType(KeyLength.class).ifPresent(k -> sb.append("-").append(k.asString()));
+        this.hasChildOfType(MessageDigest.class)
+                .ifPresent(d -> sb.append("-").append(d.asString()));
+        return sb.toString();
     }
 
     public DSA(@Nonnull DetectionLocation detectionLocation) {

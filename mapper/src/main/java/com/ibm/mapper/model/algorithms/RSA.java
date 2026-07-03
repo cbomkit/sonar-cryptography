@@ -59,9 +59,11 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
     @Override
     public @Nonnull String asString() {
         if (this.is(Signature.class)) {
-            return this.hasChildOfType(MessageDigest.class)
-                    .map(node -> node.asString() + "-" + this.name)
-                    .orElse(this.name);
+            // A plain RSA signature (not RSA-PSS, which is RSAssaPSS) is PKCS#1 v1.5.
+            final StringBuilder sb = new StringBuilder(this.name).append("-PKCS1-1.5");
+            this.hasChildOfType(MessageDigest.class)
+                    .ifPresent(node -> sb.append("-").append(node.asString()));
+            return sb.toString();
         } else if (this.is(PublicKeyEncryption.class)) {
             Optional<INode> keyLength = this.hasChildOfType(KeyLength.class);
             if (this.hasChildOfType(Padding.class).map(OAEP.class::isInstance).orElse(false)) {

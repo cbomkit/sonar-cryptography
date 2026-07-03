@@ -46,7 +46,7 @@ import javax.annotation.Nonnull;
  */
 public class MQV extends Algorithm implements KeyAgreement {
 
-    private static final String NAME = "MQV";
+    private static final String NAME = "FFMQV";
 
     public MQV(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
