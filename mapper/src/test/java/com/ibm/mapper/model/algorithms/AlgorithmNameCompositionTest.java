@@ -27,6 +27,8 @@ import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.algorithms.ascon.Ascon128;
 import com.ibm.mapper.model.algorithms.ascon.AsconHash;
 import com.ibm.mapper.model.algorithms.ascon.AsconXof;
+import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
+import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.mapper.model.algorithms.cast.CAST256;
 import com.ibm.mapper.model.mode.CBC;
@@ -103,6 +105,12 @@ class AlgorithmNameCompositionTest {
         assertThat(new Ascon128(TEST).asString()).isEqualTo("Ascon-AEAD128");
         assertThat(new AsconHash(TEST).asString()).isEqualTo("Ascon-Hash256");
         assertThat(new AsconXof(TEST).asString()).isEqualTo("Ascon-XOF128");
+    }
+
+    @Test
+    void blake2ComposesDigestSize() {
+        assertThat(new BLAKE2b(256, false, TEST).asString()).isEqualTo("BLAKE2b-256");
+        assertThat(new BLAKE2s(256, false, TEST).asString()).isEqualTo("BLAKE2s-256");
     }
 
     @Test

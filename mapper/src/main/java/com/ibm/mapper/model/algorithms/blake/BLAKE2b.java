@@ -49,6 +49,13 @@ public final class BLAKE2b extends Algorithm implements MessageDigest {
 
     private static final String NAME = "BLAKE2b";
 
+    @Override
+    public @Nonnull String asString() {
+        final StringBuilder sb = new StringBuilder(this.name);
+        this.hasChildOfType(DigestSize.class).ifPresent(d -> sb.append("-").append(d.asString()));
+        return sb.toString();
+    }
+
     public BLAKE2b(@Nonnull DetectionLocation detectionLocation) {
         this(false, detectionLocation);
     }
