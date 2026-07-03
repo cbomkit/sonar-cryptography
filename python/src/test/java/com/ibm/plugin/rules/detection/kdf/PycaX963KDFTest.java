@@ -86,7 +86,7 @@ class PycaX963KDFTest extends TestBase {
         INode keyDerivationFunctionNode = nodes.get(0);
         assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
         assertThat(keyDerivationFunctionNode.getChildren()).hasSize(3);
-        assertThat(keyDerivationFunctionNode.asString()).isEqualTo("ANSI X9.63");
+        assertThat(keyDerivationFunctionNode.asString()).isEqualTo("ANSI-KDF-X9.63");
 
         // KeyDerivation under KeyDerivationFunction
         INode keyDerivationNode = keyDerivationFunctionNode.getChildren().get(KeyDerivation.class);

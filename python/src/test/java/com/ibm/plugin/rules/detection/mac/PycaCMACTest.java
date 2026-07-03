@@ -71,7 +71,7 @@ class PycaCMACTest extends TestBase {
         INode macNode = nodes.get(0);
         assertThat(macNode.getKind()).isEqualTo(Mac.class);
         assertThat(macNode.getChildren()).hasSize(2);
-        assertThat(macNode.asString()).isEqualTo("AES-CMAC");
+        assertThat(macNode.asString()).isEqualTo("CMAC-AES");
 
         // BlockCipher under Mac
         INode blockCipherNode = macNode.getChildren().get(BlockCipher.class);

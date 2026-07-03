@@ -165,7 +165,7 @@ class PycaFernetEncryptTest extends TestBase {
         INode blockCipherNode = authenticatedEncryptionNode.getChildren().get(BlockCipher.class);
         assertThat(blockCipherNode).isNotNull();
         assertThat(blockCipherNode.getChildren()).hasSize(5);
-        assertThat(blockCipherNode.asString()).isEqualTo("AES128-CBC-PKCS7");
+        assertThat(blockCipherNode.asString()).isEqualTo("AES-128-CBC-PKCS7");
 
         // Mode under BlockCipher under AuthenticatedEncryption under SecretKey
         INode modeNode = blockCipherNode.getChildren().get(Mode.class);

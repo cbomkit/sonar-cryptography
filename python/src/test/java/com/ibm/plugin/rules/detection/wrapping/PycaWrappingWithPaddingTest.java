@@ -70,7 +70,7 @@ class PycaWrappingWithPaddingTest extends TestBase {
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(KeyWrap.class);
         assertThat(blockCipherNode.getChildren()).hasSize(4);
-        assertThat(blockCipherNode.asString()).isEqualTo("AES128");
+        assertThat(blockCipherNode.asString()).isEqualTo("AES-128");
 
         // KeyLength under BlockCipher
         INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);

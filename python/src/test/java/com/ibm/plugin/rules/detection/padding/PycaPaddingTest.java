@@ -96,7 +96,7 @@ class PycaPaddingTest extends TestBase {
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode.getChildren()).hasSize(3);
-        assertThat(blockCipherNode.asString()).isEqualTo("CAST-128");
+        assertThat(blockCipherNode.asString()).isEqualTo("CAST5-CFB");
 
         // BlockSize under BlockCipher
         INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);

@@ -87,7 +87,7 @@ class PycaCipher2Test extends TestBase {
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode.getChildren()).hasSize(2);
-        assertThat(blockCipherNode.asString()).isEqualTo("Camellia");
+        assertThat(blockCipherNode.asString()).isEqualTo("CAMELLIA-OFB");
 
         // Encrypt under BlockCipher
         INode encryptNode = blockCipherNode.getChildren().get(Encrypt.class);

@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import padding
 key = os.urandom(32)
 iv = os.urandom(16)
 # Create a cipher object
-cipher = Cipher(algorithms.CAST5(key), modes.CFB(iv)) # Noncompliant {{(BlockCipher) CAST-128}}
+cipher = Cipher(algorithms.CAST5(key), modes.CFB(iv)) # Noncompliant {{(BlockCipher) CAST5-CFB}}
 
 padder = padding.ANSIX923(128).padder()
 padded_data = padder.update(b"a secret message")

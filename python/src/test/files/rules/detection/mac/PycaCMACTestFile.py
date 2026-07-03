@@ -2,11 +2,11 @@ from cryptography.hazmat.primitives import cmac
 from cryptography.hazmat.primitives.ciphers import algorithms
 
 def generate_cmac(key, data):    
-    # Selecting the desired algorithm (e.g., AES-CMAC)
+    # Selecting the desired algorithm (e.g., CMAC-AES)
     algorithm = algorithms.AES(key)
     
     # Creating the CMAC context
-    cmac_ctx = cmac.CMAC(algorithm) # Noncompliant {{(Mac) AES-CMAC}}
+    cmac_ctx = cmac.CMAC(algorithm) # Noncompliant {{(Mac) CMAC-AES}}
     
     # Updating the context with the data
     cmac_ctx.update(data)

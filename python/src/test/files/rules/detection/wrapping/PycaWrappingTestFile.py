@@ -9,7 +9,7 @@ def aes_key_wrap_example():
     wrapping_key = b'ABCDEFGHIJKLMNOP'
 
     # Wrap the key
-    wrapped_key = aes_key_wrap(wrapping_key, key_to_wrap, default_backend()) # Noncompliant {{(KeyWrap) AES128}}
+    wrapped_key = aes_key_wrap(wrapping_key, key_to_wrap, default_backend()) # Noncompliant {{(KeyWrap) AES-128}}
 
     print("Wrapped Key:", wrapped_key.hex())
 

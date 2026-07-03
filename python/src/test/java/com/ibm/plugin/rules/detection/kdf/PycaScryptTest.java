@@ -82,7 +82,7 @@ class PycaScryptTest extends TestBase {
         assertThat(passwordBasedKeyDerivationFunctionNode.getKind())
                 .isEqualTo(PasswordBasedKeyDerivationFunction.class);
         assertThat(passwordBasedKeyDerivationFunctionNode.getChildren()).hasSize(2);
-        assertThat(passwordBasedKeyDerivationFunctionNode.asString()).isEqualTo("SCRYPT");
+        assertThat(passwordBasedKeyDerivationFunctionNode.asString()).isEqualTo("scrypt");
 
         // KeyDerivation under PasswordBasedKeyDerivationFunction
         INode keyDerivationNode =

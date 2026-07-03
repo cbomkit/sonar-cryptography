@@ -101,7 +101,7 @@ class PycaAESGCMTest extends TestBase {
                 secretKeyNode.getChildren().get(AuthenticatedEncryption.class);
         assertThat(authenticatedEncryptionNode).isNotNull();
         assertThat(authenticatedEncryptionNode.getChildren()).hasSize(4);
-        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES128-GCM");
+        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES-128-GCM");
 
         // Mode under AuthenticatedEncryption under SecretKey
         INode modeNode = authenticatedEncryptionNode.getChildren().get(Mode.class);
