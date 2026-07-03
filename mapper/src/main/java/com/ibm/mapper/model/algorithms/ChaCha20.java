@@ -54,7 +54,7 @@ public final class ChaCha20 extends Algorithm implements StreamCipher {
         super(NAME, StreamCipher.class, detectionLocation);
     }
 
-    /** Returns the name "ChaCha20Poly1305" when it has a Poly1305 Mac node as child */
+    /** Returns the name "ChaCha20-Poly1305" when it has a Poly1305 Mac node as child */
     @Override
     @Nonnull
     public String asString() {
