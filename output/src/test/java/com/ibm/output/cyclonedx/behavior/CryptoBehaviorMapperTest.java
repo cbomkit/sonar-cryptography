@@ -26,6 +26,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.AES;
@@ -227,5 +228,18 @@ class CryptoBehaviorMapperTest {
     @Test
     void nonAlgorithmInputYieldsEmptySet() {
         assertThat(mapper.map(new Encrypt(loc))).isEmpty();
+    }
+
+    @Test
+    void encapsulateOnKeyWrapCipherYieldsWrapsKey() {
+        final Algorithm aesWrap = new Algorithm("AESWrap", KeyWrap.class, loc);
+        aesWrap.put(new Encapsulate(loc));
+        assertThat(mapper.map(aesWrap)).containsExactly(CryptoBehavior.WRAPS_KEY);
+    }
+
+    @Test
+    void bareKeyWrapCipherFallsBackToWrapsKey() {
+        final Algorithm aesWrap = new Algorithm("AESWrap", KeyWrap.class, loc);
+        assertThat(mapper.map(aesWrap)).containsExactly(CryptoBehavior.WRAPS_KEY);
     }
 }
