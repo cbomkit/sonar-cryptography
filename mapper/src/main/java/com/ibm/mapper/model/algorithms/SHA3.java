@@ -37,8 +37,7 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>https://csrc.nist.gov/projects/hash-functions
- *   <li>https://cyclonedx.org/schema/cryptography-defs.json (algorithmName: SHA-3-224, SHA-3-256,
- *       SHA-3-384, SHA-3-512)
+ *   <li>https://cyclonedx.org/schema/cryptography-defs.json (pattern: SHA3-(224|256|384|512))
  * </ul>
  *
  * <h3>Other Names and Related Standards</h3>
@@ -48,7 +47,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class SHA3 extends Algorithm implements MessageDigest {
-    private static final String NAME = "SHA-3";
+    private static final String NAME = "SHA3";
 
     public SHA3(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);

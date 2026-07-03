@@ -38,4 +38,10 @@ class AlgorithmNameCompositionTest {
         AES aes = new AES(256, cbc, TEST);
         assertThat(aes.asString()).isEqualTo("AES-256-CBC");
     }
+
+    @Test
+    void sha3UsesSchemaTokenWithoutHyphenAfterSha() {
+        SHA3 sha3 = new SHA3(256, TEST);
+        assertThat(sha3.asString()).isEqualTo("SHA3-256");
+    }
 }
