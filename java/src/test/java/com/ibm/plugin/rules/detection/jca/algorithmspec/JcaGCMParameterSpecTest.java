@@ -240,7 +240,7 @@ class JcaGCMParameterSpecTest extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(4);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128");
 
             // BlockSize under BlockCipher under SecretKey
             INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
@@ -324,7 +324,7 @@ class JcaGCMParameterSpecTest extends TestBase {
                     secretKeyNode.getChildren().get(AuthenticatedEncryption.class);
             assertThat(authenticatedEncryptionNode).isNotNull();
             assertThat(authenticatedEncryptionNode.getChildren()).hasSize(6);
-            assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES128-GCM");
+            assertThat(authenticatedEncryptionNode.asString()).isEqualTo("AES-128-GCM");
 
             // TagLength under AuthenticatedEncryption under SecretKey
             INode tagLengthNode = authenticatedEncryptionNode.getChildren().get(TagLength.class);

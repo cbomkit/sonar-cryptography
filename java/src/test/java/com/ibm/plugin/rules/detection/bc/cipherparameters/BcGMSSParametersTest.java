@@ -96,7 +96,7 @@ class BcGMSSParametersTest extends TestBase {
         INode blockCipherNode3 = nodes.get(0);
         assertThat(blockCipherNode3.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode3.getChildren()).hasSize(4);
-        assertThat(blockCipherNode3.asString()).isEqualTo("AES256");
+        assertThat(blockCipherNode3.asString()).isEqualTo("AES-256");
 
         // Encrypt under BlockCipher
         INode encryptNode3 = blockCipherNode3.getChildren().get(Encrypt.class);

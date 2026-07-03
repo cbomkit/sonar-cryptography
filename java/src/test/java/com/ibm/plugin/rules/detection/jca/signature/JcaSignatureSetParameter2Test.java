@@ -117,6 +117,6 @@ class JcaSignatureSetParameter2Test extends TestBase {
 
         md = node.getChildren().get(MessageDigest.class);
         assertThat(md).isNotNull();
-        assertThat(md.asString()).isEqualTo("SHA-3-256");
+        assertThat(md.asString()).isEqualTo("SHA3-256");
     }
 }

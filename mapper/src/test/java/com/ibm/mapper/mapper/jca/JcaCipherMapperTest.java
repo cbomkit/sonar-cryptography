@@ -79,7 +79,7 @@ class JcaCipherMapperTest {
         PasswordBasedEncryption pbe = (PasswordBasedEncryption) cipherOptional.get();
 
         assertThat(pbe.getName()).isEqualTo("PBES1");
-        assertThat(pbe.asString()).isEqualTo("pbeWithMD5AndDES");
+        assertThat(pbe.asString()).isEqualTo("PBES1-DES-56-MD5");
         assertThat(pbe.hasChildren()).isTrue();
         assertThat(pbe.getChildren().values()).hasSize(2);
 

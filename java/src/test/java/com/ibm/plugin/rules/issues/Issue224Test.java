@@ -101,7 +101,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(3);
-            assertThat(blockCipherNode.asString()).isEqualTo("DES56");
+            assertThat(blockCipherNode.asString()).isEqualTo("DES-56");
 
             // KeyLength under BlockCipher under SecretKey
             INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
@@ -149,7 +149,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = nodes.get(0);
             assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
             assertThat(blockCipherNode.getChildren()).hasSize(3);
-            assertThat(blockCipherNode.asString()).isEqualTo("DES56");
+            assertThat(blockCipherNode.asString()).isEqualTo("DES-56");
 
             // KeyLength under BlockCipher
             INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
@@ -204,7 +204,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(3);
-            assertThat(blockCipherNode.asString()).isEqualTo("DES56");
+            assertThat(blockCipherNode.asString()).isEqualTo("DES-56");
 
             // KeyLength under BlockCipher under SecretKey
             INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
@@ -252,7 +252,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = nodes.get(0);
             assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
             assertThat(blockCipherNode.getChildren()).hasSize(3);
-            assertThat(blockCipherNode.asString()).isEqualTo("DES56");
+            assertThat(blockCipherNode.asString()).isEqualTo("DES-56");
 
             // KeyLength under BlockCipher
             INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
@@ -299,7 +299,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(4);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128");
 
             // KeyLength under BlockCipher under SecretKey
             INode keyLengthNode = blockCipherNode.getChildren().get(KeyLength.class);
@@ -368,7 +368,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(6);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128-CBC-PKCS5");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128-CBC-PKCS5");
 
             // Encrypt under BlockCipher under SecretKey
             INode encryptNode = blockCipherNode.getChildren().get(Encrypt.class);
@@ -433,7 +433,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(4);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128");
 
             // Oid under BlockCipher under SecretKey
             INode oidNode = blockCipherNode.getChildren().get(Oid.class);
@@ -502,7 +502,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(6);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128-CBC-PKCS5");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128-CBC-PKCS5");
 
             // Oid under BlockCipher under SecretKey
             INode oidNode = blockCipherNode.getChildren().get(Oid.class);
@@ -624,7 +624,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(4);
-            assertThat(blockCipherNode.asString()).isEqualTo("3DES");
+            assertThat(blockCipherNode.asString()).isEqualTo("3DES-CBC");
 
             // Encrypt under BlockCipher under SecretKey
             INode encryptNode = blockCipherNode.getChildren().get(Encrypt.class);
@@ -695,7 +695,7 @@ class Issue224Test extends TestBase {
             INode blockCipherNode1 = secretKeyNode1.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode1).isNotNull();
             assertThat(blockCipherNode1.getChildren()).hasSize(4);
-            assertThat(blockCipherNode1.asString()).isEqualTo("3DES");
+            assertThat(blockCipherNode1.asString()).isEqualTo("3DES-CBC");
 
             // Decrypt under BlockCipher under SecretKey
             INode decryptNode = blockCipherNode1.getChildren().get(Decrypt.class);

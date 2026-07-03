@@ -6,7 +6,7 @@ public class BcKeyParametersTestFile {
 
     public static void testKeyParameter() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES128}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-128}}
 
         KeyParameter parameters = new KeyParameter(new byte[12], 0, 128);
 

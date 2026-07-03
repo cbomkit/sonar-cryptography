@@ -16,7 +16,7 @@ public class BcIESParametersTestFile {
 
     public static void testIESWithCipherParameters() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES128}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-128}}
 
         IESWithCipherParameters parameters =
                 new IESWithCipherParameters(new byte[12], new byte[12], 256, 128);

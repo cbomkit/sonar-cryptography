@@ -96,7 +96,7 @@ class JcaDSAPrivateKeySpecTest extends TestBase {
         INode signatureNode = secretKeyNode.getChildren().get(Signature.class);
         assertThat(signatureNode).isNotNull();
         assertThat(signatureNode.getChildren()).hasSize(3);
-        assertThat(signatureNode.asString()).isEqualTo("DSA");
+        assertThat(signatureNode.asString()).isEqualTo("DSA-2048");
 
         // KeyLength under Signature under SecretKey
         INode keyLengthNode1 = signatureNode.getChildren().get(KeyLength.class);

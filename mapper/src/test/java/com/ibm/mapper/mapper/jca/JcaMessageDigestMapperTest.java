@@ -41,7 +41,7 @@ class JcaMessageDigestMapperTest {
                 jcaMessageDigestMapper.parse("SHA3-224", testDetectionLocation);
 
         assertThat(messageDigestOptional).isPresent();
-        assertThat(messageDigestOptional.get().getName()).isEqualTo("SHA-3-224");
+        assertThat(messageDigestOptional.get().getName()).isEqualTo("SHA3-224");
         assertThat(messageDigestOptional.get().getDigestSize()).isPresent();
         assertThat(messageDigestOptional.get().getDigestSize().get().getValue()).isEqualTo(224);
     }

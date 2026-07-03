@@ -169,7 +169,7 @@ class BcOAEPEncodingTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(2);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest under PublicKeyEncryption
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -223,7 +223,7 @@ class BcOAEPEncodingTest extends TestBase {
             INode messageDigestNode = digestSizeNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode).isNotNull();
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest under DigestSize
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -250,7 +250,7 @@ class BcOAEPEncodingTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -397,7 +397,7 @@ class BcOAEPEncodingTest extends TestBase {
                     publicKeyEncryptionNode.getChildren().get(MessageDigest.class);
             assertThat(messageDigestNode1).isNotNull();
             assertThat(messageDigestNode1.getChildren()).hasSize(1);
-            assertThat(messageDigestNode1.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode1.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest under PublicKeyEncryption
             INode digestNode1 = messageDigestNode1.getChildren().get(Digest.class);
@@ -424,7 +424,7 @@ class BcOAEPEncodingTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);
@@ -451,7 +451,7 @@ class BcOAEPEncodingTest extends TestBase {
             INode messageDigestNode = nodes.get(0);
             assertThat(messageDigestNode.getKind()).isEqualTo(MessageDigest.class);
             assertThat(messageDigestNode.getChildren()).hasSize(1);
-            assertThat(messageDigestNode.asString()).isEqualTo("SHA-3");
+            assertThat(messageDigestNode.asString()).isEqualTo("SHA3");
 
             // Digest under MessageDigest
             INode digestNode = messageDigestNode.getChildren().get(Digest.class);

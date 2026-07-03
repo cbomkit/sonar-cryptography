@@ -89,7 +89,7 @@ class JcaSignatureActionVerifyTest extends TestBase {
         INode signatureNode = nodes.get(0);
         assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
         assertThat(signatureNode.getChildren()).hasSize(4);
-        assertThat(signatureNode.asString()).isEqualTo("SHA-384withDSA");
+        assertThat(signatureNode.asString()).isEqualTo("DSA-2048-SHA-384");
 
         // KeyLength under Signature
         INode keyLengthNode = signatureNode.getChildren().get(KeyLength.class);

@@ -218,7 +218,7 @@ class BcKDFCounterBytesGeneratorTest extends TestBase {
             INode keyDerivationFunctionNode = nodes.get(0);
             assertThat(keyDerivationFunctionNode.getKind()).isEqualTo(KeyDerivationFunction.class);
             assertThat(keyDerivationFunctionNode.getChildren()).hasSize(1);
-            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("SP800-108-CounterKDF");
+            assertThat(keyDerivationFunctionNode.asString()).isEqualTo("SP800_108_CounterKDF");
 
             // Mac under KeyDerivationFunction
             INode macNode = keyDerivationFunctionNode.getChildren().get(Mac.class);

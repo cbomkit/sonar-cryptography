@@ -66,7 +66,7 @@ class ResolveFunctionCascadeTest extends TestBase {
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(BlockCipher.class);
-        assertThat(node.asString()).isEqualTo("AES128-ECB");
+        assertThat(node.asString()).isEqualTo("AES-128-ECB");
 
         INode mode = node.getChildren().get(Mode.class);
         assertThat(mode).isNotNull();

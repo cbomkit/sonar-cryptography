@@ -28,7 +28,7 @@ public class ResolveFunctionCascadeTestFile {
 
     public void startCipherCascade() throws InvalidKeyException, NoSuchPaddingException,
             NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
-        Cipher c = getCipher("AES/ECB/NoPadding");  // Noncompliant {{(BlockCipher) AES128-ECB}}
+        Cipher c = getCipher("AES/ECB/NoPadding");  // Noncompliant {{(BlockCipher) AES-128-ECB}}
     }
 
 }

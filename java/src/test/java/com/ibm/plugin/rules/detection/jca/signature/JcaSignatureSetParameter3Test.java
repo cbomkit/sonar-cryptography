@@ -116,7 +116,7 @@ class JcaSignatureSetParameter3Test extends TestBase {
                 probabilisticSignatureSchemeNode.getChildren().get(MessageDigest.class);
         assertThat(messageDigestNode).isNotNull();
         assertThat(messageDigestNode.getChildren()).hasSize(4);
-        assertThat(messageDigestNode.asString()).isEqualTo("SHA-3-256");
+        assertThat(messageDigestNode.asString()).isEqualTo("SHA3-256");
 
         // DigestSize under MessageDigest under ProbabilisticSignatureScheme
         INode digestSizeNode = messageDigestNode.getChildren().get(DigestSize.class);

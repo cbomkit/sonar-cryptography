@@ -88,6 +88,6 @@ class JcaTripleDESKeySpecTest extends TestBase {
 
         INode blockCipher = node.getChildren().get(BlockCipher.class);
         assertThat(blockCipher).isNotNull();
-        assertThat(blockCipher.asString()).isEqualTo("3DES");
+        assertThat(blockCipher.asString()).isEqualTo("3DES-64");
     }
 }

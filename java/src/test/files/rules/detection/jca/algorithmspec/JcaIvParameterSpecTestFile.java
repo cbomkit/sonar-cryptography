@@ -18,7 +18,7 @@ public class JcaIvParameterSpecTestFile {
         random.nextBytes(iv);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         // Encrypt
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); // Noncompliant {{(BlockCipher) AES128-CBC-PKCS5}}
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); // Noncompliant {{(BlockCipher) AES-128-CBC-PKCS5}}
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
         byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
     }

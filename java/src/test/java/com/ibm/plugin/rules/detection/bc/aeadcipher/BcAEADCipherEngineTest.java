@@ -59,7 +59,7 @@ class BcAEADCipherEngineTest extends TestBase {
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
         String algorithmName = findingId == 0 ? "AsconEngine" : "Grain128AEADEngine";
-        String translatedAlgorithmName = findingId == 0 ? "Ascon-128" : "Grain-128AEAD";
+        String translatedAlgorithmName = findingId == 0 ? "Ascon-AEAD128" : "Grain-128AEAD";
 
         /*
          * Detection Store

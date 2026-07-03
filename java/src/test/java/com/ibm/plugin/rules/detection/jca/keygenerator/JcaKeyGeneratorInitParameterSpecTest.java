@@ -74,7 +74,7 @@ class JcaKeyGeneratorInitParameterSpecTest extends TestBase {
 
         INode algorithm = node.getChildren().get(BlockCipher.class);
         assertThat(algorithm).isNotNull();
-        assertThat(algorithm.asString()).isEqualTo("DES56");
+        assertThat(algorithm.asString()).isEqualTo("DES-56");
 
         INode keyLength = algorithm.getChildren().get(KeyLength.class);
         assertThat(keyLength).isNotNull();

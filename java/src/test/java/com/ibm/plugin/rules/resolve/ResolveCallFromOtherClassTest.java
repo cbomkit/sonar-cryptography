@@ -91,7 +91,7 @@ class ResolveCallFromOtherClassTest extends TestBase {
 
             INode blockCipher = node.getChildren().get(BlockCipher.class);
             assertThat(blockCipher).isNotNull();
-            assertThat(blockCipher.asString()).isEqualTo("AES128");
+            assertThat(blockCipher.asString()).isEqualTo("AES-128");
 
             INode defaultKeyLength = blockCipher.getChildren().get(KeyLength.class);
             assertThat(defaultKeyLength).isNotNull();

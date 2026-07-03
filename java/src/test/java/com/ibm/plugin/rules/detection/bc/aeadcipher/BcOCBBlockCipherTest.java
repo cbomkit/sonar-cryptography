@@ -123,7 +123,7 @@ class BcOCBBlockCipherTest extends TestBase {
         INode authenticatedEncryptionNode = nodes.get(0);
         assertThat(authenticatedEncryptionNode.getKind()).isEqualTo(AuthenticatedEncryption.class);
         // assertThat(authenticatedEncryptionNode.getChildren()).hasSize(4);
-        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("RC6");
+        assertThat(authenticatedEncryptionNode.asString()).isEqualTo("RC6-OCB");
 
         // Mode under AuthenticatedEncryption
         INode modeNode = authenticatedEncryptionNode.getChildren().get(Mode.class);

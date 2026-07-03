@@ -96,7 +96,7 @@ class BcParametersWithTest extends TestBase {
         INode blockCipherNode = nodes.get(0);
         assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode.getChildren()).hasSize(4);
-        assertThat(blockCipherNode.asString()).isEqualTo("AES256");
+        assertThat(blockCipherNode.asString()).isEqualTo("AES-256");
 
         // Encrypt under BlockCipher
         INode encryptNode = blockCipherNode.getChildren().get(Encrypt.class);

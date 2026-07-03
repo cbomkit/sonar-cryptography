@@ -17,7 +17,7 @@ public class BcAEADCipherEngineTestFile {
 
         // Initialize the AsconEngine
         AsconEngine asconEngine =
-                new AsconEngine(AsconEngine.AsconParameters.ascon128); // Noncompliant {{(AuthenticatedEncryption) Ascon-128}}
+                new AsconEngine(AsconEngine.AsconParameters.ascon128); // Noncompliant {{(AuthenticatedEncryption) Ascon-AEAD128}}
 
         // Initialize the key parameter with the provided key
         CipherParameters keyParam = new KeyParameter(key);

@@ -109,7 +109,7 @@ class BcIESParametersTest extends TestBase {
         INode blockCipherNode1 = nodes.get(0);
         assertThat(blockCipherNode1.getKind()).isEqualTo(BlockCipher.class);
         assertThat(blockCipherNode1.getChildren()).hasSize(findingId == 1 ? 5 : 4);
-        assertThat(blockCipherNode1.asString()).isEqualTo(findingId == 1 ? "AES128" : "AES");
+        assertThat(blockCipherNode1.asString()).isEqualTo(findingId == 1 ? "AES-128" : "AES");
 
         // Encrypt under BlockCipher
         INode encryptNode1 = blockCipherNode1.getChildren().get(Encrypt.class);

@@ -80,9 +80,9 @@ public class PEMFile {
         // 1.2.840.113549.3.7
         OID_TO_ALGORITHM.put("2a864886f70d0307", Algorithm.DES_EDE3_CBC);
         // 2.16.840.1.101.3.4.1.2
-        OID_TO_ALGORITHM.put("608648016503040102", Algorithm.AES128_CBC_PAD);
+        OID_TO_ALGORITHM.put("608648016503040102", Algorithm.AES-128_CBC_PAD);
         // 2.16.840.1.101.3.4.1.42
-        OID_TO_ALGORITHM.put("60864801650304012a", Algorithm.AES256_CBC_PAD);
+        OID_TO_ALGORITHM.put("60864801650304012a", Algorithm.AES-256_CBC_PAD);
     }
 
     public static String toPEM(X509Certificate certificate) throws CertificateEncodingException {
@@ -644,8 +644,8 @@ public class PEMFile {
 
 
     private enum Algorithm {
-        AES128_CBC_PAD("AES/CBC/PKCS5PADDING", "AES", 128),
-        AES256_CBC_PAD("AES/CBC/PKCS5PADDING", "AES", 256),
+        AES-128_CBC_PAD("AES/CBC/PKCS5PADDING", "AES", 128),
+        AES-256_CBC_PAD("AES/CBC/PKCS5PADDING", "AES", 256),
         DES_EDE3_CBC("DESede/CBC/PKCS5Padding", "DESede", 192);
 
         private final String transformation;

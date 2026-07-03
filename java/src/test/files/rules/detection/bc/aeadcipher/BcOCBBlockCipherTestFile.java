@@ -22,7 +22,7 @@ public class BcOCBBlockCipherTestFile {
 
         // Instantiate OCBBlockCipher with constructor
         OCBBlockCipher constructor =
-                new OCBBlockCipher(aesEngine, rc6Engine); // Noncompliant {{(AuthenticatedEncryption) RC6}}
+                new OCBBlockCipher(aesEngine, rc6Engine); // Noncompliant {{(AuthenticatedEncryption) RC6-OCB}}
 
         // Initialize cipher with key and parameters
         KeyParameter keyParameter = new KeyParameter(keyBytes);

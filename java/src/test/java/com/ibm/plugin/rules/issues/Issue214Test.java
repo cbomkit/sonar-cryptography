@@ -78,7 +78,7 @@ class Issue214Test extends TestBase {
         INode signatureNode = nodes.get(0);
         assertThat(signatureNode.getKind()).isEqualTo(Signature.class);
         assertThat(signatureNode.getChildren()).hasSize(3);
-        assertThat(signatureNode.asString()).isEqualTo("SHA-1withRSA");
+        assertThat(signatureNode.asString()).isEqualTo("RSA-PKCS1-1.5-SHA-1");
 
         // Oid under Signature
         INode oidNode = signatureNode.getChildren().get(Oid.class);

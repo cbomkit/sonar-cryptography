@@ -108,7 +108,7 @@ class JcaIvParameterSpecTest extends TestBase {
             INode blockCipherNode = secretKeyNode.getChildren().get(BlockCipher.class);
             assertThat(blockCipherNode).isNotNull();
             assertThat(blockCipherNode.getChildren()).hasSize(4);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128");
 
             // BlockSize under BlockCipher under SecretKey
             INode blockSizeNode = blockCipherNode.getChildren().get(BlockSize.class);
@@ -171,7 +171,7 @@ class JcaIvParameterSpecTest extends TestBase {
             INode blockCipherNode = nodes.get(0);
             assertThat(blockCipherNode.getKind()).isEqualTo(BlockCipher.class);
             assertThat(blockCipherNode.getChildren()).hasSize(7);
-            assertThat(blockCipherNode.asString()).isEqualTo("AES128-CBC-PKCS5");
+            assertThat(blockCipherNode.asString()).isEqualTo("AES-128-CBC-PKCS5");
 
             // Mode under BlockCipher
             INode modeNode = blockCipherNode.getChildren().get(Mode.class);

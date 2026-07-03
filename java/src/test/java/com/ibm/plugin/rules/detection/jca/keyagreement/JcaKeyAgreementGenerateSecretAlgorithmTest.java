@@ -98,7 +98,7 @@ class JcaKeyAgreementGenerateSecretAlgorithmTest extends TestBase {
 
         INode blockCipher = aesKey.getChildren().get(BlockCipher.class);
         assertThat(blockCipher).isNotNull();
-        assertThat(blockCipher.asString()).isEqualTo("AES128");
+        assertThat(blockCipher.asString()).isEqualTo("AES-128");
 
         oid = blockCipher.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();

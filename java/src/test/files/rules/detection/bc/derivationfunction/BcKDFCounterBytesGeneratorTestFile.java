@@ -24,7 +24,7 @@ public class BcKDFCounterBytesGeneratorTestFile {
 
         // Create the KDFCounterBytesGenerator
         KDFCounterBytesGenerator kdfGenerator =
-                new KDFCounterBytesGenerator(mac); // Noncompliant {{(KeyDerivationFunction) SP800-108-CounterKDF}}
+                new KDFCounterBytesGenerator(mac); // Noncompliant {{(KeyDerivationFunction) SP800_108_CounterKDF}}
 
         // Initialize the generator with parameters
         kdfGenerator.init(new KDFCounterParameters(ikm, fixedInput, 128));

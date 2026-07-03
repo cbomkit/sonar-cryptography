@@ -97,7 +97,7 @@ class JcaSecretKeyFactoryTranslateKeyTest extends TestBase {
 
             INode blockCipher = node.getChildren().get(BlockCipher.class);
             assertThat(blockCipher).isNotNull();
-            assertThat(blockCipher.asString()).isEqualTo("DES56");
+            assertThat(blockCipher.asString()).isEqualTo("DES-56");
 
             INode defaultKeyLength = blockCipher.getChildren().get(KeyLength.class);
             assertThat(defaultKeyLength).isNotNull();
@@ -113,7 +113,7 @@ class JcaSecretKeyFactoryTranslateKeyTest extends TestBase {
 
             blockCipher = key.getChildren().get(BlockCipher.class);
             assertThat(blockCipher).isNotNull();
-            assertThat(blockCipher.asString()).isEqualTo("3DES");
+            assertThat(blockCipher.asString()).isEqualTo("3DES-128");
         } else if (findingId == 1) {
             /*
              * Detection Store
@@ -149,7 +149,7 @@ class JcaSecretKeyFactoryTranslateKeyTest extends TestBase {
 
             INode blockCipher = node.getChildren().get(BlockCipher.class);
             assertThat(blockCipher).isNotNull();
-            assertThat(blockCipher.asString()).isEqualTo("3DES");
+            assertThat(blockCipher.asString()).isEqualTo("3DES-128");
         }
     }
 }

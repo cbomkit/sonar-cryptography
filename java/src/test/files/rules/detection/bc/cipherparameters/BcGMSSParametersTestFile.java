@@ -9,7 +9,7 @@ public class BcGMSSParametersTestFile {
 
     public static void testGMSSKeyParameters() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES256}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-256}}
 
         GMSSParameters base = new GMSSParameters(256);
 
@@ -20,7 +20,7 @@ public class BcGMSSParametersTestFile {
 
     public static void testGMSSPublicKeyParameters() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES256}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-256}}
 
         GMSSParameters base = new GMSSParameters(256);
 
@@ -31,7 +31,7 @@ public class BcGMSSParametersTestFile {
 
     public static void testBCGMSSPublicKey1() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES256}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-256}}
 
         GMSSParameters base = new GMSSParameters(256);
 
@@ -42,7 +42,7 @@ public class BcGMSSParametersTestFile {
 
     public static void testBCGMSSPublicKey2() {
         // Create a block cipher engine
-        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES256}}
+        BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES-256}}
 
         GMSSParameters base = new GMSSParameters(256);
 

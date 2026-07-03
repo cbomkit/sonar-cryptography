@@ -48,7 +48,7 @@ public class CipherUtil {
             DESKeySpec desKey = new DESKeySpec(password.getBytes(Utils.DEFAULT_CHARSET));
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES"); // Noncompliant {{(SecretKey) DES}}
             SecretKey securekey = keyFactory.generateSecret(desKey);
-            Cipher cipher = Cipher.getInstance("DES"); // Noncompliant {{(BlockCipher) DES56}}
+            Cipher cipher = Cipher.getInstance("DES"); // Noncompliant {{(BlockCipher) DES-56}}
             cipher.init(Cipher.ENCRYPT_MODE, securekey, random);
             return cipher.doFinal(content);
         } catch (Throwable exception) {
@@ -80,7 +80,7 @@ public class CipherUtil {
             DESKeySpec desKey = new DESKeySpec(password.getBytes(Utils.DEFAULT_CHARSET));
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES"); // Noncompliant {{(SecretKey) DES}}
             SecretKey securekey = keyFactory.generateSecret(desKey);
-            Cipher cipher = Cipher.getInstance("DES"); // Noncompliant {{(BlockCipher) DES56}}
+            Cipher cipher = Cipher.getInstance("DES"); // Noncompliant {{(BlockCipher) DES-56}}
             cipher.init(Cipher.DECRYPT_MODE, securekey, random);
             return cipher.doFinal(content);
         } catch (Exception exception) {

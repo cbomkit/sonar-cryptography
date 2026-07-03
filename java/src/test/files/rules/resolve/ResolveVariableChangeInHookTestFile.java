@@ -10,6 +10,6 @@ class ResolveVariableChangeInHookTestFile {
     }
 
     public void startCipherCascade() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher c = getCipher("AES/ECB/NoPadding");  // Noncompliant {{(BlockCipher) AES128-ECB}}
+        Cipher c = getCipher("AES/ECB/NoPadding");  // Noncompliant {{(BlockCipher) AES-128-ECB}}
     }
 }
