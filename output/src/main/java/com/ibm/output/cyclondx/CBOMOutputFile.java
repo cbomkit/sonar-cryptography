@@ -57,6 +57,8 @@ import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
+import com.ibm.output.cyclondx.behavior.CryptoBehavior;
+import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
 import com.ibm.output.cyclondx.builder.ProtocolComponentBuilder;
 import com.ibm.output.cyclondx.builder.RelatedCryptoMaterialComponentBuilder;
@@ -66,13 +68,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -86,6 +91,7 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
+import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Service;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
@@ -98,6 +104,13 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
+
+    @Nonnull
+    private final Set<CryptoBehavior> aggregatedBehaviors = EnumSet.noneOf(CryptoBehavior.class);
+
+    @Nonnull private final CryptoBehaviorMapper behaviorMapper = new CryptoBehaviorMapper();
+
+    private static final String METADATA_COMPONENT_NAME = "application";
 
     public CBOMOutputFile() {
         this.components = new HashMap<>();
@@ -112,6 +125,7 @@ public class CBOMOutputFile implements IOutputFile {
     private void add(@Nullable final String parentBomRef, @Nonnull List<INode> nodes) {
         nodes.forEach(
                 node -> {
+                    this.aggregatedBehaviors.addAll(this.behaviorMapper.map(node));
                     // switch for asset
                     if (node instanceof Algorithm algorithm) {
                         createAlgorithmComponent(parentBomRef, algorithm);
@@ -331,6 +345,24 @@ public class CBOMOutputFile implements IOutputFile {
         }
         scannerInfo.setServices(List.of(scannerService));
         metadata.setToolChoice(scannerInfo);
+
+        // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
+        if (!this.aggregatedBehaviors.isEmpty()) {
+            final Component softwareComponent = new Component();
+            softwareComponent.setType(Component.Type.APPLICATION);
+            softwareComponent.setName(METADATA_COMPONENT_NAME);
+            final String value =
+                    this.aggregatedBehaviors.stream()
+                            .map(CryptoBehavior::fullId)
+                            .sorted()
+                            .collect(Collectors.joining(","));
+            final Property behaviorProperty = new Property();
+            behaviorProperty.setName(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
+            behaviorProperty.setValue(value);
+            softwareComponent.setProperties(List.of(behaviorProperty));
+            metadata.setComponent(softwareComponent);
+        }
+
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));
         bom.setDependencies(new ArrayList<>(this.dependencies.values()));
