@@ -50,7 +50,12 @@ import javax.annotation.Nonnull;
  */
 public final class CAST128 extends Algorithm implements BlockCipher {
 
-    private static final String NAME = "CAST-128";
+    private static final String NAME = "CAST5";
+
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, false);
+    }
 
     // "128" refers to the maximum size of the key
 

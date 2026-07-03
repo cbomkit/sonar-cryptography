@@ -49,7 +49,12 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class Aria extends Algorithm implements BlockCipher, AuthenticatedEncryption, KeyWrap {
-    private static final String NAME = "Aria";
+    private static final String NAME = "ARIA";
+
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, true);
+    }
 
     public Aria(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);

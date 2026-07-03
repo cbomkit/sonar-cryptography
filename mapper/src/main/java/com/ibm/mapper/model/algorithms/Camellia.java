@@ -33,7 +33,12 @@ import javax.annotation.Nonnull;
 
 public final class Camellia extends Algorithm
         implements BlockCipher, AuthenticatedEncryption, KeyWrap, Mac {
-    private static final String NAME = "Camellia";
+    private static final String NAME = "CAMELLIA";
+
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, true);
+    }
 
     public Camellia(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);

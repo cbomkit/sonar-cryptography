@@ -50,6 +50,11 @@ import javax.annotation.Nonnull;
 public final class TripleDES extends Algorithm implements BlockCipher {
     private static final String NAME = "3DES";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, false);
+    }
+
     public TripleDES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
         this.put(BlockSize.ofDefault(64, detectionLocation));

@@ -53,6 +53,11 @@ public final class RC6 extends Algorithm implements BlockCipher, AuthenticatedEn
 
     private static final String NAME = "RC6";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, false);
+    }
+
     public RC6(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));

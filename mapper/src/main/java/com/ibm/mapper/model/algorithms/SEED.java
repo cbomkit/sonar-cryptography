@@ -52,6 +52,11 @@ public final class SEED extends Algorithm implements BlockCipher, KeyWrap {
 
     private static final String NAME = "SEED";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, true);
+    }
+
     public SEED(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));

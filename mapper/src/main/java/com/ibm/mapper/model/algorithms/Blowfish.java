@@ -51,6 +51,11 @@ import javax.annotation.Nonnull;
 public final class Blowfish extends Algorithm implements BlockCipher, AuthenticatedEncryption, Mac {
     private static final String NAME = "Blowfish";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, true);
+    }
+
     public Blowfish(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
     }

@@ -49,6 +49,11 @@ import javax.annotation.Nonnull;
 public final class SM4 extends Algorithm implements BlockCipher, AuthenticatedEncryption, Mac {
     private static final String NAME = "SM4";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(false, true, false);
+    }
+
     public SM4(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
     }

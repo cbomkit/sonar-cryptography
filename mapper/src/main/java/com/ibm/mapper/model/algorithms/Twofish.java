@@ -53,6 +53,11 @@ public final class Twofish extends Algorithm implements BlockCipher, Authenticat
 
     private static final String NAME = "Twofish";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, true);
+    }
+
     public Twofish(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));

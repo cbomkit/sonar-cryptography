@@ -49,7 +49,12 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 public final class RC2 extends Algorithm implements BlockCipher, KeyWrap {
-    private static final String NAME = "RC2"; // ARC2
+    private static final String NAME = "RC2";
+
+    @Override
+    public @Nonnull String asString() {
+        return composeName(true, true, false);
+    } // ARC2
 
     public RC2(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);

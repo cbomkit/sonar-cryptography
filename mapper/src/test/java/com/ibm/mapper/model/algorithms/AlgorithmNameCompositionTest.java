@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
+import com.ibm.mapper.model.algorithms.cast.CAST128;
+import com.ibm.mapper.model.algorithms.cast.CAST256;
 import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -53,5 +55,24 @@ class AlgorithmNameCompositionTest {
         Padding pkcs5 = new PKCS5(TEST);
         DES des = new DES(56, cbc, pkcs5, TEST);
         assertThat(des.asString()).isEqualTo("DES-56-CBC");
+    }
+
+    @Test
+    void blockCipherRenamesAndComposition() {
+        Mode cbc = new CBC(TEST);
+        assertThat(new Aria(256, cbc, TEST).asString()).isEqualTo("ARIA-256-CBC");
+        assertThat(new Camellia(256, cbc, TEST).asString()).isEqualTo("CAMELLIA-256-CBC");
+        assertThat(new CAST128(128, cbc, TEST).asString()).isEqualTo("CAST5-128-CBC");
+        assertThat(new CAST256(256, cbc, TEST).asString()).isEqualTo("CAST6-256-CBC");
+        assertThat(new Twofish(256, cbc, TEST).asString()).isEqualTo("Twofish-256-CBC");
+        assertThat(new Serpent(256, cbc, TEST).asString()).isEqualTo("Serpent-256-CBC");
+        assertThat(new Blowfish(128, cbc, TEST).asString()).isEqualTo("Blowfish-128-CBC");
+        assertThat(new SEED(cbc, TEST).asString()).isEqualTo("SEED-128-CBC");
+        assertThat(new RC2(64, cbc, TEST).asString()).isEqualTo("RC2-64-CBC");
+        assertThat(new RC5(128, cbc, TEST).asString()).isEqualTo("RC5-128-CBC");
+        assertThat(new RC6(128, cbc, TEST).asString()).isEqualTo("RC6-128-CBC");
+        assertThat(new TripleDES(168, cbc, TEST).asString()).isEqualTo("3DES-168-CBC");
+        assertThat(new SM4(cbc, TEST).asString()).isEqualTo("SM4-CBC");
+        assertThat(new IDEA(cbc, TEST).asString()).isEqualTo("IDEA-CBC");
     }
 }

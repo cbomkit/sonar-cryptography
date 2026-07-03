@@ -48,6 +48,11 @@ import javax.annotation.Nonnull;
 public final class IDEA extends Algorithm implements BlockCipher {
     private static final String NAME = "IDEA";
 
+    @Override
+    public @Nonnull String asString() {
+        return composeName(false, true, false);
+    }
+
     public IDEA(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, BlockCipher.class, detectionLocation);
     }
