@@ -35,6 +35,7 @@ import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Encapsulate;
@@ -234,6 +235,13 @@ class CryptoBehaviorMapperTest {
     void encapsulateOnKeyWrapCipherYieldsWrapsKey() {
         final Algorithm aesWrap = new Algorithm("AESWrap", KeyWrap.class, loc);
         aesWrap.put(new Encapsulate(loc));
+        assertThat(mapper.map(aesWrap)).containsExactly(CryptoBehavior.WRAPS_KEY);
+    }
+
+    @Test
+    void decapsulateOnKeyWrapCipherYieldsWrapsKey() {
+        final Algorithm aesWrap = new Algorithm("AESWrap", KeyWrap.class, loc);
+        aesWrap.put(new Decapsulate(loc));
         assertThat(mapper.map(aesWrap)).containsExactly(CryptoBehavior.WRAPS_KEY);
     }
 
