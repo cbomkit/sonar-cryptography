@@ -21,6 +21,7 @@ package com.ibm.output.cyclonedx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
@@ -38,6 +39,7 @@ import com.ibm.output.cyclondx.CBOMOutputFile;
 import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Property;
@@ -70,11 +72,25 @@ class CryptoBehaviorMetadataTest {
         assertThat(property.getName()).isEqualTo(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
         assertThat(property.getValue())
                 .isEqualTo(
-                        "security:cryptography:authenticates,"
-                                + "security:cryptography:encryptsData,"
-                                + "security:cryptography:ensuresConfidentiality,"
-                                + "security:cryptography:ensuresIntegrity,"
-                                + "security:cryptography:hashesData");
+                        "security:cryptography:encryptsData=high,"
+                                + "security:cryptography:ensuresConfidentiality=high,"
+                                + "security:cryptography:ensuresIntegrity=high,"
+                                + "security:cryptography:hashesData=high");
+    }
+
+    @Test
+    void authInterfaceUnlocksAuthenticatesAndValidatesToken() {
+        final AES aes = new AES(loc);
+        aes.put(new Encrypt(loc));
+        final CBOMOutputFile outputFile = new CBOMOutputFile(Set.of(AuthContext.Kind.JWT));
+        outputFile.add(List.of(aes));
+        final Bom bom = outputFile.getBom();
+
+        final Property property = bom.getMetadata().getComponent().getProperties().get(0);
+        assertThat(property.getValue())
+                .contains("security:cryptography:authenticates=high")
+                .contains("security:cryptography:validatesToken=high")
+                .contains("security:cryptography:encryptsData=high");
     }
 
     @Test
