@@ -23,9 +23,11 @@ import com.ibm.common.IObserver;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.java.JavaScanContext;
+import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
+import com.ibm.plugin.BehaviorEvidenceStore;
 import com.ibm.plugin.JavaAggregator;
 import com.ibm.plugin.translation.JavaTranslationProcess;
 import com.ibm.plugin.translation.reorganizer.JavaReorganizerRules;
@@ -99,6 +101,12 @@ public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
      */
     @Override
     public void update(@Nonnull Finding<JavaCheck, Tree, Symbol, JavaFileScannerContext> finding) {
+        final IDetectionContext context = finding.detectionStore().getDetectionValueContext();
+        if (isInventory && BehaviorEvidenceStore.recordFrom(context)) {
+            // Contextual auth signal captured scan-wide; do not translate to a crypto node
+            // or report it as an inventory finding.
+            return;
+        }
         final List<INode> nodes = javaTranslationProcess.initiate(finding.detectionStore());
         if (isInventory) {
             JavaAggregator.addNodes(nodes);
