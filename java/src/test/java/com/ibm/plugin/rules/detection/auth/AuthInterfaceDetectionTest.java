@@ -1,0 +1,81 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection.auth;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.mapper.model.INode;
+import com.ibm.plugin.TestBase;
+import java.io.File;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import javax.annotation.Nonnull;
+import org.junit.jupiter.api.Test;
+import org.sonar.java.checks.verifier.CheckVerifier;
+import org.sonar.plugins.java.api.JavaCheck;
+import org.sonar.plugins.java.api.JavaFileScannerContext;
+import org.sonar.plugins.java.api.semantic.Symbol;
+import org.sonar.plugins.java.api.tree.Tree;
+
+class AuthInterfaceDetectionTest extends TestBase {
+
+    private final Set<AuthContext.Kind> observedKinds = EnumSet.noneOf(AuthContext.Kind.class);
+
+    // The auth interfaces (jjwt, jakarta.servlet) are test-scope dependencies, so they are on the
+    // JUnit runtime classpath. Hand that classpath to CheckVerifier so the analyzer can resolve
+    // io.jsonwebtoken.Jwts and jakarta.servlet.http.HttpServletRequest for semantic matching.
+    private static final List<File> RUNTIME_CLASSPATH =
+            Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
+                    .map(File::new)
+                    .toList();
+
+    protected AuthInterfaceDetectionTest() {
+        super(AuthDetectionRules.rules());
+    }
+
+    @Test
+    void test() {
+        CheckVerifier.newVerifier()
+                .onFile("src/test/files/rules/detection/auth/AuthInterfaceTestFile.java")
+                .withChecks(this)
+                .withClassPath(RUNTIME_CLASSPATH)
+                .verifyNoIssues();
+
+        assertThat(observedKinds).contains(AuthContext.Kind.JWT, AuthContext.Kind.PRINCIPAL);
+    }
+
+    @Override
+    public void asserts(
+            int findingId,
+            @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
+            @Nonnull List<INode> nodes) {
+        // Auth findings are contextual: they carry an AuthContext and do not translate to a
+        // crypto INode. Record the kind so the test can assert both interfaces were detected.
+        assertThat(detectionStore.getDetectionValueContext())
+                .as("finding %d must carry an AuthContext", findingId)
+                .isInstanceOf(AuthContext.class);
+        final AuthContext context = (AuthContext) detectionStore.getDetectionValueContext();
+        observedKinds.add(context.kind());
+    }
+}

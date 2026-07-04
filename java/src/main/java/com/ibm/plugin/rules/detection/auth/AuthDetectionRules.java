@@ -17,33 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection;
+package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.auth.AuthDetectionRules;
-import com.ibm.plugin.rules.detection.bc.BouncyCastleDetectionRules;
-import com.ibm.plugin.rules.detection.jca.JcaDetectionRules;
-import com.ibm.plugin.rules.detection.random.SecureRandomGetInstance;
-import com.ibm.plugin.rules.detection.ssl.SSLDetectionRules;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JavaDetectionRules {
-    private JavaDetectionRules() {
+/**
+ * Phase 1 authentication/token interface detection. OAUTH and SAML kinds exist in {@link
+ * com.ibm.engine.model.context.AuthContext.Kind} and are handled by the inference engine, but their
+ * detection rules are deferred (design §9 / future work).
+ */
+public final class AuthDetectionRules {
+
+    private AuthDetectionRules() {
         // private
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        JcaDetectionRules.rules().stream(),
-                        BouncyCastleDetectionRules.rules().stream(),
-                        SSLDetectionRules.rules().stream(),
-                        AuthDetectionRules.rules().stream(),
-                        SecureRandomGetInstance.rules().stream())
-                .flatMap(i -> i)
-                .toList();
+        return Stream.of(AuthInterfaceDetection.rules().stream()).flatMap(i -> i).toList();
     }
 }
