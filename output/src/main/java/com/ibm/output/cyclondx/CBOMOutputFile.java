@@ -19,6 +19,7 @@
  */
 package com.ibm.output.cyclondx;
 
+import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.CipherSuite;
@@ -57,6 +58,8 @@ import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
+import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
+import com.ibm.output.cyclondx.behavior.Confidence;
 import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
@@ -110,13 +113,22 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nonnull private final CryptoBehaviorMapper behaviorMapper = new CryptoBehaviorMapper();
 
+    @Nonnull private final Set<AuthContext.Kind> authSignals;
+
+    @Nonnull private final BehaviorInferenceEngine inferenceEngine = new BehaviorInferenceEngine();
+
     // Intentional simplification of spec §4.4: use a fixed name because no scanned-software
     // name is plumbed into getBom(); the ideal value would be the scanned project name.
     private static final String METADATA_COMPONENT_NAME = "application";
 
     public CBOMOutputFile() {
+        this(java.util.Collections.emptySet());
+    }
+
+    public CBOMOutputFile(@Nonnull Set<AuthContext.Kind> authSignals) {
         this.components = new HashMap<>();
         this.dependencies = new HashMap<>();
+        this.authSignals = authSignals;
     }
 
     @Override
@@ -351,13 +363,15 @@ public class CBOMOutputFile implements IOutputFile {
         metadata.setToolChoice(scannerInfo);
 
         // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
-        if (!this.aggregatedBehaviors.isEmpty()) {
+        final Map<CryptoBehavior, Confidence> behaviors =
+                this.inferenceEngine.infer(this.aggregatedBehaviors, this.authSignals);
+        if (!behaviors.isEmpty()) {
             final Component softwareComponent = new Component();
             softwareComponent.setType(Component.Type.APPLICATION);
             softwareComponent.setName(METADATA_COMPONENT_NAME);
             final String value =
-                    this.aggregatedBehaviors.stream()
-                            .map(CryptoBehavior::fullId)
+                    behaviors.entrySet().stream()
+                            .map(e -> e.getKey().fullId() + "=" + e.getValue().token())
                             .sorted()
                             .collect(Collectors.joining(","));
             final Property behaviorProperty = new Property();

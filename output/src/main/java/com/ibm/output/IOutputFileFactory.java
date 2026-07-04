@@ -19,14 +19,17 @@
  */
 package com.ibm.output;
 
+import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.output.cyclondx.CBOMOutputFileFactory;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 public interface IOutputFileFactory {
     public static IOutputFileFactory DEFAULT = new CBOMOutputFileFactory();
 
     @Nonnull
-    IOutputFile createOutputFormat(@Nonnull List<INode> nodes);
+    IOutputFile createOutputFormat(
+            @Nonnull List<INode> nodes, @Nonnull Set<AuthContext.Kind> authSignals);
 }
