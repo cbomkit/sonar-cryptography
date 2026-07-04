@@ -38,6 +38,8 @@ public enum CryptoBehavior {
     EXCHANGES_KEY("exchangesKey"),
     WRAPS_KEY("wrapsKey"),
     AUTHENTICATES("authenticates"),
+    VALIDATES_TOKEN("validatesToken"),
+    USES_IDENTITY("usesIdentity"),
     ENSURES_CONFIDENTIALITY("ensuresConfidentiality"),
     ENSURES_INTEGRITY("ensuresIntegrity"),
     ENSURES_NON_REPUDIATION("ensuresNonRepudiation");
