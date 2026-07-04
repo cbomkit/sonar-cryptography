@@ -142,6 +142,8 @@ public final class SecureRandomGetInstance {
                     .inBundle(() -> "Random")
                     .withoutDependingDetectionRules();
 
+    // "NativePRNG" is only the probe key handed to JcaPRNGMapper; the emitted CBOM asset is the
+    // generic "PRNG" model regardless of the platform's actual default SecureRandom algorithm.
     private static final IDetectionRule<Tree> SECURE_RANDOM_NO_ARG =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()

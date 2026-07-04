@@ -66,6 +66,8 @@ class JcaCipherUnwrapTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // This test verifies that unwrap translates to a Decapsulate node.
+        // The end-to-end Decapsulate → wrapsKey behavior is validated in CryptoBehaviorMapperTest.
         assertThat(nodes).isNotEmpty();
         assertThat(treeContainsKind(nodes, Decapsulate.class))
                 .as("unwrap should translate to a Decapsulate functionality")
