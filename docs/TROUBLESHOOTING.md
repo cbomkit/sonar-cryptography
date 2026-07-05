@@ -142,11 +142,11 @@ Paste the code snippet in the terminal, but **replace the `verify` argument of t
 > java.lang.OutOfMemoryError: Java heap space
 >     at com.ibm.engine.detection.MethodMatcher.<init>(...)
 > ```
-> This happens because the BouncyCastle rule set expands into a very large in-memory graph (~520k rule objects) that needs headroom on top of the analyzed project's AST.
-> With `mvn sonar:sonar` the analysis runs **inside the Maven JVM**, so the heap is controlled by `MAVEN_OPTS` — `-Dsonar.scanner.javaOpts` / `SONAR_SCANNER_JAVA_OPTS` only affect the standalone `sonar-scanner` CLI and are ignored here. Set both to be safe:
+> This happens because the BouncyCastle rule set expands into a large in-memory graph (~520k rule objects, ~200 MB) that is rebuilt once per registered check, so it needs headroom on top of the analyzed project's semantic model.
+> **Set the heap on the right JVM.** As of SonarScanner for Maven **5.0+** (bundled with recent SonarQube), `mvn sonar:sonar` runs the analysis in a **forked Scanner Engine process** (`ScannerMain` in the stack trace), whose heap is controlled by `SONAR_SCANNER_JAVA_OPTS` — **not** `MAVEN_OPTS` (that only applies to scanner ≤ 4.x, where the engine ran in the Maven JVM):
 > ```
-> export MAVEN_OPTS="-Xmx4g"
-> export SONAR_SCANNER_JAVA_OPTS="-Xmx4g"   # only needed for the standalone sonar-scanner CLI
+> export SONAR_SCANNER_JAVA_OPTS="-Xmx2g"   # scanner-for-maven 5.0+ (forked engine)
+> # export MAVEN_OPTS="-Xmx2g"              # only for scanner-for-maven <= 4.x
 > ```
 > A permanent fix that shrinks the rule graph is tracked in [#476](https://github.com/cbomkit/sonar-cryptography/issues/476).
 
