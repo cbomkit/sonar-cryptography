@@ -23,6 +23,7 @@ import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.CipherSuite;
+import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.IAsset;
@@ -113,7 +114,8 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nonnull private final CryptoBehaviorMapper behaviorMapper = new CryptoBehaviorMapper();
 
-    @Nonnull private final Set<AuthContext.Kind> authSignals;
+    @Nonnull
+    private final Set<AuthContext.Kind> authSignals = EnumSet.noneOf(AuthContext.Kind.class);
 
     @Nonnull private final BehaviorInferenceEngine inferenceEngine = new BehaviorInferenceEngine();
 
@@ -122,13 +124,8 @@ public class CBOMOutputFile implements IOutputFile {
     private static final String METADATA_COMPONENT_NAME = "application";
 
     public CBOMOutputFile() {
-        this(java.util.Collections.emptySet());
-    }
-
-    public CBOMOutputFile(@Nonnull Set<AuthContext.Kind> authSignals) {
         this.components = new HashMap<>();
         this.dependencies = new HashMap<>();
-        this.authSignals = authSignals;
     }
 
     @Override
@@ -154,10 +151,22 @@ public class CBOMOutputFile implements IOutputFile {
                             || node instanceof NonceLength) {
                         final IProperty property = (IProperty) node;
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
+                    } else if (node instanceof ContextualEvidence evidence) {
+                        recordContextualEvidence(evidence);
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     }
                 });
+    }
+
+    private void recordContextualEvidence(@Nonnull ContextualEvidence evidence) {
+        // ContextualEvidence carries a generic identifier; map the ones that name an auth
+        // interface back to the typed vocabulary. Unknown identifiers are not auth signals; skip.
+        try {
+            this.authSignals.add(AuthContext.Kind.valueOf(evidence.identifier()));
+        } catch (IllegalArgumentException ignored) {
+            // not an auth-interface evidence identifier we model
+        }
     }
 
     @Nullable private String createAlgorithmComponent(
