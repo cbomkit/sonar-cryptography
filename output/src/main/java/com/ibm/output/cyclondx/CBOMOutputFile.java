@@ -60,7 +60,6 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
 import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
-import com.ibm.output.cyclondx.behavior.Confidence;
 import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
@@ -372,15 +371,15 @@ public class CBOMOutputFile implements IOutputFile {
         metadata.setToolChoice(scannerInfo);
 
         // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
-        final Map<CryptoBehavior, Confidence> behaviors =
+        final Set<CryptoBehavior> behaviors =
                 this.inferenceEngine.infer(this.aggregatedBehaviors, this.authSignals);
         if (!behaviors.isEmpty()) {
             final Component softwareComponent = new Component();
             softwareComponent.setType(Component.Type.APPLICATION);
             softwareComponent.setName(METADATA_COMPONENT_NAME);
             final String value =
-                    behaviors.entrySet().stream()
-                            .map(e -> e.getKey().fullId() + "=" + e.getValue().token())
+                    behaviors.stream()
+                            .map(CryptoBehavior::fullId)
                             .sorted()
                             .collect(Collectors.joining(","));
             final Property behaviorProperty = new Property();

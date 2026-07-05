@@ -71,10 +71,10 @@ class CryptoBehaviorMetadataTest {
         assertThat(property.getName()).isEqualTo(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
         assertThat(property.getValue())
                 .isEqualTo(
-                        "security:cryptography:encryptsData=high,"
-                                + "security:cryptography:ensuresConfidentiality=high,"
-                                + "security:cryptography:ensuresIntegrity=high,"
-                                + "security:cryptography:hashesData=high");
+                        "security:cryptography:encryptsData,"
+                                + "security:cryptography:ensuresConfidentiality,"
+                                + "security:cryptography:ensuresIntegrity,"
+                                + "security:cryptography:hashesData");
     }
 
     @Test
@@ -85,9 +85,9 @@ class CryptoBehaviorMetadataTest {
 
         final Property property = bom.getMetadata().getComponent().getProperties().get(0);
         assertThat(property.getValue())
-                .contains("security:cryptography:authenticates=high")
-                .contains("security:cryptography:validatesToken=high")
-                .contains("security:cryptography:encryptsData=high");
+                .contains("security:cryptography:authenticates")
+                .contains("security:cryptography:validatesToken")
+                .contains("security:cryptography:encryptsData");
     }
 
     @Test

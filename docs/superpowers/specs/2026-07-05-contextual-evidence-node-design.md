@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-05
 **Status:** Design approved, pending implementation plan
-**Supersedes:** the `BehaviorEvidenceStore` sidecar in `2026-07-04-crypto-behavior-context-layer-design.md` (§4.3 and its routing/threading). Everything else in that spec (two-tier inference, gating, confidence-suffixed output, Phase-1 auth scope) stands.
+**Supersedes:** the `BehaviorEvidenceStore` sidecar in `2026-07-04-crypto-behavior-context-layer-design.md` (§4.3 and its routing/threading). Everything else in that spec (two-tier inference, gating, comma-joined output, Phase-1 auth scope) stands.
 **Module ownership:** `mapper` (new IR node), `java` (new context translator + wiring), `output` (evidence collection during `add()`).
 
 ## 1. Summary
@@ -33,7 +33,7 @@ naturally as those do.
 - Be cross-language by construction: adding Go/Python auth detection later is "add a rule + a context
   translator," exactly like adding any crypto detection.
 - Keep the node **generic** (`ContextualEvidence`), reusable for future non-auth evidence.
-- Preserve the already-approved inference, gating, and confidence-suffixed output unchanged.
+- Preserve the already-approved inference, gating, and output unchanged.
 
 **Non-goals**
 - Changing the two-tier inference logic or output format (kept verbatim from the prior spec).
@@ -60,7 +60,7 @@ auth detection rule (produces AuthContext finding)          [unchanged; prior sp
    → JavaAggregator → ScannerManager.getAggregatedNodes() → CBOMOutputFile.add()   [existing pipe]
    → add(): ContextualEvidence branch records kind into Set<AuthContext.Kind> authSignals  [NEW]
    → getBom(): BehaviorInferenceEngine.infer(aggregatedBehaviors, authSignals)   [unchanged; Task 4]
-   → one confidence-suffixed property on metadata.component                       [unchanged]
+   → one property on metadata.component                                           [unchanged]
 ```
 
 ### 4.1 `ContextualEvidence` (mapper model, new)
@@ -105,7 +105,7 @@ detection — the same per-language cost every crypto concept already pays.)
   where `recordContextualEvidence` does a guarded `AuthContext.Kind.valueOf(evidence.identifier())`
   (ignore unknown tokens, never throw) and adds the kind to `authSignals`. No component is created.
 - `getBom()` unchanged from the prior Task 4: `inferenceEngine.infer(aggregatedBehaviors, authSignals)`
-  → confidence-suffixed property.
+  → comma-joined property value.
 
 ## 5. What the rework reverts (from the current branch state)
 
@@ -117,9 +117,9 @@ detection — the same per-language cost every crypto concept already pays.)
 | `ScannerManager` (getOutputFile arg + store reset) | **Revert** to original; delete `ScannerManagerBehaviorWiringTest`. |
 | `CBOMOutputFile(Set<AuthContext.Kind>)` constructor | **Revert** to no-arg only; self-collect in `add()`. |
 
-**Kept unchanged:** `AuthContext` (engine), `CryptoBehavior`/`Confidence` enums, `BehaviorInferenceEngine`
+**Kept unchanged:** `AuthContext` (engine), the `CryptoBehavior` enum, `BehaviorInferenceEngine`
 (+ tests, still typed on `AuthContext.Kind`), the auth detection rules + their test, and the
-`getBom()` inference + confidence-suffix emission.
+`getBom()` inference + emission.
 
 ## 6. Error handling
 
@@ -140,7 +140,7 @@ detection — the same per-language cost every crypto concept already pays.)
   now also confirms the translated node is a `ContextualEvidence` (nodes are no longer routed away).
 - **`CBOMOutputFile` evidence test** (output, replaces the constructor-based one): building a scan with
   an AES-encrypt asset **plus** a `ContextualEvidence("JWT", …)` node yields a metadata property
-  containing `authenticates=high` and `validatesToken=high`; the same scan without the evidence node
+  containing `authenticates` and `validatesToken`; the same scan without the evidence node
   omits them (gating). Confirms `add()` records evidence and creates no component for it.
 - **Inference engine tests**: unchanged (still green).
 - **Full `mvn clean package`**: all modules build; whole pipeline exercised end-to-end.

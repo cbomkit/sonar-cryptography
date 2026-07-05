@@ -20,33 +20,32 @@
 package com.ibm.output.cyclondx.behavior;
 
 import com.ibm.engine.model.context.AuthContext;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.EnumSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
 /**
  * Two-tier behavior inference (design §5). Combines crypto-derived behaviors with scan-wide
- * contextual auth signals. Crypto operational/goal behaviors pass through at {@link
- * Confidence#HIGH}. Application-level behaviors ({@code authenticates}, {@code validatesToken},
- * {@code usesIdentity}) are gated behind a required auth-interface primary: crypto alone can never
- * assert them. Total and side-effect free; never throws.
+ * contextual auth signals. Crypto operational/goal behaviors pass through unchanged.
+ * Application-level behaviors ({@code authenticates}, {@code validatesToken}, {@code usesIdentity})
+ * are gated behind a required auth-interface primary: crypto alone can never assert them. Total and
+ * side-effect free; never throws.
  */
 public final class BehaviorInferenceEngine {
 
     @Nonnull
-    public Map<CryptoBehavior, Confidence> infer(
+    public Set<CryptoBehavior> infer(
             @Nonnull Set<CryptoBehavior> cryptoBehaviors,
             @Nonnull Set<AuthContext.Kind> authSignals) {
-        final Map<CryptoBehavior, Confidence> result = new EnumMap<>(CryptoBehavior.class);
+        final Set<CryptoBehavior> result = EnumSet.noneOf(CryptoBehavior.class);
 
-        // Crypto behaviors pass through at HIGH, except AUTHENTICATES which is gated below:
+        // Crypto behaviors pass through, except AUTHENTICATES which is gated below:
         // a MAC alone (mapped to authenticates by CryptoBehaviorMapper) only corroborates.
         for (CryptoBehavior behavior : cryptoBehaviors) {
             if (behavior == CryptoBehavior.AUTHENTICATES) {
                 continue;
             }
-            result.put(behavior, Confidence.HIGH);
+            result.add(behavior);
         }
 
         final boolean hasAuthPrimary =
@@ -60,13 +59,13 @@ public final class BehaviorInferenceEngine {
         final boolean hasPrincipal = authSignals.contains(AuthContext.Kind.PRINCIPAL);
 
         if (hasAuthPrimary) {
-            result.put(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
+            result.add(CryptoBehavior.AUTHENTICATES);
         }
         if (hasTokenPrimary) {
-            result.put(CryptoBehavior.VALIDATES_TOKEN, Confidence.HIGH);
+            result.add(CryptoBehavior.VALIDATES_TOKEN);
         }
         if (hasPrincipal) {
-            result.put(CryptoBehavior.USES_IDENTITY, Confidence.HIGH);
+            result.add(CryptoBehavior.USES_IDENTITY);
         }
         return result;
     }
