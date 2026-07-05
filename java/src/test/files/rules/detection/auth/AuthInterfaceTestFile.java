@@ -90,4 +90,14 @@ class AuthInterfaceTestFile {
         return new org.springframework.security.web.authentication.preauth.x509
                 .X509AuthenticationFilter();
     }
+
+    org.pac4j.http.client.direct.HeaderClient usePac4jHeaderClient() {
+        return new org.pac4j.http.client.direct.HeaderClient();
+    }
+
+    org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
+            useSpringHeaderFilter() {
+        return new org.springframework.security.web.authentication.preauth
+                .RequestHeaderAuthenticationFilter();
+    }
 }
