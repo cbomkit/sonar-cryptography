@@ -28,8 +28,10 @@ import javax.annotation.Nonnull;
  * Two-tier behavior inference (design §5). Combines crypto-derived behaviors with scan-wide
  * contextual auth signals. Crypto operational/goal behaviors pass through unchanged.
  * Application-level behaviors ({@code authenticates}, {@code validatesToken}, {@code usesIdentity})
- * are gated behind a required auth-interface primary: crypto alone can never assert them. Total and
- * side-effect free; never throws.
+ * are gated behind a required auth-interface primary: crypto alone can never assert them. SAML
+ * validates a signed assertion (a bearer credential) so it also yields {@code validatesToken}; MTLS
+ * and API_KEY corroborate {@code authenticates}, and MTLS additionally yields {@code usesIdentity}
+ * via the authenticated peer principal. Total and side-effect free; never throws.
  */
 public final class BehaviorInferenceEngine {
 
@@ -52,11 +54,16 @@ public final class BehaviorInferenceEngine {
                 authSignals.contains(AuthContext.Kind.JWT)
                         || authSignals.contains(AuthContext.Kind.OAUTH)
                         || authSignals.contains(AuthContext.Kind.SAML)
-                        || authSignals.contains(AuthContext.Kind.PRINCIPAL);
+                        || authSignals.contains(AuthContext.Kind.PRINCIPAL)
+                        || authSignals.contains(AuthContext.Kind.API_KEY)
+                        || authSignals.contains(AuthContext.Kind.MTLS);
         final boolean hasTokenPrimary =
                 authSignals.contains(AuthContext.Kind.JWT)
-                        || authSignals.contains(AuthContext.Kind.OAUTH);
-        final boolean hasPrincipal = authSignals.contains(AuthContext.Kind.PRINCIPAL);
+                        || authSignals.contains(AuthContext.Kind.OAUTH)
+                        || authSignals.contains(AuthContext.Kind.SAML);
+        final boolean hasIdentity =
+                authSignals.contains(AuthContext.Kind.PRINCIPAL)
+                        || authSignals.contains(AuthContext.Kind.MTLS);
 
         if (hasAuthPrimary) {
             result.add(CryptoBehavior.AUTHENTICATES);
@@ -64,7 +71,7 @@ public final class BehaviorInferenceEngine {
         if (hasTokenPrimary) {
             result.add(CryptoBehavior.VALIDATES_TOKEN);
         }
-        if (hasPrincipal) {
+        if (hasIdentity) {
             result.add(CryptoBehavior.USES_IDENTITY);
         }
         return result;
