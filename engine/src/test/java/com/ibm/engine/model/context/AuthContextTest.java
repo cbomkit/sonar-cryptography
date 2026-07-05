@@ -37,4 +37,11 @@ class AuthContextTest {
     void defaultsToNone() {
         assertThat(new AuthContext().kind()).isEqualTo(AuthContext.Kind.NONE);
     }
+
+    @Test
+    void carriesNewKinds() {
+        assertThat(new AuthContext(AuthContext.Kind.API_KEY).kind())
+                .isEqualTo(AuthContext.Kind.API_KEY);
+        assertThat(new AuthContext(AuthContext.Kind.MTLS).kind()).isEqualTo(AuthContext.Kind.MTLS);
+    }
 }
