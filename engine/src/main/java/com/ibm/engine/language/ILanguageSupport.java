@@ -117,4 +117,18 @@ public interface ILanguageSupport<R, T, S, P> {
      */
     @Nullable EnumMatcher<T> createSimpleEnumMatcherFor(
             @Nonnull T enumIdentifier, @Nonnull MatchContext matchContext);
+
+    /**
+     * Whether a recorded call may be stored tree-free (detached) instead of retaining its AST for
+     * the whole scan. Detaching lets the file's AST be garbage-collected after analysis.
+     *
+     * <p>Default: conservative {@code false} (retain the tree, today's behavior). Only languages
+     * that can faithfully pre-resolve a call's arguments at record time override this.
+     *
+     * @param tree the recorded call
+     * @return {@code true} if the call can be recorded as a detached, tree-free record
+     */
+    default boolean isDetachableCall(@Nonnull T tree) {
+        return false;
+    }
 }
