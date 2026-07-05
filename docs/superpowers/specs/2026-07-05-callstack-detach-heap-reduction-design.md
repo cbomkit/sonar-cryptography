@@ -31,11 +31,15 @@ A recorded call's tree is read at three points. All three must be handled to hol
    - *Verified narrowing (factory influence):* `valueFactory` steers traversal in exactly one place — `if (valueFactory instanceof SizeFactory<?>)` for `NEW_ARRAY` args (`JavaDetectionEngine.java:275`). Everywhere else the factory is threaded but not inspected; the raw `ResolvedValue` list is factory-independent, and the factory is applied *afterward* (`DetectionStoreWithHook.java:185`, `ValueDetection.toValue`).
 
 3. **Detection output (location)** — the produced `IValue<T>.getLocation()` returns the tree (`IValue.java:26`; each of 27 model value classes stores its own `T location`). The sole production consumer is the translator: `JavaTranslator.getDetectionContextFrom` (`JavaTranslator.java:170`) reduces the tree to `DetectionLocation(filePath, lineNumber, columnOffset, keywords, bundle)` — every field derivable at record time.
-   - *Consequence:* to emit a cross-file detection without holding the AST, the produced `IValue`'s location must be a tree-free snapshot. This forces a location-model change (see Scope Revision).
+   - *Consequence:* the produced `IValue`'s location must not pin the AST. We satisfy this **without changing the value model** by using a synthetic detached `SyntaxToken` (see §4).
 
-## Scope revision vs. the original plan
+## Keeping `T = Tree` (no value-model change)
 
-The plan constrained changes to "strictly callstack/hooks." **That constraint is not achievable for a faithful detach.** Point 3 above proves that every cross-file detection's produced value must carry a tree-free location, which touches the value-location model. This spec therefore expands scope to include a location abstraction across the model/factory/translator seam. This is the single largest cost of the work and the main review surface.
+An earlier reading of point 3 suggested every model value would need a `Location` abstraction (re-typing 27 model classes + 27 factories). That is **not necessary**. The value model's location `T` stays `Tree`; we supply a **synthetic detached `Tree`** for cross-file detections:
+
+- `org.sonar.plugins.java.api.location.Position.at(int,int)` and `Range.at(...)` are public static factories producing AST-free coordinate objects; `SyntaxToken` is a small interface (`text/trivias/line/column/range` + `Tree`'s `is/accept/parent/firstToken/lastToken/kind`).
+- A `DetachedSyntaxToken implements SyntaxToken` backed by captured primitives (line, column offsets, and the record-time keywords) returns `parent() == null` and `firstToken()/lastToken() == this`, so it pins nothing.
+- The existing factories build `IValue<Tree>` with this token as the location, unchanged. Scope stays essentially within callstack/hooks + one new token class + a single translator branch. The plan's "strictly callstack/hooks" spirit holds.
 
 ## Chosen architecture: Hybrid detach with tree-fallback
 
@@ -55,8 +59,8 @@ Replace `CallContext(tree, scanContext)` with a sealed shape:
 - `RetainedCall<T>(T tree, IScanContext scanContext)` — the fallback (non-detachable) case, identical to today.
 - `DetachedCall` — tree-free, holding:
   - **match keys:** invoked-object `IType`, method name, parameter `IType`s (for `MethodMatcher` without a tree);
-  - **pre-resolved arguments:** for each argument index, the raw resolved value(s) (`Object`) plus a `LocationSnapshot` (see §4). If *any* argument fails to pre-resolve at record time, the call is treated as non-detachable and keeps its tree (fallback) — never a silent per-argument drop;
-  - for enum accesses: the enum class name plus a snapshot map `{constantName → resolvedValue + LocationSnapshot}` (fire-time `EnumHook` selection picks by name).
+  - **pre-resolved arguments:** for each argument index, the raw resolved value(s) (`Object`) plus captured location primitives (line, offset, keywords) for a `DetachedSyntaxToken` (see §4). If *any* argument fails to pre-resolve at record time, the call is treated as non-detachable and keeps its tree (fallback) — never a silent per-argument drop;
+  - for enum accesses: the enum class name plus a snapshot map `{constantName → resolvedValue + location primitives}` (fire-time `EnumHook` selection picks by name).
 
 Match uses the keys; the argument/enum snapshots feed fire-time replay. No `Tree` and no `JavaFileScannerContext` are retained → the file AST becomes GC-eligible after `leaveFile`.
 
@@ -64,21 +68,16 @@ Match uses the keys; the argument/enum snapshots feed fire-time replay. No `Tree
 
 `onNewHookSubscription` and `HookRepository.update` match against the record's keys instead of a tree. On a match of a `DetachedCall`, `DetectionStoreWithHook` skips `extractArgumentFromMethodCaller`/`resolveValuesInInnerScope` and instead takes the pre-resolved snapshot for the hook's parameter index, applies the hook's factory to it, and proceeds through `handleNextRulesForMethodHooks` as today (that path visits `hook.methodDefinition()`, from the hook's own file, and is unaffected by detachment). `RetainedCall`s replay exactly as today.
 
-### 4. Location abstraction (the model change)
+### 4. Detached location via synthetic `SyntaxToken` (no model change)
 
-Introduce an engine-level location carrier (no dependency on `mapper`):
+`getLocation()` keeps returning `Tree`; for a detached call we hand the factory a `DetachedSyntaxToken` instead of a real leaf tree:
 
-```
-sealed interface Location<T> permits TreeLocation, SnapshotLocation
-  TreeLocation<T>(T tree)                                   // normal / fallback path
-  SnapshotLocation<T>(String filePath, int line, int columnOffset, List<String> keywords)
-```
+- **New class** `DetachedSyntaxToken implements SyntaxToken` (engine, `com.ibm.engine…`): fields = start/end line + column offsets and the record-time `keywords`. `range()` → `Range.at(Position.at(line, col), Position.at(endLine, endCol))`; `firstToken()/lastToken()` → `this`; `kind()` → `Tree.Kind.TOKEN`; `parent()` → `null`; `accept()` → no-op; `text()` → the resolved value string; `trivias()` → empty. Value `equals/hashCode` over the fields (model `equals` compares `getLocation()`).
+- **Record time:** while the argument's leaf tree is live, capture (line, columnOffset, end position, keywords) — computed by the *same* logic `JavaTranslator.getDetectionContextFrom` uses (`JavaTranslator.java:170`) — and store the primitives in the `DetachedCall`. No `Tree`/`Range`/`Position` object is retained (store ints), so nothing pins the AST.
+- **Fire time:** build `new ResolvedValue<>(rawValue, new DetachedSyntaxToken(...))` and run the existing factory unchanged → `IValue<Tree>` whose location pins nothing.
+- **One translator branch:** `JavaTranslator.getDetectionContextFrom` gets a leading `if (location instanceof DetachedSyntaxToken d) return new DetectionLocation(filePath, d.line(), d.offset(), d.keywords(), bundle);`. This preserves `keywords`/`additionalContext` fidelity exactly (they were computed from the live tree at record time). Python/Go never produce a `DetachedSyntaxToken`, so their translators are untouched.
 
-- `ResolvedValue<O,T>` carries a `Location<T>` instead of a raw `T tree`. Normal resolution wraps the leaf tree in `TreeLocation`; record-time pre-resolution captures a `SnapshotLocation` (computed with the same logic `JavaTranslator.getDetectionContextFrom` uses today).
-- The 27 model value classes store `Location<T>` instead of `T`; the 27 factories pass `resolvedValue.location()`.
-- Translators handle both: `SnapshotLocation` → build `DetectionLocation` directly; `TreeLocation` → existing derivation. Python/Go always produce `TreeLocation`, so their behavior is unchanged.
-
-This is mechanical but wide (~27 model + ~27 factory + 3 translator edits, plus `ResolvedValue` construction sites in the Java/Python/Go engines and tests that call `getLocation()`/`reportIssue`). It is exercised on the **main** cross-file path, not just edge cases.
+Zero edits to the 27 model classes, 27 factories, and `ResolvedValue`. The change is one new class + one translator branch, plus the record/replay wiring.
 
 ### 5. Lossless cleanups folded in
 
@@ -95,15 +94,14 @@ This is mechanical but wide (~27 model + ~27 factory + 3 translator edits, plus 
 
 - `engine/.../callstack/CallStackAgent.java` — key-indexed lookup; drop `visitedTreeObjects`; record `DetachedCall` vs `RetainedCall`; match against keys.
 - `engine/.../callstack/CallContext.java` — becomes the sealed record family (`RetainedCall`/`DetachedCall`).
-- `engine/.../detection/ResolvedValue.java` — carry `Location<T>`.
-- `engine/.../model/Location.java` (+ `TreeLocation`, `SnapshotLocation`) — NEW.
-- `engine/.../model/*.java` (27) + `engine/.../model/factory/*.java` (27) — location field/parameter type.
-- `engine/.../detection/DetectionStoreWithHook.java` — detached replay branch.
-- `engine/.../language/java/JavaDetectionEngine.java` — record-time pre-resolution + `NEW_ARRAY` detection; `ResolvedValue` construction.
-- `engine/.../language/{python,go}/*DetectionEngine.java` — `ResolvedValue`/`TreeLocation` construction (behavior-preserving).
-- `engine/.../language/ILanguageSupport.java` (or `ILanguageTranslation.java`) — `isDetachableCall` predicate (default: not detachable).
-- `{java,python,go}/.../translation/translator/*Translator.java` — handle `SnapshotLocation`.
+- `engine/.../callstack/DetachedSyntaxToken.java` — NEW (synthetic `SyntaxToken`, §4).
+- `engine/.../detection/DetectionStoreWithHook.java` — detached replay branch (build `ResolvedValue` from snapshot + `DetachedSyntaxToken`, skip `extractArgumentFromMethodCaller`/`resolveValuesInInnerScope`).
+- `engine/.../language/java/JavaDetectionEngine.java` — record-time pre-resolution + `NEW_ARRAY` detection + capture location primitives.
+- `engine/.../language/ILanguageSupport.java` (or `ILanguageTranslation.java`) — `isDetachableCall` predicate (default: not detachable → Python/Go keep trees).
+- `java/.../translation/translator/JavaTranslator.java` — leading `DetachedSyntaxToken` branch in `getDetectionContextFrom` (Python/Go translators untouched).
 - `java/src/test/files/...` + a new multi-file `CheckVerifier` test — NEW (see Verification).
+
+No edits to the 27 `engine/.../model/*.java`, the 27 `engine/.../model/factory/*.java`, `ResolvedValue.java`, or the Python/Go engines/translators.
 
 ## Verification
 
@@ -113,11 +111,11 @@ This is mechanical but wide (~27 model + ~27 factory + 3 translator edits, plus 
 
 ## Risks & open implementation questions
 
-- **Location-model diff size** is the top risk — wide but mechanical. Mitigate by landing it as an isolated, behavior-preserving commit (`TreeLocation` everywhere) before any detach logic, so it can be reviewed/tested independently.
-- **Record-time pre-resolution fidelity:** must produce exactly the raw `ResolvedValue`s fire-time would, minus the `SizeFactory` case. Guard with a test that resolves the same argument both ways and asserts equality.
+- **`DetachedSyntaxToken` consumer safety (top risk):** the synthetic token returns `parent() == null` and a no-op `accept()`. This is safe only if every consumer of a value's `getLocation()` reads at most `firstToken()/lastToken()/kind()/range()`. Verified today: the sole *production* consumer is `getDetectionContextFrom`; production CBOM output does not `reportIssue` on value locations (that path is test-only). **Task:** audit all `IValue.getLocation()` consumers to confirm none navigate `parent()`/`accept()`/children, and make the new multi-file test's `asserts()` tolerant of detached locations.
+- **Record-time pre-resolution fidelity:** must produce exactly the raw `ResolvedValue`s fire-time would, minus the `NEW_ARRAY`/`SizeFactory` case (kept on tree-fallback). Guard with a test that resolves the same argument both ways and asserts equality.
 - **Enum snapshot completeness:** pre-resolving all enum constants at record time must match `resolveEnumValue`'s selection semantics; verify against existing enum-hook tests.
-- **`SnapshotLocation` fidelity:** the `keywords`/line/offset must match what `getDetectionContextFrom` produces from the live tree, so CBOM occurrences are identical for detached vs. non-detached detections. Verify via an output-level test.
-- **`filePath` origin for cross-file values:** confirm the detached value's `SnapshotLocation.filePath` is file A's (the call site), matching today's tree-derived behavior.
+- **Location fidelity:** `keywords`/line/offset captured at record time must match what `getDetectionContextFrom` derives from the live tree, so CBOM occurrences (incl. `additionalContext`) are identical for detached vs. non-detached detections. Verify via an output-level test.
+- **`filePath` origin for cross-file values:** confirm the translator receives file A's (call-site) path for a detached value, matching today's tree-derived behavior — this is independent of the token but must be checked on the cross-file path.
 
 ## Explicitly out of scope
 
