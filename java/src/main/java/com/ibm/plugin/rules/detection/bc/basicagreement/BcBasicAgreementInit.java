@@ -22,8 +22,10 @@ package com.ibm.plugin.rules.detection.bc.basicagreement;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -44,8 +46,11 @@ public final class BcBasicAgreementInit {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> List.of(CONSTRUCTOR_1));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(CONSTRUCTOR_1);
+        return RULES.get();
     }
 }
