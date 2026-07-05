@@ -24,9 +24,11 @@ import com.ibm.engine.model.factory.BooleanFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -64,8 +66,11 @@ public final class BcBufferedAsymmetricBlockCipher {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(List.of(INIT));
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> List.of(CONSTRUCTOR));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(CONSTRUCTOR);
+        return RULES.get();
     }
 }

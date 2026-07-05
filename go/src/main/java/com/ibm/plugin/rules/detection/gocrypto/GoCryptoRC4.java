@@ -27,7 +27,9 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -77,8 +79,16 @@ public final class GoCryptoRC4 {
                     .inBundle(() -> "GoCrypto")
                     .withDependingDetectionRules(List.of(XOR_KEY_STREAM));
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(GoCryptoRC4::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW_CIPHER);
     }
 }

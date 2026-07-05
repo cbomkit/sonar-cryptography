@@ -21,7 +21,9 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,13 +35,25 @@ public final class BcAsymmetricBlockCipher {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> buildRules(null, null));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return rules(null, null);
+        return RULES.get();
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
+            @Nullable IDetectionContext encodingDetectionValueContext,
+            @Nullable IDetectionContext engineDetectionValueContext) {
+        return encodingDetectionValueContext == null && engineDetectionValueContext == null
+                ? RULES.get()
+                : buildRules(encodingDetectionValueContext, engineDetectionValueContext);
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules(
             @Nullable IDetectionContext encodingDetectionValueContext,
             @Nullable IDetectionContext engineDetectionValueContext) {
         return Stream.of(

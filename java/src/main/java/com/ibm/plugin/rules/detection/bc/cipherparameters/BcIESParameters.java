@@ -27,7 +27,9 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.MacSizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -68,8 +70,11 @@ public final class BcIESParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> List.of(CONSTRUCTOR_IES, CONSTRUCTOR_IES_WITH_CIPHER_PARAMETERS));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(CONSTRUCTOR_IES, CONSTRUCTOR_IES_WITH_CIPHER_PARAMETERS);
+        return RULES.get();
     }
 }

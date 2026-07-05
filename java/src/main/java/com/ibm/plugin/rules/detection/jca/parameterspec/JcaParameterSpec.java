@@ -20,7 +20,9 @@
 package com.ibm.plugin.rules.detection.jca.parameterspec;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -31,8 +33,16 @@ public final class JcaParameterSpec {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JcaParameterSpec::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(JcaDHParameterSpec.rules().stream()).flatMap(i -> i).toList();
     }
 }

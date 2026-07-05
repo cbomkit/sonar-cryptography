@@ -24,7 +24,9 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -159,18 +161,23 @@ public final class BcParametersWith {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            List.of(
+                                    CONSTRUCTOR_1,
+                                    CONSTRUCTOR_2,
+                                    CONSTRUCTOR_3,
+                                    CONSTRUCTOR_4,
+                                    CONSTRUCTOR_5,
+                                    CONSTRUCTOR_6,
+                                    CONSTRUCTOR_7,
+                                    CONSTRUCTOR_8,
+                                    CONSTRUCTOR_9,
+                                    CONSTRUCTOR_10));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(
-                CONSTRUCTOR_1,
-                CONSTRUCTOR_2,
-                CONSTRUCTOR_3,
-                CONSTRUCTOR_4,
-                CONSTRUCTOR_5,
-                CONSTRUCTOR_6,
-                CONSTRUCTOR_7,
-                CONSTRUCTOR_8,
-                CONSTRUCTOR_9,
-                CONSTRUCTOR_10);
+        return RULES.get();
     }
 }

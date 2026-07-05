@@ -23,11 +23,13 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import com.ibm.plugin.rules.detection.bc.messagesigner.BcMessageSigner;
 import com.ibm.plugin.rules.detection.bc.messagesigner.BcStateAwareMessageSigner;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -73,8 +75,11 @@ public final class BcPQCSigner {
         return constructorsList;
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> specialConstructors());
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return specialConstructors();
+        return RULES.get();
     }
 }

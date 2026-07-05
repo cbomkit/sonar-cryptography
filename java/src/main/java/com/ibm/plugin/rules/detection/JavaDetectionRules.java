@@ -26,6 +26,7 @@ import com.ibm.plugin.rules.detection.jca.JcaDetectionRules;
 import com.ibm.plugin.rules.detection.random.SecureRandomGetInstance;
 import com.ibm.plugin.rules.detection.ssl.SSLDetectionRules;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -35,8 +36,16 @@ public final class JavaDetectionRules {
         // private
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JavaDetectionRules::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         JcaDetectionRules.rules().stream(),
                         BouncyCastleDetectionRules.rules().stream(),

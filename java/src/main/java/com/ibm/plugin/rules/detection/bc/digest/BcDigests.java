@@ -26,10 +26,12 @@ import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -191,13 +193,22 @@ public final class BcDigests {
         return constructorsList;
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> buildRules(null));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return rules(null);
+        return RULES.get();
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
+            @Nullable IDetectionContext detectionValueContext) {
+        return detectionValueContext == null ? RULES.get() : buildRules(detectionValueContext);
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules(
             @Nullable IDetectionContext detectionValueContext) {
         return Stream.concat(
                         regularConstructors(detectionValueContext).stream(),

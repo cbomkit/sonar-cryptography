@@ -27,8 +27,10 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -150,8 +152,16 @@ public final class GoCryptoECDH {
                     .withDependingDetectionRules(
                             List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(GoCryptoECDH::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(P256, P384, P521, X25519);
     }
 }

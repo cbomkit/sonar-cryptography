@@ -20,7 +20,9 @@
 package com.ibm.plugin.rules.detection.bc.signer;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -30,22 +32,27 @@ public final class BcSigner {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            Stream.of(
+                                            BcDSADigestSigner.rules().stream(),
+                                            BcGenericSigner.rules().stream(),
+                                            BcISO9796d2Signer.rules().stream(),
+                                            BcISO9796d2PSSSigner.rules().stream(),
+                                            BcPQCSigner.rules().stream(),
+                                            BcPSSSigner.rules().stream(),
+                                            BcRSADigestSigner.rules().stream(),
+                                            BcSimpleSigner.rules().stream(),
+                                            BcSM2Signer.rules().stream(),
+                                            BcX931Signer.rules().stream(),
+                                            BcMLDSASigner.rules().stream(),
+                                            BcHashMLDSASigner.rules().stream())
+                                    .flatMap(i -> i)
+                                    .toList());
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        BcDSADigestSigner.rules().stream(),
-                        BcGenericSigner.rules().stream(),
-                        BcISO9796d2Signer.rules().stream(),
-                        BcISO9796d2PSSSigner.rules().stream(),
-                        BcPQCSigner.rules().stream(),
-                        BcPSSSigner.rules().stream(),
-                        BcRSADigestSigner.rules().stream(),
-                        BcSimpleSigner.rules().stream(),
-                        BcSM2Signer.rules().stream(),
-                        BcX931Signer.rules().stream(),
-                        BcMLDSASigner.rules().stream(),
-                        BcHashMLDSASigner.rules().stream())
-                .flatMap(i -> i)
-                .toList();
+        return RULES.get();
     }
 }

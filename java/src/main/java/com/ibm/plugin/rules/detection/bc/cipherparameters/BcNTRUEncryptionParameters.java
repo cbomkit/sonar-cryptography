@@ -24,8 +24,10 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -204,15 +206,20 @@ public final class BcNTRUEncryptionParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            List.of(
+                                    KEY_CONSTRUCTOR,
+                                    PUBLIC_KEY_CONSTRUCTOR_1,
+                                    PUBLIC_KEY_CONSTRUCTOR_2,
+                                    PUBLIC_KEY_CONSTRUCTOR_3,
+                                    PRIVATE_KEY_CONSTRUCTOR_1,
+                                    PRIVATE_KEY_CONSTRUCTOR_2,
+                                    PRIVATE_KEY_CONSTRUCTOR_3));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(
-                KEY_CONSTRUCTOR,
-                PUBLIC_KEY_CONSTRUCTOR_1,
-                PUBLIC_KEY_CONSTRUCTOR_2,
-                PUBLIC_KEY_CONSTRUCTOR_3,
-                PRIVATE_KEY_CONSTRUCTOR_1,
-                PRIVATE_KEY_CONSTRUCTOR_2,
-                PRIVATE_KEY_CONSTRUCTOR_3);
+        return RULES.get();
     }
 }

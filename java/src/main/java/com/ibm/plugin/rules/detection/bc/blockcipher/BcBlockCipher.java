@@ -26,9 +26,11 @@ import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -199,21 +201,39 @@ public final class BcBlockCipher {
         return constructorsList;
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> buildRules(null));
+    private static final Supplier<List<IDetectionRule<Tree>>> ALL =
+            Memoize.of(() -> buildAll(null));
+
     @Nonnull
     // Rules defined in this file (classes finishing with BlockCipher)
     public static List<IDetectionRule<Tree>> rules() {
-        return rules(null);
+        return RULES.get();
     }
 
     @Nonnull
     // All BlockCipher rules including all the engines
     public static List<IDetectionRule<Tree>> all() {
-        return all(null);
+        return ALL.get();
     }
 
     @Nonnull
     // Rules defined in this file (classes finishing with BlockCipher)
     public static List<IDetectionRule<Tree>> rules(
+            @Nullable IDetectionContext detectionValueContext) {
+        return detectionValueContext == null ? RULES.get() : buildRules(detectionValueContext);
+    }
+
+    @Nonnull
+    // All BlockCipher rules including all the engines
+    public static List<IDetectionRule<Tree>> all(
+            @Nullable IDetectionContext detectionValueContext) {
+        return detectionValueContext == null ? ALL.get() : buildAll(detectionValueContext);
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules(
             @Nullable IDetectionContext detectionValueContext) {
         return Stream.of(
                         simpleConstructors(detectionValueContext).stream(),
@@ -223,8 +243,7 @@ public final class BcBlockCipher {
     }
 
     @Nonnull
-    // All BlockCipher rules including all the engines
-    public static List<IDetectionRule<Tree>> all(
+    private static List<IDetectionRule<Tree>> buildAll(
             @Nullable IDetectionContext detectionValueContext) {
         return Stream.of(
                         rules(detectionValueContext).stream(),

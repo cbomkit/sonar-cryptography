@@ -25,11 +25,13 @@ import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherEngine;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -130,10 +132,15 @@ public final class BcWrapperEngine {
         return constructorsList;
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            Stream.of(simpleConstructors().stream(), specialConstructors().stream())
+                                    .flatMap(i -> i)
+                                    .toList());
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(simpleConstructors().stream(), specialConstructors().stream())
-                .flatMap(i -> i)
-                .toList();
+        return RULES.get();
     }
 }
