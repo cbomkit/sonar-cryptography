@@ -32,5 +32,9 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/jjwt-api-0.12.6.jar"),
                     new File("src/test/resources/test-jars/jakarta.servlet-api-6.0.0.jar"),
                     new File("src/test/resources/test-jars/nimbus-jose-jwt-9.40.jar"),
-                    new File("src/test/resources/test-jars/java-jwt-4.4.0.jar"));
+                    new File("src/test/resources/test-jars/java-jwt-4.4.0.jar"),
+                    new File("src/test/resources/test-jars/spring-security-oauth2-jose-6.3.3.jar"),
+                    new File(
+                            "src/test/resources/test-jars/spring-security-oauth2-resource-server-6.3.3.jar"),
+                    new File("src/test/resources/test-jars/oauth2-oidc-sdk-11.13.jar"));
 }

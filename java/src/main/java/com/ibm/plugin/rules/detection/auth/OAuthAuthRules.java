@@ -19,19 +19,59 @@
  */
 package com.ibm.plugin.rules.detection.auth;
 
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
+@SuppressWarnings("java:S1192")
 public final class OAuthAuthRules {
 
     private OAuthAuthRules() {
         // nothing
     }
 
+    private static final IDetectionRule<Tree> SPRING_JWT_DECODER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.springframework.security.oauth2.jwt.JwtDecoder",
+                            "org.springframework.security.oauth2.jwt.ReactiveJwtDecoder")
+                    .forMethods("decode")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("OAUTH"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.OAUTH))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SPRING_OPAQUE_INTROSPECTOR =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector")
+                    .forMethods("introspect")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("OAUTH"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.OAUTH))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> NIMBUS_ID_TOKEN_VALIDATOR =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("com.nimbusds.openid.connect.sdk.validators.IDTokenValidator")
+                    .forMethods("validate")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("OAUTH"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.OAUTH))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of();
+        return List.of(SPRING_JWT_DECODER, SPRING_OPAQUE_INTROSPECTOR, NIMBUS_ID_TOKEN_VALIDATOR);
     }
 }
