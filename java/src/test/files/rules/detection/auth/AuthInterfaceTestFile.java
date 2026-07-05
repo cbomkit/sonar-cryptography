@@ -9,6 +9,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
@@ -55,5 +56,21 @@ class AuthInterfaceTestFile {
 
     Principal usePrincipal(HttpServletRequest request) {
         return request.getUserPrincipal();
+    }
+
+    Principal useJavaxServlet(javax.servlet.http.HttpServletRequest request) {
+        return request.getUserPrincipal();
+    }
+
+    Principal useJakartaJaxrs(SecurityContext context) {
+        return context.getUserPrincipal();
+    }
+
+    Principal useJavaxJaxrs(javax.ws.rs.core.SecurityContext context) {
+        return context.getUserPrincipal();
+    }
+
+    Object useSpringAuthentication(org.springframework.security.core.Authentication authentication) {
+        return authentication.getPrincipal();
     }
 }

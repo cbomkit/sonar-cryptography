@@ -41,5 +41,8 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/opensaml-saml-impl-4.3.2.jar"),
                     new File(
                             "src/test/resources/test-jars/spring-security-saml2-service-provider-6.3.3.jar"),
-                    new File("src/test/resources/test-jars/spring-security-core-6.3.3.jar"));
+                    new File("src/test/resources/test-jars/spring-security-core-6.3.3.jar"),
+                    new File("src/test/resources/test-jars/javax.servlet-api-4.0.1.jar"),
+                    new File("src/test/resources/test-jars/jakarta.ws.rs-api-3.1.0.jar"),
+                    new File("src/test/resources/test-jars/javax.ws.rs-api-2.1.1.jar"));
 }

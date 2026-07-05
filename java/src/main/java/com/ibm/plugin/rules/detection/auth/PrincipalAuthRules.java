@@ -37,8 +37,34 @@ public final class PrincipalAuthRules {
     private static final IDetectionRule<Tree> SERVLET_PRINCIPAL =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectTypes("jakarta.servlet.http.HttpServletRequest")
+                    .forObjectTypes(
+                            "jakarta.servlet.http.HttpServletRequest",
+                            "javax.servlet.http.HttpServletRequest")
                     .forMethods("getUserPrincipal")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PRINCIPAL"))
+                    .withoutParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.PRINCIPAL))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> JAXRS_SECURITY_CONTEXT =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "jakarta.ws.rs.core.SecurityContext",
+                            "javax.ws.rs.core.SecurityContext")
+                    .forMethods("getUserPrincipal")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PRINCIPAL"))
+                    .withoutParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.PRINCIPAL))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SPRING_AUTHENTICATION =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("org.springframework.security.core.Authentication")
+                    .forMethods("getPrincipal")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PRINCIPAL"))
                     .withoutParameters()
                     .buildForContext(new AuthContext(AuthContext.Kind.PRINCIPAL))
@@ -47,6 +73,6 @@ public final class PrincipalAuthRules {
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(SERVLET_PRINCIPAL);
+        return List.of(SERVLET_PRINCIPAL, JAXRS_SECURITY_CONTEXT, SPRING_AUTHENTICATION);
     }
 }
