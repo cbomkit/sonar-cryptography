@@ -1,3 +1,4 @@
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.params.AEADParameters;
@@ -11,6 +12,8 @@ public class BcAEADParametersTestFile {
 
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        secureRandom.nextBytes(keyBytes);
 
         // Initialize cipher with key and parameters
         KeyParameter keyParameter = new KeyParameter(new byte[12], 0, 256);

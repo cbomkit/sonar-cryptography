@@ -1,3 +1,4 @@
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.AESFastEngine;
@@ -12,6 +13,8 @@ public class BcGCMBlockCipherTestFile {
     public static void test1() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = new AESFastEngine(); // Noncompliant {{(BlockCipher) AES}}
@@ -28,6 +31,8 @@ public class BcGCMBlockCipherTestFile {
     public static void test2() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}
@@ -45,6 +50,8 @@ public class BcGCMBlockCipherTestFile {
     public static void test3() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = new AESFastEngine(); // Noncompliant {{(BlockCipher) AES}}
@@ -64,6 +71,8 @@ public class BcGCMBlockCipherTestFile {
     public static void test4() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
         BlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}

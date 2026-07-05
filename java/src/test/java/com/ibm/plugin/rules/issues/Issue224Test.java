@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
@@ -66,7 +67,13 @@ class Issue224Test extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        if (findingId == 0) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
+        if (findingId == 1) {
             /*
              * Detection Store
              */
@@ -120,7 +127,7 @@ class Issue224Test extends TestBase {
             assertThat(keyGenerationNode).isNotNull();
             assertThat(keyGenerationNode.getChildren()).isEmpty();
             assertThat(keyGenerationNode.asString()).isEqualTo("KEYGENERATION");
-        } else if (findingId == 1) {
+        } else if (findingId == 2) {
             /*
              * Detection Store
              */
@@ -168,7 +175,7 @@ class Issue224Test extends TestBase {
             assertThat(blockSizeNode).isNotNull();
             assertThat(blockSizeNode.getChildren()).isEmpty();
             assertThat(blockSizeNode.asString()).isEqualTo("64");
-        } else if (findingId == 2) {
+        } else if (findingId == 4) {
             /*
              * Detection Store
              */
@@ -223,7 +230,7 @@ class Issue224Test extends TestBase {
             assertThat(keyGenerationNode).isNotNull();
             assertThat(keyGenerationNode.getChildren()).isEmpty();
             assertThat(keyGenerationNode.asString()).isEqualTo("KEYGENERATION");
-        } else if (findingId == 3) {
+        } else if (findingId == 5) {
             /*
              * Detection Store
              */
@@ -271,7 +278,7 @@ class Issue224Test extends TestBase {
             assertThat(blockSizeNode).isNotNull();
             assertThat(blockSizeNode.getChildren()).isEmpty();
             assertThat(blockSizeNode.asString()).isEqualTo("64");
-        } else if (findingId == 4) {
+        } else if (findingId == 6) {
             /*
              * Detection Store
              */
@@ -324,7 +331,7 @@ class Issue224Test extends TestBase {
             assertThat(keyGenerationNode).isNotNull();
             assertThat(keyGenerationNode.getChildren()).isEmpty();
             assertThat(keyGenerationNode.asString()).isEqualTo("KEYGENERATION");
-        } else if (findingId == 5) {
+        } else if (findingId == 7) {
             /*
              * Detection Store
              */
@@ -405,7 +412,7 @@ class Issue224Test extends TestBase {
             assertThat(modeNode).isNotNull();
             assertThat(modeNode.getChildren()).isEmpty();
             assertThat(modeNode.asString()).isEqualTo("CBC");
-        } else if (findingId == 6) {
+        } else if (findingId == 8) {
             /*
              * Detection Store
              */
@@ -458,7 +465,7 @@ class Issue224Test extends TestBase {
             assertThat(blockSizeNode).isNotNull();
             assertThat(blockSizeNode.getChildren()).isEmpty();
             assertThat(blockSizeNode.asString()).isEqualTo("128");
-        } else if (findingId == 7) {
+        } else if (findingId == 9) {
             /*
              * Detection Store
              */
@@ -539,7 +546,7 @@ class Issue224Test extends TestBase {
             assertThat(modeNode).isNotNull();
             assertThat(modeNode.getChildren()).isEmpty();
             assertThat(modeNode.asString()).isEqualTo("CBC");
-        } else if (findingId == 8) {
+        } else if (findingId == 10) {
             /*
              * Detection Store
              */
@@ -580,7 +587,7 @@ class Issue224Test extends TestBase {
             assertThat(blockSizeNode).isNotNull();
             assertThat(blockSizeNode.getChildren()).isEmpty();
             assertThat(blockSizeNode.asString()).isEqualTo("64");
-        } else if (findingId == 9) {
+        } else if (findingId == 11) {
             /*
              * Detection Store
              */
@@ -649,9 +656,9 @@ class Issue224Test extends TestBase {
             assertThat(modeNode).isNotNull();
             assertThat(modeNode.getChildren()).isEmpty();
             assertThat(modeNode.asString()).isEqualTo("CBC");
-        } else if (findingId == 10) {
+        } else if (findingId == 12) {
             GenerateAssertsHelper.generate(detectionStore, nodes);
-        } else if (findingId == 11) {
+        } else if (findingId == 13) {
             /*
              * Detection Store
              */

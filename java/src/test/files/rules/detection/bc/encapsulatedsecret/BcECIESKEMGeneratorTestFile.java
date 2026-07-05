@@ -1,3 +1,4 @@
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.DerivationFunction;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.SecretWithEncapsulation;
@@ -12,13 +13,15 @@ public class BcECIESKEMGeneratorTestFile {
         // Initialize the parameters
         int keyLen = 2048; // Key length in bits
 
+        SecureRandom rnd = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+
         Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 
         DerivationFunction kdf = new HKDFBytesGenerator(digest); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
 
         // Initialize the ECIESKEMGenerator
         ECIESKEMGenerator kemGenerator =
-                new ECIESKEMGenerator(keyLen, kdf, null, true, true, true); // Noncompliant {{(KeyEncapsulationMechanism) ECIES-KEM}}
+                new ECIESKEMGenerator(keyLen, kdf, rnd, true, true, true); // Noncompliant {{(KeyEncapsulationMechanism) ECIES-KEM}}
 
         // Generate secret
         SecretWithEncapsulation secret =

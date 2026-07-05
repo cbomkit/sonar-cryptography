@@ -25,6 +25,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
@@ -56,6 +57,12 @@ class Issue297RsaTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
         /*
          * Detection Store
          */

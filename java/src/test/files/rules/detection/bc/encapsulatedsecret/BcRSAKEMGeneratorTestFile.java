@@ -1,3 +1,4 @@
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.DerivationFunction;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.SecretWithEncapsulation;
@@ -11,6 +12,7 @@ public class BcRSAKEMGeneratorTestFile {
         public static void main(String[] args) {
             // Initialize the parameters
             int keyLen = 2048; // Key length in bits
+            SecureRandom rnd = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
             Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
             DerivationFunction kdf =
                     new HKDFBytesGenerator(digest); // Your DerivationFunction implementation
@@ -18,7 +20,7 @@ public class BcRSAKEMGeneratorTestFile {
     
             // Initialize the RSAKEMGenerator
             RSAKEMGenerator kemGenerator =
-                    new RSAKEMGenerator(keyLen, kdf, null); // Noncompliant {{(KeyEncapsulationMechanism) RSA-KEM}}
+                    new RSAKEMGenerator(keyLen, kdf, rnd); // Noncompliant {{(KeyEncapsulationMechanism) RSA-KEM}}
     
             // Generate secret
             SecretWithEncapsulation secret =
