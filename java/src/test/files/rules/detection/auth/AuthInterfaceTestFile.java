@@ -10,8 +10,11 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
+import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 
 class AuthInterfaceTestFile {
     Jws<Claims> useJjwt(JwtParser parser, String jws) {
@@ -36,6 +39,18 @@ class AuthInterfaceTestFile {
 
     void useOidcValidator(IDTokenValidator validator) throws Exception {
         validator.validate((JWT) null, (Nonce) null);
+    }
+
+    void useSignatureValidator() throws Exception {
+        SignatureValidator.validate(null, null);
+    }
+
+    void useProfileValidator(SAMLSignatureProfileValidator validator) throws Exception {
+        validator.validate(null);
+    }
+
+    void useSpringSaml2(OpenSaml4AuthenticationProvider provider) {
+        provider.authenticate(null);
     }
 
     Principal usePrincipal(HttpServletRequest request) {

@@ -19,19 +19,58 @@
  */
 package com.ibm.plugin.rules.detection.auth;
 
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
+@SuppressWarnings("java:S1192")
 public final class SamlAuthRules {
 
     private SamlAuthRules() {
         // nothing
     }
 
+    private static final IDetectionRule<Tree> OPENSAML_SIGNATURE_VALIDATOR =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("org.opensaml.xmlsec.signature.support.SignatureValidator")
+                    .forMethods("validate")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SAML"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.SAML))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> OPENSAML_PROFILE_VALIDATOR =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("org.opensaml.saml.security.impl.SAMLSignatureProfileValidator")
+                    .forMethods("validate")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SAML"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.SAML))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SPRING_SAML2_PROVIDER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider")
+                    .forMethods("authenticate")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SAML"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.SAML))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of();
+        return List.of(
+                OPENSAML_SIGNATURE_VALIDATOR, OPENSAML_PROFILE_VALIDATOR, SPRING_SAML2_PROVIDER);
     }
 }

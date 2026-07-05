@@ -54,7 +54,11 @@ class AuthInterfaceDetectionTest extends TestBase {
                 .verifyNoIssues();
 
         assertThat(observedKinds)
-                .contains(AuthContext.Kind.JWT, AuthContext.Kind.PRINCIPAL, AuthContext.Kind.OAUTH);
+                .contains(
+                        AuthContext.Kind.JWT,
+                        AuthContext.Kind.PRINCIPAL,
+                        AuthContext.Kind.OAUTH,
+                        AuthContext.Kind.SAML);
     }
 
     @Override
