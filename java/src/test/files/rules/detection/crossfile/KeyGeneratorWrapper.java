@@ -10,4 +10,13 @@ public class KeyGeneratorWrapper {
         keyGenerator.init(keySize);
         return keyGenerator.generateKey();
     }
+
+    // Extra byte[] parameter so a caller passing `new byte[N]` makes the recorded call carry a
+    // NEW_ARRAY argument -> the detach predicate must keep this call on the retained-tree path.
+    public static SecretKey generateWithIv(String algo, int keySize, byte[] iv)
+            throws NoSuchAlgorithmException {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(algo);
+        keyGenerator.init(keySize);
+        return keyGenerator.generateKey();
+    }
 }
