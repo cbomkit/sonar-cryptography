@@ -20,7 +20,9 @@
 package com.ibm.plugin.rules.detection.bc.asymmetrickeypair;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -30,8 +32,11 @@ public final class BcAsymmetricCipherKeyPairGenerators {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> BcRSAKeyPairGenerator.rules());
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return BcRSAKeyPairGenerator.rules();
+        return RULES.get();
     }
 }

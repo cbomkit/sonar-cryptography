@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.bc;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.aeadcipher.BcAEADCipherEngine;
 import com.ibm.plugin.rules.detection.bc.aeadcipher.BcCCMBlockCipher;
 import com.ibm.plugin.rules.detection.bc.aeadcipher.BcChaCha20Poly1305;
@@ -49,6 +50,7 @@ import com.ibm.plugin.rules.detection.bc.signer.BcSigner;
 import com.ibm.plugin.rules.detection.bc.streamcipher.BcStreamCipherEngine;
 import com.ibm.plugin.rules.detection.bc.wrapper.BcWrapperEngine;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -58,54 +60,59 @@ public final class BouncyCastleDetectionRules {
         // private
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            Stream.of(
+                                            // AsymmetricBlockCipher
+                                            BcAsymmetricBlockCipher.rules().stream(),
+                                            BcBufferedAsymmetricBlockCipher.rules().stream(),
+                                            // AEADCipher
+                                            BcCCMBlockCipher.rules().stream(),
+                                            BcChaCha20Poly1305.rules().stream(),
+                                            BcEAXBlockCipher.rules().stream(),
+                                            BcGCMBlockCipher.rules().stream(),
+                                            BcGCMSIVBlockCipher.rules().stream(),
+                                            BcKCCMBlockCipher.rules().stream(),
+                                            BcKGCMBlockCipher.rules().stream(),
+                                            BcOCBBlockCipher.rules().stream(),
+                                            BcAEADCipherEngine.rules().stream(),
+                                            // BlockCipher
+                                            BcBlockCipher.rules().stream(),
+                                            BcBlockCipherEngine.rules().stream(),
+                                            // BufferedBlockCipher
+                                            BcBufferedBlockCipher.rules().stream(),
+                                            // StreamCipher
+                                            BcStreamCipherEngine.rules().stream(),
+                                            // Digest
+                                            BcDigests.rules().stream(),
+                                            // Mac
+                                            BcMac.rules().stream(),
+                                            // PBE
+                                            BcPBEParametersGenerator.rules().stream(),
+                                            // Wrapper
+                                            BcWrapperEngine.rules().stream(),
+                                            // BasicAgreement
+                                            BcBasicAgreement.rules().stream(),
+                                            // DerivationFunction
+                                            BcDerivationFunction.rules().stream(),
+                                            // EncapsulatedSecret
+                                            BcEncapsulatedSecretGenerator.rules().stream(),
+                                            BcEncapsulatedSecretExtractor.rules().stream(),
+                                            // DSA
+                                            BcDSA.rules().stream(),
+                                            // Signer
+                                            BcSigner.rules().stream(),
+                                            // Asymmetric Key Pair Generators
+                                            BcAsymmetricCipherKeyPairGenerators.rules().stream(),
+                                            // Other
+                                            BcIESEngine.rules().stream(),
+                                            BcSM2Engine.rules().stream())
+                                    .flatMap(i -> i)
+                                    .toList());
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        // AsymmetricBlockCipher
-                        BcAsymmetricBlockCipher.rules().stream(),
-                        BcBufferedAsymmetricBlockCipher.rules().stream(),
-                        // AEADCipher
-                        BcCCMBlockCipher.rules().stream(),
-                        BcChaCha20Poly1305.rules().stream(),
-                        BcEAXBlockCipher.rules().stream(),
-                        BcGCMBlockCipher.rules().stream(),
-                        BcGCMSIVBlockCipher.rules().stream(),
-                        BcKCCMBlockCipher.rules().stream(),
-                        BcKGCMBlockCipher.rules().stream(),
-                        BcOCBBlockCipher.rules().stream(),
-                        BcAEADCipherEngine.rules().stream(),
-                        // BlockCipher
-                        BcBlockCipher.rules().stream(),
-                        BcBlockCipherEngine.rules().stream(),
-                        // BufferedBlockCipher
-                        BcBufferedBlockCipher.rules().stream(),
-                        // StreamCipher
-                        BcStreamCipherEngine.rules().stream(),
-                        // Digest
-                        BcDigests.rules().stream(),
-                        // Mac
-                        BcMac.rules().stream(),
-                        // PBE
-                        BcPBEParametersGenerator.rules().stream(),
-                        // Wrapper
-                        BcWrapperEngine.rules().stream(),
-                        // BasicAgreement
-                        BcBasicAgreement.rules().stream(),
-                        // DerivationFunction
-                        BcDerivationFunction.rules().stream(),
-                        // EncapsulatedSecret
-                        BcEncapsulatedSecretGenerator.rules().stream(),
-                        BcEncapsulatedSecretExtractor.rules().stream(),
-                        // DSA
-                        BcDSA.rules().stream(),
-                        // Signer
-                        BcSigner.rules().stream(),
-                        // Asymmetric Key Pair Generators
-                        BcAsymmetricCipherKeyPairGenerators.rules().stream(),
-                        // Other
-                        BcIESEngine.rules().stream(),
-                        BcSM2Engine.rules().stream())
-                .flatMap(i -> i)
-                .toList();
+        return RULES.get();
     }
 }
