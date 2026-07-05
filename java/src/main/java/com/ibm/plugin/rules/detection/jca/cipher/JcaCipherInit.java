@@ -26,10 +26,12 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.OperationModeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaAlgorithmParameterSpec;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaKeySpec;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -151,8 +153,16 @@ public final class JcaCipherInit {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JcaCipherInit::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 CIPHER_INIT_1,
                 CIPHER_INIT_2,

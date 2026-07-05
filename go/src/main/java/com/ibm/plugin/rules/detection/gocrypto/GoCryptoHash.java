@@ -20,7 +20,9 @@
 package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
@@ -43,8 +45,16 @@ public final class GoCryptoHash {
         // private
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(GoCryptoHash::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         GoCryptoMD5.rules().stream(),
                         GoCryptoSHA1.rules().stream(),

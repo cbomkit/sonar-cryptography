@@ -24,8 +24,10 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BIGINTEGER_TYPE;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaECGenParameterSpec;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -47,8 +49,16 @@ public final class JcaECPrivateKeySpec {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JcaECPrivateKeySpec::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(EC_PRIVATE_KEY_SPEC);
     }
 }

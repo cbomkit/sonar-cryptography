@@ -27,9 +27,11 @@ import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -78,8 +80,16 @@ public final class PycaFernet {
                     .inBundle(() -> "Pyca")
                     .withDependingDetectionRules(encryptDecryptFernet());
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(PycaFernet::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATION_FERNET);
     }
 }

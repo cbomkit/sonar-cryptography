@@ -24,9 +24,11 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -98,8 +100,16 @@ public final class PycaHash {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(PycaHash::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         final List<IDetectionRule<Tree>> hashAndPrehashRules = new LinkedList<>(hashesRules());
         hashAndPrehashRules.add(PRE_HASH);
         return hashAndPrehashRules;

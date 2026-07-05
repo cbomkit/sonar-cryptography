@@ -27,8 +27,10 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaKeySpec;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -49,8 +51,16 @@ public final class JcaCipherWrap {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JcaCipherWrap::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(CIPHER_WRAP_1);
     }
 }

@@ -26,7 +26,9 @@ import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -59,8 +61,16 @@ public final class JcaDESKeySpec {
         // nothing
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(JcaDESKeySpec::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(DES_KEY_SPEC_1, DES_KEY_SPEC_2);
     }
 }

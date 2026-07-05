@@ -32,9 +32,11 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.hash.PycaHash;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -97,8 +99,16 @@ public final class PycaDSA {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(PycaDSA::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATION_DSA, PUBLIC_NUMBERS_DSA, PRIVATE_NUMBERS_DSA);
     }
 }

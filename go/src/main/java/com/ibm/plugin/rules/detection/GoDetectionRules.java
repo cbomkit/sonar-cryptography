@@ -41,6 +41,7 @@ import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA3;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA512;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoTLS;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
@@ -50,8 +51,16 @@ public final class GoDetectionRules {
         // private
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(GoDetectionRules::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         GoCryptoAES.rules().stream(),
                         GoCryptoDES.rules().stream(),

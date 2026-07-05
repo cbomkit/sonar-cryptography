@@ -24,8 +24,10 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -58,8 +60,16 @@ public final class PycaWrapping {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(PycaWrapping::buildRules);
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<Tree>> buildRules() {
         return List.of(AES_KEY_WRAP, AES_KEY_WRAP_WITH_PADDING);
     }
 }
