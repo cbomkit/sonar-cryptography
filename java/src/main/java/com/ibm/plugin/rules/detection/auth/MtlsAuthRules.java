@@ -19,19 +19,57 @@
  */
 package com.ibm.plugin.rules.detection.auth;
 
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
+@SuppressWarnings("java:S1192")
 public final class MtlsAuthRules {
 
     private MtlsAuthRules() {
         // nothing
     }
 
+    private static final IDetectionRule<Tree> X509_TRUST_MANAGER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("javax.net.ssl.X509TrustManager")
+                    .forMethods("checkClientTrusted")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MTLS"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.MTLS))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SSL_SESSION_PEER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("javax.net.ssl.SSLSession")
+                    .forMethods("getPeerPrincipal", "getPeerCertificates")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MTLS"))
+                    .withoutParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.MTLS))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SPRING_X509_FILTER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter")
+                    .forConstructor()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MTLS"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.MTLS))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of();
+        return List.of(X509_TRUST_MANAGER, SSL_SESSION_PEER, SPRING_X509_FILTER);
     }
 }

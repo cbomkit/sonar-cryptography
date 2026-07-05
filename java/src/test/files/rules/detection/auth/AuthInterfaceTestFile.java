@@ -11,6 +11,8 @@ import io.jsonwebtoken.JwtParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -72,5 +74,20 @@ class AuthInterfaceTestFile {
 
     Object useSpringAuthentication(org.springframework.security.core.Authentication authentication) {
         return authentication.getPrincipal();
+    }
+
+    Principal usePeerPrincipal(SSLSession session) throws Exception {
+        return session.getPeerPrincipal();
+    }
+
+    void useTrustManager(X509TrustManager manager, java.security.cert.X509Certificate[] chain)
+            throws Exception {
+        manager.checkClientTrusted(chain, "RSA");
+    }
+
+    org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter
+            useX509Filter() {
+        return new org.springframework.security.web.authentication.preauth.x509
+                .X509AuthenticationFilter();
     }
 }

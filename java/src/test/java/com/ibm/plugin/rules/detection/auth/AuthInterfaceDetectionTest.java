@@ -58,7 +58,8 @@ class AuthInterfaceDetectionTest extends TestBase {
                         AuthContext.Kind.JWT,
                         AuthContext.Kind.PRINCIPAL,
                         AuthContext.Kind.OAUTH,
-                        AuthContext.Kind.SAML);
+                        AuthContext.Kind.SAML,
+                        AuthContext.Kind.MTLS);
     }
 
     @Override
