@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.context.AuthContext;
+import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import java.io.File;
@@ -70,12 +71,23 @@ class AuthInterfaceDetectionTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        // Auth findings are contextual: they carry an AuthContext and do not translate to a
-        // crypto INode. Record the kind so the test can assert both interfaces were detected.
         assertThat(detectionStore.getDetectionValueContext())
                 .as("finding %d must carry an AuthContext", findingId)
                 .isInstanceOf(AuthContext.class);
         final AuthContext context = (AuthContext) detectionStore.getDetectionValueContext();
+
+        // Auth findings now translate to a generic ContextualEvidence node and ride the normal
+        // pipeline (translate + reorganize + enrich). Asserting the node here also proves it
+        // passes those stages inert.
+        final ContextualEvidence evidence =
+                (ContextualEvidence)
+                        nodes.stream()
+                                .filter(n -> n.is(ContextualEvidence.class))
+                                .findFirst()
+                                .orElseThrow();
+        assertThat(evidence.identifier())
+                .as("finding %d node identifier should match the auth kind", findingId)
+                .isEqualTo(context.kind().name());
         observedKinds.add(context.kind());
     }
 }
