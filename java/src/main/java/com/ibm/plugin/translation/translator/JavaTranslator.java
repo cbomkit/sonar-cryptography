@@ -21,6 +21,7 @@ package com.ibm.plugin.translation.translator;
 
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
+import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -38,6 +39,7 @@ import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.plugin.translation.translator.contexts.JavaAlgorithmParameterContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.JavaAuthContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.JavaCipherContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.JavaDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.JavaKeyAgreementContextTranslator;
@@ -150,6 +152,13 @@ public final class JavaTranslator
             final JavaProtocolContextTranslator javaProtocolContextTranslator =
                     new JavaProtocolContextTranslator();
             return javaProtocolContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+
+            // authentication interface (contextual evidence)
+        } else if (detectionValueContext.is(AuthContext.class)) {
+            final JavaAuthContextTranslator javaAuthContextTranslator =
+                    new JavaAuthContextTranslator();
+            return javaAuthContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
         return Optional.empty();
