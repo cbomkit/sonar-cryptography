@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a scan-wide contextual-evidence layer that detects application-level auth interfaces (JWT, servlet principal) and combines them with crypto-derived behaviors via a two-tier inference engine, so app-level taxonomy behaviors (`authenticates`, `validatesToken`, `usesIdentity`) are gated behind a real interface and every emitted behavior carries a discrete confidence tag.
+**Goal:** Add a scan-wide contextual-evidence layer that detects application-level auth interfaces (JWT, servlet principal) and combines them with crypto-derived behaviors via a two-tier inference engine, so app-level taxonomy behaviors (`authenticates`, `validatesToken`, `usesIdentity`) are gated behind a real interface.
 
-**Architecture:** Contextual signals bypass the crypto `INode` stream: new AST detection rules tagged with a new `AuthContext` are routed, in `JavaBaseDetectionRule.update()`, into a scan-wide `BehaviorEvidenceStore` (never becoming crypto components). At emission, `CBOMOutputFile` runs a `BehaviorInferenceEngine` over the union of crypto behaviors + the auth signals, producing a `Map<CryptoBehavior, Confidence>` that is written as one confidence-suffixed property on `metadata.component`.
+**Architecture:** Contextual signals bypass the crypto `INode` stream: new AST detection rules tagged with a new `AuthContext` are routed, in `JavaBaseDetectionRule.update()`, into a scan-wide `BehaviorEvidenceStore` (never becoming crypto components). At emission, `CBOMOutputFile` runs a `BehaviorInferenceEngine` over the union of crypto behaviors + the auth signals, producing a `Set<CryptoBehavior>` that is written as one comma-joined property on `metadata.component`.
 
 **Tech Stack:** Java 17, Maven multi-module, SonarQube plugin (sonar-java `IssuableSubscriptionVisitor`), JUnit 5 + AssertJ, sonar-java `CheckVerifier`, CycloneDX model.
 
@@ -13,7 +13,7 @@
 - Java 17; follow existing module boundaries: `engine` (no deps) → `mapper`/`output` (depend on `engine`) → `java` (depends on `engine`, `mapper`, `output`) → `sonar-cryptography-plugin` (depends on `java`, `output`).
 - Apache 2.0 license header required in every new `.java` file (Spotless applies it on `mvn package`; copy the header verbatim from any existing file in the same module).
 - Code style: Google Java Format (AOSP) via Spotless; Checkstyle: no unused imports, `@Override` required, private utility constructors. Run `mvn spotless:apply` before committing.
-- Property namespace is experimental: name stays `cbomkit:crypto:behavior`. Confidence suffix delimiter is `=` (identifiers already contain `:`).
+- Property namespace is experimental: name stays `cbomkit:crypto:behavior`.
 - Phase 1 detection scope: **JWT** (`io.jsonwebtoken`) and **PRINCIPAL** (`jakarta.servlet.http.HttpServletRequest`) only. `OAUTH` and `SAML` are defined in the `AuthContext.Kind` enum and handled by the inference engine, but their detection rules are deferred (documented, not built).
 - Inference is total: never throws; unknown/insufficient evidence → behavior simply absent.
 
@@ -23,11 +23,10 @@
 
 - `engine/.../model/context/AuthContext.java` — CREATE — new detection-context kind.
 - `output/.../behavior/CryptoBehavior.java` — MODIFY — add `VALIDATES_TOKEN`, `USES_IDENTITY`.
-- `output/.../behavior/Confidence.java` — CREATE — discrete confidence enum.
 - `output/.../behavior/BehaviorInferenceEngine.java` — CREATE — two-tier decision logic.
 - `output/.../IOutputFileFactory.java` — MODIFY — factory signature gains `authSignals`.
 - `output/.../cyclondx/CBOMOutputFileFactory.java` — MODIFY — pass `authSignals` through.
-- `output/.../cyclondx/CBOMOutputFile.java` — MODIFY — ctor arg + inference at emission + suffix format.
+- `output/.../cyclondx/CBOMOutputFile.java` — MODIFY — ctor arg + inference at emission + value format.
 - `java/.../rules/detection/auth/AuthInterfaceDetection.java` — CREATE — Phase-1 auth rules.
 - `java/.../rules/detection/auth/AuthDetectionRules.java` — CREATE — aggregator.
 - `java/.../rules/detection/JavaDetectionRules.java` — MODIFY — wire in auth rules.
@@ -158,37 +157,29 @@ git commit -m "feat(engine): add AuthContext detection-context kind for auth-int
 
 ---
 
-## Task 2: Output enums — `CryptoBehavior` additions + `Confidence` (output)
+## Task 2: Output enums — `CryptoBehavior` additions (output)
 
 **Files:**
 - Modify: `output/src/main/java/com/ibm/output/cyclondx/behavior/CryptoBehavior.java` (add two values after `AUTHENTICATES`, line ~40)
-- Create: `output/src/main/java/com/ibm/output/cyclondx/behavior/Confidence.java`
-- Test: `output/src/test/java/com/ibm/output/cyclonedx/behavior/ConfidenceTest.java`
+- Test: `output/src/test/java/com/ibm/output/cyclonedx/behavior/CryptoBehaviorAppLevelTest.java`
 - Existing test that must stay green: `output/src/test/java/com/ibm/output/cyclonedx/behavior/CryptoBehaviorTaxonomyTest.java` (iterates every `CryptoBehavior.values()` and asserts it exists in `crypto-behavior-taxonomy.json`; `validatesToken` and `usesIdentity` are already in the snapshot).
 
 **Interfaces:**
-- Produces: `CryptoBehavior.VALIDATES_TOKEN` (`"validatesToken"`), `CryptoBehavior.USES_IDENTITY` (`"usesIdentity"`); `enum Confidence { HIGH, MEDIUM }` with `String token()` → `"high"` / `"medium"`.
+- Produces: `CryptoBehavior.VALIDATES_TOKEN` (`"validatesToken"`), `CryptoBehavior.USES_IDENTITY` (`"usesIdentity"`).
 
 - [ ] **Step 1: Write the failing test**
 
-Create `output/src/test/java/com/ibm/output/cyclonedx/behavior/ConfidenceTest.java` (copy header from `CryptoBehaviorTaxonomyTest.java`; note test package is `com.ibm.output.cyclonedx.behavior` — with an `e` — while the production package is `com.ibm.output.cyclondx.behavior` — no `e`; this mismatch is pre-existing, keep it):
+Create `output/src/test/java/com/ibm/output/cyclonedx/behavior/CryptoBehaviorAppLevelTest.java` (copy header from `CryptoBehaviorTaxonomyTest.java`; note test package is `com.ibm.output.cyclonedx.behavior` — with an `e` — while the production package is `com.ibm.output.cyclondx.behavior` — no `e`; this mismatch is pre-existing, keep it):
 
 ```java
 package com.ibm.output.cyclonedx.behavior;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ibm.output.cyclondx.behavior.Confidence;
 import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import org.junit.jupiter.api.Test;
 
-class ConfidenceTest {
-
-    @Test
-    void tokensAreLowercaseWords() {
-        assertThat(Confidence.HIGH.token()).isEqualTo("high");
-        assertThat(Confidence.MEDIUM.token()).isEqualTo("medium");
-    }
+class CryptoBehaviorAppLevelTest {
 
     @Test
     void newAppLevelBehaviorsExposeFullId() {
@@ -202,8 +193,8 @@ class ConfidenceTest {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `mvn test -pl output -Dtest=ConfidenceTest`
-Expected: FAIL — `Confidence` and the two new enum constants do not exist.
+Run: `mvn test -pl output -Dtest=CryptoBehaviorAppLevelTest`
+Expected: FAIL — the two new enum constants do not exist.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -216,42 +207,17 @@ In `CryptoBehavior.java`, insert the two new constants immediately after the `AU
     ENSURES_CONFIDENTIALITY("ensuresConfidentiality"),
 ```
 
-Create `output/src/main/java/com/ibm/output/cyclondx/behavior/Confidence.java` (copy header from `CryptoBehavior.java`; package `com.ibm.output.cyclondx.behavior`):
-
-```java
-package com.ibm.output.cyclondx.behavior;
-
-import javax.annotation.Nonnull;
-
-/** Discrete confidence for an emitted {@link CryptoBehavior}. See design §5. */
-public enum Confidence {
-    HIGH("high"),
-    MEDIUM("medium");
-
-    @Nonnull private final String token;
-
-    Confidence(@Nonnull String token) {
-        this.token = token;
-    }
-
-    @Nonnull
-    public String token() {
-        return this.token;
-    }
-}
-```
-
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `mvn test -pl output -Dtest=ConfidenceTest,CryptoBehaviorTaxonomyTest`
-Expected: PASS (ConfidenceTest 2 tests; CryptoBehaviorTaxonomyTest still green — new enum values are present in the snapshot).
+Run: `mvn test -pl output -Dtest=CryptoBehaviorAppLevelTest,CryptoBehaviorTaxonomyTest`
+Expected: PASS (CryptoBehaviorAppLevelTest 1 test; CryptoBehaviorTaxonomyTest still green — new enum values are present in the snapshot).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 mvn spotless:apply -pl output
-git add output/src/main/java/com/ibm/output/cyclondx/behavior/CryptoBehavior.java output/src/main/java/com/ibm/output/cyclondx/behavior/Confidence.java output/src/test/java/com/ibm/output/cyclonedx/behavior/ConfidenceTest.java
-git commit -m "feat(output): add validatesToken/usesIdentity behaviors and Confidence enum"
+git add output/src/main/java/com/ibm/output/cyclondx/behavior/CryptoBehavior.java output/src/test/java/com/ibm/output/cyclonedx/behavior/CryptoBehaviorAppLevelTest.java
+git commit -m "feat(output): add validatesToken/usesIdentity behaviors"
 ```
 
 ---
@@ -263,14 +229,14 @@ git commit -m "feat(output): add validatesToken/usesIdentity behaviors and Confi
 - Test: `output/src/test/java/com/ibm/output/cyclonedx/behavior/BehaviorInferenceEngineTest.java`
 
 **Interfaces:**
-- Consumes: `CryptoBehavior`, `Confidence` (Task 2), `com.ibm.engine.model.context.AuthContext.Kind` (Task 1).
-- Produces: `Map<CryptoBehavior, Confidence> infer(Set<CryptoBehavior> cryptoBehaviors, Set<AuthContext.Kind> authSignals)`.
+- Consumes: `CryptoBehavior` (Task 2), `com.ibm.engine.model.context.AuthContext.Kind` (Task 1).
+- Produces: `Set<CryptoBehavior> infer(Set<CryptoBehavior> cryptoBehaviors, Set<AuthContext.Kind> authSignals)`.
 
 **Behavior contract (design §5):**
-- Every crypto behavior passes through at `HIGH`, **except** `AUTHENTICATES`, which is dropped from the crypto set (a MAC maps to `AUTHENTICATES` in the base mapper but only *corroborates*).
-- `AUTHENTICATES` is (re)emitted at `HIGH` iff any auth primary is present (`JWT`/`OAUTH`/`SAML`/`PRINCIPAL`).
-- `VALIDATES_TOKEN` at `HIGH` iff a token primary is present (`JWT`/`OAUTH`).
-- `USES_IDENTITY` at `HIGH` iff `PRINCIPAL` is present.
+- Every crypto behavior passes through, **except** `AUTHENTICATES`, which is dropped from the crypto set (a MAC maps to `AUTHENTICATES` in the base mapper but only *corroborates*).
+- `AUTHENTICATES` is (re)emitted iff any auth primary is present (`JWT`/`OAUTH`/`SAML`/`PRINCIPAL`).
+- `VALIDATES_TOKEN` iff a token primary is present (`JWT`/`OAUTH`).
+- `USES_IDENTITY` iff `PRINCIPAL` is present.
 - `NONE` is never a primary.
 
 - [ ] **Step 1: Write the failing test**
@@ -284,10 +250,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
-import com.ibm.output.cyclondx.behavior.Confidence;
 import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -297,46 +261,46 @@ class BehaviorInferenceEngineTest {
 
     @Test
     void macAloneDoesNotAuthenticate() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY),
                         Set.of());
-        assertThat(result).doesNotContainKey(CryptoBehavior.AUTHENTICATES);
-        assertThat(result).containsEntry(CryptoBehavior.ENSURES_INTEGRITY, Confidence.HIGH);
+        assertThat(result).doesNotContain(CryptoBehavior.AUTHENTICATES);
+        assertThat(result).contains(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void macPlusJwtAuthenticatesAndValidatesToken() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY),
                         Set.of(AuthContext.Kind.JWT));
-        assertThat(result).containsEntry(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.VALIDATES_TOKEN, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.ENSURES_INTEGRITY, Confidence.HIGH);
+        assertThat(result).contains(CryptoBehavior.AUTHENTICATES);
+        assertThat(result).contains(CryptoBehavior.VALIDATES_TOKEN);
+        assertThat(result).contains(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void jwtWithoutCryptoStillYieldsTokenBehaviors() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.JWT));
         assertThat(result)
-                .containsOnlyKeys(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
     }
 
     @Test
     void principalYieldsUsesIdentityAndCorroboratesAuthenticates() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.PRINCIPAL));
-        assertThat(result).containsEntry(CryptoBehavior.USES_IDENTITY, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
-        assertThat(result).doesNotContainKey(CryptoBehavior.VALIDATES_TOKEN);
+        assertThat(result).contains(CryptoBehavior.USES_IDENTITY);
+        assertThat(result).contains(CryptoBehavior.AUTHENTICATES);
+        assertThat(result).doesNotContain(CryptoBehavior.VALIDATES_TOKEN);
     }
 
     @Test
     void cryptoOnlyPassesThroughUnchanged() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(
                                 CryptoBehavior.ENCRYPTS_DATA,
@@ -344,13 +308,13 @@ class BehaviorInferenceEngineTest {
                         Set.of());
         assertThat(result)
                 .containsOnly(
-                        Map.entry(CryptoBehavior.ENCRYPTS_DATA, Confidence.HIGH),
-                        Map.entry(CryptoBehavior.ENSURES_CONFIDENTIALITY, Confidence.HIGH));
+                        CryptoBehavior.ENCRYPTS_DATA,
+                        CryptoBehavior.ENSURES_CONFIDENTIALITY);
     }
 
     @Test
     void noneKindIsNotAPrimary() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.NONE));
         assertThat(result).isEmpty();
     }
@@ -370,33 +334,32 @@ Create `output/src/main/java/com/ibm/output/cyclondx/behavior/BehaviorInferenceE
 package com.ibm.output.cyclondx.behavior;
 
 import com.ibm.engine.model.context.AuthContext;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.EnumSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
 /**
  * Two-tier behavior inference (design §5). Combines crypto-derived behaviors with scan-wide
- * contextual auth signals. Crypto operational/goal behaviors pass through at {@link
- * Confidence#HIGH}. Application-level behaviors ({@code authenticates}, {@code validatesToken},
- * {@code usesIdentity}) are gated behind a required auth-interface primary: crypto alone can never
- * assert them. Total and side-effect free; never throws.
+ * contextual auth signals. Crypto operational/goal behaviors pass through unchanged. Application-level
+ * behaviors ({@code authenticates}, {@code validatesToken}, {@code usesIdentity}) are gated behind a
+ * required auth-interface primary: crypto alone can never assert them. Total and side-effect free;
+ * never throws.
  */
 public final class BehaviorInferenceEngine {
 
     @Nonnull
-    public Map<CryptoBehavior, Confidence> infer(
+    public Set<CryptoBehavior> infer(
             @Nonnull Set<CryptoBehavior> cryptoBehaviors,
             @Nonnull Set<AuthContext.Kind> authSignals) {
-        final Map<CryptoBehavior, Confidence> result = new EnumMap<>(CryptoBehavior.class);
+        final Set<CryptoBehavior> result = EnumSet.noneOf(CryptoBehavior.class);
 
-        // Crypto behaviors pass through at HIGH, except AUTHENTICATES which is gated below:
+        // Crypto behaviors pass through, except AUTHENTICATES which is gated below:
         // a MAC alone (mapped to authenticates by CryptoBehaviorMapper) only corroborates.
         for (CryptoBehavior behavior : cryptoBehaviors) {
             if (behavior == CryptoBehavior.AUTHENTICATES) {
                 continue;
             }
-            result.put(behavior, Confidence.HIGH);
+            result.add(behavior);
         }
 
         final boolean hasAuthPrimary =
@@ -410,13 +373,13 @@ public final class BehaviorInferenceEngine {
         final boolean hasPrincipal = authSignals.contains(AuthContext.Kind.PRINCIPAL);
 
         if (hasAuthPrimary) {
-            result.put(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
+            result.add(CryptoBehavior.AUTHENTICATES);
         }
         if (hasTokenPrimary) {
-            result.put(CryptoBehavior.VALIDATES_TOKEN, Confidence.HIGH);
+            result.add(CryptoBehavior.VALIDATES_TOKEN);
         }
         if (hasPrincipal) {
-            result.put(CryptoBehavior.USES_IDENTITY, Confidence.HIGH);
+            result.add(CryptoBehavior.USES_IDENTITY);
         }
         return result;
     }
@@ -438,7 +401,7 @@ git commit -m "feat(output): add two-tier BehaviorInferenceEngine gating app-lev
 
 ---
 
-## Task 4: Wire inference into CBOM emission + confidence suffix (output)
+## Task 4: Wire inference into CBOM emission + value format (output)
 
 **Files:**
 - Modify: `output/src/main/java/com/ibm/output/IOutputFileFactory.java`
@@ -447,20 +410,20 @@ git commit -m "feat(output): add two-tier BehaviorInferenceEngine gating app-lev
 - Test: `output/src/test/java/com/ibm/output/cyclonedx/CryptoBehaviorMetadataTest.java` (update expectations)
 
 **Interfaces:**
-- Consumes: `BehaviorInferenceEngine`, `Confidence` (Task 3), `AuthContext.Kind` (Task 1).
+- Consumes: `BehaviorInferenceEngine` (Task 3), `AuthContext.Kind` (Task 1).
 - Produces: `CBOMOutputFile(Set<AuthContext.Kind> authSignals)` constructor (plus a no-arg constructor delegating to an empty set); `IOutputFileFactory.createOutputFormat(List<INode> nodes, Set<AuthContext.Kind> authSignals)`.
 
 - [ ] **Step 1: Update the failing test**
 
-In `CryptoBehaviorMetadataTest.java`, replace the exact-value assertion in `aggregatesBehaviorsOfWholeScanOntoMetadataComponent()` (currently expecting the un-suffixed list including `authenticates`). The HMAC-only scenario has no auth primary, so `authenticates` is now **gated out**, and every id gains `=high`:
+In `CryptoBehaviorMetadataTest.java`, replace the exact-value assertion in `aggregatesBehaviorsOfWholeScanOntoMetadataComponent()` (currently expecting the list including `authenticates`). The HMAC-only scenario has no auth primary, so `authenticates` is now **gated out**:
 
 ```java
         assertThat(property.getValue())
                 .isEqualTo(
-                        "security:cryptography:encryptsData=high,"
-                                + "security:cryptography:ensuresConfidentiality=high,"
-                                + "security:cryptography:ensuresIntegrity=high,"
-                                + "security:cryptography:hashesData=high");
+                        "security:cryptography:encryptsData,"
+                                + "security:cryptography:ensuresConfidentiality,"
+                                + "security:cryptography:ensuresIntegrity,"
+                                + "security:cryptography:hashesData");
 ```
 
 Add a new test in the same class proving the gate opens when an auth signal is present. Add imports `com.ibm.engine.model.context.AuthContext` and `java.util.Set` at the top:
@@ -476,13 +439,13 @@ Add a new test in the same class proving the gate opens when an auth signal is p
 
         final Property property = bom.getMetadata().getComponent().getProperties().get(0);
         assertThat(property.getValue())
-                .contains("security:cryptography:authenticates=high")
-                .contains("security:cryptography:validatesToken=high")
-                .contains("security:cryptography:encryptsData=high");
+                .contains("security:cryptography:authenticates")
+                .contains("security:cryptography:validatesToken")
+                .contains("security:cryptography:encryptsData");
     }
 ```
 
-(The `protocolCipherSuiteConstituentsContributeBehaviors` test uses `.contains("security:cryptography:decryptsData")` etc.; those substrings still match inside the `=high`-suffixed value, so that test needs no change. `noMetadataComponentWhenNoBehaviorsDetected` also stays valid — empty inference → no component.)
+(The `protocolCipherSuiteConstituentsContributeBehaviors` test uses `.contains("security:cryptography:decryptsData")` etc.; those substrings still match inside the comma-joined value, so that test needs no change. `noMetadataComponentWhenNoBehaviorsDetected` also stays valid — empty inference → no component.)
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -538,7 +501,7 @@ public class CBOMOutputFileFactory implements IOutputFileFactory {
 
 - [ ] **Step 5: Modify `CBOMOutputFile`**
 
-Add imports near the top: `com.ibm.engine.model.context.AuthContext`, `com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine`, `com.ibm.output.cyclondx.behavior.Confidence`, `java.util.Set` (and confirm `java.util.Map` is imported — it is, used elsewhere).
+Add imports near the top: `com.ibm.engine.model.context.AuthContext`, `com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine`, `java.util.Set` (and confirm `java.util.Set` and `CryptoBehavior` are imported).
 
 Add two fields alongside `aggregatedBehaviors`/`behaviorMapper` (~line 108-111):
 
@@ -567,15 +530,15 @@ Replace the behavior-emission block in `getBom()` (currently the `if (!this.aggr
 
 ```java
         // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
-        final Map<CryptoBehavior, Confidence> behaviors =
+        final Set<CryptoBehavior> behaviors =
                 this.inferenceEngine.infer(this.aggregatedBehaviors, this.authSignals);
         if (!behaviors.isEmpty()) {
             final Component softwareComponent = new Component();
             softwareComponent.setType(Component.Type.APPLICATION);
             softwareComponent.setName(METADATA_COMPONENT_NAME);
             final String value =
-                    behaviors.entrySet().stream()
-                            .map(e -> e.getKey().fullId() + "=" + e.getValue().token())
+                    behaviors.stream()
+                            .map(CryptoBehavior::fullId)
                             .sorted()
                             .collect(Collectors.joining(","));
             final Property behaviorProperty = new Property();
@@ -596,7 +559,7 @@ Expected: PASS. (`CryptoBehaviorMapperTest` is unaffected — the mapper is unch
 ```bash
 mvn spotless:apply -pl output
 git add output/src/main/java/com/ibm/output/IOutputFileFactory.java output/src/main/java/com/ibm/output/cyclondx/CBOMOutputFileFactory.java output/src/main/java/com/ibm/output/cyclondx/CBOMOutputFile.java output/src/test/java/com/ibm/output/cyclonedx/CryptoBehaviorMetadataTest.java
-git commit -m "feat(output): run behavior inference at emission with confidence-suffixed output"
+git commit -m "feat(output): run behavior inference at emission with comma-joined behavior output"
 ```
 
 ---
@@ -1128,7 +1091,6 @@ git commit -m "feat(plugin): forward auth evidence signals from ScannerManager i
 
 ## Self-Review Notes (for the implementer)
 
-- **Spec coverage:** AuthContext (§4.1 → Task 1); CryptoBehavior/Confidence (§4.2/§4.4 → Task 2); inference engine two-tier gating (§4.4/§5 → Task 3); emission + suffix + gate restructure (§4.5/§6 → Task 4); AST auth detection (§4.2 → Task 5); evidence store + routing (§4.3 → Task 6); ScannerManager threading (§4 flow → Task 7). Phase 2 (§9) and OAUTH/SAML detection are explicitly deferred, not implemented.
+- **Spec coverage:** AuthContext (§4.1 → Task 1); CryptoBehavior additions (§4.2/§4.4 → Task 2); inference engine two-tier gating (§4.4/§5 → Task 3); emission + gate restructure (§4.5/§6 → Task 4); AST auth detection (§4.2 → Task 5); evidence store + routing (§4.3 → Task 6); ScannerManager threading (§4 flow → Task 7). Phase 2 (§9) and OAUTH/SAML detection are explicitly deferred, not implemented.
 - **Package spelling:** production behavior package is `com.ibm.output.cyclondx.behavior` (no `e` in `cyclondx`); tests live under `com.ibm.output.cyclonedx.behavior` (with `e`). This inconsistency is pre-existing — match each file to its existing neighbors.
-- **Confidence values in Phase 1:** all emitted behaviors are `HIGH` (AST primaries are strong). `MEDIUM` is wired through the format and enum but only produced once Phase 2's corroborating dependency-scan lands.
-- **Gating regression to watch:** Task 4 changes the base `cbomkit:crypto:behavior` value format (adds `=high`) and drops MAC-only `authenticates`. The `CryptoBehaviorMetadataTest` update in Task 4 is the guard; do not skip it.
+- **Gating regression to watch:** Task 4 drops MAC-only `authenticates` from the `cbomkit:crypto:behavior` value. The `CryptoBehaviorMetadataTest` update in Task 4 is the guard; do not skip it.

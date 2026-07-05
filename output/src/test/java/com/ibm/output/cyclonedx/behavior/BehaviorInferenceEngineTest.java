@@ -23,10 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
-import com.ibm.output.cyclondx.behavior.Confidence;
 import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -36,60 +34,59 @@ class BehaviorInferenceEngineTest {
 
     @Test
     void macAloneDoesNotAuthenticate() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY),
                         Set.of());
-        assertThat(result).doesNotContainKey(CryptoBehavior.AUTHENTICATES);
-        assertThat(result).containsEntry(CryptoBehavior.ENSURES_INTEGRITY, Confidence.HIGH);
+        assertThat(result).doesNotContain(CryptoBehavior.AUTHENTICATES);
+        assertThat(result).contains(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void macPlusJwtAuthenticatesAndValidatesToken() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY),
                         Set.of(AuthContext.Kind.JWT));
-        assertThat(result).containsEntry(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.VALIDATES_TOKEN, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.ENSURES_INTEGRITY, Confidence.HIGH);
+        assertThat(result)
+                .contains(
+                        CryptoBehavior.AUTHENTICATES,
+                        CryptoBehavior.VALIDATES_TOKEN,
+                        CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void jwtWithoutCryptoStillYieldsTokenBehaviors() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.JWT));
         assertThat(result)
-                .containsOnlyKeys(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
     }
 
     @Test
     void principalYieldsUsesIdentityAndCorroboratesAuthenticates() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.PRINCIPAL));
-        assertThat(result).containsEntry(CryptoBehavior.USES_IDENTITY, Confidence.HIGH);
-        assertThat(result).containsEntry(CryptoBehavior.AUTHENTICATES, Confidence.HIGH);
-        assertThat(result).doesNotContainKey(CryptoBehavior.VALIDATES_TOKEN);
+        assertThat(result).contains(CryptoBehavior.USES_IDENTITY, CryptoBehavior.AUTHENTICATES);
+        assertThat(result).doesNotContain(CryptoBehavior.VALIDATES_TOKEN);
     }
 
     @Test
     void cryptoOnlyPassesThroughUnchanged() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(
                         EnumSet.of(
                                 CryptoBehavior.ENCRYPTS_DATA,
                                 CryptoBehavior.ENSURES_CONFIDENTIALITY),
                         Set.of());
         assertThat(result)
-                .containsOnly(
-                        Map.entry(CryptoBehavior.ENCRYPTS_DATA, Confidence.HIGH),
-                        Map.entry(CryptoBehavior.ENSURES_CONFIDENTIALITY, Confidence.HIGH));
+                .containsOnly(CryptoBehavior.ENCRYPTS_DATA, CryptoBehavior.ENSURES_CONFIDENTIALITY);
     }
 
     @Test
     void noneKindIsNotAPrimary() {
-        final Map<CryptoBehavior, Confidence> result =
+        final Set<CryptoBehavior> result =
                 engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.NONE));
         assertThat(result).isEmpty();
     }

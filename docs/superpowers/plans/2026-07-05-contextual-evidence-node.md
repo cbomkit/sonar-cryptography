@@ -12,7 +12,7 @@
 
 - Java 17; module boundaries: `engine` → `mapper`/`output` → `java` → `sonar-cryptography-plugin`.
 - Apache 2.0 license header in every new `.java` file (copy verbatim from a neighbor in the same module). Run `mvn spotless:apply` before committing.
-- Property name stays `cbomkit:crypto:behavior`; confidence suffix delimiter `=`. The two-tier inference and confidence-suffixed output are unchanged from `2026-07-04-crypto-behavior-context-layer-design.md`.
+- Property name stays `cbomkit:crypto:behavior`; its value is a comma-joined list of behavior ids. The two-tier gating inference and its output are unchanged from `2026-07-04-crypto-behavior-context-layer-design.md`.
 - Phase 1 detection scope stays Java-only (JWT + servlet principal). `AuthContext.Kind` in engine remains the single evidence vocabulary.
 - Use `-am` on module test commands so upstream modules are rebuilt from source (avoids stale local-repo installs).
 
@@ -323,7 +323,7 @@ This task flips the channel atomically: the output layer starts collecting evide
 - Delete: `java/src/main/java/com/ibm/plugin/BehaviorEvidenceStore.java`, `java/src/test/java/com/ibm/plugin/BehaviorEvidenceStoreTest.java`, `sonar-cryptography-plugin/src/test/java/com/ibm/plugin/ScannerManagerBehaviorWiringTest.java`
 
 **Interfaces:**
-- Consumes: `ContextualEvidence` (Task 1); `BehaviorInferenceEngine`, `Confidence`, `CryptoBehavior`, `AuthContext.Kind` (existing).
+- Consumes: `ContextualEvidence` (Task 1); `BehaviorInferenceEngine`, `CryptoBehavior`, `AuthContext.Kind` (existing).
 - Produces: `IOutputFileFactory.createOutputFormat(List<INode> nodes)` (single-arg, restored); `CBOMOutputFile()` no-arg ctor that self-collects auth signals from `ContextualEvidence` nodes during `add()`.
 
 - [ ] **Step 1: Update the metadata test to drive node-based collection**
@@ -339,9 +339,9 @@ In `CryptoBehaviorMetadataTest.java`: remove the imports `com.ibm.engine.model.c
 
         final Property property = bom.getMetadata().getComponent().getProperties().get(0);
         assertThat(property.getValue())
-                .contains("security:cryptography:authenticates=high")
-                .contains("security:cryptography:validatesToken=high")
-                .contains("security:cryptography:encryptsData=high");
+                .contains("security:cryptography:authenticates")
+                .contains("security:cryptography:validatesToken")
+                .contains("security:cryptography:encryptsData");
     }
 ```
 
