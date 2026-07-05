@@ -36,5 +36,10 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/spring-security-oauth2-jose-6.3.3.jar"),
                     new File(
                             "src/test/resources/test-jars/spring-security-oauth2-resource-server-6.3.3.jar"),
-                    new File("src/test/resources/test-jars/oauth2-oidc-sdk-11.13.jar"));
+                    new File("src/test/resources/test-jars/oauth2-oidc-sdk-11.13.jar"),
+                    new File("src/test/resources/test-jars/opensaml-xmlsec-api-4.3.2.jar"),
+                    new File("src/test/resources/test-jars/opensaml-saml-impl-4.3.2.jar"),
+                    new File(
+                            "src/test/resources/test-jars/spring-security-saml2-service-provider-6.3.3.jar"),
+                    new File("src/test/resources/test-jars/spring-security-core-6.3.3.jar"));
 }
