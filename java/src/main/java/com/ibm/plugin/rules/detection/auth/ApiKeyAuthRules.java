@@ -21,27 +21,17 @@ package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.rule.IDetectionRule;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-/** Authentication / token interface detection, one rule class per {@code AuthContext.Kind}. */
-public final class AuthDetectionRules {
+public final class ApiKeyAuthRules {
 
-    private AuthDetectionRules() {
-        // private
+    private ApiKeyAuthRules() {
+        // nothing
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        JwtAuthRules.rules().stream(),
-                        OAuthAuthRules.rules().stream(),
-                        SamlAuthRules.rules().stream(),
-                        PrincipalAuthRules.rules().stream(),
-                        MtlsAuthRules.rules().stream(),
-                        ApiKeyAuthRules.rules().stream())
-                .flatMap(s -> s)
-                .toList();
+        return List.of();
     }
 }

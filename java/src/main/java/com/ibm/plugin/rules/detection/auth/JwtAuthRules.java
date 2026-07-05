@@ -28,7 +28,11 @@ import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class AuthInterfaceDetection {
+public final class JwtAuthRules {
+
+    private JwtAuthRules() {
+        // nothing
+    }
 
     private static final IDetectionRule<Tree> JWT_PARSER =
             new DetectionRuleBuilder<Tree>()
@@ -41,23 +45,8 @@ public final class AuthInterfaceDetection {
                     .inBundle(() -> "Auth")
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<Tree> SERVLET_PRINCIPAL =
-            new DetectionRuleBuilder<Tree>()
-                    .createDetectionRule()
-                    .forObjectTypes("jakarta.servlet.http.HttpServletRequest")
-                    .forMethods("getUserPrincipal")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PRINCIPAL"))
-                    .withoutParameters()
-                    .buildForContext(new AuthContext(AuthContext.Kind.PRINCIPAL))
-                    .inBundle(() -> "Auth")
-                    .withoutDependingDetectionRules();
-
-    private AuthInterfaceDetection() {
-        // nothing
-    }
-
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(JWT_PARSER, SERVLET_PRINCIPAL);
+        return List.of(JWT_PARSER);
     }
 }

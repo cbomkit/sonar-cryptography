@@ -19,29 +19,34 @@
  */
 package com.ibm.plugin.rules.detection.auth;
 
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-/** Authentication / token interface detection, one rule class per {@code AuthContext.Kind}. */
-public final class AuthDetectionRules {
+@SuppressWarnings("java:S1192")
+public final class PrincipalAuthRules {
 
-    private AuthDetectionRules() {
-        // private
+    private PrincipalAuthRules() {
+        // nothing
     }
+
+    private static final IDetectionRule<Tree> SERVLET_PRINCIPAL =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("jakarta.servlet.http.HttpServletRequest")
+                    .forMethods("getUserPrincipal")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PRINCIPAL"))
+                    .withoutParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.PRINCIPAL))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return Stream.of(
-                        JwtAuthRules.rules().stream(),
-                        OAuthAuthRules.rules().stream(),
-                        SamlAuthRules.rules().stream(),
-                        PrincipalAuthRules.rules().stream(),
-                        MtlsAuthRules.rules().stream(),
-                        ApiKeyAuthRules.rules().stream())
-                .flatMap(s -> s)
-                .toList();
+        return List.of(SERVLET_PRINCIPAL);
     }
 }
