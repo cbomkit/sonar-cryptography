@@ -134,24 +134,30 @@ Click "Generate", then "Continue" (you don't have to save the value of your toke
 For reference, at the time of writing this guide, we use Java 17.0.11 and Maven 3.9.7.
 
 Copy this code snippet and open a terminal in the directory of the `client-encryption-java` project you just cloned.
-Paste the code snippet in the terminal, but **replace the `verify` argument of the command by `package -DskipTests`** (we don't want to run the tests as they may fail in this case). In our case, the command is now:
+Paste the code snippet in the terminal, but **replace the `verify` argument of the command by `package -DskipTests`** (we don't want to run the tests as they may fail in this case).
+
+> [!IMPORTANT]
+> Before running the command, raise the JVM heap, otherwise the scan can fail during rule construction with:
+> ```
+> java.lang.OutOfMemoryError: Java heap space
+>     at com.ibm.engine.detection.MethodMatcher.<init>(...)
+> ```
+> This happens because the BouncyCastle rule set expands into a very large in-memory graph (~520k rule objects) that needs headroom on top of the analyzed project's AST.
+> With `mvn sonar:sonar` the analysis runs **inside the Maven JVM**, so the heap is controlled by `MAVEN_OPTS` — `-Dsonar.scanner.javaOpts` / `SONAR_SCANNER_JAVA_OPTS` only affect the standalone `sonar-scanner` CLI and are ignored here. Set both to be safe:
+> ```
+> export MAVEN_OPTS="-Xmx4g"
+> export SONAR_SCANNER_JAVA_OPTS="-Xmx4g"   # only needed for the standalone sonar-scanner CLI
+> ```
+> A permanent fix that shrinks the rule graph is tracked in [#476](https://github.com/cbomkit/sonar-cryptography/issues/476).
+
+In our case, the command is now:
 ```
 mvn clean package -DskipTests sonar:sonar \
   -Dsonar.projectKey=mastercard \
   -Dsonar.projectName='mastercard' \
   -Dsonar.host.url=http://localhost:9000 \
-  -Dsonar.token=sqp_b5eb445be0c987a7975635bb55f297083f655934 \
-  -Dsonar.scanner.javaOpts=-Xmx2g
+  -Dsonar.token=sqp_b5eb445be0c987a7975635bb55f297083f655934
 ```
-
-> [!IMPORTANT]
-> The `-Dsonar.scanner.javaOpts=-Xmx2g` flag raises the heap of the forked **Scanner Engine** process (the JVM that instantiates this plugin's detection rules). Without it, a scan can fail during rule construction with:
-> ```
-> java.lang.OutOfMemoryError: Java heap space
->     at com.ibm.engine.detection.MethodMatcher.<init>(...)
-> ```
-> This happens because the BouncyCastle rule set expands into a very large in-memory graph (~520k rule objects) that needs several hundred MB of headroom on top of the analyzed project's AST. `-Xmx2g` gives comfortable margin. You can also set it once via the environment instead of per-command: `export SONAR_SCANNER_JAVA_OPTS=-Xmx2g`.
-> A permanent fix that shrinks the rule graph is tracked in [#476](https://github.com/cbomkit/sonar-cryptography/issues/476).
 
 If the analysis runs as expected, you should see the results in two ways:
 - The "Issues" tab of your project in the SonarQube UI should list all various cryptographic findings: ![alt text](images/issues.png)
