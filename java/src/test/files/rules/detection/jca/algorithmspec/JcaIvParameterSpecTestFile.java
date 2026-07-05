@@ -2,6 +2,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import java.security.SecureRandom;
 import java.util.Base64;
 
 public class JcaIvParameterSpecTestFile {
@@ -13,6 +14,8 @@ public class JcaIvParameterSpecTestFile {
         SecretKey secretKey = keyGen.generateKey();
         // Generate a random 16-byte IV
         byte[] iv = new byte[16];
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
+        random.nextBytes(iv);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         // Encrypt
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); // Noncompliant {{(BlockCipher) AES-128-CBC-PKCS5}}

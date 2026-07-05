@@ -1,5 +1,6 @@
 package com.ibm.plugin.rules.detection.bc.derivationfunction;
 
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.engines.EthereumIESEngine;
@@ -16,7 +17,7 @@ public class BcHandshakeKDFFunctionTestFile {
         // Generate sender's key pair
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenParams =
-                new ECKeyGenerationParameters(curveParams, null);
+                new ECKeyGenerationParameters(curveParams, new SecureRandom()); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         keyPairGenerator.init(keyGenParams);
 
         // Define the HandshakeKDFFunction using EthereumIESEngine

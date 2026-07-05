@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -15,7 +16,7 @@ public class BcDSATestFile {
         // Generate key pair
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenParams =
-                new ECKeyGenerationParameters(curveParams, null);
+                new ECKeyGenerationParameters(curveParams, new SecureRandom()); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         keyPairGenerator.init(keyGenParams);
         AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
 
