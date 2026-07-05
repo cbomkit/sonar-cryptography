@@ -43,7 +43,7 @@ public final class ScannerManager {
     public IOutputFile getOutputFile() {
         return Optional.ofNullable(this.outputFileFactory)
                 .orElse(IOutputFileFactory.DEFAULT)
-                .createOutputFormat(getAggregatedNodes(), BehaviorEvidenceStore.getSignals());
+                .createOutputFormat(getAggregatedNodes());
     }
 
     @Nonnull
@@ -90,6 +90,5 @@ public final class ScannerManager {
         PythonAggregator.reset();
         GoAggregator.reset();
         CSharpAggregator.reset();
-        BehaviorEvidenceStore.reset();
     }
 }

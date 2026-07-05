@@ -21,9 +21,9 @@ package com.ibm.output.cyclonedx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.CipherSuite;
+import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.algorithms.AES;
@@ -39,7 +39,6 @@ import com.ibm.output.cyclondx.CBOMOutputFile;
 import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Property;
@@ -82,9 +81,7 @@ class CryptoBehaviorMetadataTest {
     void authInterfaceUnlocksAuthenticatesAndValidatesToken() {
         final AES aes = new AES(loc);
         aes.put(new Encrypt(loc));
-        final CBOMOutputFile outputFile = new CBOMOutputFile(Set.of(AuthContext.Kind.JWT));
-        outputFile.add(List.of(aes));
-        final Bom bom = outputFile.getBom();
+        final Bom bom = bomOf(List.of(aes, new ContextualEvidence("JWT", loc)));
 
         final Property property = bom.getMetadata().getComponent().getProperties().get(0);
         assertThat(property.getValue())
