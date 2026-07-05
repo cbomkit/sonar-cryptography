@@ -45,5 +45,6 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/javax.servlet-api-4.0.1.jar"),
                     new File("src/test/resources/test-jars/jakarta.ws.rs-api-3.1.0.jar"),
                     new File("src/test/resources/test-jars/javax.ws.rs-api-2.1.1.jar"),
-                    new File("src/test/resources/test-jars/spring-security-web-6.3.3.jar"));
+                    new File("src/test/resources/test-jars/spring-security-web-6.3.3.jar"),
+                    new File("src/test/resources/test-jars/pac4j-http-5.7.7.jar"));
 }

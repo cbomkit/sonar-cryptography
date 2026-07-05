@@ -19,19 +19,48 @@
  */
 package com.ibm.plugin.rules.detection.auth;
 
+import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
+@SuppressWarnings("java:S1192")
 public final class ApiKeyAuthRules {
 
     private ApiKeyAuthRules() {
         // nothing
     }
 
+    private static final IDetectionRule<Tree> PAC4J_DIRECT_CLIENT =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.pac4j.http.client.direct.HeaderClient",
+                            "org.pac4j.http.client.direct.ParameterClient")
+                    .forConstructor()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("API_KEY"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.API_KEY))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> SPRING_REQUEST_HEADER_FILTER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(
+                            "org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter")
+                    .forConstructor()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("API_KEY"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.API_KEY))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of();
+        return List.of(PAC4J_DIRECT_CLIENT, SPRING_REQUEST_HEADER_FILTER);
     }
 }
