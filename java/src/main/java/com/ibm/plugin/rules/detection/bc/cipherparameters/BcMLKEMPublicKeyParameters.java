@@ -24,7 +24,9 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -61,8 +63,11 @@ public final class BcMLKEMPublicKeyParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> List.of(MLKEM_PUBLIC_KEY_PARAMETERS_1, MLKEM_PUBLIC_KEY_PARAMETERS_2));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(MLKEM_PUBLIC_KEY_PARAMETERS_1, MLKEM_PUBLIC_KEY_PARAMETERS_2);
+        return RULES.get();
     }
 }

@@ -26,7 +26,9 @@ import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -157,14 +159,19 @@ public final class BcGMSSParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(
+                    () ->
+                            List.of(
+                                    KEY_CONSTRUCTOR,
+                                    PUBLIC_KEY_CONSTRUCTOR,
+                                    BCGMSS_PUBLIC_KEY_CONSTRUCTOR_1,
+                                    BCGMSS_PUBLIC_KEY_CONSTRUCTOR_2,
+                                    PRIVATE_KEY_CONSTRUCTOR_1,
+                                    PRIVATE_KEY_CONSTRUCTOR_2));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(
-                KEY_CONSTRUCTOR,
-                PUBLIC_KEY_CONSTRUCTOR,
-                BCGMSS_PUBLIC_KEY_CONSTRUCTOR_1,
-                BCGMSS_PUBLIC_KEY_CONSTRUCTOR_2,
-                PRIVATE_KEY_CONSTRUCTOR_1,
-                PRIVATE_KEY_CONSTRUCTOR_2);
+        return RULES.get();
     }
 }
