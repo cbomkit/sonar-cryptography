@@ -28,6 +28,8 @@ public class AuthContext implements IDetectionContext, ISupportKind<AuthContext.
         OAUTH,
         SAML,
         PRINCIPAL,
+        API_KEY,
+        MTLS,
         NONE,
     }
 
