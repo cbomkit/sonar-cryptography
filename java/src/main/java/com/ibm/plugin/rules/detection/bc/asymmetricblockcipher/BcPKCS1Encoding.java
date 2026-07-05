@@ -26,9 +26,11 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -93,15 +95,20 @@ public final class BcPKCS1Encoding {
         return constructorsList;
     }
 
+    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
+            Memoize.of(() -> constructors(null, null));
+
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return rules(null, null);
+        return RULES.get();
     }
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
             @Nullable IDetectionContext encodingDetectionValueContext,
             @Nullable IDetectionContext engineDetectionValueContext) {
-        return constructors(encodingDetectionValueContext, engineDetectionValueContext);
+        return encodingDetectionValueContext == null && engineDetectionValueContext == null
+                ? RULES.get()
+                : constructors(encodingDetectionValueContext, engineDetectionValueContext);
     }
 }
