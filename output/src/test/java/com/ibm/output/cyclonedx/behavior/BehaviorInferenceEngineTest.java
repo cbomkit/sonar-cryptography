@@ -85,6 +85,30 @@ class BehaviorInferenceEngineTest {
     }
 
     @Test
+    void samlYieldsAuthenticatesAndValidatesToken() {
+        final Set<CryptoBehavior> result =
+                engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.SAML));
+        assertThat(result)
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
+    void apiKeyAuthenticatesOnly() {
+        final Set<CryptoBehavior> result =
+                engine.infer(
+                        EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.API_KEY));
+        assertThat(result).containsOnly(CryptoBehavior.AUTHENTICATES);
+    }
+
+    @Test
+    void mtlsYieldsAuthenticatesAndUsesIdentity() {
+        final Set<CryptoBehavior> result =
+                engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.MTLS));
+        assertThat(result).containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.USES_IDENTITY);
+        assertThat(result).doesNotContain(CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
     void noneKindIsNotAPrimary() {
         final Set<CryptoBehavior> result =
                 engine.infer(EnumSet.noneOf(CryptoBehavior.class), Set.of(AuthContext.Kind.NONE));
