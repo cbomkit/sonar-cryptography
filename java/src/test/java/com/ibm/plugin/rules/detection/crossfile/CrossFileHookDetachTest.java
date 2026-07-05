@@ -45,8 +45,9 @@ import org.sonar.plugins.java.api.tree.Tree;
  * <p>Cross-file resolution requires the callee's type to resolve at the call site. Production
  * achieves this via {@code sonar.java.binaries} (the project is compiled first). CheckVerifier does
  * not put sibling sources on the semantic classpath, so we reproduce production by compiling the
- * fixtures to {@code .class} and passing the output directory to {@link CheckVerifier#withClassPath}.
- * The {@code // Noncompliant} marker in the caller fixture asserts the cross-file detection fired.
+ * fixtures to {@code .class} and passing the output directory to {@link
+ * CheckVerifier#withClassPath}. The {@code // Noncompliant} marker in the caller fixture asserts
+ * the cross-file detection fired.
  */
 class CrossFileHookDetachTest extends TestBase {
 
@@ -65,7 +66,9 @@ class CrossFileHookDetachTest extends TestBase {
                 .verifyIssues();
     }
 
-    /** Compiles the fixtures to a temp dir so their types resolve across files (mimics binaries). */
+    /**
+     * Compiles the fixtures to a temp dir so their types resolve across files (mimics binaries).
+     */
     private static File compileToClasspath(String... sources) throws Exception {
         Path out = Files.createTempDirectory("xfile-classes");
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
