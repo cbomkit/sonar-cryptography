@@ -30,5 +30,7 @@ public class AuthInterfaceJars {
     public static List<File> jars =
             List.of(
                     new File("src/test/resources/test-jars/jjwt-api-0.12.6.jar"),
-                    new File("src/test/resources/test-jars/jakarta.servlet-api-6.0.0.jar"));
+                    new File("src/test/resources/test-jars/jakarta.servlet-api-6.0.0.jar"),
+                    new File("src/test/resources/test-jars/nimbus-jose-jwt-9.40.jar"),
+                    new File("src/test/resources/test-jars/java-jwt-4.4.0.jar"));
 }

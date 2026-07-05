@@ -34,19 +34,41 @@ public final class JwtAuthRules {
         // nothing
     }
 
-    private static final IDetectionRule<Tree> JWT_PARSER =
+    private static final IDetectionRule<Tree> JJWT_PARSE_SIGNED =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectTypes("io.jsonwebtoken.Jwts")
-                    .forMethods("parser", "parserBuilder")
+                    .forObjectTypes("io.jsonwebtoken.JwtParser")
+                    .forMethods("parseSignedClaims", "parseClaimsJws")
                     .shouldBeDetectedAs(new ValueActionFactory<>("JWT"))
-                    .withoutParameters()
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.JWT))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> NIMBUS_SIGNED_JWT =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("com.nimbusds.jwt.SignedJWT", "com.nimbusds.jose.JWSObject")
+                    .forMethods("verify")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("JWT"))
+                    .withAnyParameters()
+                    .buildForContext(new AuthContext(AuthContext.Kind.JWT))
+                    .inBundle(() -> "Auth")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> AUTH0_JWT_VERIFIER =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes("com.auth0.jwt.interfaces.JWTVerifier")
+                    .forMethods("verify")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("JWT"))
+                    .withAnyParameters()
                     .buildForContext(new AuthContext(AuthContext.Kind.JWT))
                     .inBundle(() -> "Auth")
                     .withoutDependingDetectionRules();
 
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return List.of(JWT_PARSER);
+        return List.of(JJWT_PARSE_SIGNED, NIMBUS_SIGNED_JWT, AUTH0_JWT_VERIFIER);
     }
 }
