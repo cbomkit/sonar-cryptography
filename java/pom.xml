@@ -67,14 +67,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <!-- Enables resolving JWT auth-interface types in auth detection test files -->
+            <!-- Not required by the analyzer (it uses the pinned jar in test-jars via
+                 AuthInterfaceJars); kept only to enable IDE linting in auth detection test files -->
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <!-- Enables resolving servlet principal types in auth detection test files -->
+            <!-- Not required by the analyzer (it uses the pinned jar in test-jars via
+                 AuthInterfaceJars); kept only to enable IDE linting in auth detection test files -->
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>

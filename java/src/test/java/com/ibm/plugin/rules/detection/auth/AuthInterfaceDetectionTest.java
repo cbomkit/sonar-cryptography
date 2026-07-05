@@ -26,8 +26,6 @@ import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
-import java.io.File;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -43,14 +41,6 @@ class AuthInterfaceDetectionTest extends TestBase {
 
     private final Set<AuthContext.Kind> observedKinds = EnumSet.noneOf(AuthContext.Kind.class);
 
-    // The auth interfaces (jjwt, jakarta.servlet) are test-scope dependencies, so they are on the
-    // JUnit runtime classpath. Hand that classpath to CheckVerifier so the analyzer can resolve
-    // io.jsonwebtoken.Jwts and jakarta.servlet.http.HttpServletRequest for semantic matching.
-    private static final List<File> RUNTIME_CLASSPATH =
-            Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
-                    .map(File::new)
-                    .toList();
-
     protected AuthInterfaceDetectionTest() {
         super(AuthDetectionRules.rules());
     }
@@ -60,7 +50,7 @@ class AuthInterfaceDetectionTest extends TestBase {
         CheckVerifier.newVerifier()
                 .onFile("src/test/files/rules/detection/auth/AuthInterfaceTestFile.java")
                 .withChecks(this)
-                .withClassPath(RUNTIME_CLASSPATH)
+                .withClassPath(AuthInterfaceJars.jars)
                 .verifyNoIssues();
 
         assertThat(observedKinds).contains(AuthContext.Kind.JWT, AuthContext.Kind.PRINCIPAL);
