@@ -27,6 +27,7 @@ import com.ibm.engine.hooks.IHookDetectionObserver;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.IScanContext;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -127,7 +128,7 @@ public class CallStackAgent<R, T, S, P>
         }
 
         final List<CallContext<R, T>> stackCalls = new ArrayList<>();
-        final Iterator<List<CallContext<R, T>>> iterator = invokedCallStack.values().iterator();
+        final Iterator<List<CallContext<R, T>>> iterator = bucketsToScan(methodMatcher).iterator();
         while (iterator.hasNext()) {
             final List<CallContext<R, T>> callContexts = iterator.next();
             final Iterator<CallContext<R, T>> callContextIterator = callContexts.iterator();
@@ -146,6 +147,23 @@ public class CallStackAgent<R, T, S, P>
                 listeners.get(i).update(callContext);
             }
         }
+    }
+
+    /**
+     * The call-stack buckets a hook's matcher could match. Recorded calls are keyed by their
+     * invoked method name's hash, so a single-name matcher only needs that one bucket; {@code
+     * ANY}/multi-name matchers fall back to scanning every bucket.
+     */
+    @Nonnull
+    private Collection<List<CallContext<R, T>>> bucketsToScan(
+            @Nonnull MethodMatcher<T> methodMatcher) {
+        final List<String> methodNames = methodMatcher.getMethodNamesSerializable();
+        if (methodNames.size() == 1 && !MethodMatcher.ANY.equals(methodNames.get(0))) {
+            final List<CallContext<R, T>> bucket =
+                    invokedCallStack.get(methodNames.get(0).hashCode());
+            return bucket == null ? List.of() : List.of(bucket);
+        }
+        return invokedCallStack.values();
     }
 
     private boolean matches(
