@@ -19,23 +19,29 @@
  */
 package com.ibm.engine.callstack;
 
-import com.ibm.engine.language.IScanContext;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
-/**
- * A recorded call site accumulated by the {@link CallStackAgent} for later cross-file hook
- * matching.
- *
- * <p>{@link RetainedCall} keeps the live AST tree (today's behavior); {@link DetachedCall} holds a
- * tree-free snapshot so the file's AST can be garbage-collected after analysis.
- */
-public sealed interface CallContext<R, T> permits RetainedCall, DetachedCall {
+import com.ibm.engine.detection.IType;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.sonar.api.batch.fs.InputFile;
 
-    /** The recorded call tree, or {@code null} for a detached record that holds no AST. */
-    @Nullable T tree();
+class DetachedCallTest {
 
-    /** The scan context of the file the call was recorded in. */
-    @Nonnull
-    IScanContext<R, T> publisher();
+    @Test
+    void holdsNoTreeAndExposesKeys() {
+        DetachedScanContext<Object, Object> ctx =
+                new DetachedScanContext<>(mock(InputFile.class), "/p/CrossFileUsage.java");
+        IType owner = mock(IType.class);
+
+        DetachedCall<Object, Object> call =
+                new DetachedCall<>(owner, "make", List.of(), List.of(), ctx);
+
+        assertThat(call.tree()).isNull();
+        assertThat(call.publisher()).isSameAs(ctx);
+        assertThat(call.invokedObjectType()).isSameAs(owner);
+        assertThat(call.methodName()).isEqualTo("make");
+        assertThat(call.arguments()).isEmpty();
+    }
 }

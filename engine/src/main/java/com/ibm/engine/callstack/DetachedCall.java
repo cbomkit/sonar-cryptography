@@ -19,23 +19,35 @@
  */
 package com.ibm.engine.callstack;
 
+import com.ibm.engine.detection.IType;
 import com.ibm.engine.language.IScanContext;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * A recorded call site accumulated by the {@link CallStackAgent} for later cross-file hook
- * matching.
+ * A recorded call stored tree-free: the match keys and pre-resolved argument snapshots are captured
+ * at record time while the file is live, so the file's AST becomes garbage-collectable afterwards.
  *
- * <p>{@link RetainedCall} keeps the live AST tree (today's behavior); {@link DetachedCall} holds a
- * tree-free snapshot so the file's AST can be garbage-collected after analysis.
+ * <p>Matching uses {@link #invokedObjectType()} / {@link #methodName()} / {@link #parameterTypes()}
+ * via {@code MethodMatcher.matchKeys}; hook replay reads {@link #arguments()}.
  */
-public sealed interface CallContext<R, T> permits RetainedCall, DetachedCall {
+public record DetachedCall<R, T>(
+        @Nonnull IType invokedObjectType,
+        @Nonnull String methodName,
+        @Nonnull List<IType> parameterTypes,
+        @Nonnull List<ArgSnapshot> arguments,
+        @Nonnull DetachedScanContext<R, T> detachedPublisher)
+        implements CallContext<R, T> {
 
-    /** The recorded call tree, or {@code null} for a detached record that holds no AST. */
-    @Nullable T tree();
+    @Nullable @Override
+    public T tree() {
+        return null;
+    }
 
-    /** The scan context of the file the call was recorded in. */
     @Nonnull
-    IScanContext<R, T> publisher();
+    @Override
+    public IScanContext<R, T> publisher() {
+        return detachedPublisher;
+    }
 }
