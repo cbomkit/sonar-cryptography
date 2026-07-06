@@ -328,20 +328,46 @@ Bucket the top entries of `histo.txt` into the three sources:
 Sample two or three histograms as the scan progresses to see which bucket *grows* (the floor is
 about accumulation, not a one-time cost).
 
-### Decision (fill in after measuring)
+### Decision — measured 2026-07-06 (Keycloak `main`, 94 compiled modules, SonarQube 26.1, `-Xmx6g`)
 
-| Population | count (log) | approx. retained bytes (jmap) |
-|---|---|---|
-| Retained CBOM nodes | | |
-| Detached call-stack | | |
-| Residual Tree / hooks | | |
+Scan outcome: **ANALYSIS SUCCESSFUL** in ~14 min, CBOM generated (108 detected assets → 68
+components), no OOM; post-GC heap floor oscillated and ended ~2.9–3.4 GB (healthy — G1 reclaims,
+no monotonic climb). Attribution from live `GC.class_histogram` (post-full-GC) sampled early /
+mid / late in the run:
 
-Record the outcome here, then route H2 accordingly:
+| Population | early | mid | late (near end) |
+|---|---|---|---|
+| Retained CBOM nodes (`com.ibm.mapper.**`) | ~0 | 0.01 MB (484) | **0.02 MB (824 inst)** |
+| Detached call-stack (`com.ibm.engine.callstack.**`) | ~0 | 7.6 MB (291k) | **15.6 MB (594k inst)** |
+| Hooks (`com.ibm.engine.hooks.**`) | ~0 | 0.001 MB | **~1 KB (1376 inst)** |
+| **Plugin total (`com.ibm.**`)** | ~0 | 14.2 MB | **28.4 MB** |
+| **Whole heap floor** | 0.05 GB | 1.55 GB | **2.90 GB** |
 
-- **Call-stack dominates** → proceed with H2: eligibility filter **and** retention cap.
-- **CBOM nodes dominate** → build only H2's eligibility filter (still a lossless trim + CPU
-  assist); open a separate spec for `detectedNodes` dedup / incremental emission.
-- **Hooks dominate** → open a hooks-subscription-pruning spec.
+The ~2.9 GB floor is overwhelmingly **SonarQube / ECJ baseline**, not plugin state — the top
+retained classes are `byte[]` (332 MB), `HashMap$Node` (251 MB), `Object[]` (219 MB), `char[]`
+(210 MB), `ArrayList` (176 MB), and sonar-java/ECJ semantic objects (`InternalPosition` 152 MB,
+`InternalSyntaxToken` 122 MB, `MethodBinding` 95 MB, `InternalRange` 76 MB).
+
+**Outcome — the original hypothesis is disproven.** The floor growth (~1.6 → ~3.4 GB) is *not*
+`JavaAggregator.detectedNodes`: retained CBOM nodes are **negligible (~25 KB, 824 instances)**.
+The entire plugin footprint is **~28 MB (~1 % of the floor)**, and the floor growth tracks
+SonarQube's own accumulating semantic model / AST of the module under analysis — which the plugin
+cannot reduce. Within the plugin the **call-stack dominates** (15.6 MB vs. 0.02 MB) and grows
+linearly/unbounded (291k → 594k records mid→late), but AST-detach keeps each record tiny, so the
+absolute heap cost is small.
+
+**H2 routing (revised by this measurement):**
+- **No `detectedNodes` spec.** CBOM-node retention is not a heap problem — drop that candidate.
+- **No heap-motivated retention cap.** 594k detached records ≈ 15.6 MB is not a memory risk; the
+  cap (old Task 5) is unjustified on heap grounds — defer/drop it.
+- **Eligibility filter → justify on CPU, not heap.** Skipping library calls still avoids building
+  their expensive detached form (`buildDetachedCall`), so fold it into the **throughput track
+  (C1/C2)**, not a heap spec. Net: the heap track is effectively closed by this measurement.
+
+> Note: signal 1 (the `[heap-attribution]` DEBUG line) does not surface in the Maven scanner
+> console even with `sonar.verbose=true` — the scanner does not route plugin `LOGGER.debug` there
+> (the INFO `Detected Assets` statistics line does print). The `jmap`/`jcmd` histogram (signal 2)
+> is the reliable attribution path; use it directly.
 
 > Note on H2's eligibility filter: the predicate cannot be derived from `methodSymbol().declaration()`
 > — cross-file *user* calls resolve via `sonar.java.binaries` and have a null declaration, exactly
