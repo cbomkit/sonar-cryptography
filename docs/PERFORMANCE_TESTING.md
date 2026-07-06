@@ -283,6 +283,73 @@ rm -rf ~/Downloads/keycloak-main/.scannerwork
 
 ---
 
+## C. Post-detach floor attribution (H1)
+
+AST-detach removed the dominant AST-pinning heap term, but the post-GC floor still grows over a
+scan (observed ~1.6 → ~3.4 GB). This procedure attributes that residual to one of three
+populations so we know whether the call-stack still needs trimming (H2) or whether retained CBOM
+nodes dominate (a separate follow-up).
+
+### Two signals
+
+**1. In-process population counts (cheap).** At end of scan the plugin logs, at DEBUG:
+
+```
+[heap-attribution] detectedNodes=<n> detachedCalls=<n> totalCalls=<n> callStackBuckets=<n>
+```
+
+Enable DEBUG for the plugin (e.g. `-Dsonar.log.level=DEBUG` on the scanner, or the analysis
+`sonar.verbose=true`) and read the line from the scanner log. The fast local proxy is
+`CallStackHeapPerfTest`, whose report line now also prints `detectedNodes=<n>` (note: `0` in that
+harness — it runs with `isInventory=false`, so CBOM nodes are not aggregated there; the count is
+meaningful only on a real inventory scan).
+
+Counts size the *populations*, not their bytes — a small count of heavy objects can still
+dominate. Use them to spot which population grows, then confirm bytes with the histogram below.
+
+**2. Byte attribution via `jmap` (decisive).** During a constrained-heap Keycloak scan (see
+section B), capture a live histogram near the end of analysis:
+
+```bash
+# find the scanner JVM pid (the surefire/scanner java process running the analysis)
+jps -l
+# live histogram (forces a GC first), sorted by retained bytes
+jmap -histo:live <pid> > histo.txt
+```
+
+Bucket the top entries of `histo.txt` into the three sources:
+
+| Bucket | Classes to sum in `histo.txt` |
+|---|---|
+| Retained CBOM nodes | `com.ibm.mapper.model.**` (e.g. `Algorithm`, `Key`, `Property`, `MessageDigest`, …) and their child `HashMap`/`HashMap$Node` share |
+| Detached call-stack | `com.ibm.engine.callstack.DetachedCall`, `...callstack.ArgSnapshot`, `...callstack.ResolvedSnapshotValue` |
+| Residual Tree / hooks | `org.sonar.**Tree*` still live + `com.ibm.engine.hooks.**` |
+
+Sample two or three histograms as the scan progresses to see which bucket *grows* (the floor is
+about accumulation, not a one-time cost).
+
+### Decision (fill in after measuring)
+
+| Population | count (log) | approx. retained bytes (jmap) |
+|---|---|---|
+| Retained CBOM nodes | | |
+| Detached call-stack | | |
+| Residual Tree / hooks | | |
+
+Record the outcome here, then route H2 accordingly:
+
+- **Call-stack dominates** → proceed with H2: eligibility filter **and** retention cap.
+- **CBOM nodes dominate** → build only H2's eligibility filter (still a lossless trim + CPU
+  assist); open a separate spec for `detectedNodes` dedup / incremental emission.
+- **Hooks dominate** → open a hooks-subscription-pruning spec.
+
+> Note on H2's eligibility filter: the predicate cannot be derived from `methodSymbol().declaration()`
+> — cross-file *user* calls resolve via `sonar.java.binaries` and have a null declaration, exactly
+> like library calls (see the comment in `JavaLanguageSupport.isDetachableCall`). The discriminator
+> must be pinned empirically against the `crossfile/` fixtures before the filter is written.
+
+---
+
 ## Gotchas quick reference
 
 - **0 detections / term is 0** → Keycloak wasn't compiled. Rebuild (Step 2); the scan needs
