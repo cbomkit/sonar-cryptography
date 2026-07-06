@@ -319,7 +319,11 @@ In `CallStackHeapPerfTest.detachesRecordedCallsAtScale`, the report block curren
 - [ ] **Step 2: Run the perf harness and eyeball the new field**
 
 Run: `mvn test -pl java -DexcludedGroups= -Dtest=CallStackHeapPerfTest`
-Expected: PASS; the printed line now includes `detectedNodes=<n>` with `n > 0`. The existing assertions (`total()` positive, `detachedRatio >= 0.9`, `retainedWithTree <= 10`) still hold.
+Expected: PASS; the printed line now includes `detectedNodes=<n>`. Note it reads `detectedNodes=0`
+in this harness — the `CheckVerifier`/`TestBase` path constructs rules with `isInventory=false`
+(`JavaBaseDetectionRule.java:52`), so `JavaAggregator.addNodes` never fires here; the count is
+non-zero only on a real inventory scan (Keycloak). The existing assertions (`total()` positive,
+`detachedRatio >= 0.9`, `retainedWithTree <= 10`) still hold.
 
 - [ ] **Step 3: Commit**
 

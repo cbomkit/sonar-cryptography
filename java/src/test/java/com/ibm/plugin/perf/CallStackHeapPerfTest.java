@@ -105,11 +105,13 @@ class CallStackHeapPerfTest extends TestBase {
         // REPORT (never asserted)
         System.out.printf(
                 "%n[callstack-perf] files=%d units=%d time=%dms heapDeltaMB=%d "
+                        + "detectedNodes=%d "
                         + "retainedWithTree=%d detached=%d total=%d buckets=%d ratio=%.3f%n",
                 sources.size(),
                 units,
                 elapsedMs,
                 (heapAfter - heapBefore) / (1024L * 1024L),
+                JavaAggregator.getDetectedNodes().size(),
                 stats.retainedWithTree(),
                 stats.detached(),
                 stats.total(),
