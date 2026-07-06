@@ -21,9 +21,6 @@ package com.ibm.engine.language.java;
 
 import com.ibm.engine.callstack.DetachedSyntaxToken;
 import com.ibm.engine.callstack.IDetachedIssueReporter;
-import java.lang.reflect.Field;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.InputFile;
@@ -32,6 +29,10 @@ import org.sonar.java.model.DefaultModuleScannerContext;
 import org.sonar.java.reporting.AnalyzerMessage;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 
 /**
  * Raises a SonarQube issue for a detached (tree-free) cross-file detection through {@link
@@ -80,6 +81,7 @@ public final class JavaDetachedIssueReporter implements IDetachedIssueReporter<J
         sonarComponents.reportIssue(new AnalyzerMessage(rule, inputFile, span, message, 0));
     }
 
+    @SuppressWarnings("java:S3011")
     @Nullable private static SonarComponents extractSonarComponents(@Nonnull JavaFileScannerContext context) {
         try {
             final Field field =
