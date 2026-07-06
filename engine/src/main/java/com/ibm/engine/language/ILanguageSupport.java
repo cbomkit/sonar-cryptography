@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.IBaseMethodVisitorFactory;
@@ -154,5 +155,16 @@ public interface ILanguageSupport<R, T, S, P> {
      */
     default void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
         // no-op by default
+    }
+
+    /**
+     * Read-only snapshot of the language's recorded-call population, for the performance/heap
+     * harness. Languages that do not accumulate a call stack return {@link CallContextStats#EMPTY}.
+     *
+     * @return the current call-context stats; never {@code null}
+     */
+    @Nonnull
+    default CallContextStats callContextStats() {
+        return CallContextStats.EMPTY;
     }
 }

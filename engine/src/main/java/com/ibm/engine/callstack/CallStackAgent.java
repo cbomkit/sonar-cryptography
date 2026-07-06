@@ -73,6 +73,12 @@ public class CallStackAgent<R, T, S, P>
         }
     }
 
+    /** Read-only snapshot of the recorded-call population (retained-with-tree vs. detached). */
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return CallContextStats.from(invokedCallStack.values());
+    }
+
     /** Records a call (retained or detached) and notifies live hook subscriptions. */
     public void add(@Nonnull CallContext<R, T> callContext) {
         final Optional<Integer> keyOptional = keyOf(callContext);

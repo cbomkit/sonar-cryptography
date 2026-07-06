@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.java;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.Handler;
@@ -147,6 +148,12 @@ public final class JavaLanguageSupport
     @Override
     public void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
         this.handler.detachCallsForFile(inputFile);
+    }
+
+    @Override
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return this.handler.callContextStats();
     }
 
     @Override

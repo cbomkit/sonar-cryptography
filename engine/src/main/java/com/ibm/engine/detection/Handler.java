@@ -21,6 +21,7 @@ package com.ibm.engine.detection;
 
 import com.ibm.common.IObserver;
 import com.ibm.engine.callstack.CallContext;
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.callstack.CallStackAgent;
 import com.ibm.engine.hooks.HookDetectionObservable;
 import com.ibm.engine.hooks.HookRepository;
@@ -88,6 +89,11 @@ public class Handler<R, T, S, P> {
 
     public void detachCallsForFile(@Nonnull InputFile inputFile) {
         this.callStackAgent.detachCallsForFile(inputFile);
+    }
+
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return this.callStackAgent.callContextStats();
     }
 
     public void subscribeToCallStackAgent(@Nonnull IObserver<CallContext<R, T>> listener) {
