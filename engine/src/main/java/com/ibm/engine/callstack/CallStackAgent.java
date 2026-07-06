@@ -57,7 +57,7 @@ public class CallStackAgent<R, T, S, P>
         }
 
         int key = keyOptional.get();
-        final CallContext<R, T> callContext = new CallContext<>(tree, scanContext);
+        final CallContext<R, T> callContext = new RetainedCall<>(tree, scanContext);
         if (addedToCallContext(key, callContext)) {
             this.notify(callContext);
         }
