@@ -106,8 +106,16 @@ Add a language-layer predicate that mirrors the existing `isDetachableCall` sibl
   `default boolean isHookEligibleCall(T tree) { return true; }`. Keeping it a defaulted method
   leaves Python/Go on record-all (unchanged behavior).
 - **`engine/.../language/java/JavaLanguageSupport.java`** — implement for Java: `true` for
-  enum accesses (must stay recorded for `EnumHook`) and for method invocations whose
-  `methodSymbol().declaration() != null`; `false` otherwise (library calls). DEBUG-log skips.
+  enum accesses (must stay recorded for `EnumHook`) and for calls whose invoked-object owner
+  type *could* be a user class; `false` for library calls. **Predicate premise correction:**
+  the discriminator is **not** `methodSymbol().declaration() != null` — cross-file *user* calls
+  resolve their callee via `sonar.java.binaries` and have a null declaration too (see the
+  comment in `JavaLanguageSupport.isDetachableCall`, `:165-172`), so that predicate would drop
+  exactly the cross-file detections we must keep. There may be no clean intrinsic AST/symbol
+  signal separating a binary-resolved user class from a library class; the real discriminator
+  must be **pinned empirically** against the `crossfile/` fixtures (a characterization test)
+  before the filter body is written, and may end up coarser (e.g. a library-package check).
+  DEBUG-log skips.
 - **`engine/.../language/java/JavaDetectionEngine.java`** — gate at the **top of
   `recordCall` (`:135`)**, i.e. *before* `isDetachableCall`/`buildDetachedCall`. Returning
   early for library calls means they are neither recorded **nor** put through the expensive
