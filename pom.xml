@@ -40,6 +40,9 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <!-- JUnit tags excluded from the default build; clear via -DexcludedGroups= to run them. -->
+        <excludedGroups>performance</excludedGroups>
+
         <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
         <checkstyle.version>10.15.0</checkstyle.version>
 
@@ -193,6 +196,9 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.5.4</version>
+            <configuration>
+                <excludedGroups>${excludedGroups}</excludedGroups>
+            </configuration>
             </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
