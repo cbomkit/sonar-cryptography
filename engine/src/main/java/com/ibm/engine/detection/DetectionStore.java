@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.detection;
 
+import com.ibm.engine.callstack.CallContext;
 import com.ibm.engine.executive.IStatusReporting;
 import com.ibm.engine.hooks.IHook;
 import com.ibm.engine.hooks.IHookDetectionObserver;
@@ -397,22 +398,20 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
 
     @Override
     public void onHookInvocation(
-            @Nonnull T invocationTree,
-            @Nonnull IHook<R, T, S, P> hook,
-            @Nonnull IScanContext<R, T> scanContext) {
+            @Nonnull CallContext<R, T> callContext, @Nonnull IHook<R, T, S, P> hook) {
         final DetectionStoreWithHook<R, T, S, P> newDetectionStore =
                 new DetectionStoreWithHook<>(
                         level + 1,
                         detectionRule,
-                        scanContext,
+                        callContext.publisher(),
                         handler,
                         statusReporting,
-                        invocationTree);
+                        callContext);
         if (hook instanceof IMethodInvocationHook<R, T, S, P> methodInvocationHook) {
             this.attach(methodInvocationHook.getParameter().getIndex(), newDetectionStore);
         }
         // TODO: Enum Hook
-        newDetectionStore.onHookInvocation(invocationTree, hook);
+        newDetectionStore.onHookInvocation(hook);
     }
 
     @Override

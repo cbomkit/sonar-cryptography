@@ -19,8 +19,8 @@
  */
 package com.ibm.engine.hooks;
 
+import com.ibm.engine.callstack.CallContext;
 import com.ibm.engine.detection.Handler;
-import com.ibm.engine.language.IScanContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,10 +55,7 @@ public class HookDetectionObservable<R, T, S, P> implements IHookDetectionObserv
     }
 
     @Override
-    public void notify(
-            @Nonnull T invocationTree,
-            @Nonnull IHook<R, T, S, P> hook,
-            @Nonnull IScanContext<R, T> scanContext) {
+    public void notify(@Nonnull CallContext<R, T> callContext, @Nonnull IHook<R, T, S, P> hook) {
         List<IHookDetectionObserver<R, T, S, P>> subscribers = listeners.get(hook.hookValue());
         if (subscribers == null) {
             return;
@@ -71,7 +68,7 @@ public class HookDetectionObservable<R, T, S, P> implements IHookDetectionObserv
          * Iterator to traverse the elements of a Collection, it does not cause a ConcurrentModificationException.
          */
         for (int i = 0; i < subscribers.size(); i++) {
-            subscribers.get(i).onHookInvocation(invocationTree, hook, scanContext);
+            subscribers.get(i).onHookInvocation(callContext, hook);
         }
     }
 }

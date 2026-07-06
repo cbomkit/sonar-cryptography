@@ -33,6 +33,7 @@ import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.rule.IDetectionRule;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,6 +51,7 @@ import org.sonar.plugins.java.api.tree.MethodTree;
 import org.sonar.plugins.java.api.tree.NewArrayTree;
 import org.sonar.plugins.java.api.tree.Tree;
 import org.sonar.plugins.java.api.tree.TypeTree;
+import org.sonar.plugins.java.api.tree.VariableTree;
 
 public final class JavaLanguageSupport
         implements ILanguageSupport<JavaCheck, Tree, Symbol, JavaFileScannerContext> {
@@ -143,6 +145,11 @@ public final class JavaLanguageSupport
     }
 
     @Override
+    public void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
+        this.handler.detachCallsForFile(inputFile);
+    }
+
+    @Override
     public boolean isDetachableCall(@Nonnull Tree tree) {
         if (!(tree instanceof MethodInvocationTree invocation)) {
             // Enum accesses and other kinds stay retained in this iteration.
@@ -165,6 +172,27 @@ public final class JavaLanguageSupport
             }
         }
         return true;
+    }
+
+    @Override
+    public int parameterIndexOf(@Nonnull Tree methodDefinition, @Nonnull Tree methodParameter) {
+        if (!(methodDefinition instanceof MethodTree method)) {
+            return -1;
+        }
+        final Optional<String> targetName =
+                translation()
+                        .resolveIdentifierAsString(
+                                MatchContext.createForHookContext(), methodParameter);
+        if (targetName.isEmpty()) {
+            return -1;
+        }
+        final List<VariableTree> parameters = method.parameters();
+        for (int i = 0; i < parameters.size(); i++) {
+            if (parameters.get(i).simpleName().name().equals(targetName.get())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static boolean containsNewArray(@Nonnull Tree tree) {

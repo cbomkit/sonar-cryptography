@@ -72,6 +72,16 @@ public final class DetachedSyntaxToken implements SyntaxToken {
         return columnOffset;
     }
 
+    /** 1-based end line of the captured range. */
+    public int endLine() {
+        return endLine;
+    }
+
+    /** 0-based end column offset of the captured range. */
+    public int endOffset() {
+        return endColumnOffset;
+    }
+
     @Override
     public String text() {
         return text;

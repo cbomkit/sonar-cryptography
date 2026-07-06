@@ -30,10 +30,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
+import org.sonar.api.batch.fs.InputFile;
 
 public class CallStackAgent<R, T, S, P>
         implements INotifyWhenNewCallWasAddedOntoTheCallStack<R, T>,
@@ -42,7 +42,6 @@ public class CallStackAgent<R, T, S, P>
     private final ConcurrentMap<Integer, List<CallContext<R, T>>> invokedCallStack =
             new ConcurrentHashMap<>();
 
-    @Nonnull private final Set<T> visitedTreeObjects = ConcurrentHashMap.newKeySet();
     @Nonnull private final List<IObserver<CallContext<R, T>>> listeners = new ArrayList<>();
     @Nonnull private final ILanguageSupport<R, T, S, P> languageSupport;
 
@@ -51,16 +50,46 @@ public class CallStackAgent<R, T, S, P>
     }
 
     public void addCall(@Nonnull T tree, @Nonnull IScanContext<R, T> scanContext) {
-        Optional<Integer> keyOptional = getKeyFormT(tree);
+        add(new RetainedCall<>(tree, scanContext, null));
+    }
+
+    /**
+     * Detaches the just-analyzed file's still-retained calls: each {@link RetainedCall} for {@code
+     * inputFile} that carries a pre-built {@link RetainedCall#detachedForm()} is replaced by that
+     * tree-free form, so the file's AST becomes garbage-collectable while cross-file matching
+     * continues from the snapshot. Same-file detections have already fired (with the live context)
+     * before this runs, so their SonarQube issues are unaffected.
+     */
+    public void detachCallsForFile(@Nonnull InputFile inputFile) {
+        for (List<CallContext<R, T>> bucket : invokedCallStack.values()) {
+            for (int i = 0; i < bucket.size(); i++) {
+                if (bucket.get(i) instanceof RetainedCall<R, T> retained
+                        && retained.detachedForm() != null
+                        && inputFile.equals(retained.publisher().getInputFile())) {
+                    bucket.set(i, retained.detachedForm());
+                }
+            }
+        }
+    }
+
+    /** Records a call (retained or detached) and notifies live hook subscriptions. */
+    public void add(@Nonnull CallContext<R, T> callContext) {
+        final Optional<Integer> keyOptional = keyOf(callContext);
         if (keyOptional.isEmpty()) {
             return;
         }
-
-        int key = keyOptional.get();
-        final CallContext<R, T> callContext = new RetainedCall<>(tree, scanContext);
-        if (addedToCallContext(key, callContext)) {
+        if (addedToCallContext(keyOptional.get(), callContext)) {
             this.notify(callContext);
         }
+    }
+
+    @Nonnull
+    private Optional<Integer> keyOf(@Nonnull CallContext<R, T> callContext) {
+        if (callContext instanceof DetachedCall<R, T> detached) {
+            return Optional.of(detached.methodName().hashCode());
+        }
+        final T tree = callContext.tree();
+        return tree == null ? Optional.empty() : getKeyFormT(tree);
     }
 
     @Override
@@ -104,8 +133,7 @@ public class CallStackAgent<R, T, S, P>
             final Iterator<CallContext<R, T>> callContextIterator = callContexts.iterator();
             while (callContextIterator.hasNext()) {
                 final CallContext<R, T> callContext = callContextIterator.next();
-                if (methodMatcher.match(
-                        callContext.tree(), languageSupport.translation(), hook.matchContext())) {
+                if (matches(methodMatcher, callContext, hook)) {
                     stackCalls.add(callContext);
                 }
             }
@@ -120,24 +148,39 @@ public class CallStackAgent<R, T, S, P>
         }
     }
 
-    private boolean addedToCallContext(int key, @Nonnull CallContext<R, T> callContext) {
-        if (visitedTreeObjects.contains(callContext.tree())) {
-            return false;
+    private boolean matches(
+            @Nonnull MethodMatcher<T> methodMatcher,
+            @Nonnull CallContext<R, T> callContext,
+            @Nonnull IHook<R, T, S, P> hook) {
+        if (callContext instanceof DetachedCall<R, T> detached) {
+            return methodMatcher.matchKeys(
+                    detached.invokedObjectType(), detached.methodName(), detached.parameterTypes());
         }
-        visitedTreeObjects.add(callContext.tree());
+        final T tree = callContext.tree();
+        return tree != null
+                && methodMatcher.match(tree, languageSupport.translation(), hook.matchContext());
+    }
+
+    private boolean addedToCallContext(int key, @Nonnull CallContext<R, T> callContext) {
+        final T tree = callContext.tree();
+        final boolean[] added = {true};
         invokedCallStack.compute(
                 key,
                 (k, v) -> {
-                    if (v == null) {
-                        final ArrayList<CallContext<R, T>> callContexts = new ArrayList<>();
-                        callContexts.add(callContext);
-                        return callContexts;
-                    } else {
-                        v.add(callContext);
-                        return v;
+                    final List<CallContext<R, T>> callContexts =
+                            (v == null) ? new ArrayList<>() : v;
+                    if (tree != null) {
+                        for (CallContext<R, T> existing : callContexts) {
+                            if (tree.equals(existing.tree())) {
+                                added[0] = false;
+                                return callContexts;
+                            }
+                        }
                     }
+                    callContexts.add(callContext);
+                    return callContexts;
                 });
-        return true;
+        return added[0];
     }
 
     @Nonnull

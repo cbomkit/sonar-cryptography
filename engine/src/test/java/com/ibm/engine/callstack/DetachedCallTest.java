@@ -32,7 +32,7 @@ class DetachedCallTest {
     @Test
     void holdsNoTreeAndExposesKeys() {
         DetachedScanContext<Object, Object> ctx =
-                new DetachedScanContext<>(mock(InputFile.class), "/p/CrossFileUsage.java");
+                new DetachedScanContext<>(mock(InputFile.class), "/p/CrossFileUsage.java", null);
         IType owner = mock(IType.class);
 
         DetachedCall<Object, Object> call =

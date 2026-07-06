@@ -17,18 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.engine.hooks;
+package com.ibm.engine.callstack;
 
-import com.ibm.engine.callstack.CallContext;
 import javax.annotation.Nonnull;
 
-public interface IHookDetectionObservable<R, T, S, P> {
+/**
+ * Raises a SonarQube issue for a detached (tree-free) cross-file detection, at the location
+ * captured in the {@link DetachedSyntaxToken}. Implemented per language over a shared,
+ * non-AST-pinning reporting channel (for Java, {@code SonarComponents} + the file's {@code
+ * InputFile}), so a detached record can report an issue without retaining the file's AST.
+ *
+ * @param <R> the language's rule/check type
+ */
+@FunctionalInterface
+public interface IDetachedIssueReporter<R> {
 
-    void subscribe(
-            @Nonnull IHook<R, T, S, P> hook, @Nonnull IHookDetectionObserver<R, T, S, P> listener);
-
-    void unsubscribe(
-            @Nonnull IHook<R, T, S, P> hook, @Nonnull IHookDetectionObserver<R, T, S, P> listener);
-
-    void notify(@Nonnull CallContext<R, T> callContext, @Nonnull IHook<R, T, S, P> hook);
+    void report(@Nonnull R rule, @Nonnull DetachedSyntaxToken location, @Nonnull String message);
 }

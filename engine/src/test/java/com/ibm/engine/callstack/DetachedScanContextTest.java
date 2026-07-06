@@ -20,7 +20,7 @@
 package com.ibm.engine.callstack;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
@@ -32,17 +32,19 @@ class DetachedScanContextTest {
     void exposesFilePathAndInputFileWithoutPinningAst() {
         InputFile inputFile = mock(InputFile.class);
         DetachedScanContext<Object, Object> ctx =
-                new DetachedScanContext<>(inputFile, "/abs/path/CrossFileUsage.java");
+                new DetachedScanContext<>(inputFile, "/abs/path/CrossFileUsage.java", null);
 
         assertThat(ctx.getFilePath()).isEqualTo("/abs/path/CrossFileUsage.java");
         assertThat(ctx.getInputFile()).isSameAs(inputFile);
     }
 
     @Test
-    void reportIssueIsUnsupported() {
+    void reportIssueIsANoOp() {
+        // A detached context has no live scanner context, so it cannot raise a tree-based issue; it
+        // silently skips rather than failing the analysis. The CBOM node is still produced.
         DetachedScanContext<Object, Object> ctx =
-                new DetachedScanContext<>(mock(InputFile.class), "/p/F.java");
-        assertThatThrownBy(() -> ctx.reportIssue(new Object(), new Object(), "msg"))
-                .isInstanceOf(UnsupportedOperationException.class);
+                new DetachedScanContext<>(mock(InputFile.class), "/p/F.java", null);
+        assertThatCode(() -> ctx.reportIssue(new Object(), new Object(), "msg"))
+                .doesNotThrowAnyException();
     }
 }

@@ -131,4 +131,28 @@ public interface ILanguageSupport<R, T, S, P> {
     default boolean isDetachableCall(@Nonnull T tree) {
         return false;
     }
+
+    /**
+     * Index of a hook's target parameter within the method definition's parameter list, used to
+     * pick the matching pre-resolved argument snapshot when replaying a detached call. Returns
+     * {@code -1} if it cannot be determined.
+     *
+     * @param methodDefinition the hooked method definition
+     * @param methodParameter the hook's target parameter identifier
+     * @return the zero-based parameter index, or {@code -1}
+     */
+    default int parameterIndexOf(@Nonnull T methodDefinition, @Nonnull T methodParameter) {
+        return -1;
+    }
+
+    /**
+     * Called when a source file has finished being analyzed. Languages that detach recorded calls
+     * use this to drop the just-analyzed file's retained ASTs (its same-file detections have
+     * already fired). Default: no-op.
+     *
+     * @param inputFile the file that finished analysis
+     */
+    default void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
+        // no-op by default
+    }
 }

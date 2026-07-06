@@ -21,10 +21,20 @@ package com.ibm.engine.callstack;
 
 import com.ibm.engine.language.IScanContext;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
- * A recorded call that retains its live AST tree and scan context — today's behavior. Retaining the
- * tree pins the file's AST for the whole scan; used for calls that cannot be faithfully detached.
+ * A recorded call that retains its live AST tree and scan context — today's behavior. While the
+ * call's file is being analyzed, this form is used so same-file hook detections resolve and report
+ * SonarQube issues through the live context.
+ *
+ * <p>If the call is detachable, {@link #detachedForm} carries a pre-built tree-free {@link
+ * DetachedCall} (its arguments resolved at record time). When the call's file finishes analysis,
+ * the {@link CallStackAgent} swaps this entry for {@link #detachedForm}, dropping the tree so the
+ * file's AST becomes garbage-collectable while cross-file matching continues from the snapshot.
  */
-public record RetainedCall<R, T>(@Nonnull T tree, @Nonnull IScanContext<R, T> publisher)
+public record RetainedCall<R, T>(
+        @Nonnull T tree,
+        @Nonnull IScanContext<R, T> publisher,
+        @Nullable DetachedCall<R, T> detachedForm)
         implements CallContext<R, T> {}
