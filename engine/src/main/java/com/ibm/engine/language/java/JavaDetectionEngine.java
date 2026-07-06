@@ -147,8 +147,12 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     @Nullable private DetachedCall<JavaCheck, Tree> buildDetachedCall(
             @Nonnull MethodInvocationTree invocation,
             @Nonnull IScanContext<JavaCheck, Tree> scanContext) {
-        final MatchContext matchContext =
-                MatchContext.build(false, detectionStore.getDetectionRule());
+        // A detached call is only ever matched in hook context (MethodMatcher.matchKeys), so its
+        // type keys must be snapshotted with hook-context semantics (exact type matching) to
+        // reproduce the live retained-call path, which matches via the hook's isHookContext=true
+        // MatchContext. Using record-context (isHookContext=false) here would make cross-file
+        // matching subtype-permissive and diverge from the same-file result.
+        final MatchContext matchContext = MatchContext.createForHookContext();
         final ILanguageTranslation<Tree> translation = handler.getLanguageSupport().translation();
         final Optional<IType> invokedType =
                 translation.getInvokedObjectTypeString(matchContext, invocation);

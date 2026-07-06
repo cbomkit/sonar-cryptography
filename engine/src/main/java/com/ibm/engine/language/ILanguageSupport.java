@@ -158,8 +158,10 @@ public interface ILanguageSupport<R, T, S, P> {
     }
 
     /**
-     * Read-only snapshot of the language's recorded-call population, for the performance/heap
-     * harness. Languages that do not accumulate a call stack return {@link CallContextStats#EMPTY}.
+     * Diagnostics-only: a read-only snapshot of the language's recorded-call population, exposed
+     * for the performance/heap harness and scan-floor attribution. This is <em>not</em> part of the
+     * detection contract — no detection behaviour depends on it, and languages that do not
+     * accumulate a call stack simply return {@link CallContextStats#EMPTY}.
      *
      * @return the current call-context stats; never {@code null}
      */
