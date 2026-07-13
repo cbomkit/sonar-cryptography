@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.output.cyclonedx.behavior;
+package com.ibm.output.behavior;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,8 +47,6 @@ import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.utils.DetectionLocation;
-import com.ibm.output.cyclondx.behavior.CryptoBehavior;
-import com.ibm.output.cyclondx.behavior.CryptoBehaviorMapper;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 

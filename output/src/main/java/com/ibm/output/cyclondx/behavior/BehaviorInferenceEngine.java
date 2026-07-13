@@ -20,6 +20,7 @@
 package com.ibm.output.cyclondx.behavior;
 
 import com.ibm.engine.model.context.AuthContext;
+import com.ibm.output.behavior.CryptoBehavior;
 import java.util.EnumSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
