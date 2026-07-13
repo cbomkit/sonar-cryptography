@@ -19,7 +19,7 @@
  */
 package com.ibm.engine.hooks;
 
-import com.ibm.engine.language.IScanContext;
+import com.ibm.engine.callstack.CallContext;
 import javax.annotation.Nonnull;
 
 public interface IHookDetectionObservable<R, T, S, P> {
@@ -30,8 +30,5 @@ public interface IHookDetectionObservable<R, T, S, P> {
     void unsubscribe(
             @Nonnull IHook<R, T, S, P> hook, @Nonnull IHookDetectionObserver<R, T, S, P> listener);
 
-    void notify(
-            @Nonnull T invocationTree,
-            @Nonnull IHook<R, T, S, P> hook,
-            @Nonnull IScanContext<R, T> scanContext);
+    void notify(@Nonnull CallContext<R, T> callContext, @Nonnull IHook<R, T, S, P> hook);
 }

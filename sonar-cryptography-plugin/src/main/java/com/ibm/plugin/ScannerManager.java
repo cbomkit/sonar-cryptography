@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.mapper.model.INode;
 import com.ibm.output.IOutputFile;
 import com.ibm.output.IOutputFileFactory;
@@ -67,6 +68,20 @@ public final class ScannerManager {
         nodes.addAll(PythonAggregator.getDetectedNodes());
         nodes.addAll(GoAggregator.getDetectedNodes());
         return nodes;
+    }
+
+    /**
+     * Snapshot of the heap populations whose relative size attributes the post-detach scan-floor
+     * growth: retained CBOM nodes vs. detached call-stack records (see the H1 attribution in {@code
+     * docs/PERFORMANCE_TESTING.md}). Java is the measured heap driver; Python/Go call stacks are
+     * not included.
+     */
+    @Nonnull
+    public HeapAttributionSummary heapAttribution() {
+        int detectedNodes = JavaAggregator.getDetectedNodes().size();
+        CallContextStats stats = JavaAggregator.getLanguageSupport().callContextStats();
+        return new HeapAttributionSummary(
+                detectedNodes, stats.detached(), stats.total(), stats.buckets());
     }
 
     public void reset() {

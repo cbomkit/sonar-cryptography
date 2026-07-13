@@ -19,10 +19,16 @@
  */
 package com.ibm.engine.language.java;
 
+import com.ibm.engine.callstack.ArgSnapshot;
+import com.ibm.engine.callstack.DetachedCall;
+import com.ibm.engine.callstack.DetachedScanContext;
+import com.ibm.engine.callstack.DetachedSyntaxToken;
+import com.ibm.engine.callstack.RetainedCall;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.DetectionStoreWithHook;
 import com.ibm.engine.detection.Handler;
 import com.ibm.engine.detection.IDetectionEngine;
+import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.detection.MethodDetection;
 import com.ibm.engine.detection.MethodMatcher;
@@ -32,6 +38,8 @@ import com.ibm.engine.detection.ValueDetection;
 import com.ibm.engine.hooks.EnumHook;
 import com.ibm.engine.hooks.MethodInvocationHookWithParameterResolvement;
 import com.ibm.engine.hooks.MethodInvocationHookWithReturnResolvement;
+import com.ibm.engine.language.ILanguageTranslation;
+import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.SizeFactory;
 import com.ibm.engine.rule.DetectableParameter;
@@ -53,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import org.sonar.java.model.ExpressionUtils;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
+import org.sonar.plugins.java.api.location.Position;
 import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Arguments;
 import org.sonar.plugins.java.api.tree.ArrayDimensionTree;
@@ -69,6 +78,7 @@ import org.sonar.plugins.java.api.tree.MethodTree;
 import org.sonar.plugins.java.api.tree.NewArrayTree;
 import org.sonar.plugins.java.api.tree.NewClassTree;
 import org.sonar.plugins.java.api.tree.ReturnStatementTree;
+import org.sonar.plugins.java.api.tree.SyntaxToken;
 import org.sonar.plugins.java.api.tree.Tree;
 import org.sonar.plugins.java.api.tree.TypeTree;
 import org.sonar.plugins.java.api.tree.VariableTree;
@@ -97,7 +107,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     public void run(@Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull Tree tree) {
         if (tree.is(Tree.Kind.METHOD_INVOCATION)) {
             MethodInvocationTree methodInvocationTree = (MethodInvocationTree) tree;
-            handler.addCallToCallStack(methodInvocationTree, detectionStore.getScanContext());
+            recordCall(methodInvocationTree);
             if (detectionStore
                     .getDetectionRule()
                     .match(methodInvocationTree, handler.getLanguageSupport().translation())) {
@@ -114,6 +124,126 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             ClassTree enumClass = (ClassTree) tree;
             handler.addCallToCallStack(enumClass, detectionStore.getScanContext());
         }
+    }
+
+    /**
+     * Records a method invocation for later cross-file hook matching, detaching it from the AST
+     * when possible (its arguments are pre-resolved here while the file is live). Falls back to
+     * retaining the tree when the call is not detachable or an argument cannot be faithfully
+     * snapshotted.
+     */
+    private void recordCall(@Nonnull MethodInvocationTree invocation) {
+        final IScanContext<JavaCheck, Tree> scanContext = detectionStore.getScanContext();
+        // Record retained (with the live tree) so same-file hook detections resolve and report
+        // through the live context. If detachable, pre-build the tree-free form now, while the file
+        // is live; CallStackAgent swaps to it at leaveFile so the AST can be collected.
+        DetachedCall<JavaCheck, Tree> detachedForm = null;
+        if (handler.getLanguageSupport().isDetachableCall(invocation)) {
+            detachedForm = buildDetachedCall(invocation, scanContext);
+        }
+        handler.addRecordedCall(new RetainedCall<>(invocation, scanContext, detachedForm));
+    }
+
+    @Nullable private DetachedCall<JavaCheck, Tree> buildDetachedCall(
+            @Nonnull MethodInvocationTree invocation,
+            @Nonnull IScanContext<JavaCheck, Tree> scanContext) {
+        // A detached call is only ever matched in hook context (MethodMatcher.matchKeys), so its
+        // type keys must be snapshotted with hook-context semantics (exact type matching) to
+        // reproduce the live retained-call path, which matches via the hook's isHookContext=true
+        // MatchContext. Using record-context (isHookContext=false) here would make cross-file
+        // matching subtype-permissive and diverge from the same-file result.
+        final MatchContext matchContext = MatchContext.createForHookContext();
+        final ILanguageTranslation<Tree> translation = handler.getLanguageSupport().translation();
+        final Optional<IType> invokedType =
+                translation.getInvokedObjectTypeString(matchContext, invocation);
+        final Optional<String> name = translation.getMethodName(matchContext, invocation);
+        if (invokedType.isEmpty() || name.isEmpty()) {
+            return null;
+        }
+        final List<IType> parameterTypes =
+                translation.getMethodParameterTypes(matchContext, invocation);
+
+        final List<ArgSnapshot> arguments = new ArrayList<>();
+        final List<ExpressionTree> actualArguments = invocation.arguments();
+        for (int i = 0; i < actualArguments.size(); i++) {
+            final List<ResolvedValue<Object, Tree>> resolved =
+                    resolveValuesInInnerScope(Object.class, actualArguments.get(i), null);
+            final List<ArgSnapshot.ResolvedSnapshotValue> snapshots = new ArrayList<>();
+            for (ResolvedValue<Object, Tree> resolvedValue : resolved) {
+                final DetachedSyntaxToken location =
+                        captureLocation(resolvedValue.tree(), resolvedValue.value().toString());
+                if (location == null) {
+                    return null; // cannot faithfully snapshot -> fall back to retaining the tree
+                }
+                snapshots.add(
+                        new ArgSnapshot.ResolvedSnapshotValue(resolvedValue.value(), location));
+            }
+            arguments.add(new ArgSnapshot(i, snapshots));
+        }
+
+        final JavaDetachedIssueReporter issueReporter =
+                scanContext instanceof JavaScanContext javaScanContext
+                        ? JavaDetachedIssueReporter.create(javaScanContext.javaFileScannerContext())
+                        : null;
+        final DetachedScanContext<JavaCheck, Tree> detachedScanContext =
+                new DetachedScanContext<>(
+                        scanContext.getInputFile(), scanContext.getFilePath(), issueReporter);
+        return new DetachedCall<>(
+                invokedType.get(), name.get(), parameterTypes, arguments, detachedScanContext);
+    }
+
+    /**
+     * Captures a value's location as an AST-free {@link DetachedSyntaxToken}, mirroring {@code
+     * JavaTranslator.getDetectionContextFrom} so a detached detection's CBOM occurrence is
+     * identical to a non-detached one.
+     */
+    @Nullable private DetachedSyntaxToken captureLocation(@Nonnull Tree location, @Nonnull String text) {
+        final SyntaxToken firstToken = location.firstToken();
+        final SyntaxToken lastToken = location.lastToken();
+        if (firstToken == null || lastToken == null) {
+            return null;
+        }
+        SyntaxToken locationToken = firstToken;
+        List<String> keywords = List.of();
+        switch (location.kind()) {
+            case NEW_CLASS:
+                final NewClassTree newClassTree = (NewClassTree) location;
+                final SyntaxToken identifierToken = newClassTree.identifier().firstToken();
+                if (identifierToken != null) {
+                    locationToken = identifierToken;
+                }
+                keywords =
+                        List.of(
+                                newClassTree.methodSymbol().signature(),
+                                newClassTree.methodSymbol().name(),
+                                newClassTree.identifier().toString());
+                break;
+            case METHOD_INVOCATION:
+                final MethodInvocationTree methodInvocationTree = (MethodInvocationTree) location;
+                final SyntaxToken methodSelectToken =
+                        methodInvocationTree.methodSelect().firstToken();
+                if (methodSelectToken != null) {
+                    locationToken = methodSelectToken;
+                }
+                keywords =
+                        List.of(
+                                methodInvocationTree.methodSymbol().signature(),
+                                methodInvocationTree.methodSymbol().name());
+                break;
+            case ENUM_CONSTANT:
+                final EnumConstantTree enumConstantTree = (EnumConstantTree) location;
+                keywords =
+                        List.of(
+                                enumConstantTree.initializer().methodSymbol().signature(),
+                                enumConstantTree.initializer().methodSymbol().name());
+                break;
+            default:
+                break;
+        }
+        final Position start = locationToken.range().start();
+        final Position end = lastToken.range().end();
+        return new DetachedSyntaxToken(
+                start.line(), start.columnOffset(), end.line(), end.columnOffset(), text, keywords);
     }
 
     @SuppressWarnings("java:S3776")

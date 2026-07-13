@@ -169,8 +169,33 @@ public final class MethodMatcher<T> {
             return false;
         }
 
-        boolean typeMatches = this.invokedObjectTypeString.test(invokedObjectType.get());
-        boolean nameMatches = this.methodName.test(invokedMethodName.get());
+        return matchKeysInternal(
+                invokedObjectType.get(),
+                invokedMethodName.get(),
+                param,
+                translation.supportsSubsetParameterMatching());
+    }
+
+    /**
+     * Tree-free equivalent of {@link #match}: matches against the invoked-object type, method name
+     * and parameter types extracted at record time, so a detached recorded call can be matched
+     * without retaining its AST. Subset (constructor) parameter matching is not applicable to
+     * detached calls, so it is disabled here.
+     */
+    public boolean matchKeys(
+            @Nonnull IType invokedObjectType,
+            @Nonnull String methodName,
+            @Nonnull List<IType> parameterTypes) {
+        return matchKeysInternal(invokedObjectType, methodName, parameterTypes, false);
+    }
+
+    private boolean matchKeysInternal(
+            @Nonnull IType invokedObjectType,
+            @Nonnull String invokedMethodName,
+            @Nonnull List<IType> param,
+            boolean supportsSubsetParameterMatching) {
+        boolean typeMatches = this.invokedObjectTypeString.test(invokedObjectType);
+        boolean nameMatches = this.methodName.test(invokedMethodName);
 
         if (!typeMatches || !nameMatches) {
             return false;
@@ -178,9 +203,9 @@ public final class MethodMatcher<T> {
 
         // For languages supporting subset parameter matching (e.g., Go composite literals),
         // the rule matches if at least one expected parameter exists in the actual fields.
-        if (invokedMethodName.get().equals("<init>")
+        if (invokedMethodName.equals("<init>")
                 && !parameterTypesSerializable.isEmpty()
-                && translation.supportsSubsetParameterMatching()) {
+                && supportsSubsetParameterMatching) {
             return anyParameterMatches(param);
         }
 

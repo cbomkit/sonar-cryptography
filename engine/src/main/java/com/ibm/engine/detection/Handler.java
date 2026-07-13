@@ -21,6 +21,7 @@ package com.ibm.engine.detection;
 
 import com.ibm.common.IObserver;
 import com.ibm.engine.callstack.CallContext;
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.callstack.CallStackAgent;
 import com.ibm.engine.hooks.HookDetectionObservable;
 import com.ibm.engine.hooks.HookRepository;
@@ -29,6 +30,7 @@ import com.ibm.engine.hooks.IHookDetectionObserver;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.IScanContext;
 import javax.annotation.Nonnull;
+import org.sonar.api.batch.fs.InputFile;
 
 public class Handler<R, T, S, P> {
     @Nonnull private final ILanguageSupport<R, T, S, P> languageSupport;
@@ -77,10 +79,21 @@ public class Handler<R, T, S, P> {
     }
 
     public void notifyAllHookDetectionObservers(
-            @Nonnull T invocationTree,
-            @Nonnull IHook<R, T, S, P> hook,
-            @Nonnull IScanContext<R, T> scanContext) {
-        this.hookDetectionObservable.notify(invocationTree, hook, scanContext);
+            @Nonnull CallContext<R, T> callContext, @Nonnull IHook<R, T, S, P> hook) {
+        this.hookDetectionObservable.notify(callContext, hook);
+    }
+
+    public void addRecordedCall(@Nonnull CallContext<R, T> recordedCall) {
+        this.callStackAgent.add(recordedCall);
+    }
+
+    public void detachCallsForFile(@Nonnull InputFile inputFile) {
+        this.callStackAgent.detachCallsForFile(inputFile);
+    }
+
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return this.callStackAgent.callContextStats();
     }
 
     public void subscribeToCallStackAgent(@Nonnull IObserver<CallContext<R, T>> listener) {

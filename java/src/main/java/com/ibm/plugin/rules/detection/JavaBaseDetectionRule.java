@@ -74,6 +74,17 @@ public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
     }
 
     /**
+     * When a file finishes analysis, detach its still-retained recorded calls so the file's AST
+     * becomes garbage-collectable. Same-file detections have already fired with the live context.
+     *
+     * @param context the scanner context of the file that finished analysis
+     */
+    @Override
+    public void leaveFile(@Nonnull JavaFileScannerContext context) {
+        JavaAggregator.getLanguageSupport().notifyLeaveFile(context.getInputFile());
+    }
+
+    /**
      * Visits a tree node and applies detection rules to it.
      *
      * @param tree The tree node to visit.

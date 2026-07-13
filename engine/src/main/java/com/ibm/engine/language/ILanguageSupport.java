@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.IBaseMethodVisitorFactory;
@@ -117,4 +118,55 @@ public interface ILanguageSupport<R, T, S, P> {
      */
     @Nullable EnumMatcher<T> createSimpleEnumMatcherFor(
             @Nonnull T enumIdentifier, @Nonnull MatchContext matchContext);
+
+    /**
+     * Whether a recorded call may be stored tree-free (detached) instead of retaining its AST for
+     * the whole scan. Detaching lets the file's AST be garbage-collected after analysis.
+     *
+     * <p>Default: conservative {@code false} (retain the tree, today's behavior). Only languages
+     * that can faithfully pre-resolve a call's arguments at record time override this.
+     *
+     * @param tree the recorded call
+     * @return {@code true} if the call can be recorded as a detached, tree-free record
+     */
+    default boolean isDetachableCall(@Nonnull T tree) {
+        return false;
+    }
+
+    /**
+     * Index of a hook's target parameter within the method definition's parameter list, used to
+     * pick the matching pre-resolved argument snapshot when replaying a detached call. Returns
+     * {@code -1} if it cannot be determined.
+     *
+     * @param methodDefinition the hooked method definition
+     * @param methodParameter the hook's target parameter identifier
+     * @return the zero-based parameter index, or {@code -1}
+     */
+    default int parameterIndexOf(@Nonnull T methodDefinition, @Nonnull T methodParameter) {
+        return -1;
+    }
+
+    /**
+     * Called when a source file has finished being analyzed. Languages that detach recorded calls
+     * use this to drop the just-analyzed file's retained ASTs (its same-file detections have
+     * already fired). Default: no-op.
+     *
+     * @param inputFile the file that finished analysis
+     */
+    default void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
+        // no-op by default
+    }
+
+    /**
+     * Diagnostics-only: a read-only snapshot of the language's recorded-call population, exposed
+     * for the performance/heap harness and scan-floor attribution. This is <em>not</em> part of the
+     * detection contract — no detection behaviour depends on it, and languages that do not
+     * accumulate a call stack simply return {@link CallContextStats#EMPTY}.
+     *
+     * @return the current call-context stats; never {@code null}
+     */
+    @Nonnull
+    default CallContextStats callContextStats() {
+        return CallContextStats.EMPTY;
+    }
 }

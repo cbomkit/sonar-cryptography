@@ -293,6 +293,8 @@ Run with `go run gen_package.go`, then delete the script.
 
 If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [*Testing your configuration and troubleshooting*](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
 
+To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [*Performance & Heap Testing*](docs/PERFORMANCE_TESTING.md).
+
 ## Contribution Guidelines
 
 If you'd like to contribute to Sonar Cryptography Plugin, please take a look at our

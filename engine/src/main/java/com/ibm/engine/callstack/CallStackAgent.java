@@ -27,13 +27,14 @@ import com.ibm.engine.hooks.IHookDetectionObserver;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.IScanContext;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
+import org.sonar.api.batch.fs.InputFile;
 
 public class CallStackAgent<R, T, S, P>
         implements INotifyWhenNewCallWasAddedOntoTheCallStack<R, T>,
@@ -42,7 +43,6 @@ public class CallStackAgent<R, T, S, P>
     private final ConcurrentMap<Integer, List<CallContext<R, T>>> invokedCallStack =
             new ConcurrentHashMap<>();
 
-    @Nonnull private final Set<T> visitedTreeObjects = ConcurrentHashMap.newKeySet();
     @Nonnull private final List<IObserver<CallContext<R, T>>> listeners = new ArrayList<>();
     @Nonnull private final ILanguageSupport<R, T, S, P> languageSupport;
 
@@ -51,16 +51,52 @@ public class CallStackAgent<R, T, S, P>
     }
 
     public void addCall(@Nonnull T tree, @Nonnull IScanContext<R, T> scanContext) {
-        Optional<Integer> keyOptional = getKeyFormT(tree);
+        add(new RetainedCall<>(tree, scanContext, null));
+    }
+
+    /**
+     * Detaches the just-analyzed file's still-retained calls: each {@link RetainedCall} for {@code
+     * inputFile} that carries a pre-built {@link RetainedCall#detachedForm()} is replaced by that
+     * tree-free form, so the file's AST becomes garbage-collectable while cross-file matching
+     * continues from the snapshot. Same-file detections have already fired (with the live context)
+     * before this runs, so their SonarQube issues are unaffected.
+     */
+    public void detachCallsForFile(@Nonnull InputFile inputFile) {
+        for (List<CallContext<R, T>> bucket : invokedCallStack.values()) {
+            for (int i = 0; i < bucket.size(); i++) {
+                if (bucket.get(i) instanceof RetainedCall<R, T> retained
+                        && retained.detachedForm() != null
+                        && inputFile.equals(retained.publisher().getInputFile())) {
+                    bucket.set(i, retained.detachedForm());
+                }
+            }
+        }
+    }
+
+    /** Read-only snapshot of the recorded-call population (retained-with-tree vs. detached). */
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return CallContextStats.from(invokedCallStack.values());
+    }
+
+    /** Records a call (retained or detached) and notifies live hook subscriptions. */
+    public void add(@Nonnull CallContext<R, T> callContext) {
+        final Optional<Integer> keyOptional = keyOf(callContext);
         if (keyOptional.isEmpty()) {
             return;
         }
-
-        int key = keyOptional.get();
-        final CallContext<R, T> callContext = new CallContext<>(tree, scanContext);
-        if (addedToCallContext(key, callContext)) {
+        if (addedToCallContext(keyOptional.get(), callContext)) {
             this.notify(callContext);
         }
+    }
+
+    @Nonnull
+    private Optional<Integer> keyOf(@Nonnull CallContext<R, T> callContext) {
+        if (callContext instanceof DetachedCall<R, T> detached) {
+            return Optional.of(detached.methodName().hashCode());
+        }
+        final T tree = callContext.tree();
+        return tree == null ? Optional.empty() : getKeyFormT(tree);
     }
 
     @Override
@@ -98,14 +134,13 @@ public class CallStackAgent<R, T, S, P>
         }
 
         final List<CallContext<R, T>> stackCalls = new ArrayList<>();
-        final Iterator<List<CallContext<R, T>>> iterator = invokedCallStack.values().iterator();
+        final Iterator<List<CallContext<R, T>>> iterator = bucketsToScan(methodMatcher).iterator();
         while (iterator.hasNext()) {
             final List<CallContext<R, T>> callContexts = iterator.next();
             final Iterator<CallContext<R, T>> callContextIterator = callContexts.iterator();
             while (callContextIterator.hasNext()) {
                 final CallContext<R, T> callContext = callContextIterator.next();
-                if (methodMatcher.match(
-                        callContext.tree(), languageSupport.translation(), hook.matchContext())) {
+                if (matches(methodMatcher, callContext, hook)) {
                     stackCalls.add(callContext);
                 }
             }
@@ -120,24 +155,56 @@ public class CallStackAgent<R, T, S, P>
         }
     }
 
-    private boolean addedToCallContext(int key, @Nonnull CallContext<R, T> callContext) {
-        if (visitedTreeObjects.contains(callContext.tree())) {
-            return false;
+    /**
+     * The call-stack buckets a hook's matcher could match. Recorded calls are keyed by their
+     * invoked method name's hash, so a single-name matcher only needs that one bucket; {@code
+     * ANY}/multi-name matchers fall back to scanning every bucket.
+     */
+    @Nonnull
+    private Collection<List<CallContext<R, T>>> bucketsToScan(
+            @Nonnull MethodMatcher<T> methodMatcher) {
+        final List<String> methodNames = methodMatcher.getMethodNamesSerializable();
+        if (methodNames.size() == 1 && !MethodMatcher.ANY.equals(methodNames.get(0))) {
+            final List<CallContext<R, T>> bucket =
+                    invokedCallStack.get(methodNames.get(0).hashCode());
+            return bucket == null ? List.of() : List.of(bucket);
         }
-        visitedTreeObjects.add(callContext.tree());
+        return invokedCallStack.values();
+    }
+
+    private boolean matches(
+            @Nonnull MethodMatcher<T> methodMatcher,
+            @Nonnull CallContext<R, T> callContext,
+            @Nonnull IHook<R, T, S, P> hook) {
+        if (callContext instanceof DetachedCall<R, T> detached) {
+            return methodMatcher.matchKeys(
+                    detached.invokedObjectType(), detached.methodName(), detached.parameterTypes());
+        }
+        final T tree = callContext.tree();
+        return tree != null
+                && methodMatcher.match(tree, languageSupport.translation(), hook.matchContext());
+    }
+
+    private boolean addedToCallContext(int key, @Nonnull CallContext<R, T> callContext) {
+        final T tree = callContext.tree();
+        final boolean[] added = {true};
         invokedCallStack.compute(
                 key,
                 (k, v) -> {
-                    if (v == null) {
-                        final ArrayList<CallContext<R, T>> callContexts = new ArrayList<>();
-                        callContexts.add(callContext);
-                        return callContexts;
-                    } else {
-                        v.add(callContext);
-                        return v;
+                    final List<CallContext<R, T>> callContexts =
+                            (v == null) ? new ArrayList<>() : v;
+                    if (tree != null) {
+                        for (CallContext<R, T> existing : callContexts) {
+                            if (tree.equals(existing.tree())) {
+                                added[0] = false;
+                                return callContexts;
+                            }
+                        }
                     }
+                    callContexts.add(callContext);
+                    return callContexts;
                 });
-        return true;
+        return added[0];
     }
 
     @Nonnull

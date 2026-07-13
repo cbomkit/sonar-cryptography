@@ -21,5 +21,21 @@ package com.ibm.engine.callstack;
 
 import com.ibm.engine.language.IScanContext;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-public record CallContext<R, T>(@Nonnull T tree, @Nonnull IScanContext<R, T> publisher) {}
+/**
+ * A recorded call site accumulated by the {@link CallStackAgent} for later cross-file hook
+ * matching.
+ *
+ * <p>{@link RetainedCall} keeps the live AST tree (today's behavior); {@link DetachedCall} holds a
+ * tree-free snapshot so the file's AST can be garbage-collected after analysis.
+ */
+public sealed interface CallContext<R, T> permits RetainedCall, DetachedCall {
+
+    /** The recorded call tree, or {@code null} for a detached record that holds no AST. */
+    @Nullable T tree();
+
+    /** The scan context of the file the call was recorded in. */
+    @Nonnull
+    IScanContext<R, T> publisher();
+}

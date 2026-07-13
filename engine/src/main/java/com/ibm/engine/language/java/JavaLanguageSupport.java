@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.java;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.Handler;
@@ -33,6 +34,7 @@ import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.rule.IDetectionRule;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,11 +44,15 @@ import org.sonar.java.model.ExpressionUtils;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.semantic.Symbol;
+import org.sonar.plugins.java.api.tree.BaseTreeVisitor;
 import org.sonar.plugins.java.api.tree.ClassTree;
 import org.sonar.plugins.java.api.tree.ExpressionTree;
+import org.sonar.plugins.java.api.tree.MethodInvocationTree;
 import org.sonar.plugins.java.api.tree.MethodTree;
+import org.sonar.plugins.java.api.tree.NewArrayTree;
 import org.sonar.plugins.java.api.tree.Tree;
 import org.sonar.plugins.java.api.tree.TypeTree;
+import org.sonar.plugins.java.api.tree.VariableTree;
 
 public final class JavaLanguageSupport
         implements ILanguageSupport<JavaCheck, Tree, Symbol, JavaFileScannerContext> {
@@ -137,5 +143,74 @@ public final class JavaLanguageSupport
         Optional<String> enumIdentifierName =
                 translation().getEnumIdentifierName(matchContext, enumIdentifier);
         return enumIdentifierName.<EnumMatcher<Tree>>map(EnumMatcher::new).orElse(null);
+    }
+
+    @Override
+    public void notifyLeaveFile(@Nonnull org.sonar.api.batch.fs.InputFile inputFile) {
+        this.handler.detachCallsForFile(inputFile);
+    }
+
+    @Override
+    @Nonnull
+    public CallContextStats callContextStats() {
+        return this.handler.callContextStats();
+    }
+
+    @Override
+    public boolean isDetachableCall(@Nonnull Tree tree) {
+        if (!(tree instanceof MethodInvocationTree invocation)) {
+            // Enum accesses and other kinds stay retained in this iteration.
+            return false;
+        }
+        // NB: we deliberately do NOT require methodSymbol().declaration() != null. Cross-file calls
+        // resolve their callee via the compiled classpath (sonar.java.binaries), so declaration()
+        // is
+        // null for exactly the cross-file calls that drive the heap retention. Detachability
+        // depends
+        // on argument pre-resolvability (checked when building the record, with a retained-tree
+        // fallback) and on matchKeys (record-time type/name/params), neither of which needs the
+        // callee's source declaration.
+        for (ExpressionTree argument : invocation.arguments()) {
+            if (containsNewArray(argument)) {
+                // NEW_ARRAY resolution is value-factory dependent (SizeFactory returns the array
+                // size, otherwise its elements). We cannot reproduce that generically at record
+                // time, so keep such calls on the retained-tree fallback path.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int parameterIndexOf(@Nonnull Tree methodDefinition, @Nonnull Tree methodParameter) {
+        if (!(methodDefinition instanceof MethodTree method)) {
+            return -1;
+        }
+        final Optional<String> targetName =
+                translation()
+                        .resolveIdentifierAsString(
+                                MatchContext.createForHookContext(), methodParameter);
+        if (targetName.isEmpty()) {
+            return -1;
+        }
+        final List<VariableTree> parameters = method.parameters();
+        for (int i = 0; i < parameters.size(); i++) {
+            if (parameters.get(i).simpleName().name().equals(targetName.get())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean containsNewArray(@Nonnull Tree tree) {
+        final boolean[] found = {false};
+        tree.accept(
+                new BaseTreeVisitor() {
+                    @Override
+                    public void visitNewArray(NewArrayTree newArrayTree) {
+                        found[0] = true;
+                    }
+                });
+        return found[0];
     }
 }

@@ -51,6 +51,9 @@ public class OutputFileJob implements PostJob {
         } else {
             LOGGER.info("No cryptography assets were detected. CBOM will not be generated.");
         }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(scannerManager.heapAttribution().format());
+        }
         scannerManager.reset();
     }
 }
