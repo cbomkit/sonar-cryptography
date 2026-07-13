@@ -1,5 +1,6 @@
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
@@ -8,6 +9,7 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
@@ -16,6 +18,7 @@ import javax.net.ssl.X509TrustManager;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 
@@ -24,8 +27,22 @@ class AuthInterfaceTestFile {
         return parser.parseSignedClaims(jws);
     }
 
+    @SuppressWarnings("deprecation")
+    Jws<Claims> useJjwtLegacyAlias(JwtParser parser, String jws) {
+        return parser.parseClaimsJws(jws);
+    }
+
+    // Retighten regression: constructing a parser is not verification and must not be detected.
+    JwtParser buildJjwtParserOnly() {
+        return Jwts.parser().build();
+    }
+
     boolean useNimbus(SignedJWT jwt, JWSVerifier verifier) throws Exception {
         return jwt.verify(verifier);
+    }
+
+    boolean useNimbusJwsObject(JWSObject jws, JWSVerifier verifier) throws Exception {
+        return jws.verify(verifier);
     }
 
     DecodedJWT useAuth0(JWTVerifier verifier) {
@@ -33,6 +50,10 @@ class AuthInterfaceTestFile {
     }
 
     void useJwtDecoder(JwtDecoder decoder) {
+        decoder.decode((String) null);
+    }
+
+    void useReactiveJwtDecoder(ReactiveJwtDecoder decoder) {
         decoder.decode((String) null);
     }
 
@@ -80,6 +101,10 @@ class AuthInterfaceTestFile {
         return session.getPeerPrincipal();
     }
 
+    java.security.cert.Certificate[] usePeerCertificates(SSLSession session) throws Exception {
+        return session.getPeerCertificates();
+    }
+
     void useTrustManager(X509TrustManager manager, java.security.cert.X509Certificate[] chain)
             throws Exception {
         manager.checkClientTrusted(chain, "RSA");
@@ -93,6 +118,10 @@ class AuthInterfaceTestFile {
 
     org.pac4j.http.client.direct.HeaderClient usePac4jHeaderClient() {
         return new org.pac4j.http.client.direct.HeaderClient();
+    }
+
+    org.pac4j.http.client.direct.ParameterClient usePac4jParameterClient() {
+        return new org.pac4j.http.client.direct.ParameterClient();
     }
 
     org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
