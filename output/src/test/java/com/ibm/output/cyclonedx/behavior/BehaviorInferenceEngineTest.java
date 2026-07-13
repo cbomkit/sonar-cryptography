@@ -22,8 +22,8 @@ package com.ibm.output.cyclonedx.behavior;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.model.context.AuthContext;
+import com.ibm.output.behavior.CryptoBehavior;
 import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
-import com.ibm.output.cyclondx.behavior.CryptoBehavior;
 import java.util.EnumSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
