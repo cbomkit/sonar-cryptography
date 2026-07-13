@@ -65,8 +65,6 @@ import javax.annotation.Nonnull;
  */
 public final class CryptoBehaviorMapper {
 
-    public static final String BEHAVIOR_PROPERTY_NAME = "cbomkit:crypto:behavior";
-
     private static final Predicate<INode> ANY = node -> true;
 
     private static final Predicate<INode> IS_KEM = node -> node.is(KeyEncapsulationMechanism.class);

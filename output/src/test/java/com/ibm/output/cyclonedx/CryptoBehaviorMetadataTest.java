@@ -35,7 +35,7 @@ import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
-import com.ibm.output.behavior.CryptoBehaviorMapper;
+import com.ibm.output.cyclondx.BehaviorMetadataWriter;
 import com.ibm.output.cyclondx.CBOMOutputFile;
 import java.util.Collections;
 import java.util.List;
@@ -68,7 +68,7 @@ class CryptoBehaviorMetadataTest {
 
         assertThat(metaComponent.getProperties()).hasSize(1);
         final Property property = metaComponent.getProperties().get(0);
-        assertThat(property.getName()).isEqualTo(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
+        assertThat(property.getName()).isEqualTo(BehaviorMetadataWriter.BEHAVIOR_PROPERTY_NAME);
         assertThat(property.getValue())
                 .isEqualTo(
                         "security:cryptography:encryptsData,"

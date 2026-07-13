@@ -19,7 +19,6 @@
  */
 package com.ibm.output.cyclondx;
 
-import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.CipherSuite;
@@ -59,9 +58,7 @@ import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
-import com.ibm.output.behavior.CryptoBehavior;
-import com.ibm.output.behavior.CryptoBehaviorMapper;
-import com.ibm.output.cyclondx.behavior.BehaviorInferenceEngine;
+import com.ibm.output.behavior.BehaviorCollector;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
 import com.ibm.output.cyclondx.builder.ProtocolComponentBuilder;
 import com.ibm.output.cyclondx.builder.RelatedCryptoMaterialComponentBuilder;
@@ -71,16 +68,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -94,7 +88,6 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
-import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Service;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
@@ -108,19 +101,7 @@ public class CBOMOutputFile implements IOutputFile {
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
 
-    @Nonnull
-    private final Set<CryptoBehavior> aggregatedBehaviors = EnumSet.noneOf(CryptoBehavior.class);
-
-    @Nonnull private final CryptoBehaviorMapper behaviorMapper = new CryptoBehaviorMapper();
-
-    @Nonnull
-    private final Set<AuthContext.Kind> authSignals = EnumSet.noneOf(AuthContext.Kind.class);
-
-    @Nonnull private final BehaviorInferenceEngine inferenceEngine = new BehaviorInferenceEngine();
-
-    // Intentional simplification of spec §4.4: use a fixed name because no scanned-software
-    // name is plumbed into getBom(); the ideal value would be the scanned project name.
-    private static final String METADATA_COMPONENT_NAME = "application";
+    @Nonnull private final BehaviorCollector behaviorCollector = new BehaviorCollector();
 
     public CBOMOutputFile() {
         this.components = new HashMap<>();
@@ -151,28 +132,18 @@ public class CBOMOutputFile implements IOutputFile {
                         final IProperty property = (IProperty) node;
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
                     } else if (node instanceof ContextualEvidence evidence) {
-                        recordContextualEvidence(evidence);
+                        this.behaviorCollector.observe(evidence);
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     }
                 });
     }
 
-    private void recordContextualEvidence(@Nonnull ContextualEvidence evidence) {
-        // ContextualEvidence carries a generic identifier; map the ones that name an auth
-        // interface back to the typed vocabulary. Unknown identifiers are not auth signals; skip.
-        try {
-            this.authSignals.add(AuthContext.Kind.valueOf(evidence.identifier()));
-        } catch (IllegalArgumentException ignored) {
-            // not an auth-interface evidence identifier we model
-        }
-    }
-
     @Nullable private String createAlgorithmComponent(
             @Nullable String parentBomRef, @Nonnull Algorithm node) {
-        // Accumulate behaviors here so every algorithm path is covered: top-level via add(),
-        // nested recursion, and protocol/cipher-suite constituents via direct calls.
-        this.aggregatedBehaviors.addAll(this.behaviorMapper.map(node));
+        // Observe here so every algorithm path is covered: top-level via add(), nested
+        // recursion, and protocol/cipher-suite constituents via direct calls.
+        this.behaviorCollector.observe(node);
         Map<Class<? extends INode>, INode> children = node.getChildren();
         Component algorithm =
                 AlgorithmComponentBuilder.create()
@@ -371,23 +342,7 @@ public class CBOMOutputFile implements IOutputFile {
         metadata.setToolChoice(scannerInfo);
 
         // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
-        final Set<CryptoBehavior> behaviors =
-                this.inferenceEngine.infer(this.aggregatedBehaviors, this.authSignals);
-        if (!behaviors.isEmpty()) {
-            final Component softwareComponent = new Component();
-            softwareComponent.setType(Component.Type.APPLICATION);
-            softwareComponent.setName(METADATA_COMPONENT_NAME);
-            final String value =
-                    behaviors.stream()
-                            .map(CryptoBehavior::fullId)
-                            .sorted()
-                            .collect(Collectors.joining(","));
-            final Property behaviorProperty = new Property();
-            behaviorProperty.setName(CryptoBehaviorMapper.BEHAVIOR_PROPERTY_NAME);
-            behaviorProperty.setValue(value);
-            softwareComponent.setProperties(List.of(behaviorProperty));
-            metadata.setComponent(softwareComponent);
-        }
+        BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.inferBehaviors());
 
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));
