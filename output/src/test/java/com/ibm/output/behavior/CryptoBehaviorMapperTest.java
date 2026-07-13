@@ -116,11 +116,11 @@ class CryptoBehaviorMapperTest {
     }
 
     @Test
-    void bareMacFallsBackToAuthenticatesAndIntegrity() {
+    void bareMacFallsBackToIntegrityOnly() {
+        // authenticates is application-level and gated on auth-interface evidence; a bare MAC
+        // contributes only the integrity goal (spec 2026-07-13 §4).
         final HMAC hmac = new HMAC(loc);
-        assertThat(mapper.map(hmac))
-                .containsExactlyInAnyOrder(
-                        CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY);
+        assertThat(mapper.map(hmac)).containsExactly(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
@@ -167,12 +167,10 @@ class CryptoBehaviorMapperTest {
     }
 
     @Test
-    void tagOperationYieldsAuthenticatesAndIntegrity() {
+    void tagOperationYieldsIntegrityOnly() {
         final HMAC hmac = new HMAC(loc);
         hmac.put(new Tag(loc));
-        assertThat(mapper.map(hmac))
-                .containsExactlyInAnyOrder(
-                        CryptoBehavior.AUTHENTICATES, CryptoBehavior.ENSURES_INTEGRITY);
+        assertThat(mapper.map(hmac)).containsExactly(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
@@ -247,5 +245,13 @@ class CryptoBehaviorMapperTest {
     void bareKeyWrapCipherFallsBackToWrapsKey() {
         final Algorithm aesWrap = new Algorithm("AESWrap", KeyWrap.class, loc);
         assertThat(mapper.map(aesWrap)).containsExactly(CryptoBehavior.WRAPS_KEY);
+    }
+
+    @Test
+    void fallbackFirstMatchWins() {
+        // AuthenticatedEncryption must resolve via its own row (four behaviors), not a generic
+        // cipher row — guards the ordered, first-match-wins contract of the fallback table.
+        final Algorithm aesgcm = new Algorithm("AES-GCM", AuthenticatedEncryption.class, loc);
+        assertThat(mapper.map(aesgcm)).hasSize(4).contains(CryptoBehavior.ENSURES_INTEGRITY);
     }
 }
