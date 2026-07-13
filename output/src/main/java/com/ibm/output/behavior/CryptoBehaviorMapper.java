@@ -49,19 +49,170 @@ import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.mapper.model.functionality.Verify;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 
 /**
- * Derives {@link CryptoBehavior}s for a detected cryptographic asset. Operation-first: reads the
- * asset's {@code Functionality} children and its exact primitive kind. If no operation is present,
- * a primitive-kind fallback infers the plausible behaviors. Never throws; unmappable input yields
- * an empty set. See spec §5 for the mapping tables and known taxonomy gaps.
+ * Derives {@link CryptoBehavior}s for a detected cryptographic asset. Operation-first: every {@code
+ * OPERATIONS} row whose {@code Functionality} child is present and whose guard holds contributes.
+ * If no operation matched, the ordered {@code FALLBACKS} table infers plausible behaviors from the
+ * primitive kind (first matching kind wins). Never throws; unmappable input yields an empty set.
+ * Note: {@code authenticates} is deliberately never derived here — it is an application-level
+ * behavior gated on auth-interface evidence (see {@code AuthInterfaceRule}).
  */
 public final class CryptoBehaviorMapper {
 
     public static final String BEHAVIOR_PROPERTY_NAME = "cbomkit:crypto:behavior";
+
+    private static final Predicate<INode> ANY = node -> true;
+
+    private static final Predicate<INode> IS_KEM = node -> node.is(KeyEncapsulationMechanism.class);
+
+    private static final Predicate<INode> IS_CIPHER =
+            node ->
+                    node.is(BlockCipher.class)
+                            || node.is(StreamCipher.class)
+                            || node.is(Cipher.class)
+                            || node.is(AuthenticatedEncryption.class)
+                            || node.is(KeyWrap.class);
+
+    private static final Predicate<INode> IS_PRNG =
+            node -> node.is(PseudorandomNumberGenerator.class);
+
+    private static final Predicate<INode> IS_PASSWORD_KDF =
+            node ->
+                    node.is(PasswordBasedKeyDerivationFunction.class)
+                            || node.is(PasswordBasedEncryption.class);
+
+    private record OperationMapping(
+            @Nonnull Class<? extends INode> operation,
+            @Nonnull Predicate<INode> when,
+            @Nonnull Set<CryptoBehavior> behaviors) {}
+
+    private record FallbackMapping(
+            @Nonnull Class<? extends INode> primitive, @Nonnull Set<CryptoBehavior> behaviors) {}
+
+    /** Operational pass (spec §5.1) — all matching rows contribute. */
+    private static final List<OperationMapping> OPERATIONS =
+            List.of(
+                    on(
+                            Encrypt.class,
+                            ANY,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    on(
+                            Decrypt.class,
+                            ANY,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    on(
+                            Encapsulate.class,
+                            IS_KEM,
+                            CryptoBehavior.EXCHANGES_KEY,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    on(
+                            Decapsulate.class,
+                            IS_KEM,
+                            CryptoBehavior.EXCHANGES_KEY,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    // JCA WRAP_MODE/UNWRAP_MODE and Cipher.wrap surface as (De)Encapsulate on a
+                    // Cipher.
+                    on(Encapsulate.class, IS_CIPHER, CryptoBehavior.WRAPS_KEY),
+                    on(Decapsulate.class, IS_CIPHER, CryptoBehavior.WRAPS_KEY),
+                    on(
+                            Sign.class,
+                            ANY,
+                            CryptoBehavior.SIGNS_DATA,
+                            CryptoBehavior.ENSURES_INTEGRITY,
+                            CryptoBehavior.ENSURES_NON_REPUDIATION),
+                    on(
+                            Verify.class,
+                            ANY,
+                            CryptoBehavior.VERIFIES_SIGNATURE,
+                            CryptoBehavior.ENSURES_INTEGRITY),
+                    on(
+                            Digest.class,
+                            ANY,
+                            CryptoBehavior.HASHES_DATA,
+                            CryptoBehavior.ENSURES_INTEGRITY),
+                    // No operational "computesMac" verb in the taxonomy, and authenticates is
+                    // gated on auth-interface evidence — a Tag contributes integrity only.
+                    on(Tag.class, ANY, CryptoBehavior.ENSURES_INTEGRITY),
+                    on(Generate.class, IS_PRNG, CryptoBehavior.GENERATES_RANDOM_VALUE),
+                    on(KeyGeneration.class, ANY, CryptoBehavior.GENERATES_KEY),
+                    on(KeyDerivation.class, IS_PASSWORD_KDF, CryptoBehavior.HASHES_PASSWORD),
+                    // Generic KDF has no "deriveKey" value; approximated as generatesKey (spec
+                    // §5.1).
+                    on(
+                            KeyDerivation.class,
+                            IS_PASSWORD_KDF.negate(),
+                            CryptoBehavior.GENERATES_KEY));
+
+    /** Primitive-kind fallback (spec §5.2) — ordered, the first matching kind wins. */
+    private static final List<FallbackMapping> FALLBACKS =
+            List.of(
+                    fallback(
+                            AuthenticatedEncryption.class,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY,
+                            CryptoBehavior.ENSURES_INTEGRITY),
+                    fallback(
+                            BlockCipher.class,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    fallback(
+                            StreamCipher.class,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    fallback(
+                            Cipher.class,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    fallback(
+                            PublicKeyEncryption.class,
+                            CryptoBehavior.ENCRYPTS_DATA,
+                            CryptoBehavior.DECRYPTS_DATA,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    fallback(
+                            Signature.class,
+                            CryptoBehavior.SIGNS_DATA,
+                            CryptoBehavior.VERIFIES_SIGNATURE,
+                            CryptoBehavior.ENSURES_INTEGRITY,
+                            CryptoBehavior.ENSURES_NON_REPUDIATION),
+                    fallback(
+                            ProbabilisticSignatureScheme.class,
+                            CryptoBehavior.SIGNS_DATA,
+                            CryptoBehavior.VERIFIES_SIGNATURE,
+                            CryptoBehavior.ENSURES_INTEGRITY,
+                            CryptoBehavior.ENSURES_NON_REPUDIATION),
+                    fallback(
+                            MessageDigest.class,
+                            CryptoBehavior.HASHES_DATA,
+                            CryptoBehavior.ENSURES_INTEGRITY),
+                    // A bare MAC ensures integrity; authenticates is gated on auth-interface
+                    // evidence.
+                    fallback(Mac.class, CryptoBehavior.ENSURES_INTEGRITY),
+                    fallback(
+                            KeyEncapsulationMechanism.class,
+                            CryptoBehavior.EXCHANGES_KEY,
+                            CryptoBehavior.ENSURES_CONFIDENTIALITY),
+                    fallback(KeyWrap.class, CryptoBehavior.WRAPS_KEY),
+                    fallback(KeyAgreement.class, CryptoBehavior.EXCHANGES_KEY),
+                    fallback(
+                            PasswordBasedKeyDerivationFunction.class,
+                            CryptoBehavior.HASHES_PASSWORD),
+                    fallback(PasswordBasedEncryption.class, CryptoBehavior.HASHES_PASSWORD),
+                    fallback(KeyDerivationFunction.class, CryptoBehavior.GENERATES_KEY),
+                    fallback(
+                            PseudorandomNumberGenerator.class,
+                            CryptoBehavior.GENERATES_RANDOM_VALUE));
 
     @Nonnull
     public Set<CryptoBehavior> map(@Nonnull INode node) {
@@ -69,115 +220,32 @@ public final class CryptoBehaviorMapper {
         if (!(node instanceof Algorithm)) {
             return behaviors;
         }
-
         final Map<Class<? extends INode>, INode> children = node.getChildren();
-        final boolean isCipher =
-                node.is(BlockCipher.class)
-                        || node.is(StreamCipher.class)
-                        || node.is(Cipher.class)
-                        || node.is(AuthenticatedEncryption.class)
-                        || node.is(KeyWrap.class);
-        final boolean isKem = node.is(KeyEncapsulationMechanism.class);
-        final boolean isPrng = node.is(PseudorandomNumberGenerator.class);
-        final boolean isPasswordKdf =
-                node.is(PasswordBasedKeyDerivationFunction.class)
-                        || node.is(PasswordBasedEncryption.class);
-
-        // --- Operational pass (reads detected Functionality children) ---
-        if (children.containsKey(Encrypt.class)) {
-            behaviors.add(CryptoBehavior.ENCRYPTS_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-        }
-        if (children.containsKey(Decrypt.class)) {
-            behaviors.add(CryptoBehavior.DECRYPTS_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-        }
-        if (children.containsKey(Encapsulate.class) || children.containsKey(Decapsulate.class)) {
-            if (isKem) {
-                behaviors.add(CryptoBehavior.EXCHANGES_KEY);
-                behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-            } else if (isCipher) {
-                // JCA WRAP_MODE/UNWRAP_MODE and Cipher.wrap surface as (De)Encapsulate on a Cipher.
-                behaviors.add(CryptoBehavior.WRAPS_KEY);
+        for (OperationMapping row : OPERATIONS) {
+            if (children.containsKey(row.operation()) && row.when().test(node)) {
+                behaviors.addAll(row.behaviors());
             }
         }
-        if (children.containsKey(Sign.class)) {
-            behaviors.add(CryptoBehavior.SIGNS_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-            behaviors.add(CryptoBehavior.ENSURES_NON_REPUDIATION);
-        }
-        if (children.containsKey(Verify.class)) {
-            behaviors.add(CryptoBehavior.VERIFIES_SIGNATURE);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        }
-        if (children.containsKey(Digest.class)) {
-            behaviors.add(CryptoBehavior.HASHES_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        }
-        if (children.containsKey(Tag.class)) {
-            // No operational "computesMac" verb in the taxonomy; use goal-level behaviors (spec
-            // §5.1).
-            behaviors.add(CryptoBehavior.AUTHENTICATES);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        }
-        if (children.containsKey(Generate.class) && isPrng) {
-            behaviors.add(CryptoBehavior.GENERATES_RANDOM_VALUE);
-        }
-        if (children.containsKey(KeyGeneration.class)) {
-            behaviors.add(CryptoBehavior.GENERATES_KEY);
-        }
-        if (children.containsKey(KeyDerivation.class)) {
-            // Generic KDF has no "deriveKey" value; approximated as generatesKey (spec §5.1).
-            behaviors.add(
-                    isPasswordKdf ? CryptoBehavior.HASHES_PASSWORD : CryptoBehavior.GENERATES_KEY);
-        }
-
-        // --- Primitive-kind fallback (only when no operation was detected) ---
         if (behaviors.isEmpty()) {
-            applyPrimitiveFallback(node, behaviors);
+            for (FallbackMapping row : FALLBACKS) {
+                if (node.is(row.primitive())) {
+                    behaviors.addAll(row.behaviors());
+                    break;
+                }
+            }
         }
         return behaviors;
     }
 
-    private void applyPrimitiveFallback(
-            @Nonnull INode node, @Nonnull Set<CryptoBehavior> behaviors) {
-        if (node.is(AuthenticatedEncryption.class)) {
-            behaviors.add(CryptoBehavior.ENCRYPTS_DATA);
-            behaviors.add(CryptoBehavior.DECRYPTS_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        } else if (node.is(BlockCipher.class)
-                || node.is(StreamCipher.class)
-                || node.is(Cipher.class)
-                || node.is(PublicKeyEncryption.class)) {
-            behaviors.add(CryptoBehavior.ENCRYPTS_DATA);
-            behaviors.add(CryptoBehavior.DECRYPTS_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-        } else if (node.is(Signature.class) || node.is(ProbabilisticSignatureScheme.class)) {
-            behaviors.add(CryptoBehavior.SIGNS_DATA);
-            behaviors.add(CryptoBehavior.VERIFIES_SIGNATURE);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-            behaviors.add(CryptoBehavior.ENSURES_NON_REPUDIATION);
-        } else if (node.is(MessageDigest.class)) {
-            behaviors.add(CryptoBehavior.HASHES_DATA);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        } else if (node.is(Mac.class)) {
-            behaviors.add(CryptoBehavior.AUTHENTICATES);
-            behaviors.add(CryptoBehavior.ENSURES_INTEGRITY);
-        } else if (node.is(KeyEncapsulationMechanism.class)) {
-            behaviors.add(CryptoBehavior.EXCHANGES_KEY);
-            behaviors.add(CryptoBehavior.ENSURES_CONFIDENTIALITY);
-        } else if (node.is(KeyWrap.class)) {
-            behaviors.add(CryptoBehavior.WRAPS_KEY);
-        } else if (node.is(KeyAgreement.class)) {
-            behaviors.add(CryptoBehavior.EXCHANGES_KEY);
-        } else if (node.is(PasswordBasedKeyDerivationFunction.class)
-                || node.is(PasswordBasedEncryption.class)) {
-            behaviors.add(CryptoBehavior.HASHES_PASSWORD);
-        } else if (node.is(KeyDerivationFunction.class)) {
-            behaviors.add(CryptoBehavior.GENERATES_KEY);
-        } else if (node.is(PseudorandomNumberGenerator.class)) {
-            behaviors.add(CryptoBehavior.GENERATES_RANDOM_VALUE);
-        }
+    private static OperationMapping on(
+            @Nonnull Class<? extends INode> operation,
+            @Nonnull Predicate<INode> when,
+            @Nonnull CryptoBehavior... behaviors) {
+        return new OperationMapping(operation, when, Set.of(behaviors));
+    }
+
+    private static FallbackMapping fallback(
+            @Nonnull Class<? extends INode> primitive, @Nonnull CryptoBehavior... behaviors) {
+        return new FallbackMapping(primitive, Set.of(behaviors));
     }
 }
