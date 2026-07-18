@@ -17,28 +17,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.engine.language.csharp.tree;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import javax.annotation.Nonnull;
 
-class PluginTest {
+/**
+ * Represents a C# identifier (variable name, type name, etc.) used as an argument or in expressions
+ * where the resolved value is not immediately known.
+ */
+public final class CSharpIdentifierTree implements CSharpTree {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
+    private final int line;
+    private final int column;
+    @Nonnull private final String name;
+
+    public CSharpIdentifierTree(int line, int column, @Nonnull String name) {
+        this.line = line;
+        this.column = column;
+        this.name = name;
+    }
+
+    @Override
+    public int getLine() {
+        return line;
+    }
+
+    @Override
+    public int getColumn() {
+        return column;
+    }
+
+    @Nonnull
+    @Override
+    public String getText() {
+        return name;
+    }
+
+    @Nonnull
+    public String getName() {
+        return name;
     }
 }

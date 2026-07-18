@@ -17,28 +17,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.engine.language.csharp;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import javax.annotation.Nonnull;
 
-class PluginTest {
+/**
+ * Minimal symbol representation for C# detection.
+ *
+ * <p>Since the ANTLR4 grammar does not provide semantic symbol resolution (no type inference), this
+ * class holds only the identifier name. Full symbol tracking across scopes is not supported in the
+ * current implementation.
+ */
+public final class CSharpSymbol {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
+    @Nonnull private final String name;
+
+    public CSharpSymbol(@Nonnull String name) {
+        this.name = name;
+    }
+
+    @Nonnull
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return "CSharpSymbol{" + name + "}";
     }
 }
