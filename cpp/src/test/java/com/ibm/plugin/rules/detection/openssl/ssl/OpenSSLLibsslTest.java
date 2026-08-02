@@ -22,12 +22,13 @@ package com.ibm.plugin.rules.detection.openssl.ssl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IAction;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.Version;
+import com.ibm.mapper.model.collections.AssetCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
@@ -42,13 +43,15 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 69 rule entries in {@link OpenSSLLibssl}.
+ * Covers all 62 rule entries in {@link OpenSSLLibssl}.
  *
- * <p>Two finding shapes occur:
+ * <p>Three finding shapes occur:
  *
  * <ul>
  *   <li><b>Generic protocol</b> ({@link Protocol}): flat — value string only, no children.
  *   <li><b>Versioned TLS</b> ({@link TLS}): wraps a {@link Version} child with dotted version.
+ *   <li><b>Traced key/curve</b> ({@link KeyContext}): SSL_(CTX_)set_tmp_dh/ecdh raise no finding on
+ *       the call itself; their argument is traced back to its constructing call.
  * </ul>
  */
 class OpenSSLLibsslTest extends TestBase {
@@ -59,9 +62,10 @@ class OpenSSLLibsslTest extends TestBase {
     void test() {
         CxxVerifier.verify("rules/detection/openssl/ssl/OpenSSLLibsslTestFile.cc", this);
 
-        assertObservedCount(
-                "TLS",
-                6); // TLS_method x3, SSL_CTX_new, SSL_CTX_set_ssl_version, SSL_set_ssl_method
+        // SSL_CTX_new/SSL_CTX_set_ssl_version/SSL_set_ssl_method trace their SSL_METHOD* argument
+        // back to the constructing *_method() call (see methodRules()); an untraceable NULL
+        // argument resolves to no finding instead of a generic "TLS" marker.
+        assertObservedCount("TLS", 3);
         assertObservedCount("SSLv3.0", 3);
         assertObservedCount("DTLS", 3);
         assertObservedCount("DTLSv1.2", 3);
@@ -69,16 +73,28 @@ class OpenSSLLibsslTest extends TestBase {
         assertObservedCount("QUIC", 3);
         assertObservedCount("TLS-CIPHER-CONFIG", 2);
         assertObservedCount("TLS1.3-CIPHER-CONFIG", 2);
-        assertObservedCount("TLS-DH-PARAMS", 2); // SSL_CTX_set0_tmp_dh_pkey, SSL_set0_tmp_dh_pkey
-        assertObservedCount("TLS-CONF-CMD", 1);
-        assertObservedCount("SRTP-PROFILE", 2);
+        assertObservedCount("SRTP_AES128_CM_SHA1_80", 2);
 
-        // Versioned TLS findings
-        assertObservedCount("TLSv1.2", 3);
-        assertObservedCount("TLSv1.1", 3);
+        // TLS1_2_VERSION/TLS1_3_VERSION are declared as a local enum in the fixture (no real
+        // headers expanded) so OpenSSLNidLookupFactory can resolve them.
         assertObservedCount("TLSv1.0", 3);
+        assertObservedCount("TLSv1.1", 3);
+        // TLSv1_2_method x3, SSL_CTX_set_min_proto_version, SSL_set_min_proto_version, plus the
+        // direct tls12_method = TLSv1_2_method() call and the traced SSL_CTX_new(tls12_method)
+        // finding, counted separately.
+        assertObservedCount("TLSv1.2", 7);
+        // SSL_CTX_set_max_proto_version, SSL_set_max_proto_version, SSL_CONF_cmd.
+        assertObservedCount("TLSv1.3", 3);
 
-        assertThat(observed).hasSize(39);
+        assertObservedCount("SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256", 1);
+        assertObservedCount("MLKEM768:X25519:secp256r1", 1);
+        assertObservedCount("ECDSA+SHA256", 1);
+        assertObservedCount("X25519", 1);
+        // "FRODOKEM976AES" is an unrecognized group entry mixed into a known list, dropped by
+        // OpenSslGroupMapper (see assertAlgorithmCollection).
+        assertObservedCount("X25519:FRODOKEM976AES:secp256r1", 1);
+
+        assertThat(observed).hasSize(45);
     }
 
     private void assertObservedCount(String value, int expected) {
@@ -99,16 +115,38 @@ class OpenSSLLibsslTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        assertThat(value).isInstanceOf(IAction.class);
-
         String v = value.asString();
+
+        // SSL_(CTX_)set_tmp_dh/ecdh raise no finding on the call itself; their dh/ecdh argument is
+        // traced back to its constructing call (see OpenSSLLegacyDh/OpenSSLLegacyEc), surfacing
+        // here as its own KeyContext entry.
+        if (detectionStore.getDetectionValueContext() instanceof KeyContext) {
+            switch (v) {
+                // CxxKeyContextTranslator has no case for "DH-2048-256" (a named-group
+                // marker, not a key) → empty nodes, same as OpenSSLLegacyDhTest.
+                case "DH-2048-256" -> assertThat(nodes).isEmpty();
+                case "EC-P256" -> assertEcdsaKey(nodes);
+                default -> throw new AssertionError("Unexpected key finding: " + v);
+            }
+            return;
+        }
+
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
         observed.add(v);
 
         switch (v) {
             case "TLS" -> assertGenericProtocol(nodes, "TLS");
+            // SSL_CTX_set_max_proto_version/SSL_set_max_proto_version produce a TLS node (versioned
+            // protocol); SSL_CONF_cmd(NULL, "Protocol", "TLSv1.3") produces a flat Protocol node
+            // (Algorithm value, no TLS-node special-casing) — same asString(), different node kind.
+            case "TLSv1.3" -> {
+                if (nodes.get(0) instanceof TLS) {
+                    assertTlsWithVersion(nodes, "TLSv1.3", "1.3");
+                } else {
+                    assertGenericProtocol(nodes, "TLSv1.3");
+                }
+            }
             case "TLSv1.2" -> assertTlsWithVersion(nodes, "TLSv1.2", "1.2");
             case "TLSv1.1" -> assertTlsWithVersion(nodes, "TLSv1.1", "1.1");
             case "TLSv1.0" -> assertTlsWithVersion(nodes, "TLSv1.0", "1.0");
@@ -119,14 +157,28 @@ class OpenSSLLibsslTest extends TestBase {
             case "QUIC" -> assertGenericProtocol(nodes, "QUIC");
             case "TLS-CIPHER-CONFIG" -> assertGenericProtocol(nodes, "TLS-CIPHER-CONFIG");
             case "TLS1.3-CIPHER-CONFIG" -> assertGenericProtocol(nodes, "TLS1.3-CIPHER-CONFIG");
-            case "TLS-GROUPS-CONFIG" -> assertGenericProtocol(nodes, "TLS-GROUPS-CONFIG");
-            case "TLS-SIGALGS-CONFIG" -> assertGenericProtocol(nodes, "TLS-SIGALGS-CONFIG");
-            case "TLS-DH-PARAMS" -> assertGenericProtocol(nodes, "TLS-DH-PARAMS");
-            case "TLS-ECDH-PARAMS" -> assertGenericProtocol(nodes, "TLS-ECDH-PARAMS");
-            case "TLS-CONF-CMD" -> assertGenericProtocol(nodes, "TLS-CONF-CMD");
-            case "SRTP-PROFILE" -> assertGenericProtocol(nodes, "SRTP-PROFILE");
+            case "SRTP_AES128_CM_SHA1_80" -> assertGenericProtocol(nodes, "SRTP_AES128_CM_SHA1_80");
+            // Signature-algorithm / group lists: captured as an AssetCollection whose children
+            // are the individual algorithms, mapped per name by OpenSslSignatureMapper /
+            // OpenSslGroupMapper.
+            case "SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256" ->
+                    assertAlgorithmCollection(nodes, "SLH-DSA", "ECDSA", "RSA");
+            case "MLKEM768:X25519:secp256r1" ->
+                    assertAlgorithmCollection(nodes, "ML-KEM-768", "x25519", "ECDH");
+            case "ECDSA+SHA256" -> assertAlgorithmCollection(nodes, "ECDSA");
+            case "X25519" -> assertAlgorithmCollection(nodes, "x25519");
+            // Unknown group name ("FRODOKEM976AES") mixed into an otherwise-known list: skipped
+            // entirely - only OpenSslGroupMapper's recognized entries (x25519, secp256r1) appear.
+            case "X25519:FRODOKEM976AES:secp256r1" ->
+                    assertAlgorithmCollection(nodes, "x25519", "ECDH");
             default -> throw new AssertionError("Unexpected value: " + v);
         }
+    }
+
+    private static void assertEcdsaKey(List<INode> nodes) {
+        assertThat(nodes).hasSize(1);
+        INode node = nodes.get(0);
+        assertThat(node).isInstanceOf(com.ibm.mapper.model.algorithms.ECDSA.class);
     }
 
     private static void assertGenericProtocol(List<INode> nodes, String expected) {
@@ -147,5 +199,19 @@ class OpenSSLLibsslTest extends TestBase {
         INode version = node.getChildren().get(Version.class);
         assertThat(version).isNotNull();
         assertThat(version.asString()).isEqualTo(expectedVersion);
+    }
+
+    /**
+     * A colon-separated sigalg/group list is translated to a single {@link AssetCollection} whose
+     * members are the resolved algorithm nodes (one per name).
+     */
+    private static void assertAlgorithmCollection(
+            List<INode> nodes, String... expectedAlgorithmNames) {
+        assertThat(nodes).hasSize(1);
+        INode node = nodes.get(0);
+        assertThat(node).isInstanceOf(AssetCollection.class);
+        List<String> memberNames =
+                ((AssetCollection) node).getCollection().stream().map(INode::asString).toList();
+        assertThat(memberNames).containsExactly(expectedAlgorithmNames);
     }
 }
