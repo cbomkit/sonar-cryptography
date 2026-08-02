@@ -70,6 +70,7 @@
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
                     <!-- This line must specify all language keys which should be scanned by the plugin -->
                     <requiredForLanguages>java,jsp,py,ipynb,go,cxx,cpp,c++,c</requiredForLanguages>
+                    <requirePlugins>cxx</requirePlugins>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
@@ -113,9 +114,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>17</release>
-                    <source>17</source>
-                    <target>17</target>
+                    <release>21</release>
                 </configuration>
             </plugin>
             <plugin>

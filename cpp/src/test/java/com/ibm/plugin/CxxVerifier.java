@@ -38,28 +38,13 @@ import org.sonar.cxx.squidbridge.SquidAstVisitor;
  * <p>Scans a C++ test file using {@link CxxAstScanner} and invokes the provided check (typically a
  * {@link TestBase} instance) which intercepts detection findings and calls {@code asserts()}.
  *
- * <p>Fixtures use {@code #include <openssl/*.h>}. The OpenSSL headers path is auto-resolved in this
- * order:
- *
- * <ol>
- *   <li>{@code -Dopenssl.headers.dir=<path>} system property (set by Maven surefire from {@code
- *       cpp/pom.xml}; value defaults to {@code target/test-headers/openssl-<ver>/include} which the
- *       {@code download-maven-plugin} populates in the {@code generate-test-resources} phase).
- *   <li>{@code OPENSSL_HEADERS_DIR} environment variable.
- *   <li>Hard-coded fallback: {@code cpp/target/test-headers/openssl-3.6.2/include}.
- * </ol>
- *
- * <p>If no path resolves to an existing directory, the scanner still runs but the preprocessor will
- * emit "preprocessor cannot find include file" warnings and rules referencing symbols only visible
- * via headers (macros, typedefs) will fail to match.
+ * <p>No include directories are configured. Detection matches the literal OpenSSL API calls, so it
+ * does not depend on the preprocessor expanding headers. The preprocessor may log "cannot find
+ * include file" at DEBUG for the fixtures' {@code #include} lines; that is harmless.
  */
 public final class CxxVerifier {
 
     private static final String TEST_FILES_BASE = "src/test/files/";
-    private static final String INCLUDE_DIR_SYSTEM_PROPERTY = "openssl.headers.dir";
-    private static final String INCLUDE_DIR_ENV_VAR = "OPENSSL_HEADERS_DIR";
-    private static final String FALLBACK_INCLUDE_DIR =
-            "cpp/target/test-headers/openssl-3.6.2/include";
 
     private CxxVerifier() {
         // utility class
@@ -105,37 +90,14 @@ public final class CxxVerifier {
                             .setContents(content)
                             .build();
 
+            // No include directories are configured: detection matches the literal OpenSSL API
+            // calls, so it does not depend on the preprocessor expanding headers. The preprocessor
+            // may log "cannot find include file" at DEBUG for the fixtures' #include lines; that is
+            // harmless and does not affect detection.
             CxxSquidConfiguration squidConfig = new CxxSquidConfiguration();
-            String includeDir = resolveIncludeDir();
-            if (includeDir != null) {
-                squidConfig.add(
-                        CxxSquidConfiguration.GLOBAL,
-                        CxxSquidConfiguration.INCLUDE_DIRECTORIES,
-                        includeDir);
-            }
             CxxAstScanner.scanSingleInputFileConfig(inputFile, squidConfig, check);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read test file: " + fullPath, e);
         }
-    }
-
-    /**
-     * Resolves the OpenSSL headers directory from (in order): system property, env var, hard-coded
-     * fallback. Returns null if no candidate resolves to an existing directory.
-     */
-    private static String resolveIncludeDir() {
-        String fromSysProp = System.getProperty(INCLUDE_DIR_SYSTEM_PROPERTY);
-        if (fromSysProp != null && !fromSysProp.isBlank() && new File(fromSysProp).isDirectory()) {
-            return fromSysProp;
-        }
-        String fromEnv = System.getenv(INCLUDE_DIR_ENV_VAR);
-        if (fromEnv != null && !fromEnv.isBlank() && new File(fromEnv).isDirectory()) {
-            return fromEnv;
-        }
-        File fallback = new File(FALLBACK_INCLUDE_DIR);
-        if (fallback.isDirectory()) {
-            return fallback.getAbsolutePath();
-        }
-        return null;
     }
 }

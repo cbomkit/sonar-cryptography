@@ -12,8 +12,6 @@
     <artifactId>engine</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
@@ -24,9 +22,10 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.SonarOpenCommunity.sonar-cxx</groupId>
+            <groupId>${sonar.cxx.groupId}</groupId>
             <artifactId>cxx-squid</artifactId>
             <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
