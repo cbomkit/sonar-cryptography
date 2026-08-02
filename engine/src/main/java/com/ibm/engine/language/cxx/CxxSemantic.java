@@ -331,6 +331,14 @@ public final class CxxSemantic {
             if (!chased.isEmpty()) {
                 return chased;
             }
+            // A bare parameter with no local reassignment/initializer has nothing to chase, so
+            // fall back to the parameter node itself, per the returnEnclosingParam contract above.
+            if (variableSymbol.isParameter() && returnEnclosingParam) {
+                Optional<O> result = castValue(clazz, name);
+                if (result.isPresent()) {
+                    return List.of(new ResolvedValue<>(result.get(), tree));
+                }
+            }
         } else if (symbol != null
                 && symbol.kind() == Symbol.Kind.ENUM_CONSTANT
                 && !symbol.isUnknown()) {

@@ -122,24 +122,19 @@ public final class CxxLanguageSupport
                 String className = CxxAstNodeHelper.getIdentifierName(enclosingClass);
                 invocationObjectName = className != null ? className : "";
             } else {
-                invocationObjectName = "";
+                // Standalone functions use the same synthetic scope name as
+                // CxxLanguageTranslation#getInvokedObjectTypeString for a call site.
+                invocationObjectName = CxxLanguageTranslation.GLOBAL_SCOPE;
             }
 
+            // Parameter types are wildcards: CxxLanguageTranslation#getMethodParameterTypes
+            // derives a call site's argument types from literal/identifier content, not from
+            // declared C++ types, so the two are not comparable. Only parameter count is matched.
             List<AstNode> parameters =
                     CxxAstNodeHelper.getFunctionDefinitionParameters(methodDefinition);
             LinkedList<String> parameterTypeList = new LinkedList<>();
-            for (AstNode param : parameters) {
-                AstNode declSpecifierSeq =
-                        param.getFirstChild(CxxGrammarImpl.parameterDeclSpecifierSeq);
-                if (declSpecifierSeq != null) {
-                    StringBuilder sb = new StringBuilder();
-                    for (var token : declSpecifierSeq.getTokens()) {
-                        sb.append(token.getValue());
-                    }
-                    parameterTypeList.add(sb.toString().trim());
-                } else {
-                    parameterTypeList.add("*");
-                }
+            for (int i = 0; i < parameters.size(); i++) {
+                parameterTypeList.add(MethodMatcher.ANY);
             }
 
             return new MethodMatcher<>(invocationObjectName, functionName, parameterTypeList);
