@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
@@ -38,11 +39,7 @@ import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-/**
- * Covers all 24 rule entries in {@link OpenSSLEvpKeyAgreement}.
- *
- * <p>24 findings, 16 unique detection values. Dispatches on value string.
- */
+/** Covers all rule entries in {@link OpenSSLEvpKeyAgreement}. Dispatches on value string. */
 class OpenSSLEvpKeyAgreementTest extends TestBase {
 
     private int findingCount = 0;
@@ -52,8 +49,8 @@ class OpenSSLEvpKeyAgreementTest extends TestBase {
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/keyagreement/OpenSSLEvpKeyAgreementTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(24);
-        assertThat(observed).hasSize(16);
+        assertThat(findingCount).isEqualTo(26);
+        assertThat(observed).hasSize(15);
     }
 
     @Override
@@ -68,26 +65,42 @@ class OpenSSLEvpKeyAgreementTest extends TestBase {
                             detectionStore,
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+
+        // EVP_PKEY_CTX_set_dh_kdf_md/set_ecdh_kdf_md raise no finding on the call itself; their
+        // md argument is traced back to its constructing call (see OpenSSLEvpMessageDigest),
+        // which surfaces here as its own DigestContext entry.
+        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
+            findingCount++;
+            assertThat(value.asString()).isEqualTo("SHA-256");
+            assertThat(nodes).hasSize(1);
+            return;
+        }
+
         assertThat(detectionStore.getDetectionValueContext())
                 .isInstanceOf(KeyAgreementContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
 
         String v = value.asString();
         observed.add(v);
         findingCount++;
 
         switch (v) {
+            // EVP_KEYEXCH_fetch(NULL, "ECDH", NULL): real algorithm name resolved via
+            // CxxKeyAgreementContextTranslator's Algorithm branch.
+            case "ECDH" -> assertThat(nodes).hasSize(1);
+            // EVP_PKEY_CTX_set_dh_nid(ctx, 1126 /* NID_ffdhe2048 */): real NID resolved via
+            // OpenSSLNidLookupFactory.
+            case "DH-2048" -> assertThat(nodes).hasSize(1);
+            // EVP_KEM_fetch(NULL, "RSA", NULL): "RSA" is a real captured value, but
+            // CxxKeyAgreementContextTranslator has no RSA-as-KEM case, so it resolves to nothing.
+            // OSSL_HPKE_str2suite's real suite string is captured but not modeled either.
+            case "RSA", "X25519,HKDF-SHA256,AES-128-GCM" -> assertThat(nodes).isEmpty();
             case "DERIVE",
-                    "KEYEXCH-FETCH",
-                    "KEM-FETCH",
                     "DH-KDF-TYPE",
-                    "DH-KDF-MD",
                     "DH-PARAMGEN",
-                    "DH-NID",
                     "DH-RFC5114",
                     "DHX-RFC5114",
                     "ECDH-KDF-TYPE",
-                    "ECDH-KDF-MD",
                     "ENCAPSULATE",
                     "DECAPSULATE",
                     "AUTH-ENCAPSULATE",

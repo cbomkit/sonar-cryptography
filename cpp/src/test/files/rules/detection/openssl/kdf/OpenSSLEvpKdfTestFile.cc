@@ -1,12 +1,14 @@
 #include <openssl/evp.h>
 #include <openssl/kdf.h>
+#include <openssl/params.h>
 
 void test_evp_kdf() {
     OSSL_LIB_CTX* lib = NULL;
     const char* props = NULL;
     unsigned char buf[64];
 
-    // EVP_KDF_fetch — 41 rules fire across these 18 string-literal calls
+    // EVP_KDF_fetch — one finding per KDF family (the real fetched name); the digest, when
+    // set via EVP_KDF_CTX_set_params below, is a separate, independently traced finding.
     EVP_KDF_fetch(lib, "PBKDF2", props);
     EVP_KDF_fetch(lib, "HKDF", props);
     EVP_KDF_fetch(lib, "SCRYPT", props);
@@ -26,16 +28,20 @@ void test_evp_kdf() {
     EVP_KDF_fetch(lib, "PVKKDF", props);
     EVP_KDF_fetch(lib, "HMAC-DRBG-KDF", props);
 
-    // PBKDF2 direct
-    PKCS5_PBKDF2_HMAC((char*)buf, 8, buf, 16, 1000, NULL, 32, buf);
+    // PBKDF2 direct - the digest argument is traced back to its EVP_sha256() constructing call,
+    // separate from the "PBKDF2-HMAC" family finding.
+    const EVP_MD* pbkdf2_md = EVP_sha256();
+    PKCS5_PBKDF2_HMAC((char*)buf, 8, buf, 16, 1000, pbkdf2_md, 32, buf);
     PKCS5_PBKDF2_HMAC_SHA1((char*)buf, 8, buf, 16, 1000, 32, buf);
 
     // HKDF setters
-    EVP_PKEY_CTX_set_hkdf_md(NULL, NULL);
+    const EVP_MD* hkdf_md = EVP_sha256();
+    EVP_PKEY_CTX_set_hkdf_md(NULL, hkdf_md);
     EVP_PKEY_CTX_set_hkdf_mode(NULL, 0);
 
     // TLS1-PRF setter
-    EVP_PKEY_CTX_set_tls1_prf_md(NULL, NULL);
+    const EVP_MD* tls1_prf_md = EVP_sha256();
+    EVP_PKEY_CTX_set_tls1_prf_md(NULL, tls1_prf_md);
 
     // PKCS5 PBE
     PKCS5_PBE_keyivgen(NULL, NULL, 0, NULL, NULL, NULL, 0);
@@ -63,4 +69,13 @@ void test_evp_kdf() {
     PKCS12_key_gen_uni_ex(NULL, 0, buf, 16, 0, 0, buf, 32, NULL, NULL);
     PKCS12_key_gen_utf8(NULL, 0, buf, 16, 0, 0, buf, 32, NULL);
     PKCS12_key_gen_utf8_ex(NULL, 0, buf, 16, 0, 0, buf, 32, NULL, NULL);
+
+    // EVP_KDF_CTX_set_params: the "digest" entry in the OSSL_PARAM array is traced back to
+    // this declaration and resolved as its own finding, separate from the fetch above.
+    EVP_KDF_CTX* kctx = NULL;
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0),
+        OSSL_PARAM_construct_end()
+    };
+    EVP_KDF_CTX_set_params(kctx, params);
 }

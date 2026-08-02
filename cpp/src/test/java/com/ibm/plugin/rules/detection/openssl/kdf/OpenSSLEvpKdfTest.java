@@ -23,30 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.BlockCipher;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Mac;
-import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.ANSIX942;
-import com.ibm.mapper.model.algorithms.ANSIX963;
-import com.ibm.mapper.model.algorithms.CMAC;
-import com.ibm.mapper.model.algorithms.ConcatenationKDF;
-import com.ibm.mapper.model.algorithms.HKDF;
-import com.ibm.mapper.model.algorithms.HMAC;
-import com.ibm.mapper.model.algorithms.KDFCounter;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.SHA3;
-import com.ibm.mapper.model.algorithms.Scrypt;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -61,9 +46,17 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 61 rule entries in {@link OpenSSLEvpKdf}.
+ * Covers all rule entries in {@link OpenSSLEvpKdf}.
  *
- * <p>61 findings, 51 unique detection values. Dispatches on value string.
+ * <p>{@code EVP_KDF_fetch(lib, "PBKDF2", props)}-style calls raise one finding per KDF family (the
+ * real fetched name, e.g. {@code "PBKDF2"}) rather than guessing a digest that isn't visible at the
+ * fetch call site; {@link
+ * com.ibm.plugin.translation.translator.contexts.CxxKeyDerivationFunctionContextTranslator} has no
+ * case for a bare family name, so those resolve to no node. The real digest, when the code sets one
+ * via {@code EVP_KDF_CTX_set_params(kctx, params)}, is a separate, independently traced finding:
+ * {@code params} is resolved back to its {@code OSSL_PARAM params[] = {...}} declaration (see
+ * {@link com.ibm.engine.language.cxx.CxxSemantic#resolveValues}), and {@link
+ * OpenSSLParamsScannerFactory} scans that array for the {@code "digest"}-keyed entry.
  */
 class OpenSSLEvpKdfTest extends TestBase {
 
@@ -73,8 +66,8 @@ class OpenSSLEvpKdfTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/kdf/OpenSSLEvpKdfTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(61);
-        assertThat(observed).hasSize(51);
+        assertThat(findingCount).isEqualTo(42);
+        assertThat(observed).hasSize(28);
     }
 
     @Override
@@ -89,84 +82,52 @@ class OpenSSLEvpKdfTest extends TestBase {
                             detectionStore,
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+
+        // EVP_PKEY_CTX_set_hkdf_md/set_tls1_prf_md raise no finding on the call itself; their md
+        // argument is traced back to its constructing call (see OpenSSLEvpMessageDigest). Same for
+        // EVP_KDF_CTX_set_params's "digest" OSSL_PARAM entry (see OpenSSLParamsScannerFactory).
+        // Both surface here as their own DigestContext entry.
+        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
+            observed.add(value.asString());
+            findingCount++;
+            assertThat(value.asString()).isEqualTo("SHA-256");
+            assertThat(nodes).hasSize(1);
+            return;
+        }
+
         assertThat(detectionStore.getDetectionValueContext())
                 .isInstanceOf(KeyDerivationFunctionContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        assertThat(value).isInstanceOf(ValueAction.class);
 
         String v = value.asString();
         observed.add(v);
         findingCount++;
 
-        if (v.equals("PBKDF2-HMAC-SHA1")) {
-            assertPbkdf2WithSha(nodes, SHA.class, "SHA1", 160);
-        } else if (v.equals("PBKDF2-HMAC-SHA256")) {
-            assertPbkdf2WithSha2(nodes, 256);
-        } else if (v.equals("PBKDF2-HMAC-SHA384")) {
-            assertPbkdf2WithSha2(nodes, 384);
-        } else if (v.equals("PBKDF2-HMAC-SHA512")) {
-            assertPbkdf2WithSha2(nodes, 512);
-        } else if (v.equals("PBKDF2-HMAC")) {
-            assertSimpleAlgo(nodes, PBKDF2.class, "PBKDF2");
-        } else if (v.equals("HKDF-SHA1")) {
-            assertHkdfWithSha(nodes, SHA.class, "HKDF-SHA1", 160);
-        } else if (v.equals("HKDF-SHA256")) {
-            assertHkdfWithSha2(nodes, 256, "HKDF-SHA256");
-        } else if (v.equals("HKDF-SHA384")) {
-            assertHkdfWithSha2(nodes, 384, "HKDF-SHA384");
-        } else if (v.equals("HKDF-SHA512")) {
-            assertHkdfWithSha2(nodes, 512, "HKDF-SHA512");
-        } else if (v.equals("HKDF-SHA3-256")) {
-            assertHkdfWithSha(nodes, SHA3.class, "HKDF-SHA3-256", 256);
-        } else if (v.equals("HKDF-MD")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("HKDF-MODE")) {
-            assertThat(nodes).isNotNull();
+        if (v.equals("PBKDF2-HMAC")) {
+            assertPbkdf2WithSha256(nodes);
+        } else if (v.equals("PBKDF2-HMAC-SHA1")) {
+            assertPbkdf2WithSha1(nodes);
+        } else if (v.equals("PBKDF2")
+                || v.equals("HKDF")
+                || v.equals("TLS1-PRF")
+                || v.equals("TLS13-KDF")
+                || v.equals("X963KDF")
+                || v.equals("KBKDF")
+                || v.equals("SSHKDF")) {
+            // Bare KDF family name with no digest visible at the fetch call site -
+            // CxxKeyDerivationFunctionContextTranslator has no case for it, so it resolves to
+            // nothing.
+            assertThat(nodes).isEmpty();
         } else if (v.equals("SCRYPT")) {
-            assertSimpleAlgo(nodes, Scrypt.class, "SCRYPT");
-        } else if (v.equals("TLS1-PRF-MD5-SHA1")
-                || v.equals("TLS1-PRF-SHA256")
-                || v.equals("TLS1-PRF-SHA384")
-                || v.equals("TLS1-PRF-SHA512")) {
-            assertSimpleAlgo(nodes, PBKDF2.class, "PBKDF2");
-        } else if (v.equals("TLS1-PRF-MD")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("TLS13-KDF-SHA256")) {
-            assertHkdfWithSha2(nodes, 256, "HKDF-SHA256");
-        } else if (v.equals("TLS13-KDF-SHA384")) {
-            assertHkdfWithSha2(nodes, 384, "HKDF-SHA384");
-        } else if (v.equals("TLS13-KDF-SHA512")) {
-            assertHkdfWithSha2(nodes, 512, "HKDF-SHA512");
-        } else if (v.equals("X963KDF-SHA1")) {
-            assertX963WithSha(nodes, SHA.class, 160);
-        } else if (v.equals("X963KDF-SHA224")) {
-            assertX963WithSha2(nodes, 224);
-        } else if (v.equals("X963KDF-SHA256")) {
-            assertX963WithSha2(nodes, 256);
-        } else if (v.equals("X963KDF-SHA384")) {
-            assertX963WithSha2(nodes, 384);
-        } else if (v.equals("X963KDF-SHA512")) {
-            assertX963WithSha2(nodes, 512);
-        } else if (v.equals("KBKDF-HMAC-SHA1")) {
-            assertKbkdfHmac(nodes, SHA.class, "HMAC-SHA1", 160);
-        } else if (v.equals("KBKDF-HMAC-SHA256")) {
-            assertKbkdfHmacSha2(nodes, 256);
-        } else if (v.equals("KBKDF-HMAC-SHA384")) {
-            assertKbkdfHmacSha2(nodes, 384);
-        } else if (v.equals("KBKDF-HMAC-SHA512")) {
-            assertKbkdfHmacSha2(nodes, 512);
-        } else if (v.equals("KBKDF-CMAC-AES128")) {
-            assertKbkdfCmacAes(nodes, 128);
-        } else if (v.equals("KBKDF-CMAC-AES256")) {
-            assertKbkdfCmacAes(nodes, 256);
-        } else if (v.equals("X942KDF-SHA1")
-                || v.equals("X942KDF-SHA256")
-                || v.equals("X942KDF-CONCAT")) {
-            assertSimpleAlgo(nodes, ANSIX942.class, "ANSI X9.42");
+            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.Scrypt.class, "scrypt");
+        } else if (v.equals("X942KDF-ASN1") || v.equals("X942KDF-CONCAT")) {
+            assertSimpleAlgo(
+                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42");
         } else if (v.equals("SSKDF")) {
-            assertSimpleAlgo(nodes, ConcatenationKDF.class, "ConcatenationKDF");
-        } else if (v.equals("SSHKDF-SHA1") || v.equals("SSHKDF-SHA256")) {
-            assertSimpleAlgo(nodes, PBKDF2.class, "PBKDF2");
+            assertSimpleAlgo(
+                    nodes,
+                    com.ibm.mapper.model.algorithms.ConcatenationKDF.class,
+                    "ConcatenationKDF");
         } else if (v.equals("KRB5KDF")) {
             assertGenericKdf(nodes, "KRB5KDF", KeyDerivationFunction.class);
         } else if (v.equals("ARGON2D")) {
@@ -181,6 +142,8 @@ class OpenSSLEvpKdfTest extends TestBase {
             assertGenericKdf(nodes, "PVKKDF", PasswordBasedKeyDerivationFunction.class);
         } else if (v.equals("HMAC-DRBG-KDF")) {
             assertGenericKdf(nodes, "HMAC-DRBG-KDF", KeyDerivationFunction.class);
+        } else if (v.equals("HKDF-MODE")) {
+            assertThat(nodes).isNotNull();
         } else if (v.equals("KDF-CTX")) {
             assertThat(nodes).isNotNull();
         } else if (v.equals("PBE-KEYIVGEN")) {
@@ -219,89 +182,21 @@ class OpenSSLEvpKdfTest extends TestBase {
         assertThat(n.asString()).isEqualTo(asString);
     }
 
-    private static void assertPbkdf2WithSha(
-            List<INode> nodes, Class<? extends INode> shaClass, String shaName, int digestSize) {
+    private static void assertPbkdf2WithSha1(List<INode> nodes) {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(PBKDF2.class);
-        assertThat(n.asString()).isEqualTo("PBKDF2-" + shaName);
-        INode digest = n.getChildren().get(MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(shaClass);
-        assertThat(digest.asString()).isEqualTo(shaName);
-        INode size = digest.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo(Integer.toString(digestSize));
+        assertThat(n.asString()).isEqualTo("PBKDF2-SHA-1");
+        INode digest = n.getChildren().get(com.ibm.mapper.model.MessageDigest.class);
+        assertThat(digest).isNotNull().isInstanceOf(SHA.class);
+        assertThat(digest.asString()).isEqualTo("SHA-1");
     }
 
-    private static void assertPbkdf2WithSha2(List<INode> nodes, int digestSize) {
-        assertPbkdf2WithSha(nodes, SHA2.class, "SHA" + digestSize, digestSize);
-    }
-
-    private static void assertHkdfWithSha(
-            List<INode> nodes, Class<? extends INode> shaClass, String asString, int digestSize) {
+    private static void assertPbkdf2WithSha256(List<INode> nodes) {
         INode n = head(nodes);
-        assertThat(n).isInstanceOf(HKDF.class);
-        assertThat(n.asString()).isEqualTo(asString);
-        INode digest = n.getChildren().get(MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(shaClass);
-        INode size = digest.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo(Integer.toString(digestSize));
-    }
-
-    private static void assertHkdfWithSha2(List<INode> nodes, int digestSize, String asString) {
-        assertHkdfWithSha(nodes, SHA2.class, asString, digestSize);
-    }
-
-    private static void assertX963WithSha(
-            List<INode> nodes, Class<? extends INode> shaClass, int digestSize) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(ANSIX963.class);
-        assertThat(n.asString()).isEqualTo("ANSI X9.63");
-        INode digest = n.getChildren().get(MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(shaClass);
-        INode size = digest.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo(Integer.toString(digestSize));
-    }
-
-    private static void assertX963WithSha2(List<INode> nodes, int digestSize) {
-        assertX963WithSha(nodes, SHA2.class, digestSize);
-    }
-
-    private static void assertKbkdfHmac(
-            List<INode> nodes,
-            Class<? extends INode> shaClass,
-            String hmacAsString,
-            int digestSize) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(KDFCounter.class);
-        assertThat(n.asString()).isEqualTo("KDF in Counter Mode");
-        INode mac = n.getChildren().get(Mac.class);
-        assertThat(mac).isNotNull().isInstanceOf(HMAC.class);
-        assertThat(mac.asString()).isEqualTo(hmacAsString);
-        INode digest = mac.getChildren().get(MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(shaClass);
-        INode size = digest.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo(Integer.toString(digestSize));
-    }
-
-    private static void assertKbkdfHmacSha2(List<INode> nodes, int digestSize) {
-        assertKbkdfHmac(nodes, SHA2.class, "HMAC-SHA" + digestSize, digestSize);
-    }
-
-    private static void assertKbkdfCmacAes(List<INode> nodes, int keyLength) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(KDFCounter.class);
-        assertThat(n.asString()).isEqualTo("KDF in Counter Mode");
-        INode mac = n.getChildren().get(Mac.class);
-        assertThat(mac).isNotNull().isInstanceOf(CMAC.class);
-        assertThat(mac.asString()).isEqualTo("AES-CMAC");
-        INode aes = mac.getChildren().get(BlockCipher.class);
-        assertThat(aes).isNotNull().isInstanceOf(AES.class);
-        assertThat(aes.asString()).isEqualTo("AES" + keyLength);
-        INode keyLen = aes.getChildren().get(KeyLength.class);
-        assertThat(keyLen).isNotNull();
-        assertThat(keyLen.asString()).isEqualTo(Integer.toString(keyLength));
+        assertThat(n).isInstanceOf(PBKDF2.class);
+        assertThat(n.asString()).isEqualTo("PBKDF2-SHA-256");
+        INode digest = n.getChildren().get(com.ibm.mapper.model.MessageDigest.class);
+        assertThat(digest).isNotNull().isInstanceOf(SHA2.class);
+        assertThat(digest.asString()).isEqualTo("SHA-256");
     }
 }

@@ -27,6 +27,7 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 /**
@@ -46,13 +47,65 @@ public final class OpenSSLLegacyRsa {
     // Signatures
     // ====================================================================
 
+    /**
+     * int RSA_sign/RSA_verify(int type, ...) - {@code type} is a real NID (obj_mac.h) identifying
+     * the digest the signature was computed/verified over, not a placeholder; resolved via {@link
+     * OpenSSLNidLookupFactory} the same way curve/DH-group/protocol-version NIDs are elsewhere.
+     */
+    private static final Map<Integer, String> RSA_SIGN_DIGEST_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(64, "RSA-SIGN-SHA1"), // NID_sha1
+                    Map.entry(675, "RSA-SIGN-SHA224"), // NID_sha224
+                    Map.entry(672, "RSA-SIGN-SHA256"), // NID_sha256
+                    Map.entry(673, "RSA-SIGN-SHA384"), // NID_sha384
+                    Map.entry(674, "RSA-SIGN-SHA512"), // NID_sha512
+                    Map.entry(4, "RSA-SIGN-MD5"), // NID_md5
+                    Map.entry(114, "RSA-SIGN-MD5-SHA1")); // NID_md5_sha1
+
+    private static final Map<String, String> RSA_SIGN_DIGEST_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_sha1", "RSA-SIGN-SHA1"),
+                    Map.entry("NID_sha224", "RSA-SIGN-SHA224"),
+                    Map.entry("NID_sha256", "RSA-SIGN-SHA256"),
+                    Map.entry("NID_sha384", "RSA-SIGN-SHA384"),
+                    Map.entry("NID_sha512", "RSA-SIGN-SHA512"),
+                    Map.entry("NID_md5", "RSA-SIGN-MD5"),
+                    Map.entry("NID_md5_sha1", "RSA-SIGN-MD5-SHA1"));
+
+    private static final Map<Integer, String> RSA_VERIFY_DIGEST_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(64, "RSA-VERIFY-SHA1"),
+                    Map.entry(675, "RSA-VERIFY-SHA224"),
+                    Map.entry(672, "RSA-VERIFY-SHA256"),
+                    Map.entry(673, "RSA-VERIFY-SHA384"),
+                    Map.entry(674, "RSA-VERIFY-SHA512"),
+                    Map.entry(4, "RSA-VERIFY-MD5"),
+                    Map.entry(114, "RSA-VERIFY-MD5-SHA1"));
+
+    private static final Map<String, String> RSA_VERIFY_DIGEST_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_sha1", "RSA-VERIFY-SHA1"),
+                    Map.entry("NID_sha224", "RSA-VERIFY-SHA224"),
+                    Map.entry("NID_sha256", "RSA-VERIFY-SHA256"),
+                    Map.entry("NID_sha384", "RSA-VERIFY-SHA384"),
+                    Map.entry("NID_sha512", "RSA-VERIFY-SHA512"),
+                    Map.entry("NID_md5", "RSA-VERIFY-MD5"),
+                    Map.entry("NID_md5_sha1", "RSA-VERIFY-MD5-SHA1"));
+
     private static final IDetectionRule<AstNode> RSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SIGN"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    RSA_SIGN_DIGEST_BY_CODE, RSA_SIGN_DIGEST_BY_NAME))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -62,8 +115,15 @@ public final class OpenSSLLegacyRsa {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-VERIFY"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    RSA_VERIFY_DIGEST_BY_CODE, RSA_VERIFY_DIGEST_BY_NAME))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

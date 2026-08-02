@@ -20,9 +20,13 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -1932,8 +1936,8 @@ public final class OpenSSLEvpCipher {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_get_cipherbyname")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CIPHER-BY-NAME"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -1946,29 +1950,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_EncryptInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_EncryptInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT_EX2 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_EncryptInit_ex2")
+                    .forMethods("EVP_EncryptInit", "EVP_EncryptInit_ex", "EVP_EncryptInit_ex2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -1979,29 +1961,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_DecryptInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DecryptInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT_EX2 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DecryptInit_ex2")
+                    .forMethods("EVP_DecryptInit", "EVP_DecryptInit_ex", "EVP_DecryptInit_ex2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2012,29 +1972,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CIPHER-INIT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CIPHER-INIT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX2 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit_ex2")
+                    .forMethods("EVP_CipherInit", "EVP_CipherInit_ex", "EVP_CipherInit_ex2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CIPHER-INIT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2050,8 +1988,10 @@ public final class OpenSSLEvpCipher {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_ASYM_CIPHER_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ASYM-CIPHER"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -2064,29 +2004,8 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encrypt_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_ENCRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encrypt_init_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_encrypt")
+                    .forMethods(
+                            "EVP_PKEY_encrypt_init", "EVP_PKEY_encrypt_init_ex", "EVP_PKEY_encrypt")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2097,29 +2016,8 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decrypt_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_DECRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decrypt_init_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_DECRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_decrypt")
+                    .forMethods(
+                            "EVP_PKEY_decrypt_init", "EVP_PKEY_decrypt_init_ex", "EVP_PKEY_decrypt")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2146,8 +2044,9 @@ public final class OpenSSLEvpCipher {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_oaep_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -2157,9 +2056,13 @@ public final class OpenSSLEvpCipher {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_oaep_md_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MD"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -2182,18 +2085,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("CMS_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMS_ENCRYPT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMS_encrypt_ex")
+                    .forMethods("CMS_encrypt", "CMS_encrypt_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENCRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2204,18 +2096,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("CMS_EnvelopedData_create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENVELOPED-DATA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMS_ENVELOPED_DATA_CREATE_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMS_EnvelopedData_create_ex")
+                    .forMethods("CMS_EnvelopedData_create", "CMS_EnvelopedData_create_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENVELOPED-DATA"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2226,18 +2107,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("CMS_AuthEnvelopedData_create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMS-AUTH-ENVELOPED-DATA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMS_AUTH_ENVELOPED_DATA_CREATE_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMS_AuthEnvelopedData_create_ex")
+                    .forMethods("CMS_AuthEnvelopedData_create", "CMS_AuthEnvelopedData_create_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMS-AUTH-ENVELOPED-DATA"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2248,18 +2118,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("CMS_EncryptedData_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENCRYPTED-DATA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMS_ENCRYPTED_DATA_ENCRYPT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMS_EncryptedData_encrypt_ex")
+                    .forMethods("CMS_EncryptedData_encrypt", "CMS_EncryptedData_encrypt_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMS-ENCRYPTED-DATA"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2296,18 +2155,7 @@ public final class OpenSSLEvpCipher {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("PKCS7_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS7-ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS7_ENCRYPT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS7_encrypt_ex")
+                    .forMethods("PKCS7_encrypt", "PKCS7_encrypt_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS7-ENCRYPT"))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
@@ -2521,24 +2369,14 @@ public final class OpenSSLEvpCipher {
                 EVP_GET_CIPHERBYNAME,
                 // EVP cipher init
                 EVP_ENCRYPT_INIT,
-                EVP_ENCRYPT_INIT_EX,
-                EVP_ENCRYPT_INIT_EX2,
                 EVP_DECRYPT_INIT,
-                EVP_DECRYPT_INIT_EX,
-                EVP_DECRYPT_INIT_EX2,
                 EVP_CIPHER_INIT,
-                EVP_CIPHER_INIT_EX,
-                EVP_CIPHER_INIT_EX2,
                 // EVP asymmetric cipher fetch
                 EVP_ASYM_CIPHER_FETCH,
                 // EVP_PKEY encrypt
                 EVP_PKEY_ENCRYPT_INIT,
-                EVP_PKEY_ENCRYPT_INIT_EX,
-                EVP_PKEY_ENCRYPT,
                 // EVP_PKEY decrypt
                 EVP_PKEY_DECRYPT_INIT,
-                EVP_PKEY_DECRYPT_INIT_EX,
-                EVP_PKEY_DECRYPT,
                 // RSA OAEP context setters
                 EVP_PKEY_CTX_SET_RSA_PADDING,
                 EVP_PKEY_CTX_SET_RSA_OAEP_MD,
@@ -2546,18 +2384,13 @@ public final class OpenSSLEvpCipher {
                 EVP_PKEY_CTX_SET0_RSA_OAEP_LABEL,
                 // CMS enveloped / encrypted data
                 CMS_ENCRYPT,
-                CMS_ENCRYPT_EX,
                 CMS_ENVELOPED_DATA_CREATE,
-                CMS_ENVELOPED_DATA_CREATE_EX,
                 CMS_AUTH_ENVELOPED_DATA_CREATE,
-                CMS_AUTH_ENVELOPED_DATA_CREATE_EX,
                 CMS_ENCRYPTED_DATA_ENCRYPT,
-                CMS_ENCRYPTED_DATA_ENCRYPT_EX,
                 CMS_ENCRYPTED_DATA_SET1_KEY,
                 CMS_ADD0_RECIPIENT_KEY,
                 // PKCS#7 encryption
                 PKCS7_ENCRYPT,
-                PKCS7_ENCRYPT_EX,
                 PKCS7_SET_CIPHER);
     }
 }

@@ -19,12 +19,12 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
-import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.algorithms.MD2;
@@ -53,7 +53,7 @@ public final class CxxDigestContextTranslator implements IContextTranslation<Ast
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
+        if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
                 // MD Family
                 case "MD2" -> Optional.of(new MD2(detectionLocation));
@@ -61,7 +61,9 @@ public final class CxxDigestContextTranslator implements IContextTranslation<Ast
                 case "MD5" -> Optional.of(new MD5(detectionLocation));
                 // MDC2 (ISO/IEC 10118-2) is a hash function built on DES, not MD5
                 case "MDC2" ->
-                        Optional.of(new Algorithm("MDC2", MessageDigest.class, detectionLocation));
+                        Optional.of(
+                                new com.ibm.mapper.model.Algorithm(
+                                        "MDC2", MessageDigest.class, detectionLocation));
 
                 // SHA-1
                 case "SHA-1" -> Optional.of(new SHA(detectionLocation));

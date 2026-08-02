@@ -89,7 +89,6 @@ class OpenSSLRandTest extends TestBase {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(PRNGContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        assertThat(value).isInstanceOf(ValueAction.class);
 
         switch (findingId) {
             case 0, 1, 2, 3 -> {
@@ -169,11 +168,19 @@ class OpenSSLRandTest extends TestBase {
                 assertThat(node.getKind()).isEqualTo(PseudorandomNumberGenerator.class);
                 assertThat(node.asString()).isEqualTo("TEST-RAND");
             }
-            case 18, 19, 20 -> {
-                // EVP_RAND_CTX_new, RAND_set_DRBG_type, RAND_set_seed_source_type → RAND or
-                // DRBG-TYPE
-                assertThat(value.asString()).isIn("RAND", "DRBG-TYPE");
-                assertThat(nodes).isNotNull();
+            case 18 -> {
+                // RAND_set_DRBG_type(NULL, "CTR-DRBG", NULL, NULL, NULL): drbg family name
+                // resolved via CxxPRNGContextTranslator's bare-name case.
+                assertThat(value.asString()).isEqualTo("CTR-DRBG");
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("CTR-DRBG");
+            }
+            case 19 -> {
+                // RAND_set_seed_source_type(NULL, "SEED-SRC", NULL): real captured value, same
+                // vocabulary as the existing "SEED-SRC" case.
+                assertThat(value.asString()).isEqualTo("SEED-SRC");
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("SEED-SRC");
             }
             default -> throw new AssertionError("Unexpected findingId: " + findingId);
         }
@@ -184,7 +191,7 @@ class OpenSSLRandTest extends TestBase {
         INode node = nodes.get(0);
         assertThat(node).isInstanceOf(AES.class);
         assertThat(node.getKind()).isEqualTo(PseudorandomNumberGenerator.class);
-        assertThat(node.asString()).containsIgnoringCase("AES" + keySize);
+        assertThat(node.asString()).containsIgnoringCase("AES-" + keySize);
     }
 
     private static void assertDrbgSha(List<INode> nodes) {

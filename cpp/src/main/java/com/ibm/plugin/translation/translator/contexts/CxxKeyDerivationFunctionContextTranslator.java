@@ -120,7 +120,7 @@ public final class CxxKeyDerivationFunctionContextTranslator
                         Optional.of(new KDFCounter(new CMAC(new AES(256, detectionLocation))));
 
                 // X942KDF (ANSI X9.42 Key Derivation)
-                case "X942KDF-SHA256", "X942KDF-SHA512", "X942KDF-SHA1", "X942KDF-CONCAT" ->
+                case "X942KDF-ASN1", "X942KDF-CONCAT" ->
                         Optional.of(new ANSIX942(detectionLocation));
 
                 // SSKDF (Single-step KDF / ConcatenationKDF)

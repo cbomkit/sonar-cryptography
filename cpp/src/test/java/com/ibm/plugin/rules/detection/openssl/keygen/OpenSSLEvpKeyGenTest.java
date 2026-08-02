@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
@@ -63,7 +64,7 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 48 rule entries in {@link OpenSSLEvpKeyGen}.
+ * Covers all rule entries in {@link OpenSSLEvpKeyGen}.
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
@@ -76,8 +77,8 @@ class OpenSSLEvpKeyGenTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLEvpKeyGenTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(27);
-        assertThat(observed).hasSize(23);
+        assertThat(findingCount).isEqualTo(19);
+        assertThat(observed).hasSize(13);
     }
 
     @Override
@@ -92,8 +93,19 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                             detectionStore,
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+
+        // EVP_PKEY_CTX_set_dsa_paramgen_md_props("SHA256", ...) resolves through DigestContext
+        // (see OpenSSLEvpKeyGen.java).
+        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
+            observed.add(value.asString());
+            assertThat(value.asString()).isEqualTo("SHA-256");
+            assertThat(nodes).isNotEmpty();
+            findingCount++;
+            return;
+        }
+
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         observed.add(value.asString());
 
         switch (value.asString()) {
@@ -155,13 +167,10 @@ class OpenSSLEvpKeyGenTest extends TestBase {
             case "RSA-3072" -> assertRsaSized(nodes, 3072);
             case "RSA-4096" -> assertRsaSized(nodes, 4096);
             case "KEYGEN", "KEYGEN-INIT", "PARAMGEN" -> assertThat(nodes).isEmpty();
-            case "KEYMGMT-FETCH",
-                    "GROUP-NAME",
-                    "EC-PARAM-ENC",
+            case "EC-PARAM-ENC",
                     "RSA-KEYGEN-PUBEXP",
                     "RSA-KEYGEN-PRIMES",
                     "DSA-PARAMGEN-Q-BITS",
-                    "DSA-PARAMGEN-MD",
                     "DSA-PARAMGEN-TYPE" ->
                     assertThat(nodes).isNotNull();
             default -> throw new AssertionError("Unexpected value: " + value.asString());

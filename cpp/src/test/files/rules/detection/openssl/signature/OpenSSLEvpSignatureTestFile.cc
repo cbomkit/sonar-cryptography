@@ -11,11 +11,22 @@ void test_evp_signature() {
     unsigned char buf[64];
     size_t len = 0;
 
-    // DigestSign / DigestVerify init
-    EVP_DigestSignInit(ctx, NULL, NULL, NULL, NULL);
-    EVP_DigestSignInit_ex(ctx, NULL, NULL, NULL, NULL, NULL, NULL);
-    EVP_DigestVerifyInit(ctx, NULL, NULL, NULL, NULL);
-    EVP_DigestVerifyInit_ex(ctx, NULL, NULL, NULL, NULL, NULL, NULL);
+    // DigestSign / DigestVerify init: the digest argument is traced back to its constructing
+    // call, independent of the (unresolvable) key algorithm carried by the EVP_PKEY.
+    const EVP_MD* sign_md = EVP_sha256();
+    EVP_DigestSignInit(ctx, NULL, sign_md, NULL, NULL);
+    const EVP_MD* verify_md = EVP_sha256();
+    EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL);
+    // *_ex's mdname is a real digest-name string, resolved into its own DigestContext finding,
+    // separate from the SIGN/VERIFY action marker.
+    EVP_DigestSignInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
+    EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
+    EVP_DigestSign(ctx, NULL, NULL, 0, NULL, 0);
+    EVP_DigestVerify(ctx, NULL, 0, NULL, 0);
+
+    // PKEY sign/verify (one-shot)
+    EVP_PKEY_sign(pctx, buf, &len, buf, len);
+    EVP_PKEY_verify(pctx, buf, len, buf, len);
 
     // PKEY sign/verify init variants
     EVP_PKEY_sign_init(pctx);
@@ -35,13 +46,17 @@ void test_evp_signature() {
     EVP_SIGNATURE_fetch(NULL, "RSA", NULL);
 
     // RSA PSS / MGF1 CTX setters
-    EVP_PKEY_CTX_set_rsa_mgf1_md(pctx, NULL);
+    const EVP_MD* mgf1_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_mgf1_md(pctx, mgf1_md);
     EVP_PKEY_CTX_set_rsa_mgf1_md_name(pctx, "SHA256", NULL);
     EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, 32);
-    EVP_PKEY_CTX_set_signature_md(pctx, NULL);
-    EVP_PKEY_CTX_set_rsa_pss_keygen_md(pctx, NULL);
+    const EVP_MD* signature_md = EVP_sha256();
+    EVP_PKEY_CTX_set_signature_md(pctx, signature_md);
+    const EVP_MD* pss_keygen_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_pss_keygen_md(pctx, pss_keygen_md);
     EVP_PKEY_CTX_set_rsa_pss_keygen_md_name(pctx, "SHA256", NULL);
-    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, NULL);
+    const EVP_MD* pss_keygen_mgf1_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, pss_keygen_mgf1_md);
     EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(pctx, "SHA256", NULL);
     EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(pctx, 32);
 

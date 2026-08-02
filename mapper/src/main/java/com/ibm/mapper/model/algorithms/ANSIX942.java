@@ -20,8 +20,11 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -46,7 +49,21 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
 
     private static final String NAME = "ANSI-KDF-X9.42";
 
+    @Override
+    public @Nonnull String asString() {
+        final Optional<INode> digest = this.hasChildOfType(MessageDigest.class);
+        if (digest.isPresent()) {
+            return this.name + "-" + digest.get().asString();
+        }
+        return this.name;
+    }
+
     public ANSIX942(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);
+    }
+
+    public ANSIX942(@Nonnull MessageDigest messageDigest) {
+        super(NAME, KeyDerivationFunction.class, messageDigest.getDetectionContext());
+        this.put(messageDigest);
     }
 }

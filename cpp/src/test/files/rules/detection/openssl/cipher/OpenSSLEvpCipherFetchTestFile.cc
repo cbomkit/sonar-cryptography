@@ -1,8 +1,9 @@
 #include <openssl/evp.h>
 
-void test_evp_cipher_fetch() {
-    OSSL_LIB_CTX* lib = NULL;
-    const char* props = NULL;
+void test_evp_cipher_fetch()
+{
+    OSSL_LIB_CTX *lib = NULL;
+    const char *props = NULL;
 
     // AES-SIV
     EVP_CIPHER_fetch(lib, "AES-128-SIV", props);
@@ -52,4 +53,8 @@ void test_evp_cipher_fetch() {
     EVP_CIPHER_fetch(lib, "CAMELLIA-128-CBC-CTS", props);
     EVP_CIPHER_fetch(lib, "CAMELLIA-192-CBC-CTS", props);
     EVP_CIPHER_fetch(lib, "CAMELLIA-256-CBC-CTS", props);
+
+    // AES-SIV via a local variable
+    const char *alg = "AES-128-SIV";
+    EVP_CIPHER_fetch(lib, alg, props);
 }

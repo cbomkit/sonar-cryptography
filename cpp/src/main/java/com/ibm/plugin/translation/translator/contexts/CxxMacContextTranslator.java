@@ -65,7 +65,8 @@ public final class CxxMacContextTranslator implements IContextTranslation<AstNod
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
+        if (value instanceof ValueAction<AstNode>
+                || value instanceof com.ibm.engine.model.Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
                 // HMAC variants
                 case "HMAC-MD5" -> Optional.of(new HMAC(new MD5(detectionLocation)));

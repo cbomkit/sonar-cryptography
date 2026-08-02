@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -57,7 +58,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
+        if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
 
                 // ================================================================

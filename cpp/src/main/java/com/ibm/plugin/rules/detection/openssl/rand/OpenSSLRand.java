@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.openssl.rand;
 
 import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -264,27 +265,18 @@ public final class OpenSSLRand {
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // EVP_RAND context creation and seed source
+    // EVP_RAND seed source
     // ====================================================================
-
-    private static final IDetectionRule<AstNode> EVP_RAND_CTX_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> RAND_SET_SEED_SOURCE_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RAND_set_seed_source_type")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -320,8 +312,12 @@ public final class OpenSSLRand {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RAND_set_DRBG_type")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DRBG-TYPE"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -354,8 +350,7 @@ public final class OpenSSLRand {
                 SEED_SRC,
                 JITTER,
                 TEST_RAND,
-                // EVP_RAND context creation and seed source
-                EVP_RAND_CTX_NEW,
+                // EVP_RAND seed source
                 RAND_SET_SEED_SOURCE_TYPE,
                 // 3.0+ ex-variants + DRBG type
                 RAND_BYTES_EX,

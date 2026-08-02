@@ -96,7 +96,7 @@ class OpenSSLLegacyDhTest extends TestBase {
         INode n = nodes.get(0);
         assertThat(n).isInstanceOf(DH.class);
         assertThat(n.getKind()).isEqualTo(PublicKeyEncryption.class);
-        assertThat(n.asString()).isEqualTo("DH");
+        assertThat(n.asString()).isEqualTo("FFDH");
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
         assertThat(oid.asString()).isEqualTo(DH_OID);
@@ -107,7 +107,7 @@ class OpenSSLLegacyDhTest extends TestBase {
         INode n = nodes.get(0);
         assertThat(n).isInstanceOf(DH.class);
         assertThat(n.getKind()).isEqualTo(KeyAgreement.class);
-        assertThat(n.asString()).isEqualTo("DH");
+        assertThat(n.asString()).isEqualTo("FFDH");
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
         assertThat(oid.asString()).isEqualTo(DH_OID);

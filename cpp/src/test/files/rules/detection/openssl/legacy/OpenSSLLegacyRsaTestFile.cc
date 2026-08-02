@@ -1,8 +1,14 @@
 #include <openssl/rsa.h>
 
-void test_legacy_rsa() {
-    RSA* rsa = NULL;
-    BIGNUM* e = NULL;
+enum
+{
+    NID_sha256 = 672
+};
+
+void test_legacy_rsa()
+{
+    RSA *rsa = NULL;
+    BIGNUM *e = NULL;
     unsigned char buf[256];
     unsigned int len = 0;
     unsigned char em[256];
@@ -14,8 +20,8 @@ void test_legacy_rsa() {
     RSA_public_encrypt(32, buf, buf, rsa, 1);
     RSA_private_decrypt(32, buf, buf, rsa, 1);
 
-    RSA_sign(0, buf, 32, buf, &len, rsa);
-    RSA_verify(0, buf, 32, buf, 32, rsa);
+    RSA_sign(NID_sha256, buf, 32, buf, &len, rsa);
+    RSA_verify(NID_sha256, buf, 32, buf, 32, rsa);
 
     RSA_private_encrypt(32, buf, buf, rsa, 1);
     RSA_public_decrypt(32, buf, buf, rsa, 1);

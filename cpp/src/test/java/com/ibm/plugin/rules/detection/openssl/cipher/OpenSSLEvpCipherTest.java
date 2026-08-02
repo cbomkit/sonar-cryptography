@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.StreamCipher;
@@ -66,9 +68,9 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
  *
- * <p>198 findings; dispatches on detection value string and verifies INode shape per family (AES,
- * ARIA, Camellia, SM4, DES/DESede, Blowfish, CAST5, RC2, RC4, RC5, IDEA, SEED, ChaCha20,
- * ChaCha20-Poly1305, NULL, plus EVP/CMS/PKCS7 init/fetch/misc operations).
+ * <p>Dispatches on detection value string and verifies INode shape per family (AES, ARIA, Camellia,
+ * SM4, DES/DESede, Blowfish, CAST5, RC2, RC4, RC5, IDEA, SEED, ChaCha20, ChaCha20-Poly1305, NULL,
+ * plus EVP/CMS/PKCS7 init/fetch/misc operations).
  */
 class OpenSSLEvpCipherTest extends TestBase {
 
@@ -78,8 +80,8 @@ class OpenSSLEvpCipherTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(198);
-        assertThat(observed).hasSize(180);
+        assertThat(findingCount).isEqualTo(199);
+        assertThat(observed).hasSize(179);
     }
 
     @Override
@@ -94,8 +96,21 @@ class OpenSSLEvpCipherTest extends TestBase {
                             detectionStore,
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+
+        // EVP_PKEY_CTX_set_rsa_oaep_md's md argument is traced back to its constructing call
+        // (see OpenSSLEvpMessageDigest); set_rsa_oaep_md_name resolves its own name string
+        // directly. Both surface here as their own DigestContext entry.
+        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
+            observed.add(value.asString());
+            findingCount++;
+            assertThat(value.asString()).isEqualTo("SHA-256");
+            INode n = head(nodes);
+            assertThat(n).isInstanceOf(MessageDigest.class);
+            return;
+        }
+
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         observed.add(value.asString());
         findingCount++;
 
@@ -204,10 +219,7 @@ class OpenSSLEvpCipherTest extends TestBase {
         if (v.equals("ENCRYPT")
                 || v.equals("DECRYPT")
                 || v.equals("CIPHER-INIT")
-                || v.equals("ASYM-CIPHER")
-                || v.equals("CIPHER-BY-NAME")
                 || v.equals("RSA-PADDING")
-                || v.equals("RSA-OAEP-MD")
                 || v.equals("RSA-OAEP-LABEL")
                 || v.equals("CMS-ENCRYPT")
                 || v.equals("CMS-ENVELOPED-DATA")
@@ -218,6 +230,13 @@ class OpenSSLEvpCipherTest extends TestBase {
                 || v.equals("PKCS7-ENCRYPT")
                 || v.equals("PKCS7-CIPHER")) {
             assertThat(nodes).isNotNull();
+            return;
+        }
+        // EVP_ASYM_CIPHER_fetch(NULL, "RSA", NULL): real algorithm name resolved via
+        // AlgorithmFactory, but CxxCipherContextTranslator has no RSA case, so it resolves to
+        // nothing. EVP_get_cipherbyname("AES-256-GCM") is handled above by the AES- branch.
+        if (v.equals("RSA")) {
+            assertThat(nodes).isEmpty();
             return;
         }
         throw new AssertionError("Unexpected value: " + v);
@@ -248,7 +267,7 @@ class OpenSSLEvpCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(AES.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("AES" + keyLen + "-" + mode);
+        assertThat(n.asString()).isEqualTo("AES-" + keyLen + "-" + mode);
 
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
@@ -335,7 +354,7 @@ class OpenSSLEvpCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(CAST128.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("CAST-128");
+        assertThat(n.asString()).isEqualTo("CAST5-128-" + mode);
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
         assertThat(kl.asString()).isEqualTo("128");
