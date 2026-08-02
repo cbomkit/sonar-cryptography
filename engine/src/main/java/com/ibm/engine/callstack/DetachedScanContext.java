@@ -33,22 +33,22 @@ import org.sonar.api.batch.fs.InputFile;
  * so that replaying it does not pin the file's AST while still supporting CBOM translation and
  * cross-file SonarQube issue reporting.
  *
- * <p>{@link #reportIssue} raises the issue through {@link #issueReporter} when the location is a
- * {@link DetachedSyntaxToken}; if no reporter is available it logs and skips (the CBOM node is
- * still produced via translation).
+ * <p>{@link #reportIssue} raises the issue through {@link #issueReporter} (an AST-free location,
+ * e.g. Java's {@link DetachedSyntaxToken} or C++'s {@code CxxDetachedAstNode}); if no reporter is
+ * available it logs and skips (the CBOM node is still produced via translation).
  */
 public record DetachedScanContext<R, T>(
         @Nonnull InputFile inputFile,
         @Nonnull String filePath,
-        @Nullable IDetachedIssueReporter<R> issueReporter)
+        @Nullable IDetachedIssueReporter<R, T> issueReporter)
         implements IScanContext<R, T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DetachedScanContext.class);
 
     @Override
     public void reportIssue(@Nonnull R currentRule, @Nonnull T tree, @Nonnull String message) {
-        if (issueReporter != null && tree instanceof DetachedSyntaxToken location) {
-            issueReporter.report(currentRule, location, message);
+        if (issueReporter != null) {
+            issueReporter.report(currentRule, tree, message);
             return;
         }
         LOGGER.debug(
