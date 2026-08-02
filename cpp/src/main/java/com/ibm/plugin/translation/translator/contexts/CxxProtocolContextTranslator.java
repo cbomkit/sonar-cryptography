@@ -76,7 +76,9 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
                                                     new SSLVersionMapper();
                                             return sslVersionMapper
                                                     .parse(p.asString(), detectionLocation)
-                                                    .map(TLS::new)
+                                                    .<INode>map(
+                                                            version ->
+                                                                    new TLS(p.asString(), version))
                                                     .orElse(new TLS(detectionLocation));
                                         });
                 default ->
@@ -120,7 +122,7 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
                 final Optional<Version> parsedVersion =
                         sslVersionMapper.parse(stringValue, detectionLocation);
                 if (parsedVersion.isPresent()) {
-                    return Optional.of(new TLS(parsedVersion.get()));
+                    return Optional.of(new TLS(stringValue, parsedVersion.get()));
                 }
             }
             return Optional.of(new Protocol(stringValue, detectionLocation));
