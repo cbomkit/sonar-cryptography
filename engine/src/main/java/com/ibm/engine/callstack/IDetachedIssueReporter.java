@@ -22,15 +22,19 @@ package com.ibm.engine.callstack;
 import javax.annotation.Nonnull;
 
 /**
- * Raises a SonarQube issue for a detached (tree-free) cross-file detection, at the location
- * captured in the {@link DetachedSyntaxToken}. Implemented per language over a shared,
+ * Raises a SonarQube issue for a detached (tree-free) cross-file detection, at the given AST-free
+ * location (e.g. Java's {@link DetachedSyntaxToken}, which fakes a {@code Tree}, or C++'s {@code
+ * CxxDetachedAstNode}, which fakes an {@code AstNode}). Implemented per language over a shared,
  * non-AST-pinning reporting channel (for Java, {@code SonarComponents} + the file's {@code
- * InputFile}), so a detached record can report an issue without retaining the file's AST.
+ * InputFile}; for C++, the originating file's {@code SourceFile} data bag), so a detached record
+ * can report an issue without retaining the file's AST.
  *
  * @param <R> the language's rule/check type
+ * @param <T> the language's tree type; the location passed to {@link #report} is an AST-free
+ *     stand-in for it
  */
 @FunctionalInterface
-public interface IDetachedIssueReporter<R> {
+public interface IDetachedIssueReporter<R, T> {
 
-    void report(@Nonnull R rule, @Nonnull DetachedSyntaxToken location, @Nonnull String message);
+    void report(@Nonnull R rule, @Nonnull T location, @Nonnull String message);
 }
