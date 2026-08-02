@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class KeyExchangeAlgorithmMapperTest {
+class KeyExchangeAlgorithmMapperTest {
 
     @Test
-    public void test() {
+    void test() {
         final DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 

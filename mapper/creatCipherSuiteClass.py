@@ -6,6 +6,39 @@ def optional(value):
     else:
         return "\"" + value + "\""
 
+# Hash names that can end a TLS 1.3 suite name, longest first so a shorter suffix never wins.
+TLS13_HASH_ALGORITHMS = (
+    "ASCONHASH256",
+    "SHA3_256",
+    "SHA3_384",
+    "SHA3_512",
+    "SHA256",
+    "SHA384",
+    "SHA512",
+    "SM3",
+)
+
+# The ciphersuite.info API splits some TLS 1.3 names across kex/auth and leaves enc/hash empty.
+# TLS 1.3 has no negotiable kex/auth, so recover enc/hash from the name instead. Matched against
+# the known hashes above rather than the last "_" token, which would mis-split SHA3_256.
+def resolve_unparsed_tls13_fields(name, struct):
+    if struct["enc_algorithm"] or struct["hash_algorithm"]:
+        return
+    if "TLS1.3" not in struct.get("tls_version", []) or not name.startswith("TLS_"):
+        return
+
+    body = name[len("TLS_"):]
+    for hash_algorithm in TLS13_HASH_ALGORITHMS:
+        suffix = "_" + hash_algorithm
+        if body.endswith(suffix) and len(body) > len(suffix):
+            struct["kex_algorithm"] = "-"
+            struct["auth_algorithm"] = "-"
+            struct["enc_algorithm"] = body[: -len(suffix)].replace("_", " ")
+            struct["hash_algorithm"] = hash_algorithm
+            return
+
+    print(f"WARNING: cannot normalize TLS 1.3 cipher suite '{name}'; enc/hash left unset")
+
 with open("./ciphersuites.json", "r") as stream:
     cipherList = list()
 
@@ -15,6 +48,7 @@ with open("./ciphersuites.json", "r") as stream:
         name, *_ = cipherSuite.keys()
         struct, *_ = cipherSuite.values()
         struct["name"] = name
+        resolve_unparsed_tls13_fields(name, struct)
         cipherList.append(struct)
 
 
