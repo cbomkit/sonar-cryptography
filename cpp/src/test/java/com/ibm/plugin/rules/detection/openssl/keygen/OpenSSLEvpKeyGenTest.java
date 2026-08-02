@@ -77,7 +77,10 @@ class OpenSSLEvpKeyGenTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLEvpKeyGenTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(19);
+        // findingCount includes the p256_nid/rsa_bits local-variable calls (resolved via
+        // CxxSymbolResolverVisitor); observed stays the same size since both resolve to values
+        // ("EC-P256", "RSA-2048") already produced by their literal counterparts.
+        assertThat(findingCount).isEqualTo(21);
         assertThat(observed).hasSize(13);
     }
 

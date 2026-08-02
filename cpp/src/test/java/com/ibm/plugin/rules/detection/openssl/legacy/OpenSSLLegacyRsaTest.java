@@ -52,9 +52,16 @@ class OpenSSLLegacyRsaTest extends TestBase {
 
     private static final String RSA_OID = "1.2.840.113549.1.1.1";
 
+    private int md5SignCount = 0;
+    private int md5VerifyCount = 0;
+
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyRsaTestFile.cc", this);
+        // RSA_sign(md5_nid, ...) / RSA_verify(md5_nid, ...): md5_nid is a plain local variable
+        // (not an enum constant), resolved via CxxSymbolResolverVisitor.
+        assertThat(md5SignCount).isEqualTo(1);
+        assertThat(md5VerifyCount).isEqualTo(1);
     }
 
     @Override
@@ -104,6 +111,20 @@ class OpenSSLLegacyRsaTest extends TestBase {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
                 assertRsaSig(nodes, "RSA-PKCS1-1.5-SHA-256", "1.2.840.113549.1.1.11");
+            }
+            case "RSA-SIGN-MD5" -> {
+                md5SignCount++;
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(SignatureContext.class);
+                // CxxSignatureContextTranslator has no MD5 branch for RSA- values, so the
+                // digest is dropped: same bare RSA-PKCS1-1.5 node as the generic RSA-PSS case.
+                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
+            }
+            case "RSA-VERIFY-MD5" -> {
+                md5VerifyCount++;
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(SignatureContext.class);
+                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
             }
             case "RSA-OAEP-MGF1" -> {
                 assertThat(nodes).isNotNull();

@@ -60,8 +60,11 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherFetchTestFile.cc", this);
+        // alg2's initializer and its reassignment both resolve (CxxSemantic#chaseVariableValues
+        // walks every WRITE usage, not just the latest), to values already produced by literal
+        // calls above, so observed's distinct-value count is unchanged; only findingCount grows.
         assertThat(observed).hasSize(33);
-        assertThat(findingCount).isEqualTo(34);
+        assertThat(findingCount).isEqualTo(36);
     }
 
     @Override
@@ -75,9 +78,24 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+        List<IValue<AstNode>> values = detectionStore.getDetectionValues();
+
+        if (values.size() == 2) {
+            // Reassigned-variable case: alg2's initializer and reassignment both resolved.
+            assertThat(values.stream().map(IValue::asString).toList())
+                    .containsExactly("AES-192-SIV", "AES-256-SIV");
+            assertThat(nodes).hasSize(2);
+            for (int i = 0; i < values.size(); i++) {
+                observed.add(values.get(i).asString());
+                findingCount++;
+                assertAesNode(nodes.get(i), values.get(i).asString());
+            }
+            return;
+        }
+
+        assertThat(values).hasSize(1);
+        IValue<AstNode> value = values.get(0);
         observed.add(value.asString());
         findingCount++;
 
@@ -99,12 +117,15 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
     }
 
     private static void assertAes(List<INode> nodes, String v) {
+        assertAesNode(head(nodes), v);
+    }
+
+    private static void assertAesNode(INode n, String v) {
         // v: AES-<keysize>-<modeparts...>
         String[] parts = v.split("-", 3);
         int keyLen = Integer.parseInt(parts[1]);
         String mode = parts[2];
 
-        INode n = head(nodes);
         assertThat(n).isInstanceOf(AES.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
         assertThat(n.asString()).isEqualTo("AES-" + keyLen + "-" + mode);

@@ -23,6 +23,12 @@ void test_legacy_rsa()
     RSA_sign(NID_sha256, buf, 32, buf, &len, rsa);
     RSA_verify(NID_sha256, buf, 32, buf, 32, rsa);
 
+    // Digest NID via a plain local variable (not an enum constant), resolved via
+    // CxxSymbolResolverVisitor from the variable's initializer.
+    int md5_nid = 4;
+    RSA_sign(md5_nid, buf, 32, buf, &len, rsa);
+    RSA_verify(md5_nid, buf, 32, buf, 32, rsa);
+
     RSA_private_encrypt(32, buf, buf, rsa, 1);
     RSA_public_decrypt(32, buf, buf, rsa, 1);
 

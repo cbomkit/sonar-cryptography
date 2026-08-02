@@ -30,4 +30,8 @@ void test_evp_message_digest() {
     EVP_DigestInit(NULL, NULL);
     EVP_DigestInit_ex(NULL, NULL, NULL);
     EVP_DigestInit_ex2(NULL, NULL, NULL);
+
+    // Digest name via a local variable, not a literal.
+    const char *digest_name = "SHA256";
+    EVP_MD_fetch(NULL, digest_name, NULL);
 }
