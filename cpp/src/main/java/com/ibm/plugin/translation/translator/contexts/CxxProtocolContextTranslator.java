@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.CipherSuite;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
@@ -26,16 +27,21 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.IMapper;
 import com.ibm.mapper.mapper.ssl.CipherSuiteMapper;
+import com.ibm.mapper.mapper.ssl.OpenSslGroupMapper;
+import com.ibm.mapper.mapper.ssl.OpenSslSignatureMapper;
 import com.ibm.mapper.mapper.ssl.SSLVersionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.Unknown;
 import com.ibm.mapper.model.Version;
+import com.ibm.mapper.model.collections.AssetCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
-import com.ibm.plugin.rules.detection.openssl.ssl.OpenSSLVersionValue;
 import com.sonar.cxx.sslr.api.AstNode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
@@ -59,23 +65,6 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
         }
 
         final ProtocolContext.Kind kind = ((ProtocolContext) detectionContext).kind();
-
-        // OpenSSLVersionValue carries the version extracted from SSL_CTX_set_min/max_proto_version.
-        // When the context is TLS and the version string parses (e.g. "TLSv1.2" → Version("1.2")),
-        // emit a typed TLS node; otherwise emit a generic Protocol (covers DTLS, SSLv3, fallback).
-        if (value instanceof OpenSSLVersionValue versionValue) {
-            final String versionString = versionValue.asString();
-            if (kind == ProtocolContext.Kind.TLS) {
-                final SSLVersionMapper sslVersionMapper = new SSLVersionMapper();
-                final Optional<Version> parsedVersion =
-                        sslVersionMapper.parse(versionString, detectionLocation);
-                if (parsedVersion.isPresent()) {
-                    return Optional.of(new TLS(parsedVersion.get()));
-                }
-                return Optional.of(new Protocol(versionString, detectionLocation));
-            }
-            return Optional.of(new Protocol(versionString, detectionLocation));
-        }
 
         if (value instanceof com.ibm.engine.model.Protocol<AstNode> protocol) {
             return switch (kind) {
@@ -107,6 +96,18 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
                                                 new com.ibm.mapper.model.CipherSuite(
                                                         suite.asString(), detectionLocation));
             };
+        } else if (value instanceof Algorithm<AstNode> algorithm) {
+            return switch (kind) {
+                case TLS_SIGNATURE_ALGORITHMS ->
+                        translateList(
+                                algorithm.asString(),
+                                new OpenSslSignatureMapper(),
+                                detectionLocation);
+                case TLS_GROUPS ->
+                        translateList(
+                                algorithm.asString(), new OpenSslGroupMapper(), detectionLocation);
+                default -> Optional.of(new Protocol(algorithm.asString(), detectionLocation));
+            };
         } else if (value instanceof ValueAction<AstNode> valueAction) {
             final String stringValue = valueAction.asString();
             if (kind == ProtocolContext.Kind.TLS
@@ -126,5 +127,30 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
         }
 
         return Optional.of(new Unknown(detectionLocation));
+    }
+
+    /**
+     * Splits a colon-separated OpenSSL algorithm list (e.g. {@code "MLKEM768:X25519"}) and maps
+     * each entry with the given per-library mapper. Unrecognized names are skipped entirely rather
+     * than kept as a raw placeholder. The result is a single {@link AssetCollection} node holding
+     * only the recognized entries.
+     */
+    @Nonnull
+    private static Optional<INode> translateList(
+            @Nonnull String list,
+            @Nonnull IMapper mapper,
+            @Nonnull DetectionLocation detectionLocation) {
+        final List<INode> nodes = new ArrayList<>();
+        for (String rawName : list.split(":")) {
+            final String name = rawName.trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+            mapper.parse(name, detectionLocation).map(n -> (INode) n).ifPresent(nodes::add);
+        }
+        if (nodes.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new AssetCollection(nodes));
     }
 }

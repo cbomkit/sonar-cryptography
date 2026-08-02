@@ -25,6 +25,10 @@ public class ProtocolContext implements IDetectionContext, ISupportKind<Protocol
 
     public enum Kind {
         TLS,
+        // TLS signature-algorithm list configuration (e.g. SSL_CTX_set1_sigalgs_list).
+        TLS_SIGNATURE_ALGORITHMS,
+        // TLS supported-groups (key-exchange) list configuration (e.g. SSL_CTX_set1_groups_list).
+        TLS_GROUPS,
         NONE,
     }
 

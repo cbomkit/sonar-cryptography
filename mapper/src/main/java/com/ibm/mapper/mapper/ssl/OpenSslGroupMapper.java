@@ -1,0 +1,71 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.mapper.mapper.ssl;
+
+import com.ibm.mapper.mapper.IMapper;
+import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.algorithms.ECDH;
+import com.ibm.mapper.model.algorithms.MLKEM;
+import com.ibm.mapper.model.algorithms.SecP256r1MLKEM768;
+import com.ibm.mapper.model.algorithms.SecP384r1MLKEM1024;
+import com.ibm.mapper.model.algorithms.X25519;
+import com.ibm.mapper.model.algorithms.X25519MLKEM768;
+import com.ibm.mapper.model.algorithms.X448;
+import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+/**
+ * Maps OpenSSL TLS group names (the {@code SSL_(CTX_)set1_groups_list} argument) to model classes.
+ * Names follow OpenSSL's spelling (e.g. {@code MLKEM768}, {@code X25519MLKEM768}, {@code
+ * secp256r1}). Unrecognized names return {@link Optional#empty()}; the caller emits them as a raw
+ * asset so nothing is dropped.
+ */
+public final class OpenSslGroupMapper implements IMapper {
+
+    @Nonnull
+    @Override
+    public Optional<? extends INode> parse(
+            @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
+        if (str == null) {
+            return Optional.empty();
+        }
+
+        return switch (str.trim()) {
+            case "MLKEM512" -> Optional.of(new MLKEM(512, detectionLocation));
+            case "MLKEM768" -> Optional.of(new MLKEM(768, detectionLocation));
+            case "MLKEM1024" -> Optional.of(new MLKEM(1024, detectionLocation));
+            case "X25519" -> Optional.of(new X25519(detectionLocation));
+            case "X448" -> Optional.of(new X448(detectionLocation));
+            case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));
+            case "SecP256r1MLKEM768" -> Optional.of(new SecP256r1MLKEM768(detectionLocation));
+            case "SecP384r1MLKEM1024" -> Optional.of(new SecP384r1MLKEM1024(detectionLocation));
+            case "secp256r1", "prime256v1", "P-256" ->
+                    Optional.of(new ECDH(new EllipticCurve("secp256r1", detectionLocation)));
+            case "secp384r1", "P-384" ->
+                    Optional.of(new ECDH(new EllipticCurve("secp384r1", detectionLocation)));
+            case "secp521r1", "P-521" ->
+                    Optional.of(new ECDH(new EllipticCurve("secp521r1", detectionLocation)));
+            default -> Optional.empty();
+        };
+    }
+}

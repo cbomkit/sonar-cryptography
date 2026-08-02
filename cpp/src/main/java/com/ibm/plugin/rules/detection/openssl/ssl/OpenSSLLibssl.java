@@ -19,10 +19,15 @@
  */
 package com.ibm.plugin.rules.detection.openssl.ssl;
 
+import com.ibm.engine.model.Protocol;
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyEc;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -376,13 +381,51 @@ public final class OpenSSLLibssl {
     // SSL_CTX_new - Context creation (detects SSL/TLS usage)
     // ====================================================================
 
+    /**
+     * All {@code *_method()} family rules above, shared by {@code SSL_CTX_new}'s {@code method}
+     * argument and the {@code SSL_CTX_set_ssl_version}/{@code SSL_set_ssl_method} setters below -
+     * the real protocol version is only known at the {@code *_method()} call that constructs the
+     * {@code SSL_METHOD*}, not at the call site that consumes it.
+     */
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> methodRules() {
+        return List.of(
+                TLS_METHOD,
+                TLS_CLIENT_METHOD,
+                TLS_SERVER_METHOD,
+                TLSV1_2_METHOD,
+                TLSV1_2_CLIENT_METHOD,
+                TLSV1_2_SERVER_METHOD,
+                TLSV1_1_METHOD,
+                TLSV1_1_CLIENT_METHOD,
+                TLSV1_1_SERVER_METHOD,
+                TLSV1_METHOD,
+                TLSV1_CLIENT_METHOD,
+                TLSV1_SERVER_METHOD,
+                SSLV3_METHOD,
+                SSLV3_CLIENT_METHOD,
+                SSLV3_SERVER_METHOD,
+                DTLS_METHOD,
+                DTLS_CLIENT_METHOD,
+                DTLS_SERVER_METHOD,
+                DTLSV1_2_METHOD,
+                DTLSV1_2_CLIENT_METHOD,
+                DTLSV1_2_SERVER_METHOD,
+                DTLSV1_METHOD,
+                DTLSV1_CLIENT_METHOD,
+                DTLSV1_SERVER_METHOD,
+                OSSL_QUIC_CLIENT_METHOD,
+                OSSL_QUIC_CLIENT_THREAD_METHOD,
+                OSSL_QUIC_SERVER_METHOD);
+    }
+
     private static final IDetectionRule<AstNode> SSL_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(methodRules())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -439,211 +482,116 @@ public final class OpenSSLLibssl {
     // Protocol Version Configuration
     // ====================================================================
 
-    /**
-     * Detects SSL_CTX_set_min_proto_version calls and extracts version parameter.
-     *
-     * <p>Uses {@link OpenSSLVersionDetectionFactory} to extract the version parameter value during
-     * detection phase (workaround for C++ detection engine parameter extraction limitations).
-     *
-     * <p>The factory creates {@link OpenSSLVersionValue} which uses {@link
-     * org.sonar.cxx.utils.CxxConstantUtils} to resolve constants like TLS1_2_VERSION (0x0303) to
-     * actual integer values, then maps them to version strings like "TLSv1.2".
-     */
-    // Note: `SSL_CTX_set_min_proto_version(ctx, version)` is a macro in openssl/ssl.h that
-    // expands to `SSL_CTX_ctrl(ctx, SSL_CTRL_SET_MIN_PROTO_VERSION, version, NULL)`. The
-    // preprocessor runs before sonar-cxx builds the AST, so we match the expanded form.
-    // SSL_CTRL_SET_MIN_PROTO_VERSION is #defined as 123 in openssl/ssl.h.
+    // Detection matches the literal API call (no OpenSSL headers required, so the
+    // SSL_(CTX_)set_min/max_proto_version macros are not expanded). The version argument is
+    // captured and resolved by PROTO_VERSION_FACTORY, the IValueFactory pattern the Java
+    // plugin uses.
+    private static final OpenSSLNidLookupFactory PROTO_VERSION_FACTORY =
+            new OpenSSLNidLookupFactory(
+                    OpenSSLNidLookupFactory.PROTO_VERSION_BY_CODE,
+                    OpenSSLNidLookupFactory.PROTO_VERSION_BY_NAME,
+                    code -> code & 0xFFFF,
+                    Protocol::new);
+
     private static final IDetectionRule<AstNode> SSL_CTX_SET_MIN_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new OpenSSLVersionDetectionFactory("MIN"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("123")
+                    .forMethods("SSL_CTX_set_min_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    /**
-     * Detects SSL_CTX_set_max_proto_version calls and extracts version parameter.
-     *
-     * <p>Uses {@link OpenSSLVersionDetectionFactory} to extract the version parameter value during
-     * detection phase (workaround for C++ detection engine parameter extraction limitations).
-     *
-     * <p>The factory creates {@link OpenSSLVersionValue} which uses {@link
-     * org.sonar.cxx.utils.CxxConstantUtils} to resolve constants like TLS1_3_VERSION (0x0304) to
-     * actual integer values, then maps them to version strings like "TLSv1.3".
-     */
-    // Same macro-expansion handling as SSL_CTX_SET_MIN_PROTO_VERSION above.
-    // SSL_CTRL_SET_MAX_PROTO_VERSION is #defined as 124 in openssl/ssl.h.
     private static final IDetectionRule<AstNode> SSL_CTX_SET_MAX_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new OpenSSLVersionDetectionFactory("MAX"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("124")
+                    .forMethods("SSL_CTX_set_max_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Note: `SSL_set_min_proto_version(ssl, version)` expands to
-    // `SSL_ctrl(ssl, SSL_CTRL_SET_MIN_PROTO_VERSION, version, NULL)` (ctrl code 123).
     private static final IDetectionRule<AstNode> SSL_SET_MIN_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new OpenSSLVersionDetectionFactory("MIN"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("123")
+                    .forMethods("SSL_set_min_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Note: `SSL_set_max_proto_version(ssl, version)` expands to
-    // `SSL_ctrl(ssl, SSL_CTRL_SET_MAX_PROTO_VERSION, version, NULL)` (ctrl code 124).
     private static final IDetectionRule<AstNode> SSL_SET_MAX_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new OpenSSLVersionDetectionFactory("MAX"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("124")
+                    .forMethods("SSL_set_max_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // KEX Group / Curve Configuration
-    // SSL_CTX_set1_groups(ctx, glist, n)  → SSL_CTX_ctrl(ctx, 91, n, glist)
-    // SSL_CTX_set1_groups_list(ctx, s)    → SSL_CTX_ctrl(ctx, 92, 0, s)
-    // SSL_set1_groups(ssl, glist, n)      → SSL_ctrl(ssl, 91, n, glist)
-    // SSL_set1_groups_list(ssl, s)        → SSL_ctrl(ssl, 92, 0, s)
-    // SSL_CTX_set1_curves* / SSL_set1_curves* are aliases for the above (#define → same macro)
+    // KEX Group / Curve Configuration (literal API calls; headers not required)
+    // SSL_(CTX_)set1_curves* are #define aliases of the set1_groups* forms.
     // ====================================================================
 
-    // SSL_CTX_set1_groups and SSL_CTX_set1_curves both expand to SSL_CTX_ctrl(..., 91, ...)
-    private static final IDetectionRule<AstNode> SSL_CTX_SET1_GROUPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-GROUPS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("91")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // SSL_CTX_set1_groups/SSL_set1_groups take a raw int* NID buffer, not a string or object to
+    // resolve an algorithm name from - no finding is raised for these, unlike their *_list
+    // siblings below which take a colon-separated name string.
 
-    // SSL_CTX_set1_groups_list and SSL_CTX_set1_curves_list both expand to SSL_CTX_ctrl(..., 92,
-    // ...)
     private static final IDetectionRule<AstNode> SSL_CTX_SET1_GROUPS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-GROUPS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("92")
+                    .forMethods("SSL_CTX_set1_groups_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_GROUPS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // SSL_set1_groups and SSL_set1_curves both expand to SSL_ctrl(..., 91, ...)
-    private static final IDetectionRule<AstNode> SSL_SET1_GROUPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-GROUPS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("91")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // SSL_set1_groups_list and SSL_set1_curves_list both expand to SSL_ctrl(..., 92, ...)
     private static final IDetectionRule<AstNode> SSL_SET1_GROUPS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-GROUPS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("92")
+                    .forMethods("SSL_set1_groups_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_GROUPS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Signature Algorithm Configuration
-    // SSL_CTX_set1_sigalgs(ctx, list, n)      → SSL_CTX_ctrl(ctx, 97, n, list)
-    // SSL_CTX_set1_sigalgs_list(ctx, s)       → SSL_CTX_ctrl(ctx, 98, 0, s)
-    // SSL_set1_sigalgs(ssl, list, n)          → SSL_ctrl(ssl, 97, n, list)
-    // SSL_set1_sigalgs_list(ssl, s)           → SSL_ctrl(ssl, 98, 0, s)
-    // SSL_CTX_set1_client_sigalgs(ctx, l, n)  → SSL_CTX_ctrl(ctx, 101, n, l)
-    // SSL_CTX_set1_client_sigalgs_list(ctx,s) → SSL_CTX_ctrl(ctx, 102, 0, s)
+    // Signature Algorithm Configuration (literal API calls; headers not required)
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> SSL_CTX_SET1_SIGALGS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("97")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // SSL_CTX_set1_sigalgs/SSL_set1_sigalgs/SSL_CTX_set1_client_sigalgs take a raw int* sigalg-ID
+    // buffer, not a string or object to resolve an algorithm name from - no finding is raised for
+    // these, unlike their *_list siblings which take a colon-separated name string.
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET1_SIGALGS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("98")
+                    .forMethods("SSL_CTX_set1_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSL_SET1_SIGALGS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("97")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(
+                            new ProtocolContext(ProtocolContext.Kind.TLS_SIGNATURE_ALGORITHMS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -651,27 +599,12 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("98")
+                    .forMethods("SSL_set1_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSL_CTX_SET1_CLIENT_SIGALGS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("101")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(
+                            new ProtocolContext(ProtocolContext.Kind.TLS_SIGNATURE_ALGORITHMS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -679,34 +612,27 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-SIGALGS-CONFIG"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("102")
+                    .forMethods("SSL_CTX_set1_client_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(
+                            new ProtocolContext(ProtocolContext.Kind.TLS_SIGNATURE_ALGORITHMS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Ephemeral DH / ECDH Parameters
-    // SSL_CTX_set_tmp_dh(ctx, dh)    → SSL_CTX_ctrl(ctx, 3, 0, dh)
-    // SSL_set_tmp_dh(ssl, dh)        → SSL_ctrl(ssl, 3, 0, dh)
-    // SSL_CTX_set_tmp_ecdh(ctx, ecdh)→ SSL_CTX_ctrl(ctx, 4, 0, ecdh)
-    // SSL_set_tmp_ecdh(ssl, ecdh)    → SSL_ctrl(ssl, 4, 0, ecdh)
+    // Ephemeral DH / ECDH Parameters (literal API calls; headers not required)
     // ====================================================================
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_DH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-DH-PARAMS"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("3")
+                    .forMethods("SSL_CTX_set_tmp_dh")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLLegacyDh.rules())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -715,12 +641,10 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-DH-PARAMS"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("3")
+                    .forMethods("SSL_set_tmp_dh")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLLegacyDh.rules())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -729,12 +653,10 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_CTX_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-ECDH-PARAMS"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("4")
+                    .forMethods("SSL_CTX_set_tmp_ecdh")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLLegacyEc.rules())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -743,37 +665,17 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("SSL_ctrl")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-ECDH-PARAMS"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("4")
+                    .forMethods("SSL_set_tmp_ecdh")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLLegacyEc.rules())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> SSL_CTX_SET0_TMP_DH_PKEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_CTX_set0_tmp_dh_pkey")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-DH-PARAMS"))
-                    .withAnyParameters()
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSL_SET0_TMP_DH_PKEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SSL_set0_tmp_dh_pkey")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-DH-PARAMS"))
-                    .withAnyParameters()
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // SSL_CTX_set0_tmp_dh_pkey/SSL_set0_tmp_dh_pkey take an EVP_PKEY* built via EVP_PKEY_Q_keygen
+    // or EVP_PKEY_paramgen; there is no detection rule yet for those APIs to trace the pkey
+    // argument back to, so no finding is raised here rather than showing an unresolved marker.
 
     // ====================================================================
     // SSL_CONF (string-driven config)
@@ -784,8 +686,10 @@ public final class OpenSSLLibssl {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_CONF_cmd")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS-CONF-CMD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -799,8 +703,9 @@ public final class OpenSSLLibssl {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_CTX_set_tlsext_use_srtp")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SRTP-PROFILE"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -810,8 +715,9 @@ public final class OpenSSLLibssl {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_set_tlsext_use_srtp")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SRTP-PROFILE"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -821,9 +727,10 @@ public final class OpenSSLLibssl {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_CTX_set_ssl_version")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
-                    .withAnyParameters()
-                    .buildForContext(new ProtocolContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(methodRules())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -832,9 +739,10 @@ public final class OpenSSLLibssl {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("SSL_set_ssl_method")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
-                    .withAnyParameters()
-                    .buildForContext(new ProtocolContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(methodRules())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -896,24 +804,17 @@ public final class OpenSSLLibssl {
                 // KEX Group / Curve Configuration
                 // (SSL_CTX_set1_curves* and SSL_set1_curves* are aliases for the groups macros;
                 //  they expand to the same SSL_CTX_ctrl/SSL_ctrl calls with ctrl codes 91/92)
-                SSL_CTX_SET1_GROUPS,
                 SSL_CTX_SET1_GROUPS_LIST,
-                SSL_SET1_GROUPS,
                 SSL_SET1_GROUPS_LIST,
                 // Signature Algorithm Configuration
-                SSL_CTX_SET1_SIGALGS,
                 SSL_CTX_SET1_SIGALGS_LIST,
-                SSL_SET1_SIGALGS,
                 SSL_SET1_SIGALGS_LIST,
-                SSL_CTX_SET1_CLIENT_SIGALGS,
                 SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
                 // Ephemeral DH / ECDH Parameters
                 SSL_CTX_SET_TMP_DH,
                 SSL_SET_TMP_DH,
                 SSL_CTX_SET_TMP_ECDH,
                 SSL_SET_TMP_ECDH,
-                SSL_CTX_SET0_TMP_DH_PKEY,
-                SSL_SET0_TMP_DH_PKEY,
                 // SSL_CONF (string-driven config)
                 SSL_CONF_CMD,
                 // SRTP profile selection
