@@ -50,7 +50,7 @@ public final class GoCryptoTLSVersionMapper implements IMapper {
         }
 
         return switch (str.trim()) {
-            case "VersionSSL30" -> Optional.of(new Version("SSLv3", detectionLocation));
+            case "VersionSSL30" -> Optional.of(new Version("3.0", detectionLocation));
             case "VersionTLS10" -> Optional.of(new Version("1.0", detectionLocation));
             case "VersionTLS11" -> Optional.of(new Version("1.1", detectionLocation));
             case "VersionTLS12" -> Optional.of(new Version("1.2", detectionLocation));
