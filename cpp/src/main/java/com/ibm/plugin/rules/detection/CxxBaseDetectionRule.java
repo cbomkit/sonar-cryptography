@@ -34,15 +34,18 @@ import com.ibm.rules.issue.Issue;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.AstNodeType;
 import com.sonar.cxx.sslr.api.Grammar;
+import com.sonar.cxx.sslr.impl.ast.AstWalker;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.cxx.parser.CxxGrammarImpl;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.AstNodeTraversal;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
+import org.sonar.cxx.visitors.CxxSymbolResolverVisitor;
 
 /**
  * Base class for C++ cryptography detection rules.
@@ -100,8 +103,40 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
      */
     @Override
     public void visitFile(@Nonnull AstNode astNode) {
+        // Populate sonar-cxx's Symbol/SymbolTable model before detection reads it
+        resolveSymbols(astNode);
         // Traverse the entire AST looking for function calls, new expressions, and enums
         AstNodeTraversal.traverse(astNode, DETECTION_NODE_TYPES, this::processNode);
+    }
+
+    /**
+     * Populates sonar-cxx's Symbol/SymbolTable model for this file's AST before detection runs.
+     *
+     * <p>{@code CxxSymbolResolverVisitor} only registers symbols in {@code visitNode}/{@code
+     * leaveNode}, which run after every visitor's {@code visitFile}. Driving it here first, over
+     * the same tree, ensures symbols exist before this class's own {@code visitFile}-time detection
+     * traversal reads them.
+     *
+     * @param astNode the root AST node of the file being scanned
+     */
+    private void resolveSymbols(@Nonnull AstNode astNode) {
+        var symbolResolverVisitor = new CxxSymbolResolverVisitor<Grammar>();
+        symbolResolverVisitor.setContext(getContext());
+        symbolResolverVisitor.init();
+        new AstWalker(symbolResolverVisitor).walkAndVisit(astNode);
+    }
+
+    /**
+     * Called when a file finishes analysis. Detaches the just-analyzed file's still-retained
+     * recorded calls so its AST becomes garbage-collectable; same-file detections have already
+     * fired with the live context before this runs.
+     *
+     * @param astNode the root AST node of the file that finished analysis, or {@code null} on a
+     *     parse error
+     */
+    @Override
+    public void leaveFile(@Nullable AstNode astNode) {
+        CxxAggregator.getLanguageSupport().notifyLeaveFile(getContext().getInputFile());
     }
 
     /**
