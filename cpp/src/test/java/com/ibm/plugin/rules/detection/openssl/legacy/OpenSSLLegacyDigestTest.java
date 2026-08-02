@@ -51,11 +51,6 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- *
- * <p>Note: legacy rules emit dash-less values like {@code "SHA1"}, {@code "SHA224"} etc. The digest
- * translator expects dashed variants ({@code "SHA-1"}, {@code "SHA-224"}, …) and therefore yields
- * empty nodes for all SHA-family entries. Only {@code "MD5"} and {@code "RIPEMD160"} match
- * translator cases directly.
  */
 class OpenSSLLegacyDigestTest extends TestBase {
 

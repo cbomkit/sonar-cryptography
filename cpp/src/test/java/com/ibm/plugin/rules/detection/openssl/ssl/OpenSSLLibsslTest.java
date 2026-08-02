@@ -43,7 +43,7 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 62 rule entries in {@link OpenSSLLibssl}.
+ * Covers all 50 rule entries in {@link OpenSSLLibssl}.
  *
  * <p>Three finding shapes occur:
  *
