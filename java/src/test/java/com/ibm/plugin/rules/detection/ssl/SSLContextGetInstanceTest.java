@@ -57,28 +57,41 @@ class SSLContextGetInstanceTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        /*
-         * Detection Store
-         */
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(Protocol.class);
-        assertThat(value0.asString()).isEqualTo("TLSv1.2");
 
-        /*
-         * Translation
-         */
+        switch (findingId) {
+            case 0 -> {
+                assertThat(value0.asString()).isEqualTo("TLSv1.2");
+                assertTlsVersion(nodes, "TLSv1.2", "1.2");
+            }
+            // SSLVersionMapper's regex also matches ssl/dtls prefixes (not just tls), so
+            // SSLContext.getInstance("SSLv3") and ("DTLSv1.2") resolve to a versioned TLS
+            // node too, the same as a TLSv* algorithm name.
+            case 1 -> {
+                assertThat(value0.asString()).isEqualTo("SSLv3");
+                assertTlsVersion(nodes, "SSLv3", "3");
+            }
+            case 2 -> {
+                assertThat(value0.asString()).isEqualTo("DTLSv1.2");
+                assertTlsVersion(nodes, "DTLSv1.2", "1.2");
+            }
+            default -> throw new AssertionError("Unexpected findingId: " + findingId);
+        }
+    }
+
+    private static void assertTlsVersion(
+            @Nonnull List<INode> nodes, @Nonnull String asString, @Nonnull String version) {
         assertThat(nodes).hasSize(1);
-        // TLSProtocol
-        INode tLSProtocolNode = nodes.get(0);
-        assertThat(tLSProtocolNode.getKind()).isEqualTo(TLS.class);
-        assertThat(tLSProtocolNode.getChildren()).hasSize(1);
-        assertThat(tLSProtocolNode.asString()).isEqualTo("TLSv1.2");
-        // Version under TLSProtocol
-        INode versionNode = tLSProtocolNode.getChildren().get(Version.class);
+        INode tlsProtocolNode = nodes.get(0);
+        assertThat(tlsProtocolNode.getKind()).isEqualTo(TLS.class);
+        assertThat(tlsProtocolNode.getChildren()).hasSize(1);
+        assertThat(tlsProtocolNode.asString()).isEqualTo(asString);
+        INode versionNode = tlsProtocolNode.getChildren().get(Version.class);
         assertThat(versionNode).isNotNull();
         assertThat(versionNode.getChildren()).isEmpty();
-        assertThat(versionNode.asString()).isEqualTo("1.2");
+        assertThat(versionNode.asString()).isEqualTo(version);
     }
 }
