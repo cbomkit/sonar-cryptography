@@ -33,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.cxx.parser.CxxGrammarImpl;
 import org.sonar.cxx.parser.CxxTokenType;
+import org.sonar.cxx.squidbridge.api.AstNodeSymbolExtension;
+import org.sonar.cxx.squidbridge.api.Symbol;
+import org.sonar.cxx.squidbridge.api.SymbolTable;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
 import org.sonar.cxx.utils.CxxConstantUtils;
 
@@ -128,6 +131,24 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth);
+        } else if (tree.is(CxxGrammarImpl.bracedInitList)) {
+            return resolveBracedInitList(clazz, tree);
+        } else if (tree.is(CxxGrammarImpl.qualifiedId)) {
+            // idExpression is .skip()-annotated, so a qualified reference (Type::CONSTANT)
+            // surfaces its qualifiedId node directly, with no dedicated wrapper. The referenced
+            // identifier is qualifiedId's last child (unqualifiedId collapses to a bare
+            // IDENTIFIER when it has only one child), not its first child (the LHS type name).
+            AstNode referencedId = tree.getLastChild();
+            if (referencedId != null) {
+                return resolveValuesInternal(
+                        clazz,
+                        referencedId,
+                        selections,
+                        valueFactory,
+                        returnEnclosingParam,
+                        detectionEngine,
+                        depth + 1);
+            }
         } else if (CxxAstNodeHelper.isFunctionCall(tree)) {
             return resolveFunctionCall(clazz, tree, returnEnclosingParam, detectionEngine, depth);
         } else {
@@ -216,6 +237,20 @@ public final class CxxSemantic {
                 .orElse(Collections.emptyList());
     }
 
+    /**
+     * A brace-enclosed initializer list (e.g. an {@code OSSL_PARAM params[] = {...}} array) has no
+     * single scalar value to resolve; the {@code bracedInitList} node itself is resolved as-is, so
+     * a value factory that understands the specific struct-array shape (via {@link
+     * ResolvedValue#value()}) can scan its elements when applied downstream.
+     */
+    @Nonnull
+    private static <O> List<ResolvedValue<O, AstNode>> resolveBracedInitList(
+            @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
+        return castValue(clazz, tree)
+                .map(v -> List.of(new ResolvedValue<>(v, tree)))
+                .orElse(Collections.emptyList());
+    }
+
     @Nonnull
     private static <O> List<ResolvedValue<O, AstNode>> resolveCharLiteral(
             @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
@@ -263,20 +298,226 @@ public final class CxxSemantic {
                 }
             }
         } catch (Exception e) {
-            // If constant resolution fails, fall back to identifier name
             LOGGER.debug("Could not resolve identifier '{}' as constant: {}", name, e.getMessage());
         }
 
-        // Fallback to identifier name if not a constant
-        if (returnEnclosingParam) {
-            Optional<O> result = castValue(clazz, name);
-            return result.map(v -> List.of(new ResolvedValue<>(v, tree)))
-                    .orElse(Collections.emptyList());
+        // A field's or parameter's own name is never a resolved value. Parameters are still
+        // returned when returnEnclosingParam is set, since that caller needs the node to hook the
+        // enclosing function; a field has nothing to hook. A scoped enum's constants live only in
+        // its qualified-only member scope (see Symbol.TypeSymbol#memberScope), so a qualified
+        // reference (Mode::STRICT) is looked up there first, since the normal scope-chain lookup
+        // never finds a symbol that was never registered in an enclosing scope.
+        Symbol symbol = resolveScopedEnumConstant(tree, detectionEngine);
+        if (symbol == null) {
+            symbol = AstNodeSymbolExtension.getSymbol(tree);
+        }
+        if (symbol instanceof Symbol.VariableSymbol variableSymbol && !symbol.isUnknown()) {
+            boolean skipField = variableSymbol.isField();
+            boolean skipParameter = variableSymbol.isParameter() && !returnEnclosingParam;
+            if (skipField || skipParameter) {
+                return Collections.emptyList();
+            }
+
+            List<ResolvedValue<O, AstNode>> chased =
+                    chaseVariableValues(
+                            clazz,
+                            tree,
+                            variableSymbol,
+                            selections,
+                            valueFactory,
+                            returnEnclosingParam,
+                            detectionEngine,
+                            depth);
+            if (!chased.isEmpty()) {
+                return chased;
+            }
+        } else if (symbol != null
+                && symbol.kind() == Symbol.Kind.ENUM_CONSTANT
+                && !symbol.isUnknown()) {
+            List<ResolvedValue<O, AstNode>> resolved = resolveEnumConstant(clazz, symbol);
+            if (!resolved.isEmpty()) {
+                return resolved;
+            }
         }
 
-        Optional<O> result = castValue(clazz, name);
-        return result.map(v -> List.of(new ResolvedValue<>(v, tree)))
+        // An identifier with no attached symbol at all (an undeclared name: an external constant,
+        // a macro, something declared in another translation unit) is not itself a resolved value;
+        // resolution of such names is deferred to the separate outer-scope resolution mechanism.
+        return Collections.emptyList();
+    }
+
+    /**
+     * Resolves a variable to its declaration-time initializer value and every subsequent
+     * reassignment's value, matching how the Java engine chases {@code VariableTree.initializer()}
+     * and assignment-site usages. The initializer's result (if any) comes first, followed by
+     * reassignments in source order; an empty list means neither yielded a resolved value.
+     */
+    @Nonnull
+    private static <O> List<ResolvedValue<O, AstNode>> chaseVariableValues(
+            @Nonnull Class<O> clazz,
+            @Nonnull AstNode currentOccurrence,
+            @Nonnull Symbol.VariableSymbol variableSymbol,
+            @Nonnull LinkedList<AstNode> selections,
+            @Nullable IValueFactory<AstNode> valueFactory,
+            boolean returnEnclosingParam,
+            @Nullable CxxDetectionEngine detectionEngine,
+            int depth) {
+        LinkedList<ResolvedValue<O, AstNode>> result = new LinkedList<>();
+
+        for (Symbol.Usage usage : variableSymbol.usages()) {
+            if (usage.node() == currentOccurrence) {
+                continue;
+            }
+            if (usage.kind() != Symbol.Usage.UsageKind.WRITE
+                    && usage.kind() != Symbol.Usage.UsageKind.READ_WRITE) {
+                continue;
+            }
+            AstNode assignmentExpr =
+                    usage.node().getFirstAncestor(CxxGrammarImpl.assignmentExpression);
+            if (assignmentExpr == null) {
+                continue;
+            }
+            AstNode assignedValue = assignmentExpr.getLastChild();
+            if (assignedValue == null || assignedValue == usage.node()) {
+                continue;
+            }
+            result.addAll(
+                    resolveValuesInternal(
+                            clazz,
+                            assignedValue,
+                            selections,
+                            valueFactory,
+                            returnEnclosingParam,
+                            detectionEngine,
+                            depth + 1));
+        }
+
+        AstNode initializer = variableSymbol.initializer();
+        if (initializer != null) {
+            // braceOrEqualInitializer is declared with .skip() and initializerClause with
+            // .skipIfOneChild(), so for a plain "= <value>" declarator neither node survives in the
+            // tree: initializer ends up with the "=" token as its first child and the (possibly
+            // further-collapsed) value expression as its last child. Taking the structurally last
+            // child, as with assignmentExpression above, reaches the value regardless of how far
+            // it collapsed.
+            AstNode initializerTarget = initializer.getLastChild();
+            if (initializerTarget == null) {
+                initializerTarget = initializer;
+            }
+            List<ResolvedValue<O, AstNode>> initializerResults =
+                    resolveValuesInternal(
+                            clazz,
+                            initializerTarget,
+                            selections,
+                            valueFactory,
+                            returnEnclosingParam,
+                            detectionEngine,
+                            depth + 1);
+            result.addAll(0, initializerResults);
+        }
+
+        return result;
+    }
+
+    /**
+     * Resolves an enum constant to its explicit {@code = constantExpression} value when present,
+     * falling back to the constant's own declared name otherwise. A bare enum-constant reference
+     * with no explicit value is still a real, useful resolved value: the constant's own name.
+     */
+    @Nonnull
+    private static <O> List<ResolvedValue<O, AstNode>> resolveEnumConstant(
+            @Nonnull Class<O> clazz, @Nonnull Symbol constantSymbol) {
+        AstNode enumeratorNode = constantSymbol.declaration();
+        if (enumeratorNode == null) {
+            return Collections.emptyList();
+        }
+        // The symbol's declaration() is the "enumerator" node (just the IDENTIFIER, plus an
+        // optional attribute-specifier-seq); its optional "= constantExpression" is a sibling
+        // under the enclosing "enumeratorDefinition" rule, fetched from the parent rather than
+        // from the enumerator node itself.
+        AstNode enumeratorDefinition = enumeratorNode.getParent();
+        if (enumeratorDefinition != null
+                && enumeratorDefinition.is(CxxGrammarImpl.enumeratorDefinition)) {
+            AstNode constantExpr =
+                    enumeratorDefinition.getFirstChild(CxxGrammarImpl.constantExpression);
+            if (constantExpr != null) {
+                List<ResolvedValue<O, AstNode>> explicitValue =
+                        resolveValuesInternal(
+                                clazz, constantExpr, new LinkedList<>(), null, false, null, 0);
+                if (!explicitValue.isEmpty()) {
+                    return explicitValue;
+                }
+            }
+        }
+        Optional<O> nameValue = castValue(clazz, constantSymbol.name());
+        return nameValue
+                .map(v -> List.of(new ResolvedValue<>(v, enumeratorNode)))
                 .orElse(Collections.emptyList());
+    }
+
+    /**
+     * For an identifier that is the right-hand side of a qualified reference ({@code
+     * Type::CONSTANT}), looks it up inside the left-hand type's qualified-only member scope when
+     * that type is a scoped enum, since a scoped enum's constants are reachable only through their
+     * own member scope, not the normal enclosing-scope chain. Returns null for any other {@code
+     * nestedNameSpecifier} shape (namespace, class, unresolved type, or an unscoped enum), leaving
+     * those for the normal lookup path or a future, more general qualified-name resolution to
+     * handle.
+     */
+    @Nullable private static Symbol resolveScopedEnumConstant(
+            @Nonnull AstNode identifierNode, @Nullable CxxDetectionEngine detectionEngine) {
+        AstNode qualifiedId = identifierNode.getFirstAncestor(CxxGrammarImpl.qualifiedId);
+        if (qualifiedId == null) {
+            return null;
+        }
+        AstNode nestedNameSpecifier = qualifiedId.getFirstChild(CxxGrammarImpl.nestedNameSpecifier);
+        if (nestedNameSpecifier == null) {
+            return null;
+        }
+        // nestedNameSpecifier does not carry a bare IDENTIFIER child directly for a type-qualified
+        // reference; "Mode::" parses as nestedNameSpecifier -> typeName -> className -> IDENTIFIER,
+        // so the type name token has to be found as a descendant, not a direct child.
+        AstNode typeNameNode = nestedNameSpecifier.getFirstDescendant(GenericTokenType.IDENTIFIER);
+        if (typeNameNode == null) {
+            return null;
+        }
+        // A className-wrapped type-name reference (as opposed to a declarator/usage-site
+        // identifier) is never given its own attached Symbol by CxxSymbolResolverVisitor, since
+        // isInsideDeclarator(...) treats any className ancestor as a declaration site and skips
+        // usage resolution for it, even though this occurrence is a genuine read. The type symbol
+        // is still registered by name in the enclosing scope table, so it is found by a
+        // name-based scope lookup rather than an AstNode-to-Symbol association.
+        Symbol typeSymbolCandidate = AstNodeSymbolExtension.getSymbol(typeNameNode);
+        if (typeSymbolCandidate == null) {
+            SymbolTable rootScope = rootSymbolTable(detectionEngine);
+            if (rootScope != null) {
+                typeSymbolCandidate = rootScope.lookupSymbol(typeNameNode.getTokenValue());
+            }
+        }
+        if (!(typeSymbolCandidate instanceof Symbol.TypeSymbol typeSymbol)
+                || !typeSymbol.isScopedEnum()) {
+            return null;
+        }
+        SymbolTable memberScope = typeSymbol.memberScope();
+        if (memberScope == null) {
+            return null;
+        }
+        return memberScope.getSymbol(identifierNode.getTokenValue());
+    }
+
+    /**
+     * The file's root {@code SymbolTable}, reached through the scan context rather than any
+     * particular {@code AstNode}, since a qualified reference's left-hand type name has no attached
+     * symbol of its own to start a lookup from (see {@link #resolveScopedEnumConstant}).
+     */
+    @Nullable private static SymbolTable rootSymbolTable(@Nullable CxxDetectionEngine detectionEngine) {
+        if (detectionEngine == null) {
+            return null;
+        }
+        if (detectionEngine.getScanContext() instanceof CxxScanContext cxxScanContext) {
+            return cxxScanContext.cxxVisitorContext().getSymbolTable();
+        }
+        return null;
     }
 
     @Nonnull
@@ -298,16 +539,6 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth);
-        }
-
-        AstNode idExpression = tree.getFirstChild(CxxGrammarImpl.idExpression);
-        if (idExpression != null) {
-            String identifierName = CxxAstNodeHelper.getIdentifierName(idExpression);
-            if (identifierName != null) {
-                Optional<O> result = castValue(clazz, identifierName);
-                return result.map(v -> List.of(new ResolvedValue<>(v, tree)))
-                        .orElse(Collections.emptyList());
-            }
         }
 
         AstNode firstChild = tree.getFirstChild();
@@ -468,12 +699,9 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth) {
-        String functionName = CxxAstNodeHelper.getFunctionCallName(tree);
-        if (functionName != null) {
-            Optional<O> result = castValue(clazz, functionName);
-            return result.map(v -> List.of(new ResolvedValue<>(v, tree)))
-                    .orElse(Collections.emptyList());
-        }
+        // A function call's callee name is not itself a resolved value. A plain function-call
+        // identifier has a method symbol, not a variable or enum symbol, so none of the
+        // IDENTIFIER sub-cases in resolveIdentifier apply to it, and resolution yields nothing.
         return Collections.emptyList();
     }
 

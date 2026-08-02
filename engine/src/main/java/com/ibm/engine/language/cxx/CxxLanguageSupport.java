@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.cxx;
 
+import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.EnumMatcher;
 import com.ibm.engine.detection.Handler;
@@ -40,6 +41,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.cxx.parser.CxxGrammarImpl;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
@@ -142,7 +144,7 @@ public final class CxxLanguageSupport
 
             return new MethodMatcher<>(invocationObjectName, functionName, parameterTypeList);
         } catch (Exception e) {
-            LOGGER.error(e.getLocalizedMessage());
+            LOGGER.error(e.getLocalizedMessage(), e);
             return null;
         }
     }
@@ -153,5 +155,62 @@ public final class CxxLanguageSupport
         Optional<String> enumIdentifierName =
                 translation().getEnumIdentifierName(matchContext, enumIdentifier);
         return enumIdentifierName.<EnumMatcher<AstNode>>map(EnumMatcher::new).orElse(null);
+    }
+
+    @Override
+    public void notifyLeaveFile(@Nonnull InputFile inputFile) {
+        this.handler.detachCallsForFile(inputFile);
+    }
+
+    @Nonnull
+    @Override
+    public CallContextStats callContextStats() {
+        return this.handler.callContextStats();
+    }
+
+    @Override
+    public boolean isDetachableCall(@Nonnull AstNode tree) {
+        if (!CxxAstNodeHelper.isFunctionCall(tree)) {
+            // Constructor calls and other kinds stay retained in this iteration.
+            return false;
+        }
+        for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(tree)) {
+            if (containsBracedInitList(argument)) {
+                // A braced-init-list argument (e.g. an array/aggregate literal) is not covered by
+                // CxxSemantic's value resolution today, so we cannot faithfully reproduce it at
+                // record time; keep such calls on the retained-tree fallback path.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int parameterIndexOf(
+            @Nonnull AstNode methodDefinition, @Nonnull AstNode methodParameter) {
+        if (!methodDefinition.is(CxxGrammarImpl.functionDefinition)) {
+            return -1;
+        }
+        final Optional<String> targetName =
+                translation()
+                        .resolveIdentifierAsString(
+                                MatchContext.createForHookContext(), methodParameter);
+        if (targetName.isEmpty()) {
+            return -1;
+        }
+        final List<AstNode> parameters =
+                CxxAstNodeHelper.getFunctionDefinitionParameters(methodDefinition);
+        for (int i = 0; i < parameters.size(); i++) {
+            final String paramName = CxxAstNodeHelper.getIdentifierName(parameters.get(i));
+            if (targetName.get().equals(paramName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean containsBracedInitList(@Nonnull AstNode argument) {
+        return argument.is(CxxGrammarImpl.bracedInitList)
+                || argument.hasDescendant(CxxGrammarImpl.bracedInitList);
     }
 }
