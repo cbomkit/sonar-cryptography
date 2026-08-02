@@ -57,4 +57,8 @@ void test_evp_cipher_fetch()
     // AES-SIV via a local variable
     const char *alg = "AES-128-SIV";
     EVP_CIPHER_fetch(lib, alg, props);
+
+    const char *alg2 = "AES-192-SIV";
+    alg2 = "AES-256-SIV";
+    EVP_CIPHER_fetch(lib, alg2, props);
 }

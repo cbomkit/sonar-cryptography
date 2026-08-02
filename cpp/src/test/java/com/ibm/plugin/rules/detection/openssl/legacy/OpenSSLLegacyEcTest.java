@@ -49,9 +49,17 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLLegacyEcTest extends TestBase {
 
+    private int ecP256Count = 0;
+
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyEcTestFile.cc", this);
+        // EC_KEY_new_by_curve_name(415), EC_KEY_new_by_curve_name_ex(NULL, NULL, 415),
+        // EC_GROUP_new_by_curve_name(415), EC_GROUP_new_by_curve_name_ex(NULL, NULL, 415)
+        // (all literal), EC_KEY_new_by_curve_name(p256_nid) (local variable), and
+        // EC_KEY_new_by_curve_name(CurveNid::P256) (scoped-enum qualified reference) all
+        // resolve to "EC-P256", each via CxxSymbolResolverVisitor.
+        assertThat(ecP256Count).isEqualTo(6);
     }
 
     @Override
@@ -69,6 +77,9 @@ class OpenSSLLegacyEcTest extends TestBase {
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
 
         String v = value.asString();
+        if (v.equals("EC-P256")) {
+            ecP256Count++;
+        }
         switch (v) {
             case "EC", "EC-P256" -> assertEcdsa(nodes);
             case "ECDSA-SIGN" -> {

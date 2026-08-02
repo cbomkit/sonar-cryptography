@@ -49,7 +49,10 @@ class OpenSSLEvpKeyAgreementTest extends TestBase {
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/keyagreement/OpenSSLEvpKeyAgreementTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(26);
+        // findingCount includes the ffdhe2048_nid local-variable call (resolved via
+        // CxxSymbolResolverVisitor); observed stays the same size since it resolves to "DH-2048",
+        // already produced by its literal counterpart.
+        assertThat(findingCount).isEqualTo(27);
         assertThat(observed).hasSize(15);
     }
 

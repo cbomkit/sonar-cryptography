@@ -217,6 +217,12 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 assertThat(value.asString()).isEqualTo("DIGEST");
                 assertThat(nodes).isNotNull();
             }
+            case 29 -> {
+                // EVP_MD_fetch(NULL, digest_name, NULL): digest_name is a local variable,
+                // resolved via CxxSymbolResolverVisitor from its initializer.
+                assertThat(value.asString()).isEqualTo("SHA-256");
+                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
+            }
             default -> throw new AssertionError("Unexpected findingId: " + findingId);
         }
     }

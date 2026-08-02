@@ -15,9 +15,17 @@ void test_evp_keygen() {
     EVP_PKEY_CTX_set_ec_param_enc(ctx, 0);
     EVP_PKEY_CTX_set_group_name(ctx, "P-256");
 
+    // Curve NID via a local variable, not a literal.
+    int p256_nid = 415;
+    EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, p256_nid);
+
     EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048);
     EVP_PKEY_CTX_set_rsa_keygen_primes(ctx, 2);
     EVP_PKEY_CTX_set1_rsa_keygen_pubexp(ctx, NULL);
+
+    // Key-length bits via a local variable, not a literal.
+    int rsa_bits = 2048;
+    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, rsa_bits);
 
     EVP_PKEY_keygen_init(ctx);
     EVP_PKEY_keygen(ctx, &pkey);
