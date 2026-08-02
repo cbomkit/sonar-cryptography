@@ -55,7 +55,7 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 29 rule entries in {@link OpenSSLEvpMessageDigest}.
+ * Covers all rule entries in {@link OpenSSLEvpMessageDigest}.
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
@@ -105,23 +105,23 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
             }
             case 4 -> {
                 assertThat(value.asString()).isEqualTo("SHA-1");
-                assertDigest(nodes, SHA.class, "SHA1", 160, 512);
+                assertDigest(nodes, SHA.class, "SHA-1", 160, 512);
             }
             case 5 -> {
                 assertThat(value.asString()).isEqualTo("SHA-224");
-                assertDigest(nodes, SHA2.class, "SHA224", 224, 512);
+                assertDigest(nodes, SHA2.class, "SHA-224", 224, 512);
             }
             case 6 -> {
                 assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA256", 256, 512);
+                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
             case 7 -> {
                 assertThat(value.asString()).isEqualTo("SHA-384");
-                assertDigest(nodes, SHA2.class, "SHA384", 384, 1024);
+                assertDigest(nodes, SHA2.class, "SHA-384", 384, 1024);
             }
             case 8 -> {
                 assertThat(value.asString()).isEqualTo("SHA-512");
-                assertDigest(nodes, SHA2.class, "SHA512", 512, 1024);
+                assertDigest(nodes, SHA2.class, "SHA-512", 512, 1024);
             }
             case 9 -> {
                 assertThat(value.asString()).isEqualTo("SHA-512/224");
@@ -179,7 +179,7 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 INode n = head(nodes);
                 assertThat(n).isInstanceOf(BLAKE2b.class);
                 assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2b");
+                assertThat(n.asString()).isEqualTo("BLAKE2b-512");
                 assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("512");
             }
             case 20 -> {
@@ -187,7 +187,7 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 INode n = head(nodes);
                 assertThat(n).isInstanceOf(BLAKE2s.class);
                 assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2s");
+                assertThat(n.asString()).isEqualTo("BLAKE2s-256");
                 assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("256");
             }
             case 21 -> {
@@ -207,13 +207,11 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 assertThat(value.asString()).isEqualTo("NULL");
                 assertThat(nodes).isEmpty();
             }
-            case 24 -> {
-                assertThat(value.asString()).isEqualTo("MD-FETCH");
-                assertThat(nodes).isEmpty();
-            }
-            case 25 -> {
-                assertThat(value.asString()).isEqualTo("DIGEST-BY-NAME");
-                assertThat(nodes).isEmpty();
+            case 24, 25 -> {
+                // EVP_MD_fetch(NULL, "SHA256", NULL) / EVP_get_digestbyname("SHA256"): real
+                // algorithm name resolved via OpenSSLNameCanonicalizerFactory.
+                assertThat(value.asString()).isEqualTo("SHA-256");
+                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
             case 26, 27, 28 -> {
                 assertThat(value.asString()).isEqualTo("DIGEST");
@@ -252,14 +250,14 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(SHA2.class);
         assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(n.asString()).isEqualTo("SHA512/" + truncLen);
+        assertThat(n.asString()).isEqualTo("SHA-512/" + truncLen);
         INode ds = n.getChildren().get(DigestSize.class);
         assertThat(ds).isNotNull();
         assertThat(ds.asString()).isEqualTo(Integer.toString(truncLen));
         // Inner SHA512 wrapped as a MessageDigest child
         INode inner = n.getChildren().get(MessageDigest.class);
         assertThat(inner).isNotNull().isInstanceOf(SHA2.class);
-        assertThat(inner.asString()).isEqualTo("SHA512");
+        assertThat(inner.asString()).isEqualTo("SHA-512");
     }
 
     private static void assertShake(List<INode> nodes, String asString, int pset) {

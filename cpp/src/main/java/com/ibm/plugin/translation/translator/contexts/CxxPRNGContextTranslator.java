@@ -50,7 +50,8 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
+        if (value instanceof ValueAction<AstNode>
+                || value instanceof com.ibm.engine.model.Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
                 // Basic RAND operations
                 case "RAND" ->
@@ -63,6 +64,27 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
                         Optional.of(
                                 new Algorithm(
                                         "RAND-PSEUDO",
+                                        PseudorandomNumberGenerator.class,
+                                        detectionLocation));
+
+                // DRBG family name only (RAND_set_DRBG_type's drbg argument, without a
+                // separately-captured cipher/digest suffix)
+                case "CTR-DRBG" ->
+                        Optional.of(
+                                new Algorithm(
+                                        "CTR-DRBG",
+                                        PseudorandomNumberGenerator.class,
+                                        detectionLocation));
+                case "HASH-DRBG" ->
+                        Optional.of(
+                                new Algorithm(
+                                        "HASH-DRBG",
+                                        PseudorandomNumberGenerator.class,
+                                        detectionLocation));
+                case "HMAC-DRBG" ->
+                        Optional.of(
+                                new Algorithm(
+                                        "HMAC-DRBG",
                                         PseudorandomNumberGenerator.class,
                                         detectionLocation));
 

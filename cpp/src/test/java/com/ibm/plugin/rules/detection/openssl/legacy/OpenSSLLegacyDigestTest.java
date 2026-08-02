@@ -81,22 +81,31 @@ class OpenSSLLegacyDigestTest extends TestBase {
 
         switch (value.asString()) {
             case "MD5" -> assertMd5(nodes);
-            case "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" -> assertThat(nodes).isEmpty();
             case "RIPEMD160" -> assertRipemd160(nodes);
             case "SHA-1" -> {
                 assertThat(nodes).hasSize(1);
                 assertThat(nodes.get(0)).isInstanceOf(SHA.class);
                 assertThat(nodes.get(0).getKind()).isEqualTo(MessageDigest.class);
             }
+            case "SHA-224" -> {
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
+                assertThat(nodes.get(0).asString()).isEqualTo("SHA-224");
+            }
             case "SHA-256" -> {
                 assertThat(nodes).hasSize(1);
                 assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA256");
+                assertThat(nodes.get(0).asString()).isEqualTo("SHA-256");
+            }
+            case "SHA-384" -> {
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
+                assertThat(nodes.get(0).asString()).isEqualTo("SHA-384");
             }
             case "SHA-512" -> {
                 assertThat(nodes).hasSize(1);
                 assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA512");
+                assertThat(nodes.get(0).asString()).isEqualTo("SHA-512");
             }
             case "WHIRLPOOL" -> {
                 assertThat(nodes).hasSize(1);

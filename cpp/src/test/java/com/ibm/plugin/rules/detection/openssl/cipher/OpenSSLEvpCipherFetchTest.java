@@ -46,7 +46,8 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 33 rule entries in {@link OpenSSLEvpCipherFetch}.
+ * Covers all 33 algorithm values detected via {@code EVP_CIPHER_fetch}, both as string literals and
+ * via a local variable holding one of those same values.
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
@@ -54,11 +55,13 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 class OpenSSLEvpCipherFetchTest extends TestBase {
 
     private final Set<String> observed = new HashSet<>();
+    private int findingCount = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherFetchTestFile.cc", this);
         assertThat(observed).hasSize(33);
+        assertThat(findingCount).isEqualTo(34);
     }
 
     @Override
@@ -76,6 +79,7 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
         observed.add(value.asString());
+        findingCount++;
 
         String v = value.asString();
         if (v.startsWith("AES-")) {
@@ -103,7 +107,7 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(AES.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("AES" + keyLen + "-" + mode);
+        assertThat(n.asString()).isEqualTo("AES-" + keyLen + "-" + mode);
 
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
@@ -138,7 +142,7 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(Camellia.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("Camellia");
+        assertThat(n.asString()).isEqualTo(v);
 
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();

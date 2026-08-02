@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -56,69 +57,77 @@ public final class CxxKeyAgreementContextTranslator implements IContextTranslati
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
-            String algorithmName = value.asString().toUpperCase().trim();
+        if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
+            return byName(value.asString(), detectionLocation);
+        }
 
-            // DH (Diffie-Hellman)
-            if (algorithmName.equals("DH")) {
-                return Optional.of(new DH(KeyAgreement.class, detectionLocation));
-            }
-            if (algorithmName.equals("DH-2048")) {
-                return Optional.of(new DH(KeyAgreement.class, detectionLocation));
-            }
-            if (algorithmName.equals("DH-3072")) {
-                return Optional.of(new DH(KeyAgreement.class, detectionLocation));
-            }
-            if (algorithmName.equals("DH-4096")) {
-                return Optional.of(new DH(KeyAgreement.class, detectionLocation));
-            }
+        return Optional.empty();
+    }
 
-            // ECDH (Elliptic Curve Diffie-Hellman)
-            if (algorithmName.equals("ECDH")) {
-                return Optional.of(new ECDH(detectionLocation));
-            }
-            if (algorithmName.startsWith("ECDH-")) {
-                // ECDH-P256, ECDH-P384, ECDH-P521, ECDH-SECP256K1
-                return Optional.of(new ECDH(detectionLocation));
-            }
+    @Nonnull
+    private Optional<INode> byName(
+            @Nonnull String rawName, @Nonnull DetectionLocation detectionLocation) {
+        String algorithmName = rawName.toUpperCase().trim();
 
-            // X25519 and X448
-            if (algorithmName.equals("X25519")) {
-                return Optional.of(new X25519(detectionLocation));
-            }
-            if (algorithmName.equals("X448")) {
-                return Optional.of(new X448(detectionLocation));
-            }
+        // DH (Diffie-Hellman)
+        if (algorithmName.equals("DH")) {
+            return Optional.of(new DH(KeyAgreement.class, detectionLocation));
+        }
+        if (algorithmName.equals("DH-2048")) {
+            return Optional.of(new DH(KeyAgreement.class, detectionLocation));
+        }
+        if (algorithmName.equals("DH-3072")) {
+            return Optional.of(new DH(KeyAgreement.class, detectionLocation));
+        }
+        if (algorithmName.equals("DH-4096")) {
+            return Optional.of(new DH(KeyAgreement.class, detectionLocation));
+        }
 
-            // ML-KEM (Kyber) - Post-Quantum Key Encapsulation Mechanism
-            if (algorithmName.equals("ML-KEM-512")) {
-                return Optional.of(new MLKEM(512, detectionLocation));
-            }
-            if (algorithmName.equals("ML-KEM-768")) {
-                return Optional.of(new MLKEM(768, detectionLocation));
-            }
-            if (algorithmName.equals("ML-KEM-1024")) {
-                return Optional.of(new MLKEM(1024, detectionLocation));
-            }
+        // ECDH (Elliptic Curve Diffie-Hellman)
+        if (algorithmName.equals("ECDH")) {
+            return Optional.of(new ECDH(detectionLocation));
+        }
+        if (algorithmName.startsWith("ECDH-")) {
+            // ECDH-P256, ECDH-P384, ECDH-P521, ECDH-SECP256K1
+            return Optional.of(new ECDH(detectionLocation));
+        }
 
-            // Hybrid Post-Quantum KEMs (PQC + Classical)
-            if (algorithmName.equals("X25519MLKEM768")) {
-                return Optional.of(new X25519MLKEM768(detectionLocation));
-            }
-            if (algorithmName.equals("X448MLKEM1024")) {
-                return Optional.of(new X448MLKEM1024(detectionLocation));
-            }
-            if (algorithmName.equals("SECP256R1MLKEM768")) {
-                return Optional.of(new SecP256r1MLKEM768(detectionLocation));
-            }
-            if (algorithmName.equals("SECP384R1MLKEM1024")) {
-                return Optional.of(new SecP384r1MLKEM1024(detectionLocation));
-            }
+        // X25519 and X448
+        if (algorithmName.equals("X25519")) {
+            return Optional.of(new X25519(detectionLocation));
+        }
+        if (algorithmName.equals("X448")) {
+            return Optional.of(new X448(detectionLocation));
+        }
 
-            // SM2 Key Exchange
-            if (algorithmName.equals("SM2")) {
-                return Optional.of(new SM2(detectionLocation));
-            }
+        // ML-KEM (Kyber) - Post-Quantum Key Encapsulation Mechanism
+        if (algorithmName.equals("ML-KEM-512")) {
+            return Optional.of(new MLKEM(512, detectionLocation));
+        }
+        if (algorithmName.equals("ML-KEM-768")) {
+            return Optional.of(new MLKEM(768, detectionLocation));
+        }
+        if (algorithmName.equals("ML-KEM-1024")) {
+            return Optional.of(new MLKEM(1024, detectionLocation));
+        }
+
+        // Hybrid Post-Quantum KEMs (PQC + Classical)
+        if (algorithmName.equals("X25519MLKEM768")) {
+            return Optional.of(new X25519MLKEM768(detectionLocation));
+        }
+        if (algorithmName.equals("X448MLKEM1024")) {
+            return Optional.of(new X448MLKEM1024(detectionLocation));
+        }
+        if (algorithmName.equals("SECP256R1MLKEM768")) {
+            return Optional.of(new SecP256r1MLKEM768(detectionLocation));
+        }
+        if (algorithmName.equals("SECP384R1MLKEM1024")) {
+            return Optional.of(new SecP384r1MLKEM1024(detectionLocation));
+        }
+
+        // SM2 Key Exchange
+        if (algorithmName.equals("SM2")) {
+            return Optional.of(new SM2(detectionLocation));
         }
 
         return Optional.empty();

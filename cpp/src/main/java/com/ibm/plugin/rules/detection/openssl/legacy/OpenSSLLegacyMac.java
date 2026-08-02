@@ -23,6 +23,8 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -80,24 +82,38 @@ public final class OpenSSLLegacyMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // HMAC_CTX *HMAC_Init_ex(ctx, key, len, const EVP_MD *md, impl) - md (index 3) is traced back
+    // to its EVP_shaXXX()-style constructing call (same mechanism as EVP_PKEY_CTX_SET_HKDF_MD) and
+    // surfaces as its own DigestContext finding, separate from the "HMAC" family finding.
     private static final IDetectionRule<AstNode> HMAC_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("HMAC_Init_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // HMAC_CTX *HMAC_Init(ctx, key, len, const EVP_MD *md) - same tracing as HMAC_Init_ex above,
+    // md at index 3.
     private static final IDetectionRule<AstNode> HMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("HMAC_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -124,13 +140,23 @@ public final class OpenSSLLegacyMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // unsigned char *HMAC(const EVP_MD *evp_md, key, key_len, d, n, md, md_len) - evp_md (index 0)
+    // is traced back to its EVP_shaXXX()-style constructing call, same as HMAC_Init_ex/HMAC_Init
+    // above.
     private static final IDetectionRule<AstNode> HMAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("HMAC")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -150,13 +176,20 @@ public final class OpenSSLLegacyMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // int CMAC_Init(ctx, key, keylen, const EVP_CIPHER *cipher, impl) - cipher (index 3) is
+    // traced back to its EVP_aes_128_cbc()-style constructing call and surfaces as its own
+    // CipherContext finding, separate from the "CMAC" family finding.
     private static final IDetectionRule<AstNode> CMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("CMAC_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

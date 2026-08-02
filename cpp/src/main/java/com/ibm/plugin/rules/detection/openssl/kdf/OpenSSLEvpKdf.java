@@ -19,10 +19,13 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -42,51 +45,12 @@ public final class OpenSSLEvpKdf {
     // PBKDF2 - Password-Based Key Derivation Function 2
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> PBKDF2_HMAC_SHA1 =
+    private static final IDetectionRule<AstNode> PBKDF2_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PBKDF2\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PBKDF2_HMAC_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PBKDF2\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PBKDF2_HMAC_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PBKDF2\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PBKDF2_HMAC_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"PBKDF2\"")
                     .withMethodParameter("*")
@@ -98,64 +62,12 @@ public final class OpenSSLEvpKdf {
     // HKDF - HMAC-based Key Derivation Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> HKDF_SHA1 =
+    private static final IDetectionRule<AstNode> HKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HKDF_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HKDF_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HKDF_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-SHA512"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HKDF_SHA3_256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-SHA3-256"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"HKDF\"")
                     .withMethodParameter("*")
@@ -184,51 +96,12 @@ public final class OpenSSLEvpKdf {
     // TLS1-PRF - TLS 1.0/1.1/1.2 Pseudo-Random Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> TLS1_PRF_MD5_SHA1 =
+    private static final IDetectionRule<AstNode> TLS1_PRF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF-MD5-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS1-PRF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS1_PRF_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS1-PRF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS1_PRF_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS1-PRF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS1_PRF_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF-SHA512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"TLS1-PRF\"")
                     .withMethodParameter("*")
@@ -240,38 +113,12 @@ public final class OpenSSLEvpKdf {
     // TLS13-KDF - TLS 1.3 Key Derivation Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> TLS13_KDF_SHA256 =
+    private static final IDetectionRule<AstNode> TLS13_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS13-KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS13_KDF_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS13-KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS13_KDF_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF-SHA512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"TLS13-KDF\"")
                     .withMethodParameter("*")
@@ -283,64 +130,12 @@ public final class OpenSSLEvpKdf {
     // X963KDF - ANSI X9.63 Key Derivation Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> X963KDF_SHA1 =
+    private static final IDetectionRule<AstNode> X963KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X963KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X963KDF_SHA224 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF-SHA224"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X963KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X963KDF_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X963KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X963KDF_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X963KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X963KDF_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF-SHA512"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"X963KDF\"")
                     .withMethodParameter("*")
@@ -352,77 +147,12 @@ public final class OpenSSLEvpKdf {
     // KBKDF - Key-Based Key Derivation Function (NIST SP 800-108)
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> KBKDF_HMAC_SHA1 =
+    private static final IDetectionRule<AstNode> KBKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-HMAC-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_HMAC_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-HMAC-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_HMAC_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-HMAC-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_HMAC_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-HMAC-SHA512"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_CMAC_AES128 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-CMAC-AES128"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_CMAC_AES256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF-CMAC-AES256"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"KBKDF\"")
                     .withMethodParameter("*")
@@ -434,25 +164,12 @@ public final class OpenSSLEvpKdf {
     // SSHKDF - SSH Key Derivation Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> SSHKDF_SHA1 =
+    private static final IDetectionRule<AstNode> SSHKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SSHKDF-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SSHKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSHKDF_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SSHKDF-SHA256"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SSHKDF"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"SSHKDF\"")
                     .withMethodParameter("*")
@@ -524,25 +241,18 @@ public final class OpenSSLEvpKdf {
     // X942KDF - X9.42 Key Derivation Function
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> X942KDF_SHA1 =
+    // EVP_KDF_fetch("X942KDF-ASN1", ...) has no digest argument at the fetch call site - the real
+    // digest (SHA-1, SHA-256, ...) is set later via EVP_KDF_CTX_set_params and surfaces as its own
+    // DigestContext finding (see EVP_KDF_CTX_SET_PARAMS above), the same pattern as HMAC/CMAC/GMAC
+    // fetch in OpenSSLEvpMac. A single X942KDF-ASN1 marker replaces what were two rules
+    // (X942KDF_SHA1/X942KDF_SHA256) matching the identical literal and colliding
+    // non-deterministically.
+    private static final IDetectionRule<AstNode> X942KDF_ASN1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X942KDF-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X942KDF-ASN1\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X942KDF_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X942KDF-SHA256"))
+                    .shouldBeDetectedAs(new ValueActionFactory<>("X942KDF-ASN1"))
                     .withMethodParameter("*")
                     .withMethodParameter("\"X942KDF-ASN1\"")
                     .withMethodParameter("*")
@@ -635,13 +345,25 @@ public final class OpenSSLEvpKdf {
     // Legacy PBKDF2 functions
     // ====================================================================
 
+    // int PKCS5_PBKDF2_HMAC(pass, passlen, salt, saltlen, iter, const EVP_MD *digest, keylen, out)
+    // -
+    // the digest at position 6 is traced back to its EVP_shaXXX()-style constructing call (same
+    // mechanism as EVP_PKEY_CTX_SET_HKDF_MD below) and surfaces as its own DigestContext finding.
     private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS5_PBKDF2_HMAC")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -666,8 +388,9 @@ public final class OpenSSLEvpKdf {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_hkdf_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -692,8 +415,9 @@ public final class OpenSSLEvpKdf {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_tls1_prf_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -875,6 +599,20 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<AstNode> EVP_KDF_CTX_SET_PARAMS =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KDF_CTX_set_params")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     private OpenSSLEvpKdf() {
         // nothing
     }
@@ -883,43 +621,21 @@ public final class OpenSSLEvpKdf {
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
                 // PBKDF2
-                PBKDF2_HMAC_SHA1,
-                PBKDF2_HMAC_SHA256,
-                PBKDF2_HMAC_SHA384,
-                PBKDF2_HMAC_SHA512,
+                PBKDF2_FETCH,
                 // HKDF
-                HKDF_SHA1,
-                HKDF_SHA256,
-                HKDF_SHA384,
-                HKDF_SHA512,
-                HKDF_SHA3_256,
+                HKDF_FETCH,
                 // Scrypt
                 SCRYPT,
                 // TLS1-PRF
-                TLS1_PRF_MD5_SHA1,
-                TLS1_PRF_SHA256,
-                TLS1_PRF_SHA384,
-                TLS1_PRF_SHA512,
+                TLS1_PRF_FETCH,
                 // TLS13-KDF
-                TLS13_KDF_SHA256,
-                TLS13_KDF_SHA384,
-                TLS13_KDF_SHA512,
+                TLS13_KDF_FETCH,
                 // X963KDF
-                X963KDF_SHA1,
-                X963KDF_SHA224,
-                X963KDF_SHA256,
-                X963KDF_SHA384,
-                X963KDF_SHA512,
+                X963KDF_FETCH,
                 // KBKDF
-                KBKDF_HMAC_SHA1,
-                KBKDF_HMAC_SHA256,
-                KBKDF_HMAC_SHA384,
-                KBKDF_HMAC_SHA512,
-                KBKDF_CMAC_AES128,
-                KBKDF_CMAC_AES256,
+                KBKDF_FETCH,
                 // SSHKDF
-                SSHKDF_SHA1,
-                SSHKDF_SHA256,
+                SSHKDF_FETCH,
                 // Argon2
                 ARGON2D,
                 ARGON2I,
@@ -927,8 +643,7 @@ public final class OpenSSLEvpKdf {
                 // KRB5KDF
                 KRB5KDF,
                 // X942KDF
-                X942KDF_SHA1,
-                X942KDF_SHA256,
+                X942KDF_ASN1,
                 X942KDF_CONCAT,
                 // SSKDF
                 SSKDF,
@@ -946,12 +661,7 @@ public final class OpenSSLEvpKdf {
                 EVP_PKEY_CTX_SET_HKDF_MODE,
                 // TLS1-PRF setters
                 EVP_PKEY_CTX_SET_TLS1_PRF_MD,
-                // PKCS5 PBE keyivgen (legacy)
-                PKCS5_PBE_KEYIVGEN,
-                PKCS5_PBE_KEYIVGEN_EX,
-                // EVP_KDF CTX/derive
-                EVP_KDF_CTX_NEW,
-                // PKCS#12 KDF / MAC
+                // PKCS#12 KDF / MAC entry points
                 PKCS12_CREATE,
                 PKCS12_CREATE_EX,
                 PKCS12_CREATE_EX2,
@@ -963,6 +673,12 @@ public final class OpenSSLEvpKdf {
                 PKCS12_KEY_GEN_UNI,
                 PKCS12_KEY_GEN_UNI_EX,
                 PKCS12_KEY_GEN_UTF8,
-                PKCS12_KEY_GEN_UTF8_EX);
+                PKCS12_KEY_GEN_UTF8_EX,
+                // EVP_KDF CTX/derive
+                EVP_KDF_CTX_NEW,
+                // PKCS5 PBE keyivgen (legacy)
+                PKCS5_PBE_KEYIVGEN,
+                PKCS5_PBE_KEYIVGEN_EX,
+                EVP_KDF_CTX_SET_PARAMS);
     }
 }

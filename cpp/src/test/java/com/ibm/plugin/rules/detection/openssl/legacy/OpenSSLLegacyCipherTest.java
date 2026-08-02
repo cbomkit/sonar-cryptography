@@ -129,7 +129,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(DES.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("DES56-" + mode);
+        assertThat(n.asString()).isEqualTo("DES-56-" + mode);
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
         assertThat(kl.asString()).isEqualTo("56");
@@ -145,7 +145,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(Blowfish.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("Blowfish");
+        assertThat(n.asString()).isEqualTo("Blowfish-128-" + mode);
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
         assertThat(kl.asString()).isEqualTo("128");
@@ -165,7 +165,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(RC2.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("RC2");
+        assertThat(n.asString()).isEqualTo("RC2-128-" + mode);
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
         assertThat(kl.asString()).isEqualTo("128");
@@ -178,7 +178,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(CAST128.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("CAST-128");
+        assertThat(n.asString()).isEqualTo("CAST5-128-" + mode);
         INode kl = n.getChildren().get(KeyLength.class);
         assertThat(kl).isNotNull();
         assertThat(kl.asString()).isEqualTo("128");
@@ -194,7 +194,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(IDEA.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("IDEA");
+        assertThat(n.asString()).isEqualTo("IDEA-" + mode);
         INode m = n.getChildren().get(Mode.class);
         assertThat(m).isNotNull();
         assertThat(m.asString()).isEqualTo(mode);

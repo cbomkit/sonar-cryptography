@@ -19,10 +19,16 @@
  */
 package com.ibm.plugin.rules.detection.openssl.signature;
 
+import com.ibm.engine.model.SignatureAction;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -42,431 +48,48 @@ public final class OpenSSLEvpSignature {
     private static final String BUNDLE = "OpenSSL";
 
     // ====================================================================
-    // RSA Signatures - PKCS#1 v1.5
+    // DigestSign / DigestVerify init — the digest argument is traced back to its
+    // constructing call (see OpenSSLEvpMessageDigest); the key algorithm (RSA/DSA/ECDSA/SM2)
+    // is carried by the EVP_PKEY, which isn't resolvable from this call site.
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> RSA_PKCS1_SHA1 =
+    private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SHA1"))
-                    .withAnyParameters()
+                    .forMethods("EVP_DigestSignInit")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> RSA_PKCS1_SHA224 =
+    private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SHA224"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RSA_PKCS1_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SHA256"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RSA_PKCS1_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SHA384"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RSA_PKCS1_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-SHA512"))
-                    .withAnyParameters()
+                    .forMethods("EVP_DigestVerifyInit")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // DSA Signatures
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> DSA_SHA1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SHA1"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SHA224 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SHA224"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SHA256"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SHA384"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> DSA_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SHA512"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // ECDSA Signatures
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA1"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA224 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA224"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA256"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA384"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA512"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA3_256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA3-256"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA3_384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA3-384"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ECDSA_SHA3_512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SHA3-512"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // EdDSA Signatures
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> ED25519 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSign", "EVP_DigestVerify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ED25519"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ED448 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSign", "EVP_DigestVerify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ED448"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Post-Quantum Signatures - ML-DSA
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> ML_DSA_44 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-DSA-44"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ML_DSA_65 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-DSA-65"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> ML_DSA_87 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ML-DSA-87"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Post-Quantum Signatures - SLH-DSA
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_128F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-128F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_128S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-128S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_128F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-128F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_128S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-128S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_192F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-192F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_192S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-192S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_192F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-192F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_192S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-192S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_256F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-256F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHA2_256S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHA2-256S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_256F =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-256F"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SLH_DSA_SHAKE_256S =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_sign", "EVP_PKEY_verify")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SLH-DSA-SHAKE-256S"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // SM2 Signature
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> SM2 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit", "EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SM2"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Streaming Digest Sign / Verify (init/update/final variants)
+    // Streaming Digest Sign / Verify (init/update/final variants) — SIGN/VERIFY are action
+    // markers only (see JcaSignatureAction for the equivalent Java pattern); they carry no key
+    // algorithm identity (the EVP_PKEY isn't resolvable from this call site) but *_ex's mdname
+    // (index 2) is a real digest-name string (e.g. "SHA256"), resolved via
+    // OpenSSLNameCanonicalizerFactory into its own, separate DigestContext finding - same shape
+    // as EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME below.
     // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT_EX =
@@ -474,9 +97,27 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_DigestSignInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT_EX_MDNAME =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestSignInit_ex")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -485,14 +126,86 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_DigestVerifyInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY_INIT_EX_MDNAME =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestVerifyInit_ex")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // EVP_DigestSign / EVP_DigestVerify (one-shot, incl. EdDSA) — action markers only; the
+    // key algorithm (e.g. Ed25519/Ed448) is carried by the EVP_PKEY, not this call site.
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestSign")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_DigestVerify")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // EVP_PKEY sign / verify init variants
+    // EVP_PKEY sign / verify (one-shot, incl. ML-DSA/SLH-DSA) — action markers only; the key
+    // algorithm and parameter set are carried by the EVP_PKEY, not this call site.
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_SIGN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_sign")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_VERIFY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_verify")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // ====================================================================
+    // EVP_PKEY sign / verify init variants — action markers only.
     // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_SIGN_INIT =
@@ -500,7 +213,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_sign_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -511,7 +224,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_sign_init_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -522,7 +235,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_sign_init_ex2")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -533,7 +246,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -544,7 +257,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_init_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -555,14 +268,14 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_init_ex2")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // EVP_PKEY message sign / verify (streaming, OpenSSL 3.6)
+    // EVP_PKEY message sign / verify (streaming, OpenSSL 3.6) — action markers only.
     // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_SIGN_MESSAGE_INIT =
@@ -570,7 +283,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_sign_message_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -581,14 +294,14 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_message_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // EVP_PKEY verify_recover
+    // EVP_PKEY verify_recover — action marker only.
     // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_VERIFY_RECOVER_INIT =
@@ -596,7 +309,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_recover_init")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY-RECOVER"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -607,7 +320,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_recover_init_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY-RECOVER"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -618,14 +331,14 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_verify_recover_init_ex2")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY-RECOVER"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // ====================================================================
-    // Legacy EVP sign/verify (deprecated 3.0)
+    // Legacy EVP sign/verify (deprecated 3.0) — action marker only.
     // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_VERIFY_INIT_EX =
@@ -633,7 +346,7 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_VerifyInit_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withAnyParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
@@ -648,8 +361,10 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_SIGNATURE_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGNATURE-FETCH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -663,8 +378,9 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_mgf1_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-MGF1-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -674,9 +390,13 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_mgf1_md_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-MGF1-MD"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -696,8 +416,9 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_signature_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGNATURE-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -711,8 +432,9 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS-KEYGEN-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -722,9 +444,13 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_md_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS-KEYGEN-MD"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -733,8 +459,9 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS-KEYGEN-MGF1-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -744,9 +471,12 @@ public final class OpenSSLEvpSignature {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS-KEYGEN-MGF1-MD"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -975,28 +705,6 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestSignInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DigestVerifyInit")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("VERIFY"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> CMS_DIGEST_CREATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -1026,52 +734,21 @@ public final class OpenSSLEvpSignature {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
-                // RSA PKCS#1 v1.5
-                RSA_PKCS1_SHA1,
-                RSA_PKCS1_SHA224,
-                RSA_PKCS1_SHA256,
-                RSA_PKCS1_SHA384,
-                RSA_PKCS1_SHA512,
-                // DSA
-                DSA_SHA1,
-                DSA_SHA224,
-                DSA_SHA256,
-                DSA_SHA384,
-                DSA_SHA512,
-                // ECDSA
-                ECDSA_SHA1,
-                ECDSA_SHA224,
-                ECDSA_SHA256,
-                ECDSA_SHA384,
-                ECDSA_SHA512,
-                ECDSA_SHA3_256,
-                ECDSA_SHA3_384,
-                ECDSA_SHA3_512,
-                // EdDSA
-                ED25519,
-                ED448,
-                // ML-DSA (Post-Quantum)
-                ML_DSA_44,
-                ML_DSA_65,
-                ML_DSA_87,
-                // SLH-DSA (Post-Quantum)
-                SLH_DSA_SHA2_128F,
-                SLH_DSA_SHA2_128S,
-                SLH_DSA_SHAKE_128F,
-                SLH_DSA_SHAKE_128S,
-                SLH_DSA_SHA2_192F,
-                SLH_DSA_SHA2_192S,
-                SLH_DSA_SHAKE_192F,
-                SLH_DSA_SHAKE_192S,
-                SLH_DSA_SHA2_256F,
-                SLH_DSA_SHA2_256S,
-                SLH_DSA_SHAKE_256F,
-                SLH_DSA_SHAKE_256S,
-                // SM2
-                SM2,
+                // DigestSign / DigestVerify init (digest traced back; key algorithm not
+                // resolvable from this call site)
+                EVP_DIGEST_SIGN_INIT,
+                EVP_DIGEST_VERIFY_INIT,
                 // Streaming Digest Sign/Verify
                 EVP_DIGEST_SIGN_INIT_EX,
+                EVP_DIGEST_SIGN_INIT_EX_MDNAME,
                 EVP_DIGEST_VERIFY_INIT_EX,
+                EVP_DIGEST_VERIFY_INIT_EX_MDNAME,
+                // EVP_DigestSign / EVP_DigestVerify (one-shot, incl. EdDSA)
+                EVP_DIGEST_SIGN,
+                EVP_DIGEST_VERIFY,
+                // EVP_PKEY sign / verify (one-shot, incl. ML-DSA/SLH-DSA)
+                EVP_PKEY_SIGN,
+                EVP_PKEY_VERIFY,
                 // EVP_PKEY sign/verify init
                 EVP_PKEY_SIGN_INIT,
                 EVP_PKEY_SIGN_INIT_EX,
@@ -1124,9 +801,6 @@ public final class OpenSSLEvpSignature {
                 // CMP/CRMF
                 OSSL_CRMF_PBM_NEW,
                 OSSL_CRMF_MSG_CREATE_POPO,
-                // New additions
-                EVP_DIGEST_SIGN_INIT,
-                EVP_DIGEST_VERIFY_INIT,
                 CMS_DIGEST_CREATE,
                 CMS_DIGEST_CREATE_EX);
     }

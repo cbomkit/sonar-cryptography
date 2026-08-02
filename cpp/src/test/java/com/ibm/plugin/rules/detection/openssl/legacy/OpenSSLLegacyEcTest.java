@@ -70,7 +70,7 @@ class OpenSSLLegacyEcTest extends TestBase {
 
         String v = value.asString();
         switch (v) {
-            case "EC" -> assertEcdsa(nodes);
+            case "EC", "EC-P256" -> assertEcdsa(nodes);
             case "ECDSA-SIGN" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);

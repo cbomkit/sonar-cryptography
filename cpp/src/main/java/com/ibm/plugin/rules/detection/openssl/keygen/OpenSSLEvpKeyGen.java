@@ -19,10 +19,15 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -36,35 +41,14 @@ public final class OpenSSLEvpKeyGen {
     // RSA Key Generation
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS_2048 =
+    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-2048"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS_3072 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-3072"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS_4096 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-4096"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLKeygenBitsFactory("RSA"))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -73,24 +57,14 @@ public final class OpenSSLEvpKeyGen {
     // DSA Key Generation
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS_2048 =
+    private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-2048"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS_3072 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-3072"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLKeygenBitsFactory("DSA"))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -99,79 +73,14 @@ public final class OpenSSLEvpKeyGen {
     // EC Key Generation
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_P256 =
+    private static final IDetectionRule<AstNode> EVP_EC_PARAMGEN_CURVE_NID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-P256"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_P384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-P384"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_P521 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-P521"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_SECP256K1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-SECP256K1"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_BP256R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP256R1"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_BP384R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP384R1"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_EC_CURVE_BP512R1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC-BRAINPOOLP512R1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -259,8 +168,10 @@ public final class OpenSSLEvpKeyGen {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KEYMGMT_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KEYMGMT-FETCH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -274,8 +185,11 @@ public final class OpenSSLEvpKeyGen {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_group_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("GROUP-NAME"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.GROUP_NAMES))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -337,8 +251,9 @@ public final class OpenSSLEvpKeyGen {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -348,9 +263,13 @@ public final class OpenSSLEvpKeyGen {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md_props")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-MD"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -373,20 +292,11 @@ public final class OpenSSLEvpKeyGen {
     public static List<IDetectionRule<AstNode>> rules() {
         return List.of(
                 // RSA
-                EVP_RSA_KEYGEN_BITS_2048,
-                EVP_RSA_KEYGEN_BITS_3072,
-                EVP_RSA_KEYGEN_BITS_4096,
+                EVP_RSA_KEYGEN_BITS,
                 // DSA
-                EVP_DSA_PARAMGEN_BITS_2048,
-                EVP_DSA_PARAMGEN_BITS_3072,
+                EVP_DSA_PARAMGEN_BITS,
                 // EC
-                EVP_EC_CURVE_P256,
-                EVP_EC_CURVE_P384,
-                EVP_EC_CURVE_P521,
-                EVP_EC_CURVE_SECP256K1,
-                EVP_EC_CURVE_BP256R1,
-                EVP_EC_CURVE_BP384R1,
-                EVP_EC_CURVE_BP512R1,
+                EVP_EC_PARAMGEN_CURVE_NID,
                 // Generic keygen
                 EVP_PKEY_KEYGEN,
                 EVP_PKEY_KEYGEN_INIT,

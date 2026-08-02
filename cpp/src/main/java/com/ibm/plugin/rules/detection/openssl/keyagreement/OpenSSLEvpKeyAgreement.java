@@ -20,11 +20,15 @@
 package com.ibm.plugin.rules.detection.openssl.keyagreement;
 
 import com.ibm.engine.model.context.KeyAgreementContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 /**
@@ -48,8 +52,10 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KEYEXCH_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KEYEXCH-FETCH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -100,8 +106,9 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_dh_kdf_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-KDF-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -122,8 +129,9 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_md")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH-KDF-MD"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -132,44 +140,15 @@ public final class OpenSSLEvpKeyAgreement {
     // DH parameter setters
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_prime_len")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_GENERATOR =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_generator")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_TYPE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_type")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_SUBPRIME_LEN =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_subprime_len")
+                    .forMethods(
+                            "EVP_PKEY_CTX_set_dh_paramgen_prime_len",
+                            "EVP_PKEY_CTX_set_dh_paramgen_generator",
+                            "EVP_PKEY_CTX_set_dh_paramgen_type",
+                            "EVP_PKEY_CTX_set_dh_paramgen_subprime_len")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-PARAMGEN"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
@@ -181,8 +160,11 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_PKEY_CTX_set_dh_nid")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-NID"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.DH_GROUP_BY_CODE, Map.of()))
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -218,8 +200,10 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_KEM_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KEM-FETCH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -298,22 +282,11 @@ public final class OpenSSLEvpKeyAgreement {
     // HPKE (Hybrid Public Key Encryption)
     // ====================================================================
 
-    private static final IDetectionRule<AstNode> OSSL_HPKE_CTX_NEW =
+    private static final IDetectionRule<AstNode> OSSL_HPKE_CTX_LIFECYCLE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("OSSL_HPKE_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> OSSL_HPKE_KEYGEN =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("OSSL_HPKE_keygen")
+                    .forMethods("OSSL_HPKE_CTX_new", "OSSL_HPKE_keygen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
                     .withAnyParameters()
                     .buildForContext(new KeyAgreementContext())
@@ -325,8 +298,9 @@ public final class OpenSSLEvpKeyAgreement {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("OSSL_HPKE_str2suite")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HPKE"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -349,10 +323,7 @@ public final class OpenSSLEvpKeyAgreement {
                 EVP_PKEY_CTX_SET_ECDH_KDF_TYPE,
                 EVP_PKEY_CTX_SET_ECDH_KDF_MD,
                 // DH parameter setters
-                EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN,
-                EVP_PKEY_CTX_SET_DH_PARAMGEN_GENERATOR,
-                EVP_PKEY_CTX_SET_DH_PARAMGEN_TYPE,
-                EVP_PKEY_CTX_SET_DH_PARAMGEN_SUBPRIME_LEN,
+                EVP_PKEY_CTX_SET_DH_PARAMGEN,
                 EVP_PKEY_CTX_SET_DH_NID,
                 EVP_PKEY_CTX_SET_DH_RFC5114,
                 EVP_PKEY_CTX_SET_DHX_RFC5114,
@@ -368,8 +339,7 @@ public final class OpenSSLEvpKeyAgreement {
                 EVP_PKEY_AUTH_ENCAPSULATE_INIT,
                 EVP_PKEY_AUTH_DECAPSULATE_INIT,
                 // HPKE
-                OSSL_HPKE_CTX_NEW,
-                OSSL_HPKE_KEYGEN,
+                OSSL_HPKE_CTX_LIFECYCLE,
                 OSSL_HPKE_STR2SUITE);
     }
 }

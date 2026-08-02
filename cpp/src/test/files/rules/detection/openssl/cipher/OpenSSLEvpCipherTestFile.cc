@@ -158,7 +158,8 @@ void test_evp_cipher() {
     EVP_PKEY_decrypt_init(ctx);
     EVP_PKEY_decrypt_init_ex(ctx, NULL);
     EVP_PKEY_CTX_set_rsa_padding(ctx, 4);
-    EVP_PKEY_CTX_set_rsa_oaep_md(ctx, NULL);
+    const EVP_MD* oaep_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_oaep_md(ctx, oaep_md);
     EVP_PKEY_CTX_set_rsa_oaep_md_name(ctx, "SHA256", NULL);
     EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, buf, 16);
     EVP_EncryptInit(cctx, NULL, buf, buf);

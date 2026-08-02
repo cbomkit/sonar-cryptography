@@ -16,7 +16,6 @@ void test_rand() {
     EVP_RAND_fetch(NULL, "JITTER", NULL);
     EVP_RAND_fetch(NULL, "TEST-RAND", NULL);
 
-    EVP_RAND_CTX_new(NULL);
     RAND_set_DRBG_type(NULL, "CTR-DRBG", NULL, NULL, NULL);
     RAND_set_seed_source_type(NULL, "SEED-SRC", NULL);
 }

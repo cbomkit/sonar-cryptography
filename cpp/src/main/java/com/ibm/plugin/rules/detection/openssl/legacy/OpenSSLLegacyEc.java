@@ -98,7 +98,14 @@ public final class OpenSSLLegacyEc {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EC_KEY_generate_key")
+                    .forMethods(
+                            "EC_KEY_generate_key",
+                            "EC_KEY_set_group",
+                            "EC_GROUP_new_curve_GFp",
+                            "EC_GROUP_new_curve_GF2m",
+                            "EC_GROUP_new_from_params",
+                            "EC_GROUP_new_from_ecparameters",
+                            "EC_GROUP_new_from_ecpkparameters")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext())
@@ -110,8 +117,8 @@ public final class OpenSSLLegacyEc {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EC_KEY_new_by_curve_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -121,41 +128,10 @@ public final class OpenSSLLegacyEc {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EC_KEY_new_by_curve_name_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_KEY_SET_GROUP =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_KEY_set_group")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GFP =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_curve_GFp")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CURVE_GF2M =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_curve_GF2m")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -165,8 +141,8 @@ public final class OpenSSLLegacyEc {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EC_GROUP_new_by_curve_name")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -176,41 +152,10 @@ public final class OpenSSLLegacyEc {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EC_GROUP_new_by_curve_name_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_PARAMS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_from_params")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_ECPARAMETERS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_from_ecparameters")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_FROM_ECPKPARAMETERS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EC_GROUP_new_from_ecpkparameters")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -231,13 +176,7 @@ public final class OpenSSLLegacyEc {
                 EC_KEY_GENERATE_KEY,
                 EC_KEY_NEW_BY_CURVE_NAME,
                 EC_KEY_NEW_BY_CURVE_NAME_EX,
-                EC_KEY_SET_GROUP,
-                EC_GROUP_NEW_CURVE_GFP,
-                EC_GROUP_NEW_CURVE_GF2M,
                 EC_GROUP_NEW_BY_CURVE_NAME,
-                EC_GROUP_NEW_BY_CURVE_NAME_EX,
-                EC_GROUP_NEW_FROM_PARAMS,
-                EC_GROUP_NEW_FROM_ECPARAMETERS,
-                EC_GROUP_NEW_FROM_ECPKPARAMETERS);
+                EC_GROUP_NEW_BY_CURVE_NAME_EX);
     }
 }

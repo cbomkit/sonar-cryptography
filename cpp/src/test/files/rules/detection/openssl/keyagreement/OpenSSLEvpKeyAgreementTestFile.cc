@@ -12,18 +12,20 @@ void test_evp_key_agreement() {
 
     // DH CTX setters
     EVP_PKEY_CTX_set_dh_kdf_type(ctx, 1);
-    EVP_PKEY_CTX_set_dh_kdf_md(ctx, NULL);
+    const EVP_MD* dh_kdf_md = EVP_sha256();
+    EVP_PKEY_CTX_set_dh_kdf_md(ctx, dh_kdf_md);
     EVP_PKEY_CTX_set_dh_paramgen_prime_len(ctx, 2048);
     EVP_PKEY_CTX_set_dh_paramgen_generator(ctx, 2);
     EVP_PKEY_CTX_set_dh_paramgen_type(ctx, 0);
     EVP_PKEY_CTX_set_dh_paramgen_subprime_len(ctx, 256);
-    EVP_PKEY_CTX_set_dh_nid(ctx, 0);
+    EVP_PKEY_CTX_set_dh_nid(ctx, 1126); // NID_ffdhe2048
     EVP_PKEY_CTX_set_dh_rfc5114(ctx, 1);
     EVP_PKEY_CTX_set_dhx_rfc5114(ctx, 1);
 
     // ECDH CTX setters
     EVP_PKEY_CTX_set_ecdh_kdf_type(ctx, 1);
-    EVP_PKEY_CTX_set_ecdh_kdf_md(ctx, NULL);
+    const EVP_MD* ecdh_kdf_md = EVP_sha256();
+    EVP_PKEY_CTX_set_ecdh_kdf_md(ctx, ecdh_kdf_md);
 
     // fetch
     EVP_KEYEXCH_fetch(NULL, "ECDH", NULL);
@@ -40,5 +42,5 @@ void test_evp_key_agreement() {
     // HPKE
     OSSL_HPKE_CTX_new(0, 0, 0, NULL, NULL);
     OSSL_HPKE_keygen(0, NULL, NULL, NULL, NULL, 0, NULL, NULL);
-    OSSL_HPKE_str2suite(NULL, NULL);
+    OSSL_HPKE_str2suite("X25519,HKDF-SHA256,AES-128-GCM", NULL);
 }

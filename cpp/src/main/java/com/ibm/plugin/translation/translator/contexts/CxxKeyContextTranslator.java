@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -45,6 +46,7 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Translator for C++ key detection contexts.
@@ -61,19 +63,31 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
-            return switch (value.asString().toUpperCase().trim()) {
+        if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
+            String algorithmName = value.asString().toUpperCase().trim();
+
+            // RSA key length (EVP_PKEY_CTX_set_rsa_keygen_bits) — any bit-length the code sets,
+            // not just a fixed whitelist
+            if (algorithmName.startsWith("RSA-") && !algorithmName.equals("RSA-PSS")) {
+                Integer bits = parseBits(algorithmName, "RSA-");
+                if (bits != null) {
+                    return Optional.of(new RSA(bits, detectionLocation));
+                }
+            }
+
+            // DSA parameter length (EVP_PKEY_CTX_set_dsa_paramgen_bits) — key length isn't
+            // modeled on DSA, so any bit-length resolves to the bare algorithm
+            if (algorithmName.startsWith("DSA-") && parseBits(algorithmName, "DSA-") != null) {
+                return Optional.of(new DSA(detectionLocation));
+            }
+
+            return switch (algorithmName) {
                 // RSA
                 case "RSA" -> Optional.of(new RSA(detectionLocation));
                 case "RSA-PSS" -> Optional.of(new RSA(detectionLocation));
-                case "RSA-2048" -> Optional.of(new RSA(2048, detectionLocation));
-                case "RSA-3072" -> Optional.of(new RSA(3072, detectionLocation));
-                case "RSA-4096" -> Optional.of(new RSA(4096, detectionLocation));
 
                 // DSA
                 case "DSA" -> Optional.of(new DSA(detectionLocation));
-                case "DSA-2048" -> Optional.of(new DSA(detectionLocation));
-                case "DSA-3072" -> Optional.of(new DSA(detectionLocation));
 
                 // EC
                 case "EC" -> Optional.of(new ECDSA(detectionLocation));
@@ -138,5 +152,13 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
         }
 
         return Optional.empty();
+    }
+
+    @Nullable private static Integer parseBits(@Nonnull String algorithmName, @Nonnull String prefix) {
+        try {
+            return Integer.parseInt(algorithmName.substring(prefix.length()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

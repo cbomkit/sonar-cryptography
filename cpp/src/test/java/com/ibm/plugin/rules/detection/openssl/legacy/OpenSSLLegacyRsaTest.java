@@ -90,10 +90,20 @@ class OpenSSLLegacyRsaTest extends TestBase {
                         .isInstanceOf(CipherContext.class);
                 assertThat(nodes).isEmpty();
             }
-            case "RSA-SIGN", "RSA-VERIFY", "RSA-PSS" -> {
+            case "RSA-PSS" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
-                assertRsaSig(nodes);
+                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
+            }
+            case "RSA-SIGN-SHA256" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(SignatureContext.class);
+                assertRsaSig(nodes, "RSA-PKCS1-1.5-SHA-256", "1.2.840.113549.1.1.11");
+            }
+            case "RSA-VERIFY-SHA256" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(SignatureContext.class);
+                assertRsaSig(nodes, "RSA-PKCS1-1.5-SHA-256", "1.2.840.113549.1.1.11");
             }
             case "RSA-OAEP-MGF1" -> {
                 assertThat(nodes).isNotNull();
@@ -113,14 +123,15 @@ class OpenSSLLegacyRsaTest extends TestBase {
         assertThat(oid.asString()).isEqualTo(RSA_OID);
     }
 
-    private static void assertRsaSig(List<INode> nodes) {
+    private static void assertRsaSig(
+            List<INode> nodes, String expectedAsString, String expectedOid) {
         assertThat(nodes).hasSize(1);
         INode n = nodes.get(0);
         assertThat(n).isInstanceOf(RSA.class);
         assertThat(n.getKind()).isEqualTo(Signature.class);
-        assertThat(n.asString()).isEqualTo("RSA");
+        assertThat(n.asString()).isEqualTo(expectedAsString);
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
-        assertThat(oid.asString()).isEqualTo(RSA_OID);
+        assertThat(oid.asString()).isEqualTo(expectedOid);
     }
 }
