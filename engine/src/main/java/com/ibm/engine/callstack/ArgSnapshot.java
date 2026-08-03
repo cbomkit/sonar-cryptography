@@ -25,10 +25,13 @@ import javax.annotation.Nonnull;
 /**
  * Tree-free snapshot of one argument of a detached recorded call: the value(s) it resolved to at
  * record time (while the file was still live) plus, for each, an AST-free location to report on.
+ *
+ * @param <T> the language's tree type; the location is an AST-free stand-in for it (e.g. {@link
+ *     DetachedSyntaxToken} for Java, which fakes a {@code Tree}) so it can flow through existing
+ *     {@code T}-typed code unchanged
  */
-public record ArgSnapshot(int index, @Nonnull List<ResolvedSnapshotValue> values) {
+public record ArgSnapshot<T>(int index, @Nonnull List<ResolvedSnapshotValue<T>> values) {
 
     /** A single resolved value plus its detached location. */
-    public record ResolvedSnapshotValue(
-            @Nonnull Object value, @Nonnull DetachedSyntaxToken location) {}
+    public record ResolvedSnapshotValue<T>(@Nonnull Object value, @Nonnull T location) {}
 }

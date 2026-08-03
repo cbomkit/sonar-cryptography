@@ -38,6 +38,37 @@ public final class TLS extends Protocol {
         this.put(version);
     }
 
+    /**
+     * @param originalValue the detected algorithm/protocol string this version was parsed from
+     *     (e.g. {@code "SSLv3"}, {@code "DTLSv1.2"}, {@code "TLSv1.2"}, or a language-specific
+     *     constant name like Go's {@code "VersionSSL30"}); its {@code tls}/{@code ssl}/{@code dtls}
+     *     family is preserved in the node's name instead of always labeling it {@code TLS}.
+     */
+    public TLS(@Nonnull String originalValue, @Nonnull Version version) {
+        super(
+                new Protocol(
+                        namePrefix(originalValue) + "v" + version.asString(),
+                        version.getDetectionContext()),
+                TLS.class);
+        this.put(version);
+    }
+
+    @Nonnull
+    private static String namePrefix(@Nonnull String originalValue) {
+        String lower = originalValue.toLowerCase();
+        // "contains", not "startsWith": callers pass either a bare protocol string ("SSLv3",
+        // "DTLSv1.2") or a language-specific constant name the family token is embedded in
+        // (Go's "VersionSSL30", "VersionTLS12"). Check dtls before ssl since "dtls" itself
+        // contains "ls" but not "ssl", so the two never collide.
+        if (lower.contains("dtls")) {
+            return "DTLS";
+        }
+        if (lower.contains("ssl")) {
+            return "SSL";
+        }
+        return "TLS";
+    }
+
     @Nonnull
     public Optional<Version> getVersion() {
         INode node = this.getChildren().get(Version.class);

@@ -60,7 +60,9 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
                                                     new SSLVersionMapper();
                                             return sslVersionMapper
                                                     .parse(p.asString(), detectionLocation)
-                                                    .map(TLS::new)
+                                                    .<INode>map(
+                                                            version ->
+                                                                    new TLS(p.asString(), version))
                                                     .orElse(new TLS(detectionLocation));
                                         });
                 default ->

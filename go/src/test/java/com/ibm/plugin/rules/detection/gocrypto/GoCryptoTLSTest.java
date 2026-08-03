@@ -56,9 +56,6 @@ class GoCryptoTLSTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        /*
-         * Detection Store
-         */
         assertThat(detectionStore).isNotNull();
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
@@ -66,6 +63,16 @@ class GoCryptoTLSTest extends TestBase {
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString()).isEqualTo("TLS");
 
+        switch (findingId) {
+            case 0 -> assertTls12Config(detectionStore, nodes);
+            case 1 -> assertSsl30Config(detectionStore, nodes);
+            default -> throw new AssertionError("Unexpected findingId: " + findingId);
+        }
+    }
+
+    private void assertTls12Config(
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
+            @Nonnull List<INode> nodes) {
         DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
                 getStoreOfValueType(Protocol.class, detectionStore.getChildren());
         assertThat(store1).isNotNull();
@@ -75,9 +82,6 @@ class GoCryptoTLSTest extends TestBase {
         assertThat(value01).isInstanceOf(Protocol.class);
         assertThat(value01.asString()).isEqualTo("VersionTLS12");
 
-        /*
-         * Translation
-         */
         assertThat(nodes).hasSize(1);
 
         // TLS
@@ -99,5 +103,29 @@ class GoCryptoTLSTest extends TestBase {
         assertThat(versionNode).isNotNull();
         assertThat(versionNode.getChildren()).isEmpty();
         assertThat(versionNode.asString()).isEqualTo("1.2");
+    }
+
+    private void assertSsl30Config(
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> detectionStore,
+            @Nonnull List<INode> nodes) {
+        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store1 =
+                getStoreOfValueType(Protocol.class, detectionStore.getChildren());
+        assertThat(store1).isNotNull();
+        assertThat(store1.getDetectionValues()).hasSize(1);
+        IValue<Tree> value01 = store1.getDetectionValues().get(0);
+        assertThat(value01).isInstanceOf(Protocol.class);
+        assertThat(value01.asString()).isEqualTo("VersionSSL30");
+
+        assertThat(nodes).hasSize(1);
+
+        // TLS node, but named after the detected family (SSL), not hardcoded "TLS".
+        INode tLSNode = nodes.get(0);
+        assertThat(tLSNode.getKind()).isEqualTo(TLS.class);
+        assertThat(tLSNode.asString()).isEqualTo("SSLv3.0");
+
+        // Version under TLS
+        INode versionNode = tLSNode.getChildren().get(Version.class);
+        assertThat(versionNode).isNotNull();
+        assertThat(versionNode.asString()).isEqualTo("3.0");
     }
 }

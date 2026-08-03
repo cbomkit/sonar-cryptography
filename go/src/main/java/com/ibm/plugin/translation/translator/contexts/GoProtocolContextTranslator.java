@@ -54,7 +54,9 @@ public final class GoProtocolContextTranslator implements IContextTranslation<Tr
             };
         } else if (value instanceof Protocol<Tree> protocol) {
             final GoCryptoTLSVersionMapper versionMapper = new GoCryptoTLSVersionMapper();
-            return versionMapper.parse(protocol.asString(), detectionLocation).map(TLS::new);
+            return versionMapper
+                    .parse(protocol.asString(), detectionLocation)
+                    .<INode>map(version -> new TLS(protocol.asString(), version));
         } else if (value instanceof CipherSuite<Tree> cipherSuite
                 && detectionContext instanceof ProtocolContext protocolContext) {
             return switch (protocolContext.kind()) {

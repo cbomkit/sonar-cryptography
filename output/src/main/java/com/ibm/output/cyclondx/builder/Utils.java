@@ -47,7 +47,8 @@ public final class Utils {
                 .findFirst();
     }
 
-    public static <T> @Nonnull Predicate<T> distinctByKey(
+    @Nonnull
+    public static <T> Predicate<T> distinctByKey(
             @Nonnull Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;

@@ -21,7 +21,6 @@ package com.ibm.engine.language.go.tree;
 
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sonar.go.impl.BaseTreeImpl;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.Tree;
@@ -42,7 +41,7 @@ public class TreeWithBlock extends BaseTreeImpl implements ITreeWithBlock {
     }
 
     @Override
-    public @NonNull BlockTree blockTree() {
+    public @Nonnull BlockTree blockTree() {
         return blockTree;
     }
 }

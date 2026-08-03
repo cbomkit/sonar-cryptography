@@ -20,3 +20,15 @@ func main() {
 	}
 	defer conn.Close()
 }
+
+// VersionSSL30: the family (SSL, not TLS) must be preserved in the translated node's name.
+func dialSsl30() {
+	confSsl30 := tls.Config{ // Noncompliant {{(TLS) SSLv3.0}}
+		MinVersion: tls.VersionSSL30,
+	}
+	connSsl30, errSsl30 := tls.Dial("tcp", "example.com:443", &confSsl30)
+	if errSsl30 != nil {
+		panic(errSsl30)
+	}
+	defer connSsl30.Close()
+}

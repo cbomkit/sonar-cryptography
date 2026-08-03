@@ -16,11 +16,9 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <sonar.jreMinVersion>17</sonar.jreMinVersion>
+        <sonar.jreMinVersion>21</sonar.jreMinVersion>
     </properties>
     <dependencies>
         <dependency>
@@ -38,6 +36,12 @@
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>go</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>cpp</artifactId>
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
@@ -64,12 +68,13 @@
                     <pluginKey>sonar-crypto-plugin</pluginKey>
                     <pluginName>Sonar Crypto Plugin</pluginName>
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
-                    <!-- This line must specify all file extensions which should be scanned by the plugin -->
-                    <requiredForLanguages>java,jsp,py,ipynb,go</requiredForLanguages>
+                    <!-- This line must specify all language keys which should be scanned by the plugin -->
+                    <requiredForLanguages>java,jsp,py,ipynb,go,cxx,cpp,c++,c</requiredForLanguages>
+                    <requirePlugins>cxx</requirePlugins>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
-                    <jreMinVersion>17</jreMinVersion>
+                    <jreMinVersion>21</jreMinVersion>
                 </configuration>
             </plugin>
             <plugin>
@@ -109,9 +114,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>17</release>
-                    <source>17</source>
-                    <target>17</target>
+                    <release>21</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -164,7 +167,7 @@
                 </property>
             </activation>
             <properties>
-                <sonar.jreMinVersion>17</sonar.jreMinVersion>
+                <sonar.jreMinVersion>21</sonar.jreMinVersion>
             </properties>
         </profile>
     </profiles>

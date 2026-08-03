@@ -26,12 +26,12 @@ import com.ibm.mapper.model.Version;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SSLVersionMapperTest {
 
     @Test
-    public void test1() {
+    public void tlsv12IsParsedAsVersion1_2() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -44,7 +44,7 @@ public class SSLVersionMapperTest {
     }
 
     @Test
-    public void test2() {
+    public void tlsv1WithoutPatchIsParsedAsVersion1_0() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -57,7 +57,7 @@ public class SSLVersionMapperTest {
     }
 
     @Test
-    public void test3() {
+    public void tlsv13LowercaseIsParsedAsVersion1_3() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -67,5 +67,41 @@ public class SSLVersionMapperTest {
         assertThat(version).isPresent();
         assertThat(version.get().is(Version.class)).isTrue();
         assertThat(version.get().asString()).isEqualTo("1.3");
+    }
+
+    @Test
+    public void dtlsVersionIsParsedAsVersion() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final SSLVersionMapper mapper = new SSLVersionMapper();
+        Optional<? extends INode> dtls12 = mapper.parse("DTLSv1.2", testDetectionLocation);
+        assertThat(dtls12).isPresent();
+        assertThat(dtls12.get().asString()).isEqualTo("1.2");
+
+        Optional<? extends INode> dtls10 = mapper.parse("DTLSv1.0", testDetectionLocation);
+        assertThat(dtls10).isPresent();
+        assertThat(dtls10.get().asString()).isEqualTo("1.0");
+    }
+
+    @Test
+    public void sslv3IsParsedAsVersion3() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final SSLVersionMapper mapper = new SSLVersionMapper();
+        Optional<? extends INode> sslv3 = mapper.parse("SSLv3.0", testDetectionLocation);
+        assertThat(sslv3).isPresent();
+        assertThat(sslv3.get().asString()).isEqualTo("3.0");
+    }
+
+    @Test
+    public void unknownFallbackStringReturnsEmpty() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final SSLVersionMapper mapper = new SSLVersionMapper();
+        assertThat(mapper.parse("TLS-MIN-VERSION", testDetectionLocation)).isEmpty();
+        assertThat(mapper.parse("TLS-MAX-VERSION", testDetectionLocation)).isEmpty();
     }
 }

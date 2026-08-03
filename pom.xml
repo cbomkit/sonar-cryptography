@@ -13,6 +13,7 @@
         <module>java</module>
         <module>python</module>
         <module>go</module>
+        <module>cpp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
@@ -36,8 +37,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JUnit tags excluded from the default build; clear via -DexcludedGroups= to run them. -->
@@ -53,9 +54,19 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.25.0.34794</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
+        <!-- sonar-cxx (community plugin) version, via JitPack: chmodshubham/sonar-cxx@symbol-resol -->
+        <sonar.cxx.groupId>com.github.chmodshubham.sonar-cxx</sonar.cxx.groupId>
+        <sonar.cxx.version>e490e4c89df4c182759600447a0df2707881ad1</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
@@ -133,6 +144,22 @@
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
+        </dependency>
+        <!-- sonar-cxx (community plugin for C/C++ support) -->
+        <!-- provided: sonar-cxx must be installed as a separate SonarQube plugin.
+             Bundling these into the uber-JAR causes ClassCastException at runtime
+             when both plugins are loaded by SonarQube's isolated classloaders. -->
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid-bridge</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- unit tests -->

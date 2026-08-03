@@ -27,12 +27,12 @@ import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.rules.issue.Issue;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public final class NoMD5UseForMessageDigestRuleTest extends TestBase {
+final class NoMD5UseForMessageDigestRuleTest extends TestBase {
 
     @Test
-    public void non() {
+    void non() {
         final RSA rsa = new RSA(detectionLocation);
 
         final NoMD5UseForMessageDigestRule<IMockTree> rule = new NoMD5UseForMessageDigestRule<>();
@@ -42,7 +42,7 @@ public final class NoMD5UseForMessageDigestRuleTest extends TestBase {
     }
 
     @Test
-    public void valid() {
+    void valid() {
         final MD5 md5 = new MD5(detectionLocation);
         md5.put(new Tag(detectionLocation));
 
@@ -53,7 +53,7 @@ public final class NoMD5UseForMessageDigestRuleTest extends TestBase {
     }
 
     @Test
-    public void inValid() {
+    void inValid() {
         final MD5 md5 = new MD5(detectionLocation);
         md5.put(new Digest(detectionLocation));
 

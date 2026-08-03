@@ -163,12 +163,12 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
         final List<IType> parameterTypes =
                 translation.getMethodParameterTypes(matchContext, invocation);
 
-        final List<ArgSnapshot> arguments = new ArrayList<>();
+        final List<ArgSnapshot<Tree>> arguments = new ArrayList<>();
         final List<ExpressionTree> actualArguments = invocation.arguments();
         for (int i = 0; i < actualArguments.size(); i++) {
             final List<ResolvedValue<Object, Tree>> resolved =
                     resolveValuesInInnerScope(Object.class, actualArguments.get(i), null);
-            final List<ArgSnapshot.ResolvedSnapshotValue> snapshots = new ArrayList<>();
+            final List<ArgSnapshot.ResolvedSnapshotValue<Tree>> snapshots = new ArrayList<>();
             for (ResolvedValue<Object, Tree> resolvedValue : resolved) {
                 final DetachedSyntaxToken location =
                         captureLocation(resolvedValue.tree(), resolvedValue.value().toString());
@@ -176,9 +176,9 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                     return null; // cannot faithfully snapshot -> fall back to retaining the tree
                 }
                 snapshots.add(
-                        new ArgSnapshot.ResolvedSnapshotValue(resolvedValue.value(), location));
+                        new ArgSnapshot.ResolvedSnapshotValue<>(resolvedValue.value(), location));
             }
-            arguments.add(new ArgSnapshot(i, snapshots));
+            arguments.add(new ArgSnapshot<>(i, snapshots));
         }
 
         final JavaDetachedIssueReporter issueReporter =

@@ -25,6 +25,7 @@ import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.model.algorithms.SM3;
+import com.ibm.mapper.model.algorithms.ascon.AsconHash;
 import com.ibm.mapper.model.algorithms.gost.GOSTR341112;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public final class HashAlgorithmMapper implements IMapper {
             case "SHA384" -> Optional.of(new SHA2(384, detectionLocation));
             case "SM3" -> Optional.of(new SM3(detectionLocation));
             case "GOSTR341112" -> Optional.of(new GOSTR341112(detectionLocation));
+            case "ASCONHASH256" -> Optional.of(new AsconHash(detectionLocation));
             default -> Optional.empty();
         };
     }
