@@ -28,9 +28,12 @@ import com.ibm.mapper.model.algorithms.Camellia;
 import com.ibm.mapper.model.algorithms.ChaCha20;
 import com.ibm.mapper.model.algorithms.Fernet;
 import com.ibm.mapper.model.algorithms.IDEA;
+import com.ibm.mapper.model.algorithms.KMAC;
+import com.ibm.mapper.model.algorithms.MD2;
 import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.Poly1305;
 import com.ibm.mapper.model.algorithms.RC4;
+import com.ibm.mapper.model.algorithms.RIPEMD;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.SEED;
 import com.ibm.mapper.model.algorithms.SHA;
@@ -42,6 +45,7 @@ import com.ibm.mapper.model.algorithms.TripleDES;
 import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
 import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
+import com.ibm.mapper.model.algorithms.shake.CSHAKE;
 import com.ibm.mapper.model.algorithms.shake.SHAKE;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -104,13 +108,22 @@ public class PycaMacMapper implements IMapper {
             case "SHAKE128" -> Optional.of(new SHAKE(Mac.class, new SHAKE(128, detectionLocation)));
             case "SHAKE256" -> Optional.of(new SHAKE(Mac.class, new SHAKE(256, detectionLocation)));
             case "MD5" -> Optional.of(new MD5(Mac.class, detectionLocation));
+            case "MD2" -> Optional.of(new MD2(Mac.class, detectionLocation));
             case "BLAKE2B" ->
                     Optional.of(new BLAKE2b(Mac.class, new BLAKE2b(false, detectionLocation)));
             case "BLAKE2S" ->
                     Optional.of(new BLAKE2s(Mac.class, new BLAKE2s(false, detectionLocation)));
             case "SM3" -> Optional.of(new SM3(Mac.class, new SM3(detectionLocation)));
+            case "KMAC128" -> Optional.of(new KMAC(Mac.class, new KMAC(128, detectionLocation)));
+            case "KMAC256" -> Optional.of(new KMAC(Mac.class, new KMAC(256, detectionLocation)));
             case "POLY1305" ->
                     Optional.of(new Poly1305(Mac.class, new Poly1305(detectionLocation)));
+            case "RIPEMD160" ->
+                    Optional.of(new RIPEMD(Mac.class, new RIPEMD(160, detectionLocation)));
+            case "CSHAKE128" ->
+                    Optional.of(new CSHAKE(Mac.class, new CSHAKE(128, detectionLocation)));
+            case "CSHAKE256" ->
+                    Optional.of(new CSHAKE(Mac.class, new CSHAKE(256, detectionLocation)));
             default -> Optional.empty();
         };
     }
