@@ -36,6 +36,7 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 | Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%             |
 |          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1]         |
 | Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%             |
+|          | [PyCryptodome(x)](https://www.pycryptodome.org/)                                              | 100%[^4]         |
 | Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
 |          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
 
@@ -43,6 +44,7 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 [^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
 [^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
+[^4]: Also covers the legacy PyCrypto library.
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
