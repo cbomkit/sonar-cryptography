@@ -35,7 +35,6 @@ import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
@@ -194,12 +193,19 @@ public final class SignatureReorganizer {
                                     .flatMap(p -> p.hasChildOfType(underNodeClazz))
                                     .ifPresent(
                                             n -> {
-                                                for (Map.Entry<Class<? extends INode>, INode>
-                                                        childKeyValue :
-                                                                node.getChildren().entrySet()) {
-                                                    n.put(childKeyValue.getValue());
-                                                    node.removeChildOfType(childKeyValue.getKey());
-                                                }
+                                                // Snapshot the children before mutating so that
+                                                // we neither trigger
+                                                // ConcurrentModificationException
+                                                // nor corrupt a shared map aliased by Algorithm's
+                                                // copy constructor (Algorithm.java:39).
+                                                new java.util.ArrayList<>(
+                                                                node.getChildren().values())
+                                                        .forEach(
+                                                                child -> {
+                                                                    n.put(child);
+                                                                    node.removeChildOfType(
+                                                                            child.getKind());
+                                                                });
                                             });
                             return null;
                         });
@@ -252,12 +258,19 @@ public final class SignatureReorganizer {
                             Optional.ofNullable(parent)
                                     .ifPresent(
                                             p -> {
-                                                for (Map.Entry<Class<? extends INode>, INode>
-                                                        childKeyValue :
-                                                                node.getChildren().entrySet()) {
-                                                    p.put(childKeyValue.getValue());
-                                                    node.removeChildOfType(childKeyValue.getKey());
-                                                }
+                                                // Snapshot the children before mutating so that
+                                                // we neither trigger
+                                                // ConcurrentModificationException
+                                                // nor corrupt a shared map aliased by Algorithm's
+                                                // copy constructor (Algorithm.java:39).
+                                                new java.util.ArrayList<>(
+                                                                node.getChildren().values())
+                                                        .forEach(
+                                                                child -> {
+                                                                    p.put(child);
+                                                                    node.removeChildOfType(
+                                                                            child.getKind());
+                                                                });
                                             });
                             return null;
                         });
