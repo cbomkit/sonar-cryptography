@@ -20,20 +20,28 @@
 package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.aead.PycaAEAD;
-import com.ibm.plugin.rules.detection.aead.PycaAES;
-import com.ibm.plugin.rules.detection.asymmetric.PycaDSA;
-import com.ibm.plugin.rules.detection.asymmetric.PycaDiffieHellman;
-import com.ibm.plugin.rules.detection.asymmetric.PycaEllipticCurve;
-import com.ibm.plugin.rules.detection.asymmetric.PycaRSA;
-import com.ibm.plugin.rules.detection.asymmetric.PycaSign;
-import com.ibm.plugin.rules.detection.fernet.PycaFernet;
-import com.ibm.plugin.rules.detection.hash.PycaHash;
-import com.ibm.plugin.rules.detection.kdf.PycaKDF;
-import com.ibm.plugin.rules.detection.keyagreement.PycaKeyAgreement;
-import com.ibm.plugin.rules.detection.mac.PycaMAC;
-import com.ibm.plugin.rules.detection.symmetric.PycaCipher;
-import com.ibm.plugin.rules.detection.wrapping.PycaWrapping;
+import com.ibm.plugin.rules.detection.pyca.aead.PycaAEAD;
+import com.ibm.plugin.rules.detection.pyca.aead.PycaAES;
+import com.ibm.plugin.rules.detection.pyca.asymmetric.PycaDSA;
+import com.ibm.plugin.rules.detection.pyca.asymmetric.PycaDiffieHellman;
+import com.ibm.plugin.rules.detection.pyca.asymmetric.PycaEllipticCurve;
+import com.ibm.plugin.rules.detection.pyca.asymmetric.PycaRSA;
+import com.ibm.plugin.rules.detection.pyca.asymmetric.PycaSign;
+import com.ibm.plugin.rules.detection.pyca.fernet.PycaFernet;
+import com.ibm.plugin.rules.detection.pyca.hash.PycaHash;
+import com.ibm.plugin.rules.detection.pyca.kdf.PycaKDF;
+import com.ibm.plugin.rules.detection.pyca.keyagreement.PycaKeyAgreement;
+import com.ibm.plugin.rules.detection.pyca.mac.PycaMAC;
+import com.ibm.plugin.rules.detection.pyca.symmetric.PycaCipher;
+import com.ibm.plugin.rules.detection.pyca.wrapping.PycaWrapping;
+import com.ibm.plugin.rules.detection.pycrypto.cipher.PythonCryptoCipher;
+import com.ibm.plugin.rules.detection.pycrypto.hash.PythonCryptoHash;
+import com.ibm.plugin.rules.detection.pycrypto.kdf.PythonCryptoKDF;
+import com.ibm.plugin.rules.detection.pycrypto.keyagreement.PythonCryptoKeyAgreement;
+import com.ibm.plugin.rules.detection.pycrypto.mac.PythonCryptoMac;
+import com.ibm.plugin.rules.detection.pycrypto.publickey.PythonCryptoPublicKey;
+import com.ibm.plugin.rules.detection.pycrypto.random.PythonCryptoRandom;
+import com.ibm.plugin.rules.detection.pycrypto.signature.PythonCryptoSignature;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -70,7 +78,15 @@ public final class PythonDetectionRules {
                         PycaMAC.rules().stream(),
                         PycaWrapping.rules().stream(),
                         PycaKDF.rules().stream(),
-                        PycaFernet.rules().stream())
+                        PycaFernet.rules().stream(),
+                        PythonCryptoHash.rules().stream(),
+                        PythonCryptoMac.rules().stream(),
+                        PythonCryptoRandom.rules().stream(),
+                        PythonCryptoCipher.rules().stream(),
+                        PythonCryptoPublicKey.rules().stream(),
+                        PythonCryptoSignature.rules().stream(),
+                        PythonCryptoKDF.rules().stream(),
+                        PythonCryptoKeyAgreement.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }
