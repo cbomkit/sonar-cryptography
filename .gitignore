@@ -43,4 +43,10 @@ build/
 ### Generated scan output ###
 cbom.json
 
+### Python virtualenv ###
+venv/
+
+### Claude Code (local only) ###
+.claude/settings.local.json
+.claude/worktrees
 .superpowers
