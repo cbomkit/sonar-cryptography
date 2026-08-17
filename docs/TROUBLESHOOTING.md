@@ -14,16 +14,20 @@ Follow the [Installation](../README.md#installation) paragraph of the main [`REA
 #### Using our development environment (recommended)
 In this case, we advise you to use our [`docker-compose.yaml`](../docker-compose.yaml) file to set up a development environment.
 
-To do so, start by opening this repo and `git checkout` to the latest release branch (for example, at the time of writing this document, it is `release/1.2.0`).
+To do so, start by opening this repo and `git checkout` to the latest release branch (for example, at the time of writing this document, it is `release/1.6.1`).
 
 Open the [`docker-compose.yaml`](../docker-compose.yaml) file and check the `image` argument to make sure that it uses a version of SonarQube supported by our plugin.
 
 You then need to have a `.jar` plugin in the `.SonarQube/plugins/` directory. There are two options for this:
-- Easiest way: download the `.jar` file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases) GitHub page and move it to this directory. In our case, it is named `sonar-cryptography-plugin-1.2.0.jar`.
+- Easiest way: download the `.jar` file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases) GitHub page and move it to this directory. In our case, it is named `sonar-cryptography-plugin-1.6.1.jar`.
 - Alternatively, you can build the plugin from source, as explained in the [Build](../CONTRIBUTING.md#build) paragraph of [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 Now, you can run our plugin with SonarQube by following the [Run the Plugin with SonarQube](../CONTRIBUTING.md#run-the-plugin-with-sonarqube) paragraph of [`CONTRIBUTING.md`](../CONTRIBUTING.md).
-If running `docker-compose up` does not work, you may try running `UID=${UID} docker-compose up` instead.
+If running `docker-compose up` does not work (e.g. with container permission errors), note that `docker-compose.yaml` uses `user: "${UID}"`, and in zsh `UID` is a read-only shell variable that is *not* exported to child processes — if it reaches Compose blank, the container runs as root and crashes on permissions. Provide it explicitly via a `.env` file, which Compose reads automatically:
+```bash
+echo "UID=$(id -u)" > .env
+docker compose up
+```
 
 You should then be able to access the SonarQube UI at `http://localhost:9000`.
 
@@ -47,9 +51,9 @@ Alternatively, you can follow these [SonarQube instructions](https://docs.sonars
 
 > [!NOTE]
 > If you are already used to SonarQube's Quality Profiles, you can skip this part.
-> However, make sure that you are adding the "Cryptography Inventory" rule to the Quality Profile you are using to run the analysis. 
+> However, make sure that you are adding the "Cryptographic Inventory (CBOM)" rule to the Quality Profile you are using to run the analysis. 
 
-We are going to create a simple [Quality Profile](https://docs.sonarsource.com/sonarqube/latest/instance-administration/quality-profiles/) containing the "Cryptography Inventory" rule of our Cryptography Plugin for testing your configuration. This profile will then be used to run a scan on a sample repo.
+We are going to create a simple [Quality Profile](https://docs.sonarsource.com/sonarqube/latest/instance-administration/quality-profiles/) containing the "Cryptographic Inventory (CBOM)" rule of our Cryptography Plugin for testing your configuration. This profile will then be used to run a scan on a sample repo.
 If everything is properly configured, it will display cryptography findings in the SonarQube UI and generate a CBOM.
 
 > [!NOTE]
@@ -66,12 +70,12 @@ Then, click "Create". In the popup window appearing, check "Create a blank quali
 
 You can now click "Create" to confirm and close the popup.
 
-We now have an empty Quality Profile: let's configure it our "Cryptography Inventory" rule.
+We now have an empty Quality Profile: let's configure it our "Cryptographic Inventory (CBOM)" rule.
 To do so, click "Activate More" on the bottom right of the screen:
 
 <img src="images/activate-more.png" width="300"/>
 
-Search for "Cryptography Inventory", and you should see the rule from the Cryptography Plugin which will generate a CBOM:
+Search for "Cryptographic Inventory (CBOM)", and you should see the rule from the Cryptography Plugin which will generate a CBOM:
 
 ![alt text](images/cryptography-inventory-rule.png)
 
@@ -113,7 +117,7 @@ Then click "Quality Profiles":
 
 <img src="images/quality-profiles-setting.png" width="400"/>
 
-Click "Add language" and it will open a popup window, in which you should pick the "Java" language (in this case) and the "Cryptogaphy" Quality Profile (or whatever other profile you have which contains the "Cryptography Inventory" rule):
+Click "Add language" and it will open a popup window, in which you should pick the "Java" language (in this case) and the "Cryptography" Quality Profile (or whatever other profile you have which contains the "Cryptographic Inventory (CBOM)" rule):
 
 <img src="images/add-language.png" width="400"/>
 

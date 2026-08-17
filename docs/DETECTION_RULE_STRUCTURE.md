@@ -122,35 +122,35 @@ Let's say that we want to capture all the cryptography information related to th
 ```java
 public void AESCipherCFBmode(byte[] key) {
     BlockCipher aes = AESEngine.newInstance();
-    CFBBlockCipher cfb = CFBBlockCipher.newInstance(aes, 256);
+    CFBBlockCipher cfb = new CFBBlockCipher(aes, 256);
     KeyParameter kp = new KeyParameter(key);
     cfb.init(false, kp);
     return;
 }
 ```
 
-We therefore write the rule below:
+We therefore write the rule below (this is the actual rule defined in [`BcBlockCipher`](../java/src/main/java/com/ibm/plugin/rules/detection/bc/blockcipher/BcBlockCipher.java)):
 ```java
 new DetectionRuleBuilder<Tree>()
     .createDetectionRule()
     .forObjectTypes("org.bouncycastle.crypto.modes.CFBBlockCipher")
-    .forMethods("newInstance")
-    .shouldBeDetectedAs(new ValueActionFactory<>("CFB"))
+    .forConstructor()
+    .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipher"))
     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
         .addDependingDetectionRules(BcBlockCipherEngine.rules())
     .withMethodParameter("int")
         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
         .asChildOfParameterWithId(-1)
-    .buildForContext(new CipherContext(CipherContext.Kind.MODE))
+    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER")))
     .inBundle(() -> "Bc")
     .withDependingDetectionRules(BcBlockCipherInit.rules());
 ```
 
-We first specify the exact function call that we want to capture, which is here the `newInstance` function called on the `org.bouncycastle.crypto.modes.CFBBlockCipher` object, with two parameters (of type `org.bouncycastle.crypto.BlockCipher` and `int`).
+We first specify the exact function call that we want to capture, which is here the constructor of the `org.bouncycastle.crypto.modes.CFBBlockCipher` object, with two parameters (of type `org.bouncycastle.crypto.BlockCipher` and `int`).
 
-The mode "CFB" is captured using a top level detection `shouldBeDetectedAs(new ValueActionFactory<>("CFB"))`. To know that this is a mode, we use the appropriate detection context `new CipherContext(CipherContext.Kind.MODE)`.
-We also capture directly the second parameter of the function rule; the block size "256" (it will be attributed the same context, but we can distinguish it from a mode as it will be captured as a `BlockSize` object).
-This parameter detection is placed below the mode detection using `asChildOfParameterWithId(-1)`.
+The value "CFBBlockCipher" (from which the translation later extracts the CFB mode) is captured using a top level detection `shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipher"))`. To categorize this finding, we use the detection context `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))`.
+We also capture directly the second parameter of the function rule; the block size "256" (it will be attributed the same context, but we can distinguish it from the top level detection as it will be captured as a `BlockSize` object).
+This parameter detection is placed below the top level detection using `asChildOfParameterWithId(-1)`.
 
 To capture the first parameter, we rely instead on a list of dependent detection rules `BcBlockCipherEngine.rules()`, that should capture all the possible `BlockCipher` classes existing in the library. In our case, a dependent rule targeting `AESEngine.newInstance()` should capture the value "AES", with a context that should specify that it is the base cipher.
 
@@ -278,9 +278,44 @@ A tree of translated values is built while you are translating your detected val
 During the translation phase, the tree keeps its overall shape
 This means that the translation of a child node of a detected value will be appended to the translation of this detected value.
 
-| ![example of the node-by-node translation process](./images/translation.png) | 
-|:--:| 
-| *This diagram represents the node-by-node translation process. In blue, we have the tree of detected values. The dotted lines show that each detected value gets independently translated into some translated value(s), in green. Note that we translate `CCMBlockCipher` into an `UNKNOWN` authenticated encryption node with a `CCM` mode node, to avoid having the mode as the parent of the algorithm (`AES`), which will make the next step (reorganization) a bit simpler. At the end of the node-by-node translation process, we have a tree of translated values (right part of the diagram) which is composed of each translated value, linked with the same ordering as the tree of detected values. This current result is not satisfying, and we will explain next how we can reorganize this tree of translated values.* |
+```mermaid
+flowchart LR
+    subgraph DETECTED["Tree of detected values"]
+        direction TB
+        D1["<b>CCMBlockCipher</b><br/>ValueAction<br/>CipherContext&lt;kind: AEAD_BLOCK_CIPHER&gt;"]
+        D2["<b>AESEngine</b><br/>ValueAction<br/>CipherContext&lt;kind: ENGINE_FOR_AEAD&gt;"]
+        D3["<b>1</b><br/>OperationMode<br/>CipherContext&lt;kind: ENCRYPTION_STATUS&gt;"]
+        D4["<b>128</b><br/>MacSize&lt;bit&gt;<br/>AlgorithmParameterContext&lt;kind: AEAD&gt;"]
+        D1 --- D2
+        D1 --- D3
+        D3 --- D4
+    end
+
+    subgraph TRANSLATED["Tree of translated values"]
+        direction TB
+        T1["<i>UNKNOWN</i><br/>AuthenticatedEncryption (Algorithm)"]
+        T1M["<b>CCM</b><br/>Mode"]
+        T2["<b>AES</b><br/>AuthenticatedEncryption (Algorithm)"]
+        T3["<b>ENCRYPT</b><br/>Encrypt"]
+        T4["<b>128</b><br/>TagLength"]
+        T1 --- T1M
+        T1 --- T2
+        T1 --- T3
+        T3 --- T4
+    end
+
+    D1 -.->|"UNKNOWN + CCM"| T1
+    D2 -.->|"AES"| T2
+    D3 -.->|"ENCRYPT"| T3
+    D4 -.->|"128"| T4
+
+    classDef detected fill:#7cbdf0,stroke:#4a90d9,color:#000
+    classDef translated fill:#7dc47d,stroke:#4a9e4a,color:#000
+    class D1,D2,D3,D4 detected
+    class T1,T1M,T2,T3,T4 translated
+```
+
+*This diagram represents the node-by-node translation process. In blue, we have the tree of detected values. The dotted arrows show that each detected value gets independently translated into some translated value(s), in green. Note that we translate `CCMBlockCipher` into an `UNKNOWN` authenticated encryption node with a `CCM` mode node, to avoid having the mode as the parent of the algorithm (`AES`), which will make the next step (reorganization) a bit simpler. At the end of the node-by-node translation process, we have a tree of translated values (right part of the diagram) which is composed of each translated value, linked with the same ordering as the tree of detected values. This current result is not satisfying, and we will explain next how we can reorganize this tree of translated values.*
 
 ## Reorganizing the translation tree
 
@@ -395,6 +430,48 @@ This process ends once no reorganization rule matches with the current translati
 Ideally, you should write your reorganization rules so that the order in which they are applied does not matter.
 But if you truly need to assume a fixed ordering, know that the reorganization rules are applied in the list order that you define in the class listing them all ([`JavaReorganizerRules`](../java/src/main/java/com/ibm/plugin/translation/reorganizer/JavaReorganizerRules.java) in Java).
 
-| ![example graph](./images/reorganization.png) | 
-|:--:| 
-| *This diagram follows the previous one, and starts with the translation tree we obtained before. It shows how we can apply two reorganization rules to this tree to obtain a final translation tree whose structure follows our expectations. In this example, the two reorganization rules are applied in an arbitrary order: notice that we would obtain the same final translation tree if we would apply the two reorganization rules in the opposite order.* |
+```mermaid
+flowchart LR
+    subgraph S1["Initial translation tree"]
+        direction TB
+        A1["<i>UNKNOWN</i><br/>AuthenticatedEncryption (Algorithm)"]
+        A2["<b>CCM</b><br/>Mode"]
+        A3["<b>AES</b><br/>AuthenticatedEncryption (Algorithm)"]
+        A4["<b>ENCRYPT</b><br/>Encrypt"]
+        A5["<b>128</b><br/>TagLength"]
+        A1 --- A2
+        A1 --- A3
+        A1 --- A4
+        A4 --- A5
+    end
+
+    subgraph S2["After rule 1"]
+        direction TB
+        B1["<b>AES</b><br/>AuthenticatedEncryption (Algorithm)"]
+        B2["<b>CCM</b><br/>Mode"]
+        B3["<b>ENCRYPT</b><br/>Encrypt"]
+        B4["<b>128</b><br/>TagLength"]
+        B1 --- B2
+        B1 --- B3
+        B3 --- B4
+    end
+
+    subgraph S3["Reorganized translation tree"]
+        direction TB
+        C1["<b>AES</b><br/>AuthenticatedEncryption (Algorithm)"]
+        C2["<b>CCM</b><br/>Mode"]
+        C3["<b>ENCRYPT</b><br/>Encrypt"]
+        C4["<b>128</b><br/>TagLength"]
+        C1 --- C2
+        C1 --- C3
+        C1 --- C4
+    end
+
+    S1 == "reorganization rule 1" ==> S2
+    S2 == "reorganization rule 2" ==> S3
+
+    classDef translated fill:#7dc47d,stroke:#4a9e4a,color:#000
+    class A1,A2,A3,A4,A5,B1,B2,B3,B4,C1,C2,C3,C4 translated
+```
+
+*This diagram follows the previous one, and starts with the translation tree we obtained before. It shows how we can apply two reorganization rules to this tree to obtain a final translation tree whose structure follows our expectations. **Rule 1**: if we have an unknown `AuthenticatedEncryption` (node 1), check if it has an `AuthenticatedEncryption` child (node 2), and if so replace node 1's value by node 2's value, then delete node 2. **Rule 2**: if we have any kind of node (node 1) below an `Encrypt` (node 2), move node 1 under node 2's parent. In this example, the two reorganization rules are applied in an arbitrary order: notice that we would obtain the same final translation tree if we would apply the two reorganization rules in the opposite order.*
