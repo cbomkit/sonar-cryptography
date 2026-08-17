@@ -9,6 +9,7 @@ This is the **Sonar Cryptography Plugin (CBOMkit-hyperion)** - a SonarQube plugi
 **Supported languages/libraries:**
 - Java: JCA (100%), BouncyCastle light-weight API (100%)
 - Python: pyca/cryptography (100%)
+- Go: `crypto` standard library (100%, except `crypto/x509`), `golang.org/x/crypto` (partial: `hkdf`, `pbkdf2`, `sha3`)
 
 ## Build Commands
 
@@ -40,6 +41,8 @@ mvn test
 
 # Run tests for specific module
 mvn test -pl java
+mvn test -pl python
+mvn test -pl go
 mvn test -pl mapper
 mvn test -pl engine
 
@@ -53,8 +56,8 @@ mvn test -Dtest=SimpleGuidelineTest#testBasicAssertion
 **Testing Framework:** JUnit 5 + AssertJ + SonarQube Test Fixtures
 
 **Detection rule tests:**
-- Extend `TestBase` (in `java/src/test/java/com/ibm/plugin/TestBase.java`)
-- Use `CheckVerifier` from SonarQube
+- Extend the `TestBase` of the language module you're testing (`java`, `python` and `go` each have their own at `<module>/src/test/java/com/ibm/plugin/TestBase.java`)
+- Use the SonarQube verifier for that language: `CheckVerifier` (Java), `PythonCheckVerifier` (Python), `GoVerifier` (Go)
 - Test files (actual code to analyze) go in `src/test/files/`, not `src/test/java/`
 - Implement `asserts()` method to verify detection store values and translated nodes
 
@@ -72,6 +75,8 @@ engine/                       # Core detection engine
 java/                         # Java language support (JCA, BouncyCastle)
 ├── rules/detection/          # Java detection rules
 python/                       # Python language support (pyca/cryptography)
+go/                           # Go language support (crypto stdlib, golang.org/x/crypto)
+├── rules/detection/gocrypto/ # Go detection rules
 mapper/                       # Translation layer to CBOM model
 ├── model/                    # Core data model (Algorithm, Key, Protocol, etc.)
 ├── ITranslator.java          # Main translation interface
@@ -102,3 +107,5 @@ Plugin JAR is built to `sonar-cryptography-plugin/target/` and copied to `.Sonar
 - `docs/LANGUAGE_SUPPORT.md` - Extending for new languages/libraries
 - `docs/DETECTION_RULE_STRUCTURE.md` - Writing detection rules
 - `docs/TROUBLESHOOTING.md` - Testing configuration guide
+- `docs/PERFORMANCE_TESTING.md` - Runtime/heap measurement, including full Keycloak scans
+- `README.md` (Build section) - Adding packages to `sonar-go-to-slang` when Go type resolution fails

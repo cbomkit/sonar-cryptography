@@ -63,28 +63,49 @@ SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-
 
 ## Using
 
-The plugin provides new inventory rules (Cbomkit Cryptography Repository) regarding the use of cryptography for 
-the supported languages.
-If you enable these rules, a source code scan creates a cryptographic inventory by creating a 
-[CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic assets and writing 
-a `cbom.json` to the scan directory.
+The plugin provides new rules regarding the use of cryptography for the supported languages.
+They are grouped in the **Sonar Cryptography** rule repositories, one per language
+(`sonar-java-crypto`, `sonar-python-crypto` and `sonar-go-crypto`).
+If you enable the *Cryptographic Inventory (CBOM)* rule, a source code scan creates a cryptographic
+inventory by creating a [CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic
+assets and writing a `cbom.json` to the scan directory.
 
 ### Add Cryptography Rules to your Quality Profile
 
 This plugin incorporates rules specifically focused on cryptography.
 
-> To generate a Cryptography Bill of Materials (CBOM), it is mandatory to activate at 
-> least one of these cryptography-related rules.
+> To generate a Cryptography Bill of Materials (CBOM), it is mandatory to activate the
+> *Cryptographic Inventory (CBOM)* rule.
 
 ![Activate Rules Crypto Rules](docs/images/rules.png)
 
-As of the current version, the plugin contains one single rule for creating a cryptographic inventory. 
-Future updates may introduce additional rules to expand functionality.
+The plugin currently ships these rules:
+
+| Rule                                                     | Languages        | Contributes to the CBOM |
+|----------------------------------------------------------|------------------|-------------------------|
+| *Cryptographic Inventory (CBOM)*                         | Java, Python, Go | yes                     |
+| *Do not use MD5 for cryptographic purposes like hashing* | Java, Python     | no                      |
+
+Only the *Cryptographic Inventory (CBOM)* rule writes a `cbom.json`; the other rules just raise
+issues on the scanned code. Future updates may introduce additional rules to expand functionality.
 
 ### Scan Source Code
 
 Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/) 
 to start your first scan.
+
+### Configuration
+
+| Property                   | Default | Scope   | Description                                                                   |
+|----------------------------|---------|---------|-------------------------------------------------------------------------------|
+| `sonar.cryptoScanner.cbom` | `cbom`  | Project | Filename (without extension) of the generated CBOM, written as `<name>.json`. |
+
+The property can be set in the SonarQube UI under *Project Settings → General*, or passed to the
+scanner directly:
+
+```bash
+sonar-scanner -Dsonar.cryptoScanner.cbom=my-cbom
+```
 
 ### Visualizing your CBOM
 
