@@ -27,7 +27,7 @@ public class Issue297RsaTestFile {
         int strength = 1024;
 
         BigInteger publicExponent = BigInteger.valueOf(0x10001);
-        SecureRandom rnd = new SecureRandom();
+        SecureRandom rnd = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         RSAKeyGenerationParameters p = new RSAKeyGenerationParameters(publicExponent, rnd, keySizeBits, strength);
 
         RSAKeyPairGenerator g = new RSAKeyPairGenerator(); // Noncompliant {{(PublicKeyEncryption) RSA-2048}}

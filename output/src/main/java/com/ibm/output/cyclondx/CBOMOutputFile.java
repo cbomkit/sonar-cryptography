@@ -22,6 +22,7 @@ package com.ibm.output.cyclondx;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.CipherSuite;
+import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.IAsset;
@@ -57,6 +58,7 @@ import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
+import com.ibm.output.behavior.BehaviorCollector;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
 import com.ibm.output.cyclondx.builder.ProtocolComponentBuilder;
 import com.ibm.output.cyclondx.builder.RelatedCryptoMaterialComponentBuilder;
@@ -99,6 +101,8 @@ public class CBOMOutputFile implements IOutputFile {
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
 
+    @Nonnull private final BehaviorCollector behaviorCollector = new BehaviorCollector();
+
     public CBOMOutputFile() {
         this.components = new HashMap<>();
         this.dependencies = new HashMap<>();
@@ -127,6 +131,8 @@ public class CBOMOutputFile implements IOutputFile {
                             || node instanceof NonceLength) {
                         final IProperty property = (IProperty) node;
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
+                    } else if (node instanceof ContextualEvidence evidence) {
+                        this.behaviorCollector.observe(evidence);
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     }
@@ -135,6 +141,9 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nullable private String createAlgorithmComponent(
             @Nullable String parentBomRef, @Nonnull Algorithm node) {
+        // Observe here so every algorithm path is covered: top-level via add(), nested
+        // recursion, and protocol/cipher-suite constituents via direct calls.
+        this.behaviorCollector.observe(node);
         Map<Class<? extends INode>, INode> children = node.getChildren();
         Component algorithm =
                 AlgorithmComponentBuilder.create()
@@ -331,6 +340,10 @@ public class CBOMOutputFile implements IOutputFile {
         }
         scannerInfo.setServices(List.of(scannerService));
         metadata.setToolChoice(scannerInfo);
+
+        // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
+        BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.inferBehaviors());
+
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));
         bom.setDependencies(new ArrayList<>(this.dependencies.values()));

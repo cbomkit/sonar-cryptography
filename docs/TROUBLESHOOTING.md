@@ -134,7 +134,23 @@ Click "Generate", then "Continue" (you don't have to save the value of your toke
 For reference, at the time of writing this guide, we use Java 17.0.11 and Maven 3.9.7.
 
 Copy this code snippet and open a terminal in the directory of the `client-encryption-java` project you just cloned.
-Paste the code snippet in the terminal, but **replace the `verify` argument of the command by `package -DskipTests`** (we don't want to run the tests as they may fail in this case). In our case, the command is now:
+Paste the code snippet in the terminal, but **replace the `verify` argument of the command by `package -DskipTests`** (we don't want to run the tests as they may fail in this case).
+
+> [!IMPORTANT]
+> Before running the command, raise the JVM heap, otherwise the scan can fail during rule construction with:
+> ```
+> java.lang.OutOfMemoryError: Java heap space
+>     at com.ibm.engine.detection.MethodMatcher.<init>(...)
+> ```
+> This happens because the BouncyCastle rule set expands into a large in-memory graph (~520k rule objects, ~200 MB) that is rebuilt once per registered check, so it needs headroom on top of the analyzed project's semantic model.
+> **Set the heap on the right JVM.** As of SonarScanner for Maven **5.0+** (bundled with recent SonarQube), `mvn sonar:sonar` runs the analysis in a **forked Scanner Engine process** (`ScannerMain` in the stack trace), whose heap is controlled by `SONAR_SCANNER_JAVA_OPTS` — **not** `MAVEN_OPTS` (that only applies to scanner ≤ 4.x, where the engine ran in the Maven JVM):
+> ```
+> export SONAR_SCANNER_JAVA_OPTS="-Xmx2g"   # scanner-for-maven 5.0+ (forked engine)
+> # export MAVEN_OPTS="-Xmx2g"              # only for scanner-for-maven <= 4.x
+> ```
+> A permanent fix that shrinks the rule graph is tracked in [#476](https://github.com/cbomkit/sonar-cryptography/issues/476).
+
+In our case, the command is now:
 ```
 mvn clean package -DskipTests sonar:sonar \
   -Dsonar.projectKey=mastercard \

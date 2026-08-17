@@ -19,8 +19,12 @@
  */
 package com.ibm.plugin.rules.detection.random;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.PseudorandomNumberGenerator;
+import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -43,7 +47,20 @@ class SecureRandomGetInstanceTest extends TestBase {
                 .onFile(
                         "src/test/files/rules/detection/random/SecureRandomGetInstanceTestFile.java")
                 .withChecks(this)
-                .verifyNoIssues();
+                .verifyIssues();
+    }
+
+    private static boolean treeContainsKind(
+            @Nonnull List<INode> nodes, @Nonnull Class<? extends INode> kind) {
+        for (INode node : nodes) {
+            if (node.is(kind)) {
+                return true;
+            }
+            if (treeContainsKind(List.copyOf(node.getChildren().values()), kind)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -51,6 +68,12 @@ class SecureRandomGetInstanceTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        // TODO
+        assertThat(nodes).as("finding %d should translate to a node", findingId).isNotEmpty();
+        assertThat(treeContainsKind(nodes, PseudorandomNumberGenerator.class))
+                .as("finding %d should be a PseudorandomNumberGenerator", findingId)
+                .isTrue();
+        assertThat(treeContainsKind(nodes, Generate.class))
+                .as("finding %d should carry a Generate functionality", findingId)
+                .isTrue();
     }
 }

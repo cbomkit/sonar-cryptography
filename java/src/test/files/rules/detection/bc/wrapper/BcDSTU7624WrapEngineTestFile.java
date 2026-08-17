@@ -5,7 +5,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 public class BcDSTU7624WrapEngineTestFile {
     public static void test() {
         // Generate a random AES key to be wrapped
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         byte[] keyToWrap = new byte[16]; // 128-bit key
         random.nextBytes(keyToWrap);
 

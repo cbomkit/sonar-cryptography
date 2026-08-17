@@ -7,7 +7,7 @@ public class BcRFC3394WrapEngineTestFile {
 
     public static void test1() {
         // Generate a random AES key to be wrapped
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         byte[] keyToWrap = new byte[16]; // 128-bit key
         random.nextBytes(keyToWrap);
 
@@ -26,7 +26,7 @@ public class BcRFC3394WrapEngineTestFile {
 
     public static void test2() {
         // Generate a random AES key to be wrapped
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         byte[] keyToWrap = new byte[16]; // 128-bit key
         random.nextBytes(keyToWrap);
 

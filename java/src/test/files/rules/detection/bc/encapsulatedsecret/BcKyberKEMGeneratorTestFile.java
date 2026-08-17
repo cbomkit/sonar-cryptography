@@ -9,7 +9,7 @@ public class BcKyberKEMGeneratorTestFile {
 
     public static void test() {
         // Create a SecureRandom instance
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
 
         // Specify Kyber parameters
         KyberKeyGenerationParameters params =

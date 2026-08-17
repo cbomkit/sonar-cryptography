@@ -13,7 +13,7 @@ public class BcECIESKEMGeneratorTestFile {
         // Initialize the parameters
         int keyLen = 2048; // Key length in bits
 
-        SecureRandom rnd = new SecureRandom(); // Secure random number generator
+        SecureRandom rnd = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
 
         Digest digest = new SHA256Digest(); // Noncompliant {{(MessageDigest) SHA-256}}
 

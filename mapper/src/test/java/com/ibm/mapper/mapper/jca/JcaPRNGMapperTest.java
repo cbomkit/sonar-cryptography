@@ -25,12 +25,10 @@ import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class JcaPRNGMapperTest {
 
-    @Disabled
     @Test
     void base() {
         DetectionLocation testDetectionLocation =

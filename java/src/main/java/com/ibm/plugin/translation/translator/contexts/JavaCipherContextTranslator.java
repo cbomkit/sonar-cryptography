@@ -48,6 +48,7 @@ import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
@@ -75,6 +76,7 @@ public final class JavaCipherContextTranslator extends JavaAbstractLibraryTransl
         } else if (value instanceof CipherAction<Tree> cipherAction) {
             return switch (cipherAction.getAction()) {
                 case WRAP -> Optional.of(new Encapsulate(detectionLocation));
+                case UNWRAP -> Optional.of(new Decapsulate(detectionLocation));
                 default -> Optional.empty();
             };
         }
