@@ -47,8 +47,8 @@ class DotNetChaCha20Poly1305Test extends TestBase {
     public void asserts(
             int findingId,
             @Nonnull
-            DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-                    detectionStore,
+                    DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+                            detectionStore,
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);

@@ -22,7 +22,6 @@ package com.ibm.plugin.rules.detection;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.dotnet.*;
-
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
