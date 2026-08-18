@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2024 PQCA
+ * Copyright (C) 2026 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,39 +17,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection;
+package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.dotnet.*;
-
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
-/** Aggregates all C# detection rule lists. */
-public final class CSharpDetectionRules {
-
-    private CSharpDetectionRules() {
+public final class DotNetChaCha20Poly1305 {
+    private DotNetChaCha20Poly1305() {
         // nothing
     }
 
+    private static final IDetectionRule<CSharpTree> CHACHA20POLY1305 =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("ChaCha20Poly1305")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CHACHA20POLY1305"))
+                    .withMethodParameter("[]byte")
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(List.of());
+
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
-        return Stream.of(
-                        DotNetAES.rules().stream(),
-                        DotNetChaCha20Poly1305.rules().stream(),
-                        DotNetDES.rules().stream(),
-                        DotNetTripleDES.rules().stream(),
-                        DotNetRC2.rules().stream(),
-                        DotNetRSA.rules().stream(),
-                        DotNetECDsa.rules().stream(),
-                        DotNetECDiffieHellman.rules().stream(),
-                        DotNetDSA.rules().stream(),
-                        DotNetSHA.rules().stream(),
-                        DotNetHMAC.rules().stream(),
-                        DotNetRfc2898DeriveBytes.rules().stream())
-                .flatMap(i -> i)
-                .toList();
+        return List.of(CHACHA20POLY1305);
     }
 }
