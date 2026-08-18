@@ -21,9 +21,11 @@ package com.ibm.plugin.translation.reorganizer;
 
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ProbabilisticSignatureScheme;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
@@ -42,6 +44,14 @@ public final class PythonReorganizerRules {
     @Nonnull
     public static List<IReorganizerRule> rules() {
         return Stream.of(
+                        SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                                Verify.class, ProbabilisticSignatureScheme.class),
+                        SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                                Verify.class, Signature.class),
+                        SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                                Sign.class, ProbabilisticSignatureScheme.class),
+                        SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                                Sign.class, Signature.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
                                 Sign.class, PublicKeyEncryption.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderNode(
@@ -51,6 +61,8 @@ public final class PythonReorganizerRules {
                         SignatureReorganizer.MAKE_RSA_TO_SIGNATURE,
                         KeyDerivationReorganizer.moveModeFromParentToNode(BlockCipher.class),
                         KeyDerivationReorganizer.moveModeFromParentToNode(MessageDigest.class),
+                        KeyAgreementReorganizer.REPLACE_ECDH_WITH_X25519_WHEN_CURVE25519,
+                        KeyAgreementReorganizer.REPLACE_ECDH_WITH_X448_WHEN_CURVE448,
                         KeyAgreementReorganizer.MERGE_KEYAGREEMENT_WITH_PKE_UNDER_PRIVATE_KEY,
                         PaddingReorganizer.MOVE_OAEP_UNDER_ALGORITHM)
                 .toList();

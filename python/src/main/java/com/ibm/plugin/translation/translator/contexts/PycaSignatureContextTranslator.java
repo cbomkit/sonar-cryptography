@@ -30,12 +30,15 @@ import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
 import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.algorithms.DSS;
 import com.ibm.mapper.model.algorithms.ECDSA;
+import com.ibm.mapper.model.algorithms.EdDSA;
 import com.ibm.mapper.model.algorithms.MGF1;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
+import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -82,7 +85,16 @@ public final class PycaSignatureContextTranslator implements IContextTranslation
                 };
             } else {
                 return switch (value.asString().toUpperCase().trim()) {
+                    case "RSA" -> Optional.of(new RSA(Signature.class, detectionLocation));
+                    case "DSS" -> Optional.of(new DSS(detectionLocation));
+                    case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
+                    case "EDDSA" -> Optional.of(new EdDSA(detectionLocation));
                     case "MGF1" -> Optional.of(new MGF1(detectionLocation));
+                    case "RSA-PKCS1V15" -> {
+                        RSA rsaPkcs1 = new RSA(Signature.class, detectionLocation);
+                        rsaPkcs1.put(new PKCS1(detectionLocation));
+                        yield Optional.of((INode) rsaPkcs1);
+                    }
                     case "RSA-PSS" -> Optional.of(new RSAssaPSS(detectionLocation));
                     default -> Optional.empty();
                 };

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -41,7 +42,7 @@ public final class PycaDigestContextTranslator implements IContextTranslation<Tr
             @Nonnull IValue<Tree> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> || value instanceof com.ibm.engine.model.Algorithm) {
+        if (value instanceof ValueAction<Tree> || value instanceof Algorithm) {
             final PycaDigestMapper pycaDigestMapper = new PycaDigestMapper();
             return pycaDigestMapper
                     .parse(value.asString(), detectionLocation)

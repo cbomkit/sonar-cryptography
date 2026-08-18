@@ -22,6 +22,7 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
@@ -46,17 +47,19 @@ public class PycaKeyAgreementContextTranslator implements IContextTranslation<Tr
             @Nonnull IValue<Tree> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof Algorithm<Tree> algorithm) {
-            return Optional.of(algorithm)
+        if (value instanceof ValueAction<Tree> || value instanceof Algorithm<Tree>) {
+            return Optional.of(value.asString().toUpperCase().trim())
                     .map(
                             algo ->
-                                    switch (algo.asString().toUpperCase().trim()) {
+                                    switch (algo) {
                                         case "ECDH" -> new ECDH(detectionLocation);
                                         case "EC" ->
                                                 new EllipticCurveAlgorithm(
                                                         KeyAgreement.class,
                                                         new EllipticCurveAlgorithm(
                                                                 detectionLocation));
+                                        case "X25519" -> new X25519(detectionLocation);
+                                        case "X448" -> new X448(detectionLocation);
                                         default -> null;
                                     })
                     .map(

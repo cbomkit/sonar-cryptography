@@ -45,7 +45,7 @@ public class Key implements IAsset {
             @Nonnull DetectionLocation detectionLocation,
             @Nonnull final Class<? extends Key> asKind) {
         this.name = key.name;
-        this.children = key.getChildren();
+        this.children = new HashMap<>(key.getChildren());
         this.detectionLocation = detectionLocation;
         this.kind = asKind;
     }

@@ -21,8 +21,10 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
+import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
@@ -33,11 +35,15 @@ import com.ibm.mapper.mapper.pyca.PycaDigestMapper;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NumberOfIterations;
+import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.algorithms.ANSIX963;
 import com.ibm.mapper.model.algorithms.CMAC;
 import com.ibm.mapper.model.algorithms.ConcatenationKDF;
 import com.ibm.mapper.model.algorithms.HKDF;
 import com.ibm.mapper.model.algorithms.HMAC;
+import com.ibm.mapper.model.algorithms.KDFCounter;
+import com.ibm.mapper.model.algorithms.PBKDF1;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.Scrypt;
 import com.ibm.mapper.model.functionality.KeyDerivation;
@@ -101,6 +107,17 @@ public class PycaKeyDerivationContextTranslator implements IContextTranslation<T
                                             return kdf;
                                         });
                     }
+                    case "pbkdf1" -> {
+                        final PycaDigestMapper digestMapper = new PycaDigestMapper();
+                        yield digestMapper
+                                .parse(algorithm.asString(), detectionLocation)
+                                .map(
+                                        kdf -> {
+                                            final PBKDF1 pbkdf1 = new PBKDF1(kdf);
+                                            pbkdf1.put(new KeyDerivation(detectionLocation));
+                                            return pbkdf1;
+                                        });
+                    }
                     case "pbkdf2" -> {
                         final PycaDigestMapper digestMapper = new PycaDigestMapper();
                         yield digestMapper
@@ -111,6 +128,14 @@ public class PycaKeyDerivationContextTranslator implements IContextTranslation<T
                                             pbkdf2.put(new KeyDerivation(detectionLocation));
                                             return pbkdf2;
                                         });
+                    }
+                    case "pycrypto-pbkdf1", "pycrypto-pbkdf2", "pycrypto-hkdf" -> {
+                        // ValueAction already creates the root KDF node for these rules;
+                        // the Algorithm child should contribute only the digest.
+                        final PycaDigestMapper digestMapper = new PycaDigestMapper();
+                        yield digestMapper
+                                .parse(algorithm.asString(), detectionLocation)
+                                .map(digest -> (INode) digest);
                     }
                     case "concatkdf" -> {
                         final PycaDigestMapper digestMapper = new PycaDigestMapper();
@@ -146,12 +171,22 @@ public class PycaKeyDerivationContextTranslator implements IContextTranslation<T
             return Optional.empty();
         } else if (value instanceof KeySize<Tree> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
+        } else if (value instanceof IterationCount<Tree> iterationCount) {
+            return Optional.of(
+                    new NumberOfIterations(iterationCount.getValue(), detectionLocation));
+        } else if (value instanceof SaltSize<Tree> saltSize) {
+            return Optional.of(new SaltLength(saltSize.getValue(), detectionLocation));
         } else if (value instanceof ValueAction<Tree> action) {
             return Optional.of(action.asString().toUpperCase().trim())
                     .map(
                             str ->
-                                    switch (action.asString().toUpperCase().trim()) {
+                                    switch (str) {
+                                        case "PBKDF1" -> new PBKDF1(detectionLocation);
+                                        case "PBKDF2" -> new PBKDF2(detectionLocation);
+                                        case "HKDF" -> new HKDF(detectionLocation);
                                         case "SCRYPT" -> new Scrypt(detectionLocation);
+                                        case "SP800_108_COUNTER" ->
+                                                new KDFCounter(detectionLocation);
                                         default -> null;
                                     })
                     .map(

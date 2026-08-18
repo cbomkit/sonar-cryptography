@@ -40,6 +40,9 @@ new DetectionRuleBuilder<T>()
          ]?
          [.addDependingDetectionRules(detectionRules)]?
      ]+
+     [
+        .withOtherParameters()
+     ]
      .buildForContext(detectionValueContext)
      .inBundle(bundle)
      .withDependingDetectionRules(detectionRules) | .withoutDependingDetectionRules()
@@ -93,6 +96,8 @@ This can be very useful when your function parameter is a value deriving from an
 In the tree of detected values, the values detected by these dependent detection rules are placed under the detections of the parent detection rules.
 
 At this point, you should have repeated all the steps starting from the `withMethodParameter` to here as many times as there are parameters in the function that you want to capture.
+
+The `withMethodParameter` section may be followed by one `withOtherParameters` indicating that the rule still matches even if an arbirary number of additional parameters follows. This feature should be used with care since it may lead to overlapping rules that cause duplicate detections. In languges like Python it allows the matching of combinations of optional parameters without analysing them in detail.
 
 Then, `buildForContext(IDetectionContext detectionValueContext)` defines the detection context ([`IDetectionContext`](../engine/src/main/java/com/ibm/engine/model/context/IDetectionContext.java)) for all the detected values of your rule (but detections from dependent rules have their own context).
 A detection context is therefore linked to each detected value, and is designed to categorize your findings and to help you carry additional information that is not present in the detected value.

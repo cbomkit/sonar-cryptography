@@ -63,6 +63,8 @@ public final class MethodMatcherSerializer extends StdSerializer<MethodMatcher> 
         }
         jgen.writeEndArray();
 
+        jgen.writeBooleanField("prefixMatch", matcher.isPrefixMatch());
+
         jgen.writeEndObject();
     }
 }

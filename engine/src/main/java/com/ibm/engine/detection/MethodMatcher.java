@@ -43,6 +43,7 @@ public final class MethodMatcher<T> {
     @Nonnull private final List<String> invokedObjectTypeStringsSerializable;
     @Nonnull private final List<String> methodNamesSerializable;
     @Nonnull private final List<String> parameterTypesSerializable;
+    private final boolean prefixMatch;
 
     public MethodMatcher(
             @Nonnull String invokedObjectTypeString,
@@ -52,6 +53,7 @@ public final class MethodMatcher<T> {
         this.invokedObjectTypeStringsSerializable = List.of(invokedObjectTypeString);
         this.methodNamesSerializable = List.of(methodName);
         this.parameterTypesSerializable = parameterTypes;
+        this.prefixMatch = false;
 
         this.invokedObjectTypeString =
                 createPredicate(invokedObjectTypeString, (type1 -> (iType -> iType.is(type1))));
@@ -73,10 +75,19 @@ public final class MethodMatcher<T> {
             @Nonnull String[] invokedObjectTypeStrings,
             @Nonnull String[] methodNames,
             @Nonnull List<String> parameterTypes) {
+        this(invokedObjectTypeStrings, methodNames, parameterTypes, false);
+    }
+
+    public MethodMatcher(
+            @Nonnull String[] invokedObjectTypeStrings,
+            @Nonnull String[] methodNames,
+            @Nonnull List<String> parameterTypes,
+            boolean prefixMatch) {
 
         this.invokedObjectTypeStringsSerializable = Arrays.asList(invokedObjectTypeStrings);
         this.methodNamesSerializable = Arrays.asList(methodNames);
         this.parameterTypesSerializable = parameterTypes;
+        this.prefixMatch = prefixMatch;
 
         this.invokedObjectTypeString =
                 createPredicate(
@@ -95,7 +106,9 @@ public final class MethodMatcher<T> {
                                                 type -> type.is(parameterType), parameterType))
                         .toList();
         this.parameterTypes =
-                (List<IType> actualTypes) -> exactMatchesParameters(types, actualTypes);
+                prefixMatch
+                        ? (List<IType> actualTypes) -> prefixMatchesParameters(types, actualTypes)
+                        : (List<IType> actualTypes) -> exactMatchesParameters(types, actualTypes);
     }
 
     public MethodMatcher(
@@ -104,6 +117,7 @@ public final class MethodMatcher<T> {
         this.invokedObjectTypeStringsSerializable = Arrays.asList(invokedObjectTypeStrings);
         this.methodNamesSerializable = Arrays.asList(methodNames);
         this.parameterTypesSerializable = List.of();
+        this.prefixMatch = false;
 
         this.invokedObjectTypeString =
                 createPredicate(
@@ -143,6 +157,13 @@ public final class MethodMatcher<T> {
     private boolean exactMatchesParameters(
             @Nonnull List<Predicate<IType>> expectedTypes, @Nonnull List<IType> actualTypes) {
         return actualTypes.size() == expectedTypes.size()
+                && matchesParameters(expectedTypes, actualTypes);
+    }
+
+    private boolean prefixMatchesParameters(
+            @Nonnull List<Predicate<IType>> expectedTypes, @Nonnull List<IType> actualTypes) {
+        return !expectedTypes.isEmpty()
+                && actualTypes.size() >= expectedTypes.size()
                 && matchesParameters(expectedTypes, actualTypes);
     }
 
@@ -243,5 +264,9 @@ public final class MethodMatcher<T> {
     @Nonnull
     public List<String> getParameterTypesSerializable() {
         return this.parameterTypesSerializable;
+    }
+
+    public boolean isPrefixMatch() {
+        return this.prefixMatch;
     }
 }

@@ -27,6 +27,7 @@ import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
@@ -38,11 +39,12 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.plugin.translation.translator.contexts.PycaCipherContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaKeyAgreementContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.PycaKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaKeyDerivationContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaMacContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaPrivateKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaPublicKeyContextTranslator;
-import com.ibm.plugin.translation.translator.contexts.PycaSecretContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.PycaRandomContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaSecretKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaSignatureContextTranslator;
 import java.util.List;
@@ -86,11 +88,6 @@ public class PythonTranslator extends ITranslator<PythonCheck, Tree, Symbol, Pyt
                     new PycaKeyDerivationContextTranslator();
             return pycaKeyDerivationContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
-        } else if (detectionValueContext.is(KeyContext.class)) {
-            final PycaSecretContextTranslator pycaSecretContextTranslator =
-                    new PycaSecretContextTranslator();
-            return pycaSecretContextTranslator.translate(
-                    bundleIdentifier, value, detectionValueContext, detectionLocation);
         } else if (detectionValueContext.is(PrivateKeyContext.class)) {
             final PycaPrivateKeyContextTranslator pycaPrivateKeyContextTranslator =
                     new PycaPrivateKeyContextTranslator();
@@ -105,6 +102,11 @@ public class PythonTranslator extends ITranslator<PythonCheck, Tree, Symbol, Pyt
             final PycaPublicKeyContextTranslator pycaPublicKeyContextTranslator =
                     new PycaPublicKeyContextTranslator();
             return pycaPublicKeyContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        } else if (detectionValueContext.is(KeyContext.class)) {
+            final PycaKeyContextTranslator pycaKeyContextTranslator =
+                    new PycaKeyContextTranslator();
+            return pycaKeyContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
         } else if (detectionValueContext.is(DigestContext.class)) {
             final PycaDigestContextTranslator pycaDigestContextTranslator =
@@ -125,6 +127,11 @@ public class PythonTranslator extends ITranslator<PythonCheck, Tree, Symbol, Pyt
             final PycaMacContextTranslator pycaMacContextTranslator =
                     new PycaMacContextTranslator();
             return pycaMacContextTranslator.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
+        } else if (detectionValueContext.is(PRNGContext.class)) {
+            final PycaRandomContextTranslator pycaRandomContextTranslator =
+                    new PycaRandomContextTranslator();
+            return pycaRandomContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
         return Optional.empty();

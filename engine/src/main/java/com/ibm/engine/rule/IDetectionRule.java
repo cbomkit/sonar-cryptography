@@ -103,6 +103,9 @@ public interface IDetectionRule<T> {
                 @Nonnull List<IDetectionRule<T>> detectionRules);
 
         @Nonnull
+        FinalDetectionRuleBuilder<T> withOtherParameters();
+
+        @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
                 @Nonnull IDetectionContext detectionValueContext);
     }
@@ -122,6 +125,9 @@ public interface IDetectionRule<T> {
                 @Nonnull List<IDetectionRule<T>> detectionRules);
 
         @Nonnull
+        FinalDetectionRuleBuilder<T> withOtherParameters();
+
+        @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
                 @Nonnull IDetectionContext detectionValueContext);
     }
@@ -138,6 +144,9 @@ public interface IDetectionRule<T> {
                 @Nonnull List<IDetectionRule<T>> detectionRules);
 
         @Nonnull
+        FinalDetectionRuleBuilder<T> withOtherParameters();
+
+        @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
                 @Nonnull IDetectionContext detectionValueContext);
     }
@@ -148,6 +157,9 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        FinalDetectionRuleBuilder<T> withOtherParameters();
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(

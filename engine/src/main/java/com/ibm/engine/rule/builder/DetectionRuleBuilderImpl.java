@@ -316,6 +316,29 @@ final class DetectionRuleBuilderImpl<T>
 
     @Nonnull
     @Override
+    public IDetectionRule.FinalDetectionRuleBuilder<T> withOtherParameters() {
+        checkDetectionParameterState();
+        this.capturedParameterScope = CapturedParameterScope.SOME_WITH_REMAINDER;
+        return new DetectionRuleBuilderImpl<>(
+                objectTypes,
+                methodNames,
+                parameters,
+                capturedParameterScope,
+                detectionValueContext,
+                shouldMatchExactTypes,
+                invokedObjectDependingDetectionRules,
+                parameterType,
+                iValueFactory,
+                iActionFactory,
+                detectionRules,
+                positionMove,
+                parameterShouldMatchExactTypes,
+                buildingNewDetectionParameter,
+                bundle);
+    }
+
+    @Nonnull
+    @Override
     public IDetectionRule.ParametersDependingRulesBuilder<T> asChildOfParameterWithId(int id) {
         this.buildingNewDetectionParameter = true;
         this.positionMove = id;
@@ -489,7 +512,8 @@ final class DetectionRuleBuilderImpl<T>
                     new MethodMatcher<>(
                             this.objectTypes,
                             this.methodNames,
-                            this.parameters.stream().map(Parameter::getParameterType).toList());
+                            this.parameters.stream().map(Parameter::getParameterType).toList(),
+                            capturedParameterScope == CapturedParameterScope.SOME_WITH_REMAINDER);
 
             return new DetectionRule<>(
                     methodMatcher,
@@ -543,6 +567,7 @@ final class DetectionRuleBuilderImpl<T>
 
     enum CapturedParameterScope {
         SOME,
+        SOME_WITH_REMAINDER,
         ANY,
         NONE
     }

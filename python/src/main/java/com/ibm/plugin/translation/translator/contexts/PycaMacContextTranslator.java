@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
@@ -27,11 +28,11 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.pyca.PycaCipherMapper;
 import com.ibm.mapper.mapper.pyca.PycaDigestMapper;
+import com.ibm.mapper.mapper.pyca.PycaMacMapper;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.CMAC;
 import com.ibm.mapper.model.algorithms.HMAC;
-import com.ibm.mapper.model.algorithms.Poly1305;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -47,7 +48,7 @@ public final class PycaMacContextTranslator implements IContextTranslation<Tree>
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof com.ibm.engine.model.Algorithm<Tree> algorithm
+        if (value instanceof Algorithm<Tree> algorithm
                 && detectionContext instanceof DetectionContext context) {
             // hash algorithm
             Optional<String> possibleKind = context.get("kind");
@@ -76,9 +77,8 @@ public final class PycaMacContextTranslator implements IContextTranslation<Tree>
                 };
             }
         } else if (value instanceof ValueAction<Tree> action) {
-            if (action.asString().equalsIgnoreCase("poly1305")) {
-                return Optional.of(new HMAC(new Poly1305(detectionLocation)));
-            }
+            final PycaMacMapper macMapper = new PycaMacMapper();
+            return macMapper.parse(action.asString(), detectionLocation).map(n -> n);
         }
         return Optional.empty();
     }

@@ -72,6 +72,7 @@ public class DetectionRuleStore<T> {
         for (String parameterType : methodMatcher.getParameterTypesSerializable()) {
             stringID += parameterType + " ";
         }
+        stringID += "| " + methodMatcher.isPrefixMatch();
         return stringID;
     }
 
