@@ -48,6 +48,9 @@ public class CryptographyPlugin implements Plugin {
                 // golang
                 GoScannerRuleDefinition.class, // Define Go rules
                 CryptoGoSensor.class, // Custom sensor (sonar-go has no CheckRegistrar API)
+                // csharp
+                CSharpScannerRuleDefinition.class, // Define C# rules
+                CryptoCSharpSensor.class, // Custom sensor (sonar-csharp has no CheckRegistrar API)
                 // general
                 OutputFileJob.class);
     }

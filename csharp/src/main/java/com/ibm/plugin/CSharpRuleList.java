@@ -19,26 +19,17 @@
  */
 package com.ibm.plugin;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import com.ibm.plugin.rules.CSharpInventoryRule;
+import java.util.List;
 
-class PluginTest {
+/** Lists all C# check classes registered in the rule repository. */
+public final class CSharpRuleList {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
+    private CSharpRuleList() {
+        // nothing
+    }
+
+    public static List<Class<?>> getChecks() {
+        return List.of(CSharpInventoryRule.class);
     }
 }
