@@ -28,15 +28,6 @@ import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rules for {@code System.Security.Cryptography.ChaCha20Poly1305}.
- *
- * <p>{@code Encrypt}/{@code Decrypt} are expressed as depending rules attached to the
- * constructor, mirroring how {@code AesGcm}/{@code AesCcm} model their AEAD operations in {@link
- * DotNetAES}: the operation is captured as a child of the constructing detection instead of an
- * independent, disconnected top-level finding, so the CBOM ends up with one {@code
- * ChaCha20-Poly1305} node carrying nested {@code Encrypt}/{@code Decrypt} functionality nodes.
- */
 public final class DotNetChaCha20Poly1305 {
     private DotNetChaCha20Poly1305() {
         // nothing

@@ -31,34 +31,145 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.functionality.Decrypt;
+import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Test for all ChaCha20Poly1305-related detection rules
+ * (DotNetChaCha20Poly1305.java).
+ *
+ * <p>Covers the full API surface of {@code System.Security.Cryptography.ChaCha20Poly1305}:
+ *
+ * <ul>
+ *   <li>constructor overloads (byte[] key, ReadOnlySpan&lt;byte&gt; key)
+ *   <li>Encrypt overloads (byte[] and ReadOnlySpan&lt;byte&gt;), with and without associatedData
+ *   <li>Decrypt overloads (byte[] and ReadOnlySpan&lt;byte&gt;), with and without associatedData
+ * </ul>
+ *
+ * <p>Finding mapping (one finding per test method in
+ * DotNetChaCha20Poly1305TestFile.cs):
+ *
+ * <pre>
+ * Section 1 – constructor overloads (findings 0–1):
+ *   0  TestConstructByteArrayKey             → ChaCha20-Poly1305
+ *   1  TestConstructSpanKey                  → ChaCha20-Poly1305
+ *
+ * Section 2 – Encrypt, byte[] overload (findings 2–3):
+ *   2  TestEncryptByteArrayWithAad           → ChaCha20-Poly1305 + Encrypt
+ *   3  TestEncryptByteArrayNoAad             → ChaCha20-Poly1305 + Encrypt
+ *
+ * Section 3 – Encrypt, ReadOnlySpan&lt;byte&gt; overload (findings 4–5):
+ *   4  TestEncryptSpanWithAad                → ChaCha20-Poly1305 + Encrypt
+ *   5  TestEncryptSpanNoAad                  → ChaCha20-Poly1305 + Encrypt
+ *
+ * Section 4 – Decrypt, byte[] overload (findings 6–7):
+ *   6  TestDecryptByteArrayWithAad           → ChaCha20-Poly1305 + Decrypt
+ *   7  TestDecryptByteArrayNoAad             → ChaCha20-Poly1305 + Decrypt
+ *
+ * Section 5 – Decrypt, ReadOnlySpan&lt;byte&gt; overload (findings 8–9):
+ *   8  TestDecryptSpanWithAad                → ChaCha20-Poly1305 + Decrypt
+ *   9  TestDecryptSpanNoAad                  → ChaCha20-Poly1305 + Decrypt
+ *
+ * </pre>
+ */
 class DotNetChaCha20Poly1305Test extends TestBase {
+
     @Test
     void test() throws Exception {
-        CSharpVerifier.verify("rules/detection/dotnet/DotNetChaCha20Poly1305TestFile.cs", this);
+        CSharpVerifier.verify(
+                "rules/detection/dotnet/DotNetChaCha20Poly1305TestFile.cs", this);
     }
 
     @Override
     public void asserts(
             int findingId,
             @Nonnull
-                    DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-                            detectionStore,
+            DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+                    detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+
+        // Every top-level finding must be CHACHA20POLY1305
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
-        IValue<CSharpTree> value0 = detectionStore.getDetectionValues().get(0);
-        assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("CHACHA20POLY1305");
+        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        IValue<CSharpTree> primary = detectionStore.getDetectionValues().get(0);
+        assertThat(primary).isInstanceOf(ValueAction.class);
+        assertThat(primary.asString()).isEqualTo("CHACHA20POLY1305");
 
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node.getKind()).isEqualTo(AuthenticatedEncryption.class);
         assertThat(node.asString()).isEqualTo("ChaCha20-Poly1305");
+
+        switch (findingId) {
+
+            // -----------------------------------------------------------------
+            // Section 1: constructor overloads — no Encrypt/Decrypt children
+            // -----------------------------------------------------------------
+            case 0, 1 -> {
+                assertThat(node.getChildren().get(Encrypt.class)).isNull();
+                assertThat(node.getChildren().get(Decrypt.class)).isNull();
+            }
+
+            // -----------------------------------------------------------------
+            // Section 2: Encrypt — byte[] overload
+            // -----------------------------------------------------------------
+            case 2, 3 -> assertEncryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 3: Encrypt — ReadOnlySpan<byte> overload
+            // -----------------------------------------------------------------
+            case 4, 5 -> assertEncryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 4: Decrypt — byte[] overload
+            // -----------------------------------------------------------------
+            case 6, 7 -> assertDecryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 5: Decrypt — ReadOnlySpan<byte> overload
+            // -----------------------------------------------------------------
+            case 8, 9 -> assertDecryptFindings(detectionStore, node);
+
+            default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Assertion helpers
+    // -------------------------------------------------------------------------
+
+    private void assertEncryptFindings(
+            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
+            @Nonnull INode node) {
+
+        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> encryptStore =
+                getStoreOfValueType(ValueAction.class, store.getChildren());
+        assertThat(encryptStore).isNotNull();
+        assertThat(encryptStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
+        assertThat(encryptStore.getDetectionValues()).hasSize(1);
+        assertThat(encryptStore.getDetectionValues().get(0).asString()).isEqualTo("ENCRYPT");
+
+        assertThat(node.getChildren().get(Encrypt.class)).isNotNull();
+        assertThat(node.getChildren().get(Decrypt.class)).isNull();
+    }
+
+    private void assertDecryptFindings(
+            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
+            @Nonnull INode node) {
+
+        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> decryptStore =
+                getStoreOfValueType(ValueAction.class, store.getChildren());
+        assertThat(decryptStore).isNotNull();
+        assertThat(decryptStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
+        assertThat(decryptStore.getDetectionValues()).hasSize(1);
+        assertThat(decryptStore.getDetectionValues().get(0).asString()).isEqualTo("DECRYPT");
+
+        assertThat(node.getChildren().get(Decrypt.class)).isNotNull();
+        assertThat(node.getChildren().get(Encrypt.class)).isNull();
     }
 }
