@@ -4,7 +4,7 @@ public class DotNetChaCha20Poly1305Test
 {
     public void TestChaChaCreate()
     {
-        var key = new byte [32];;
+        var key = new byte [32];
         var chaCha = new ChaCha20Poly1305(key); // Noncompliant
     }
 

@@ -35,6 +35,8 @@ import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.*;
+import com.ibm.mapper.model.functionality.Decrypt;
+import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -66,6 +68,8 @@ public final class CSharpCipherContextTranslator
                                 Optional.of(new DESede(detectionLocation));
                         case "RSA" -> Optional.of(new RSA(detectionLocation));
                         case "RC2" -> Optional.of(new RC2(detectionLocation));
+                        case "ENCRYPT" -> Optional.of(new Encrypt(detectionLocation));
+                        case "DECRYPT" -> Optional.of(new Decrypt(detectionLocation));
                         default -> Optional.empty();
                     };
             if (result.isPresent()) {
