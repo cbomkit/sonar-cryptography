@@ -20,6 +20,7 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.BlockSize;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
@@ -72,8 +73,6 @@ public final class CSharpCipherContextTranslator
                                 Optional.of(new DESede(detectionLocation));
                         case "RSA" -> Optional.of(new RSA(detectionLocation));
                         case "RC2" -> Optional.of(new RC2(detectionLocation));
-                        case "ENCRYPT" -> Optional.of(new Encrypt(detectionLocation));
-                        case "DECRYPT" -> Optional.of(new Decrypt(detectionLocation));
                         case "GENERATEKEY" -> Optional.of(new KeyGeneration(detectionLocation));
                         case "GENERATEIV" -> Optional.of(new Generate(detectionLocation));
                         default -> Optional.empty();
@@ -84,6 +83,12 @@ public final class CSharpCipherContextTranslator
             // Try operation mode
             JcaCipherOperationModeMapper modeMapper = new JcaCipherOperationModeMapper();
             return modeMapper.parse(valueStr, detectionLocation).map(mode -> mode);
+        } else if (value instanceof CipherAction<?> cipherAction) {
+            return switch (cipherAction.getAction()) {
+                case ENCRYPT -> Optional.of(new Encrypt(detectionLocation));
+                case DECRYPT -> Optional.of(new Decrypt(detectionLocation));
+                default -> Optional.empty();
+            };
         } else if (value instanceof BlockSize<?> blockSize) {
             return Optional.of(
                     new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));

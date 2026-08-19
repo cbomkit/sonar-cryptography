@@ -21,9 +21,11 @@ package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
+import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ModeFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
@@ -125,7 +127,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("CreateEncryptor")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -137,7 +139,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("CreateEncryptor")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter(MethodMatcher.ANY) // key bytes
                     .withMethodParameter(MethodMatcher.ANY) // iv bytes
                     .buildForContext(new CipherContext())
@@ -150,7 +152,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("CreateDecryptor")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -162,7 +164,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("CreateDecryptor")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter(MethodMatcher.ANY) // key bytes
                     .withMethodParameter(MethodMatcher.ANY) // iv bytes
                     .buildForContext(new CipherContext())
@@ -564,7 +566,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -576,7 +578,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -591,7 +593,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -603,7 +605,7 @@ public final class DotNetAES {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")

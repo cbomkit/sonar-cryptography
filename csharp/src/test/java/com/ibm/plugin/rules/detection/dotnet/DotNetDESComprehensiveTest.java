@@ -27,6 +27,7 @@ import com.ibm.engine.language.csharp.CSharpScanContext;
 import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.BlockSize;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
@@ -365,7 +366,7 @@ class DotNetDESComprehensiveTest extends TestBase {
             @Nonnull String expectedNodeString) {
 
         DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> encryptStore =
-                getStoreOfValueType(ValueAction.class, store.getChildren());
+                getStoreOfValueType(CipherAction.class, store.getChildren());
         assertThat(encryptStore).isNotNull();
         assertThat(encryptStore.getDetectionValues()).hasSize(1);
         assertThat(encryptStore.getDetectionValues().get(0).asString()).isEqualTo("ENCRYPT");
@@ -382,7 +383,7 @@ class DotNetDESComprehensiveTest extends TestBase {
             @Nonnull String expectedNodeString) {
 
         DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> decryptStore =
-                getStoreOfValueType(ValueAction.class, store.getChildren());
+                getStoreOfValueType(CipherAction.class, store.getChildren());
         assertThat(decryptStore).isNotNull();
         assertThat(decryptStore.getDetectionValues()).hasSize(1);
         assertThat(decryptStore.getDetectionValues().get(0).asString()).isEqualTo("DECRYPT");
