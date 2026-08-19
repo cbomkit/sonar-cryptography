@@ -50,6 +50,12 @@ final class DetectionRuleBuilderImpl<T>
     @Nullable private IBundle bundle;
     private boolean shouldMatchExactTypes;
 
+    /**
+     * Set to {@code true} as soon as the first {@code withNamedMethodParameter} call is made.
+     * Subsequent {@code withMethodParameter} calls after this point are illegal.
+     */
+    private boolean namedParameterAdded;
+
     @Nonnull
     private LinkedList<IDetectionRule<T>> invokedObjectDependingDetectionRules = new LinkedList<>();
 
@@ -61,12 +67,16 @@ final class DetectionRuleBuilderImpl<T>
     @Nonnull private LinkedList<IDetectionRule<T>> detectionRules = new LinkedList<>();
     @Nullable private Integer positionMove;
     private boolean parameterShouldMatchExactTypes;
+    // named-parameter fields for the parameter currently being assembled
+    @Nullable private String pendingKeywordName;
+    private boolean pendingKeywordOptional;
 
     public DetectionRuleBuilderImpl() {
         // nothing
         buildingNewDetectionParameter = false;
         shouldMatchExactTypes = false;
         parameterShouldMatchExactTypes = false;
+        namedParameterAdded = false;
     }
 
     @SuppressWarnings("all")
@@ -85,7 +95,10 @@ final class DetectionRuleBuilderImpl<T>
             @Nullable Integer positionMove,
             boolean parameterShouldMatchExactTypes,
             boolean buildingNewDetectionParameter,
-            @Nullable IBundle bundle) {
+            @Nullable IBundle bundle,
+            boolean namedParameterAdded,
+            @Nullable String pendingKeywordName,
+            boolean pendingKeywordOptional) {
         this.objectTypes = objectTypes;
         this.methodNames = methodNames;
         this.parameters = parameters;
@@ -104,12 +117,13 @@ final class DetectionRuleBuilderImpl<T>
         this.buildingNewDetectionParameter = buildingNewDetectionParameter;
 
         this.bundle = bundle;
+        this.namedParameterAdded = namedParameterAdded;
+        this.pendingKeywordName = pendingKeywordName;
+        this.pendingKeywordOptional = pendingKeywordOptional;
     }
 
     @Nonnull
-    @Override
-    public IDetectionRule.NameBuilder<T> forObjectTypes(@Nonnull String... types) {
-        this.objectTypes = types;
+    private DetectionRuleBuilderImpl<T> copy() {
         return new DetectionRuleBuilderImpl<>(
                 objectTypes,
                 methodNames,
@@ -125,7 +139,17 @@ final class DetectionRuleBuilderImpl<T>
                 positionMove,
                 parameterShouldMatchExactTypes,
                 buildingNewDetectionParameter,
-                bundle);
+                bundle,
+                namedParameterAdded,
+                pendingKeywordName,
+                pendingKeywordOptional);
+    }
+
+    @Nonnull
+    @Override
+    public IDetectionRule.NameBuilder<T> forObjectTypes(@Nonnull String... types) {
+        this.objectTypes = types;
+        return copy();
     }
 
     @Nonnull
@@ -133,44 +157,14 @@ final class DetectionRuleBuilderImpl<T>
     public IDetectionRule.NameBuilder<T> forObjectExactTypes(@Nonnull String... types) {
         this.objectTypes = types;
         this.shouldMatchExactTypes = true;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
     @Override
     public IDetectionRule.ActionDetectionBuilder<T> forMethods(@Nonnull String... names) {
         this.methodNames = names;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -178,140 +172,72 @@ final class DetectionRuleBuilderImpl<T>
     public IDetectionRule.ActionDetectionBuilder<T> forConstructor() {
         this.methodNames = new String[1];
         this.methodNames[0] = "<init>";
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
     public IDetectionRule.ParametersTypeBuilder<T> shouldBeDetectedAs(
             @Nonnull IActionFactory<T> actionFactory) {
         this.iActionFactory = actionFactory;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
     @Override
     public IDetectionRule.ParametersFactoryBuilder<T> withMethodParameter(@Nonnull String type) {
+        if (namedParameterAdded) {
+            throw new IllegalStateException(
+                    "withMethodParameter() must precede all withNamedMethodParameter() declarations.");
+        }
         checkDetectionParameterState();
         this.buildingNewDetectionParameter = false;
         this.capturedParameterScope = CapturedParameterScope.SOME;
         this.parameterType = type;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
     @Override
     public IDetectionRule.ParametersFactoryBuilder<T> withMethodParameterMatchExactType(
             @Nonnull String type) {
+        if (namedParameterAdded) {
+            throw new IllegalStateException(
+                    "withMethodParameterMatchExactType() must precede all withNamedMethodParameter() declarations.");
+        }
         checkDetectionParameterState();
         this.buildingNewDetectionParameter = false;
         this.capturedParameterScope = CapturedParameterScope.SOME;
         this.parameterType = type;
         this.parameterShouldMatchExactTypes = true;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
+    }
+
+    @Nonnull
+    @Override
+    public IDetectionRule.ParametersFactoryBuilder<T> withNamedMethodParameter(
+            @Nonnull String name, @Nonnull String type, boolean optional) {
+        checkDetectionParameterState();
+        this.buildingNewDetectionParameter = false;
+        this.capturedParameterScope = CapturedParameterScope.SOME;
+        this.parameterType = type;
+        this.namedParameterAdded = true;
+        this.pendingKeywordName = name;
+        this.pendingKeywordOptional = optional;
+        return copy();
     }
 
     @Nonnull
     @Override
     public IDetectionRule.FinalDetectionRuleBuilder<T> withoutParameters() {
         capturedParameterScope = CapturedParameterScope.NONE;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
     @Override
     public IDetectionRule.FinalDetectionRuleBuilder<T> withAnyParameters() {
         capturedParameterScope = CapturedParameterScope.ANY;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -319,22 +245,7 @@ final class DetectionRuleBuilderImpl<T>
     public IDetectionRule.ParametersDependingRulesBuilder<T> asChildOfParameterWithId(int id) {
         this.buildingNewDetectionParameter = true;
         this.positionMove = id;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -342,22 +253,7 @@ final class DetectionRuleBuilderImpl<T>
     public IDetectionRule.AddBundleDetectionRuleBuilder<T> buildForContext(
             @Nonnull IDetectionContext detectionValueContext) {
         this.detectionValueContext = detectionValueContext;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -381,7 +277,10 @@ final class DetectionRuleBuilderImpl<T>
                 positionMove,
                 parameterShouldMatchExactTypes,
                 buildingNewDetectionParameter,
-                bundle);
+                bundle,
+                namedParameterAdded,
+                pendingKeywordName,
+                pendingKeywordOptional);
     }
 
     @Nonnull
@@ -390,22 +289,7 @@ final class DetectionRuleBuilderImpl<T>
             @Nonnull IValueFactory<T> valueFactory) {
         this.buildingNewDetectionParameter = true;
         this.iValueFactory = valueFactory;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -413,22 +297,7 @@ final class DetectionRuleBuilderImpl<T>
     public IDetectionRule.InvokedObjectDependingDetectionRules<T> inBundle(
             @Nonnull IBundle bundle) {
         this.bundle = bundle;
-        return new DetectionRuleBuilderImpl<>(
-                objectTypes,
-                methodNames,
-                parameters,
-                capturedParameterScope,
-                detectionValueContext,
-                shouldMatchExactTypes,
-                invokedObjectDependingDetectionRules,
-                parameterType,
-                iValueFactory,
-                iActionFactory,
-                detectionRules,
-                positionMove,
-                parameterShouldMatchExactTypes,
-                buildingNewDetectionParameter,
-                bundle);
+        return copy();
     }
 
     @Nonnull
@@ -485,11 +354,21 @@ final class DetectionRuleBuilderImpl<T>
                     bundle,
                     invokedObjectDependingDetectionRules);
         } else {
-            final MethodMatcher<T> methodMatcher =
-                    new MethodMatcher<>(
-                            this.objectTypes,
-                            this.methodNames,
-                            this.parameters.stream().map(Parameter::getParameterType).toList());
+            // If any parameter is a named parameter, use the no-type-list MethodMatcher so that
+            // the matcher accepts any call to the method and delegates structural matching to
+            // the extraction loop in the engine (proposal §2.1).
+            final boolean hasNamedParams =
+                    parameters.stream().anyMatch(p -> p.getKeywordName().isPresent());
+            final MethodMatcher<T> methodMatcher;
+            if (hasNamedParams) {
+                methodMatcher = new MethodMatcher<>(this.objectTypes, this.methodNames);
+            } else {
+                methodMatcher =
+                        new MethodMatcher<>(
+                                this.objectTypes,
+                                this.methodNames,
+                                this.parameters.stream().map(Parameter::getParameterType).toList());
+            }
 
             return new DetectionRule<>(
                     methodMatcher,
@@ -516,22 +395,49 @@ final class DetectionRuleBuilderImpl<T>
                                 parameterShouldMatchExactTypes,
                                 detectionRules));
             } else {
+                if (pendingKeywordName != null) {
+                    this.parameters.add(
+                            new DetectableParameter<>(
+                                    parameterType,
+                                    this.parameters.size(),
+                                    parameterShouldMatchExactTypes,
+                                    iValueFactory,
+                                    detectionRules,
+                                    positionMove,
+                                    pendingKeywordName,
+                                    pendingKeywordOptional));
+                } else {
+                    this.parameters.add(
+                            new DetectableParameter<>(
+                                    parameterType,
+                                    this.parameters.size(),
+                                    parameterShouldMatchExactTypes,
+                                    iValueFactory,
+                                    detectionRules,
+                                    positionMove));
+                }
+            }
+        } else {
+            if (pendingKeywordName != null) {
+                // Named parameter without .shouldBeDetectedAs() — store as a plain Parameter
+                // with keyword metadata so the engine can do keyword-name lookup / positional
+                // fallback without capturing a value.
                 this.parameters.add(
-                        new DetectableParameter<>(
+                        new Parameter<>(
                                 parameterType,
                                 this.parameters.size(),
                                 parameterShouldMatchExactTypes,
-                                iValueFactory,
                                 detectionRules,
-                                positionMove));
+                                pendingKeywordName,
+                                pendingKeywordOptional));
+            } else {
+                this.parameters.add(
+                        new Parameter<>(
+                                parameterType,
+                                this.parameters.size(),
+                                parameterShouldMatchExactTypes,
+                                List.of()));
             }
-        } else {
-            this.parameters.add(
-                    new Parameter<>(
-                            parameterType,
-                            this.parameters.size(),
-                            parameterShouldMatchExactTypes,
-                            List.of()));
         }
 
         this.parameterType = null;
@@ -539,6 +445,8 @@ final class DetectionRuleBuilderImpl<T>
         this.detectionRules = new LinkedList<>();
         this.positionMove = null;
         this.parameterShouldMatchExactTypes = false;
+        this.pendingKeywordName = null;
+        this.pendingKeywordOptional = false;
     }
 
     enum CapturedParameterScope {

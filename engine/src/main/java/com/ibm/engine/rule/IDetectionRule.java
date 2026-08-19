@@ -72,6 +72,10 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
     }
 
     interface ParametersTypeBuilder<T> {
@@ -80,6 +84,10 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
 
         @Nonnull
         FinalDetectionRuleBuilder<T> withoutParameters();
@@ -94,6 +102,10 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
 
         @Nonnull
         PositionBuilder<T> shouldBeDetectedAs(@Nonnull IValueFactory<T> valueFactory);
@@ -115,6 +127,10 @@ public interface IDetectionRule<T> {
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
         @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
+
+        @Nonnull
         ParametersDependingRulesBuilder<T> asChildOfParameterWithId(int id);
 
         @Nonnull
@@ -134,6 +150,10 @@ public interface IDetectionRule<T> {
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
         @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
+
+        @Nonnull
         ParametersFinalDetectionRuleBuilder<T> addDependingDetectionRules(
                 @Nonnull List<IDetectionRule<T>> detectionRules);
 
@@ -148,6 +168,10 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type, boolean optional);
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
