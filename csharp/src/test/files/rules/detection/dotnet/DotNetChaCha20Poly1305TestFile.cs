@@ -1,16 +1,15 @@
 /*
- * Comprehensive test file for System.Security.Cryptography.ChaCha20Poly1305 detection rules.
+ * Test file for System.Security.Cryptography.ChaCha20Poly1305 detection rules.
  *
- * Covers the full API surface of the ChaCha20Poly1305 AEAD class:
+ * Covers the full API surface of the ChaCha20Poly1305 class:
  *   - constructor overloads (byte[] key, ReadOnlySpan<byte> key)
  *   - Encrypt overloads (byte[] and ReadOnlySpan<byte>), with and without associatedData
  *   - Decrypt overloads (byte[] and ReadOnlySpan<byte>), with and without associatedData
- *   - combined / round-trip usage patterns
  *
  * Architecture note: Encrypt/Decrypt are depending rules attached to the constructor
- * (see DotNetChaCha20Poly1305.java, mirroring AesGcm/AesCcm in DotNetAES.java), so each
- * method below that constructs-then-uses the object produces a single finding with nested
- * Encrypt/Decrypt children, not separate disconnected findings.
+ * (see DotNetChaCha20Poly1305.java), so each method below that constructs-then-uses
+ * the object produces a single finding with nested Encrypt/Decrypt children, not separate
+ * disconnected findings.
  */
 
 using System.Security.Cryptography;
