@@ -42,6 +42,7 @@ import com.ibm.plugin.translation.translator.contexts.CSharpCipherContextTransla
 import com.ibm.plugin.translation.translator.contexts.CSharpDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpMacContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.CSharpPRNGContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpSignatureContextTranslator;
 import java.util.List;
 import java.util.Optional;
@@ -94,8 +95,12 @@ public class CSharpTranslator
                     .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 
-        if (detectionValueContext.is(PRNGContext.class)
-                || detectionValueContext.is(ProtocolContext.class)) {
+        if (detectionValueContext.is(PRNGContext.class)) {
+            return new CSharpPRNGContextTranslator()
+                    .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
+        }
+
+        if (detectionValueContext.is(ProtocolContext.class)) {
             return Optional.empty();
         }
 

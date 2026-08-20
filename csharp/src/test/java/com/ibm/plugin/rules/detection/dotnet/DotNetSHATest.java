@@ -104,6 +104,91 @@ class DotNetSHATest extends TestBase {
                 assertThat(digestSize).isNotNull();
                 assertThat(digestSize.asString()).isEqualTo("128");
             }
+            // MD5.Create("MD5") / SHA*.Create("SHA*") named-factory overloads: same detected
+            // value and translation as their no-arg Create() counterparts (cases 0-4).
+            case 5 -> {
+                assertThat(value0.asString()).isEqualTo("MD5");
+                assertThat(node.asString()).isEqualTo("MD5");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("128");
+            }
+            case 6 -> {
+                assertThat(value0.asString()).isEqualTo("SHA1");
+                assertThat(node.asString()).isEqualTo("SHA-1");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("160");
+            }
+            case 7 -> {
+                assertThat(value0.asString()).isEqualTo("SHA256");
+                assertThat(node.asString()).isEqualTo("SHA-256");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("256");
+            }
+            case 8 -> {
+                assertThat(value0.asString()).isEqualTo("SHA384");
+                assertThat(node.asString()).isEqualTo("SHA-384");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("384");
+            }
+            case 9 -> {
+                assertThat(value0.asString()).isEqualTo("SHA512");
+                assertThat(node.asString()).isEqualTo("SHA-512");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("512");
+            }
+            // new MD5Cng(): CNG-backed implementation, same translation as MD5.Create() (case 4).
+            case 10 -> {
+                assertThat(value0.asString()).isEqualTo("MD5");
+                assertThat(node.asString()).isEqualTo("MD5");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("128");
+            }
+            // new SHA1Cng() / new SHA1CryptoServiceProvider(): same translation as SHA1.Create().
+            case 11, 12 -> {
+                assertThat(value0.asString()).isEqualTo("SHA1");
+                assertThat(node.asString()).isEqualTo("SHA-1");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("160");
+            }
+            // new SHA256Cng() / new SHA256CryptoServiceProvider(): same as SHA256.Create().
+            case 13, 14 -> {
+                assertThat(value0.asString()).isEqualTo("SHA256");
+                assertThat(node.asString()).isEqualTo("SHA-256");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("256");
+            }
+            // new SHA384Cng() / new SHA384CryptoServiceProvider(): same as SHA384.Create().
+            case 15, 16 -> {
+                assertThat(value0.asString()).isEqualTo("SHA384");
+                assertThat(node.asString()).isEqualTo("SHA-384");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("384");
+            }
+            // new SHA512Cng() / new SHA512CryptoServiceProvider(): same as SHA512.Create().
+            case 17, 18 -> {
+                assertThat(value0.asString()).isEqualTo("SHA512");
+                assertThat(node.asString()).isEqualTo("SHA-512");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("512");
+            }
+            // RIPEMD160.Create() / RIPEMD160.Create("RIPEMD160") / new RIPEMD160Managed()
+            case 19, 20, 21 -> {
+                assertThat(value0.asString()).isEqualTo("RIPEMD160");
+                assertThat(node.asString()).isEqualTo("RIPEMD-160");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("160");
+            }
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
     }

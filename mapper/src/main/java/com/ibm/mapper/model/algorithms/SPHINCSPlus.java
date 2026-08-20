@@ -20,9 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -52,9 +55,12 @@ public class SPHINCSPlus extends Algorithm implements Signature {
 
     @Override
     public @Nonnull String asString() {
-        return this.hasChildOfType(MessageDigest.class)
-                .map(node -> this.name + node.asString())
-                .orElse(this.name);
+        StringBuilder builtName = new StringBuilder(this.name);
+        Optional<INode> parameterSetIdentifier = this.hasChildOfType(ParameterSetIdentifier.class);
+        parameterSetIdentifier.ifPresent(node -> builtName.append("-").append(node.asString()));
+        this.hasChildOfType(MessageDigest.class)
+                .ifPresent(node -> builtName.append(node.asString()));
+        return builtName.toString();
     }
 
     public SPHINCSPlus(@Nonnull DetectionLocation detectionLocation) {
@@ -64,5 +70,18 @@ public class SPHINCSPlus extends Algorithm implements Signature {
     public SPHINCSPlus(MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    /**
+     * Constructs an SLH-DSA node carrying a FIPS 205 parameter set identifier, e.g. {@code
+     * "SHA2-128s"} or {@code "SHAKE-256f"}, so that {@link #asString()} yields {@code
+     * "SLH-DSA-SHA2-128s"}. Used by the C# {@code SlhDsaAlgorithm}-parameterized detection rules
+     * (see {@code DotNetSlhDsa}), which can recover the exact parameter set from the enum member
+     * name at the call site.
+     */
+    public SPHINCSPlus(
+            @Nonnull String parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
+        this(detectionLocation);
+        this.put(new ParameterSetIdentifier(parameterSetIdentifier, detectionLocation));
     }
 }
