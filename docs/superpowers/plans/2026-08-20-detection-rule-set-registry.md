@@ -18,7 +18,7 @@
 - Package for all new engine classes: `com.ibm.engine.rule`.
 - Tree type per module (verified): `java` uses `org.sonar.plugins.java.api.tree.Tree`, `python` uses `org.sonar.plugins.python.api.tree.Tree`, `go` uses `org.sonar.plugins.go.api.Tree`, `csharp` uses `com.ibm.engine.language.csharp.tree.CSharpTree`. **Do not change any tree type**; copy the one already imported in the file you edit.
 - `RuleGraphMemoizationTest` must stay green and its printed count must be at or below 2,563.
-- Known baseline: `SecureRandomGetInstanceTest` in the `java` module fails on pristine `main` in some environments. A failure there is pre-existing, not a regression.
+- Measured baseline in this worktree (2026-08-20, `mvn test`): **BUILD SUCCESS, 413 tests, 0 failures, 0 errors, 12 skipped**, and `[#476] distinct reachable rule objects = 2563`. Per module: engine 13, mapper 73, output 20, enricher 27, java 163, python 50, go 41, csharp 19, plugin 7. `SecureRandomGetInstanceTest` **passes** here, although it is known to fail in some other environments. Because the baseline is clean, treat any test failure during this work as a regression to investigate, not as pre-existing.
 - If a build truncates `JsonCipherSuites.java`, restore it with `git checkout -- <path>` before committing.
 - Branch: `refactor/detection-rule-set-registry`.
 
