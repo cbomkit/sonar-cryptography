@@ -22,22 +22,18 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcISO9796d1Encoding {
-
-    private BcISO9796d1Encoding() {
-        // nothing
-    }
+public final class BcISO9796d1Encoding extends ContextualDetectionRuleSet<Tree> {
 
     private static final List<IDetectionRule<Tree>> constructors(
             @Nullable IDetectionContext encodingDetectionValueContext,
@@ -63,20 +59,23 @@ public final class BcISO9796d1Encoding {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> constructors(null, null));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
+        return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
     }
 
+    /** Temporary shim, removed in the call-site cleanup. */
+    @Nonnull
+    public static List<IDetectionRule<Tree>> rules() {
+        return RuleSets.rulesOf(BcISO9796d1Encoding.class);
+    }
+
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
-        return encodingDetectionValueContext == null && engineDetectionValueContext == null
-                ? RULES.get()
-                : constructors(encodingDetectionValueContext, engineDetectionValueContext);
+            @Nullable IDetectionContext encodingContext,
+            @Nullable IDetectionContext engineContext) {
+        return RuleSets.rulesOf(BcISO9796d1Encoding.class, encodingContext, engineContext);
     }
 }
