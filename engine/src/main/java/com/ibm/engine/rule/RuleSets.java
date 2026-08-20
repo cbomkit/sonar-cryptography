@@ -63,12 +63,24 @@ public final class RuleSets {
     public static <T> List<IDetectionRule<T>> rulesOf(
             @Nonnull Class<? extends ContextualDetectionRuleSet<T>> type,
             @Nonnull IDetectionContext... contexts) {
-        if (contexts.length == 0) {
+        // Trailing nulls carry no information: contextAt(contexts, i) already returns null for
+        // any index at or past the end of the list, so a trailing null is indistinguishable from
+        // the position simply not being present. Trimming them means rulesOf(X), rulesOf(X, null)
+        // and rulesOf(X, a, null) all resolve to the same cache entry as their untrimmed
+        // equivalents, instead of silently building the same rules twice under different keys.
+        // Interior nulls are kept: they still mark "use the default for that position" and are
+        // positionally significant.
+        int end = contexts.length;
+        while (end > 0 && contexts[end - 1] == null) {
+            end--;
+        }
+        if (end == 0) {
             return (List<IDetectionRule<T>>) DEFAULTS.get(type);
         }
         // Arrays.asList, not List.of: a context may legitimately be null, meaning "use the
         // default for that position".
-        List<IDetectionContext> key = Collections.unmodifiableList(Arrays.asList(contexts.clone()));
+        List<IDetectionContext> key =
+                Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(contexts, end)));
         CacheKey cacheKey = new CacheKey(type, key);
 
         List<? extends IDetectionRule<?>> cached = CONTEXTUAL.get(cacheKey);
