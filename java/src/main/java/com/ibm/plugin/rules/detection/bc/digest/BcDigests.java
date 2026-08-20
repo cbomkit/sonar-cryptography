@@ -24,24 +24,20 @@ import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcDigests {
-
-    private BcDigests() {
-        // nothing
-    }
+public final class BcDigests extends ContextualDetectionRuleSet<Tree> {
 
     private static final BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
@@ -193,26 +189,24 @@ public final class BcDigests {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> buildRules(null));
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
+        IDetectionContext context = contextAt(contexts, 0);
+        return Stream.concat(
+                        regularConstructors(context).stream(), otherConstructors(context).stream())
+                .toList();
+    }
 
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcDigests.class);
     }
 
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
-        return detectionValueContext == null ? RULES.get() : buildRules(detectionValueContext);
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules(
-            @Nullable IDetectionContext detectionValueContext) {
-        return Stream.concat(
-                        regularConstructors(detectionValueContext).stream(),
-                        otherConstructors(detectionValueContext).stream())
-                .toList();
+    public static List<IDetectionRule<Tree>> rules(@Nullable IDetectionContext context) {
+        return RuleSets.rulesOf(BcDigests.class, context);
     }
 }
