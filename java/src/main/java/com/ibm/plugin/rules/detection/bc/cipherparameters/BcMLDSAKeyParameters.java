@@ -24,7 +24,6 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -44,12 +43,6 @@ public final class BcMLDSAKeyParameters extends DetectionRuleSet<Tree> {
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcMLDSAKeyParameters.class);
-    }
 
     @Nonnull
     @Override

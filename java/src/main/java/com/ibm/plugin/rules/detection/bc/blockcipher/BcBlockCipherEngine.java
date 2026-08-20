@@ -135,16 +135,4 @@ public final class BcBlockCipherEngine extends ContextualDetectionRuleSet<Tree> 
     protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
         return simpleConstructors(contextAt(contexts, 0));
     }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcBlockCipherEngine.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(@Nullable IDetectionContext context) {
-        return RuleSets.rulesOf(BcBlockCipherEngine.class, context);
-    }
 }

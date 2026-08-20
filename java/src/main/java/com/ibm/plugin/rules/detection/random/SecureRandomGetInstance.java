@@ -25,7 +25,6 @@ import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.SeedSizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -118,12 +117,6 @@ public final class SecureRandomGetInstance extends DetectionRuleSet<Tree> {
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "Random")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(SecureRandomGetInstance.class);
-    }
 
     @Nonnull
     @Override

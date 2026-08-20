@@ -110,13 +110,6 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
         return constructorsList;
     }
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    // Includes StateAwareMessageSigner rules
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcMessageSigner.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

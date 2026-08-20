@@ -30,7 +30,6 @@ import com.ibm.engine.model.factory.PasswordSizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -79,12 +78,6 @@ public final class JcaPBEKeySpec extends DetectionRuleSet<Tree> {
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaPBEKeySpec.class);
-    }
 
     @Nonnull
     @Override

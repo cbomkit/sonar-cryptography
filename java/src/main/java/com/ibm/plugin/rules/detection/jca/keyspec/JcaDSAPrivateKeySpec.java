@@ -26,7 +26,6 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -47,12 +46,6 @@ public final class JcaDSAPrivateKeySpec extends DetectionRuleSet<Tree> {
                     .buildForContext(new KeyContext(KeyContext.Kind.DSA))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaDSAPrivateKeySpec.class);
-    }
 
     @Nonnull
     @Override

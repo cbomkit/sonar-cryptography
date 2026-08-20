@@ -42,12 +42,6 @@ public final class BcMLDSASigner extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcMLDSASigner.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

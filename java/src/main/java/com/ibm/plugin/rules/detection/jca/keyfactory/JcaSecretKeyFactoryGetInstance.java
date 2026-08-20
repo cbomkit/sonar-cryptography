@@ -91,12 +91,6 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                                                     .stream())
                                     .toList());
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaSecretKeyFactoryGetInstance.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

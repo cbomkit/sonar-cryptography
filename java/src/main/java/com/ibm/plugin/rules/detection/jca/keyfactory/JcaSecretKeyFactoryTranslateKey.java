@@ -43,12 +43,6 @@ public final class JcaSecretKeyFactoryTranslateKey extends DetectionRuleSet<Tree
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

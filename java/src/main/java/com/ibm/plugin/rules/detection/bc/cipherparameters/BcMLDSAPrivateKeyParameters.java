@@ -102,12 +102,6 @@ public final class BcMLDSAPrivateKeyParameters extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcMLDSAPrivateKeyParameters.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

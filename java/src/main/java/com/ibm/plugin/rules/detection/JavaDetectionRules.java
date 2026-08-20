@@ -32,12 +32,6 @@ import org.sonar.plugins.java.api.tree.Tree;
 
 public final class JavaDetectionRules extends DetectionRuleSet<Tree> {
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JavaDetectionRules.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

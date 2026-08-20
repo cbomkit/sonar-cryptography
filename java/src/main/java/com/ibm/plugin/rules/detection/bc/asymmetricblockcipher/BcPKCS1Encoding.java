@@ -99,18 +99,4 @@ public final class BcPKCS1Encoding extends ContextualDetectionRuleSet<Tree> {
     protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
         return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
     }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcPKCS1Encoding.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingContext,
-            @Nullable IDetectionContext engineContext) {
-        return RuleSets.rulesOf(BcPKCS1Encoding.class, encodingContext, engineContext);
-    }
 }

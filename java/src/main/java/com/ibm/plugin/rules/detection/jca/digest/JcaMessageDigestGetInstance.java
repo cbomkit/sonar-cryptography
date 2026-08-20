@@ -25,7 +25,6 @@ import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -67,12 +66,6 @@ public final class JcaMessageDigestGetInstance extends DetectionRuleSet<Tree> {
                     .buildForContext(new DigestContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaMessageDigestGetInstance.class);
-    }
 
     @Nonnull
     @Override

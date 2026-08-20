@@ -78,12 +78,6 @@ public final class JcaAlgorithmParameterGeneratorInit extends DetectionRuleSet<T
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaAlgorithmParameterGeneratorInit.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

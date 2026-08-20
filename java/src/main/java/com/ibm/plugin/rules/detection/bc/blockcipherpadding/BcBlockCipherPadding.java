@@ -23,7 +23,6 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,12 +56,6 @@ public final class BcBlockCipherPadding extends DetectionRuleSet<Tree> {
                             .withoutDependingDetectionRules());
         }
         return constructorsList;
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcBlockCipherPadding.class);
     }
 
     @Nonnull

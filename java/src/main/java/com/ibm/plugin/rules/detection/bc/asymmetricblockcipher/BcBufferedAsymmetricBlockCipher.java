@@ -62,12 +62,6 @@ public final class BcBufferedAsymmetricBlockCipher extends DetectionRuleSet<Tree
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(List.of(INIT));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcBufferedAsymmetricBlockCipher.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

@@ -26,7 +26,6 @@ import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
 import java.util.LinkedList;
@@ -196,17 +195,5 @@ public final class BcDigests extends ContextualDetectionRuleSet<Tree> {
         return Stream.concat(
                         regularConstructors(context).stream(), otherConstructors(context).stream())
                 .toList();
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcDigests.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(@Nullable IDetectionContext context) {
-        return RuleSets.rulesOf(BcDigests.class, context);
     }
 }

@@ -40,12 +40,6 @@ import org.sonar.plugins.java.api.tree.Tree;
 
 public final class JcaDetectionRules extends DetectionRuleSet<Tree> {
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaDetectionRules.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
