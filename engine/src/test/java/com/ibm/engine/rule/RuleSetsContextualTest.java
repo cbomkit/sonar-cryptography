@@ -27,10 +27,22 @@ import com.ibm.engine.model.context.IDetectionContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 
 class RuleSetsContextualTest {
+
+    /**
+     * Counts how often {@link ContextualLeaf} was actually built. The {@code isNotSameAs}
+     * assertions alone prove the cache key doesn't wrongly collapse two distinct contexts into one
+     * entry, but they'd pass just as well if there were no cache at all — with nothing cached,
+     * every call allocates a fresh list, so "not the same" is trivially true. Pairing each with a
+     * build-count delta of exactly 2 proves a distinct entry was actually built for each context,
+     * not merely that the two results happen to differ. Together the two assertions fail whether
+     * the key over-collapses or the cache is missing entirely.
+     */
+    static final AtomicInteger LEAF_BUILDS = new AtomicInteger();
 
     /**
      * A trivial, hand-rolled {@link IDetectionRule} so {@code buildRules} below can return a
@@ -80,6 +92,7 @@ class RuleSetsContextualTest {
         @Override
         protected List<IDetectionRule<Object>> buildRules(
                 @Nonnull List<IDetectionContext> contexts) {
+            LEAF_BUILDS.incrementAndGet();
             // A fresh, mutable, non-empty list per call: List.copyOf hands back its argument
             // unchanged when it is already an immutable list, so returning List.of(STUB_RULE)
             // directly would collapse every build back to one shared instance.
@@ -109,10 +122,14 @@ class RuleSetsContextualTest {
 
     @Test
     void differentContextsGetDifferentLists() {
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, mgf1()))
-                .isNotSameAs(
-                        RuleSets.rulesOf(
-                                ContextualLeaf.class, new DigestContext(Map.of("kind", "SHA"))));
+        // Markers unique to this test, unused elsewhere, so no other test's cache entries
+        // perturb the build count.
+        DigestContext a = new DigestContext(Map.of("kind", "DIFF_A"));
+        DigestContext b = new DigestContext(Map.of("kind", "DIFF_B"));
+        int before = LEAF_BUILDS.get();
+        assertThat(RuleSets.rulesOf(ContextualLeaf.class, a))
+                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, b));
+        assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
     }
 
     @Test
@@ -129,8 +146,14 @@ class RuleSetsContextualTest {
 
     @Test
     void positionMattersWhenOneOfTwoContextsIsNull() {
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, null, mgf1()))
-                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1(), null));
+        // A marker unique to this test, unused elsewhere (including not reusing mgf1(), which
+        // other tests also cache under), so no other test's cache entries perturb the build
+        // count.
+        DigestContext c = new DigestContext(Map.of("kind", "POSITION"));
+        int before = LEAF_BUILDS.get();
+        assertThat(RuleSets.rulesOf(ContextualLeaf.class, null, c))
+                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, c, null));
+        assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
     }
 
     @Test
