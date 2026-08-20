@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.random;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -34,7 +35,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 class SecureRandomGetInstanceTest extends TestBase {
 
     protected SecureRandomGetInstanceTest() {
-        super(SecureRandomGetInstance.rules());
+        super(RuleSets.rulesOf(SecureRandomGetInstance.class));
     }
 
     @Test

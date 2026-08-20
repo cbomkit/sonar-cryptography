@@ -41,7 +41,7 @@ public final class BcWrapperInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "WRAPPING_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

@@ -67,7 +67,8 @@ public final class BcAEADCipherEngine extends DetectionRuleSet<Tree> {
                                 .withoutParameters()
                                 .buildForContext(new CipherContext(Map.of("kind", "AEAD_ENGINE")))
                                 .inBundle(() -> "Bc")
-                                .withDependingDetectionRules(BcAEADCipherInit.rules()));
+                                .withDependingDetectionRules(
+                                        RuleSets.rulesOf(BcAEADCipherInit.class)));
             } else {
                 constructorsList.add(
                         new DetectionRuleBuilder<Tree>()
@@ -86,7 +87,8 @@ public final class BcAEADCipherEngine extends DetectionRuleSet<Tree> {
                                 .asChildOfParameterWithId(-1)
                                 .buildForContext(new CipherContext(Map.of("kind", "AEAD_ENGINE")))
                                 .inBundle(() -> "Bc")
-                                .withDependingDetectionRules(BcAEADCipherInit.rules()));
+                                .withDependingDetectionRules(
+                                        RuleSets.rulesOf(BcAEADCipherInit.class)));
             }
         }
         return constructorsList;

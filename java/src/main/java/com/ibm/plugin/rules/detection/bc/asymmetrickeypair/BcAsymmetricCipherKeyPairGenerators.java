@@ -37,6 +37,6 @@ public final class BcAsymmetricCipherKeyPairGenerators extends DetectionRuleSet<
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
-        return BcRSAKeyPairGenerator.rules();
+        return RuleSets.rulesOf(BcRSAKeyPairGenerator.class);
     }
 }

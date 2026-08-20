@@ -36,7 +36,7 @@ public final class SSLSetParameters extends DetectionRuleSet<Tree> {
                     .forObjectExactTypes("javax.net.ssl.SSLServerSocket")
                     .forMethods("setSSLParameters")
                     .withMethodParameter("javax.net.ssl.SSLParameters")
-                    .addDependingDetectionRules(SSLParametersSetProtocols.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(SSLParametersSetProtocols.class))
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();

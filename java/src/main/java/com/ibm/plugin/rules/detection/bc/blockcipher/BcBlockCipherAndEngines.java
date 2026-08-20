@@ -28,7 +28,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-/** All block-cipher rules, including every engine. Was {@code BcBlockCipher.all()}. */
+/**
+ * All block-cipher rules, including every engine. Historically the static {@code all} accessor on
+ * {@link BcBlockCipher}.
+ */
 public final class BcBlockCipherAndEngines extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull

@@ -37,7 +37,7 @@ public final class BcBasicAgreementInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("org.bouncycastle.crypto.BasicAgreement")
                     .forMethods("init")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

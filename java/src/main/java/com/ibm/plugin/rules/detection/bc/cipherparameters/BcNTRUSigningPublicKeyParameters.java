@@ -49,7 +49,7 @@ public final class BcNTRUSigningPublicKeyParameters extends DetectionRuleSet<Tre
                     .withMethodParameter("double")
                     .withMethodParameter("double")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -73,7 +73,7 @@ public final class BcNTRUSigningPublicKeyParameters extends DetectionRuleSet<Tre
                     .withMethodParameter("double")
                     .withMethodParameter("double")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

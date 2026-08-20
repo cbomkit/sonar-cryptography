@@ -40,7 +40,7 @@ public final class BcCCMParameters extends DetectionRuleSet<Tree> {
                     .forObjectTypes("org.bouncycastle.crypto.params.CCMParameters")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.params.KeyParameter")
-                    .addDependingDetectionRules(BcKeyParameter.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcKeyParameter.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter(BYTE_ARRAY_TYPE)

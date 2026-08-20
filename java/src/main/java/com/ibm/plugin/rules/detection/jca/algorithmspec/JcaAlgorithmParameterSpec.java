@@ -39,14 +39,14 @@ public final class JcaAlgorithmParameterSpec extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        JcaECParameterSpec.rules().stream(),
-                        JcaECGenParameterSpec.rules().stream(),
-                        JcaPSSParameterSpec.rules().stream(),
-                        JcaMGF1ParameterSpec.rules().stream(),
-                        JcaDHGenParameterSpec.rules().stream(),
-                        JcaDHParameterSpec.rules().stream(),
-                        JcaGCMParameterSpec.rules().stream(),
-                        JcaIvParameterSpec.rules().stream())
+                        RuleSets.rulesOf(JcaECParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaECGenParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaPSSParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaMGF1ParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHGenParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaGCMParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaIvParameterSpec.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

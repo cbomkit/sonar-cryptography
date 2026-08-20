@@ -25,6 +25,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.Protocol;
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.protocol.TLS;
@@ -41,7 +42,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 class SSLContextGetInstanceTest extends TestBase {
 
     protected SSLContextGetInstanceTest() {
-        super(SSLDetectionRules.rules());
+        super(RuleSets.rulesOf(SSLDetectionRules.class));
     }
 
     @Test

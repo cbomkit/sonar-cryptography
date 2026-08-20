@@ -66,7 +66,7 @@ public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
                             .withAnyParameters()
                             .buildForContext(new CipherContext(Map.of("kind", "WRAP")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcWrapperInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcWrapperInit.class)));
         }
 
         return constructorsList;
@@ -86,7 +86,7 @@ public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
                         .asChildOfParameterWithId(-1)
                         .buildForContext(new CipherContext(Map.of("kind", "WRAP")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcWrapperInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcWrapperInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -95,10 +95,10 @@ public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("RFC5649WrapEngine"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .buildForContext(new CipherContext(Map.of("kind", "WRAP")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcWrapperInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcWrapperInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -107,10 +107,10 @@ public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("RFC3394WrapEngine"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .buildForContext(new CipherContext(Map.of("kind", "WRAP")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcWrapperInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcWrapperInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -119,11 +119,11 @@ public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("RFC3394WrapEngine"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("boolean")
                         .buildForContext(new CipherContext(Map.of("kind", "WRAP")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcWrapperInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcWrapperInit.class)));
 
         return constructorsList;
     }

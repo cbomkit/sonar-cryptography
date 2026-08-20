@@ -42,7 +42,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyFactoryGenerate.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 
     private static final IDetectionRule<Tree> KEY_FACTORY_2 =
             new DetectionRuleBuilder<Tree>()
@@ -54,7 +54,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .withMethodParameter(STRING_TYPE)
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyFactoryGenerate.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 
     private static final IDetectionRule<Tree> KEY_FACTORY_3 =
             new DetectionRuleBuilder<Tree>()
@@ -66,7 +66,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.security.Provider")
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyFactoryGenerate.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

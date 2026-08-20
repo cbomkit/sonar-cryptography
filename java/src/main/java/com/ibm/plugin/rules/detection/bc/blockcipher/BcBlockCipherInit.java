@@ -41,7 +41,7 @@ public final class BcBlockCipherInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ENCRYPTION_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

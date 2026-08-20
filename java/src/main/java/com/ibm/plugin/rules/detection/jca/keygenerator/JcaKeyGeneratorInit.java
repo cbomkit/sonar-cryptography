@@ -62,7 +62,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("javax.crypto.KeyGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
@@ -73,7 +73,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("javax.crypto.KeyGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")

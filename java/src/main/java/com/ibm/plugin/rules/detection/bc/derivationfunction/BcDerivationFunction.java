@@ -94,7 +94,7 @@ public final class BcDerivationFunction extends DetectionRuleSet<Tree> {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(generator))
                             .withMethodParameter("org.bouncycastle.crypto.Digest")
-                            .addDependingDetectionRules(BcDigests.rules())
+                            .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                             .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                             .inBundle(() -> "Bc")
                             .withoutDependingDetectionRules());
@@ -110,7 +110,7 @@ public final class BcDerivationFunction extends DetectionRuleSet<Tree> {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(generator))
                             .withMethodParameter("org.bouncycastle.crypto.Mac")
-                            .addDependingDetectionRules(BcMac.rules())
+                            .addDependingDetectionRules(RuleSets.rulesOf(BcMac.class))
                             .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                             .inBundle(() -> "Bc")
                             .withoutDependingDetectionRules());
@@ -131,7 +131,7 @@ public final class BcDerivationFunction extends DetectionRuleSet<Tree> {
                         .withMethodParameter("int") /* this determines whether its KDF1 or KDF2 */
                         .shouldBeDetectedAs(new OperationModeFactory<>())
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
-                        .addDependingDetectionRules(BcDigests.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                         .inBundle(() -> "Bc")
                         .withoutDependingDetectionRules());

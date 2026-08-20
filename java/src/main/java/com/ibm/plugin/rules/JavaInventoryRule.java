@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.JavaBaseDetectionRule;
 import com.ibm.plugin.rules.detection.JavaDetectionRules;
@@ -36,7 +37,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 public class JavaInventoryRule extends JavaBaseDetectionRule {
 
     public JavaInventoryRule() {
-        super(true, JavaDetectionRules.rules(), JavaReorganizerRules.rules());
+        super(true, RuleSets.rulesOf(JavaDetectionRules.class), JavaReorganizerRules.rules());
     }
 
     @VisibleForTesting

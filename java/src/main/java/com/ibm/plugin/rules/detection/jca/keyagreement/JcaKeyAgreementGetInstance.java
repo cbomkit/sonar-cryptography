@@ -45,8 +45,9 @@ public final class JcaKeyAgreementGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> KEY_AGREEMENT2 =
@@ -61,8 +62,9 @@ public final class JcaKeyAgreementGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> KEY_AGREEMENT3 =
@@ -77,8 +79,9 @@ public final class JcaKeyAgreementGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
     /** Temporary shim, removed in the call-site cleanup. */

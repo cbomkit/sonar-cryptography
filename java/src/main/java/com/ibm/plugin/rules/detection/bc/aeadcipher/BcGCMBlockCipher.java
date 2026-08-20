@@ -25,7 +25,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipher;
+import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherAndEngines;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -43,12 +43,13 @@ public final class BcGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> NEW_INSTANCE_2 =
             new DetectionRuleBuilder<Tree>()
@@ -58,13 +59,14 @@ public final class BcGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .withMethodParameter("org.bouncycastle.crypto.modes.gcm.GCMMultiplier")
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -74,12 +76,13 @@ public final class BcGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -89,13 +92,14 @@ public final class BcGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .withMethodParameter("org.bouncycastle.crypto.modes.gcm.GCMMultiplier")
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

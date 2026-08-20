@@ -62,7 +62,7 @@ public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree> {
                             .withoutParameters()
                             .buildForContext(context)
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcAsymCipherInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
         }
         return constructorsList;
     }

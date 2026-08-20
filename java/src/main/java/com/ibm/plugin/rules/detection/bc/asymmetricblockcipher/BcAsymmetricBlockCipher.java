@@ -56,16 +56,23 @@ public final class BcAsymmetricBlockCipher extends ContextualDetectionRuleSet<Tr
             @Nullable IDetectionContext encodingDetectionValueContext,
             @Nullable IDetectionContext engineDetectionValueContext) {
         return Stream.of(
-                        BcPKCS1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcPKCS1Encoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcOAEPEncoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcOAEPEncoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcISO9796d1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcISO9796d1Encoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcAsymCipherEngine.rules(engineDetectionValueContext).stream())
+                        RuleSets.rulesOf(BcAsymCipherEngine.class, engineDetectionValueContext)
+                                .stream())
                 .flatMap(i -> i)
                 .toList();
     }

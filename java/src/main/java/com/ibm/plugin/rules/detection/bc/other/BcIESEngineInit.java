@@ -41,7 +41,7 @@ public final class BcIESEngineInit extends DetectionRuleSet<Tree> {
                     // TODO: capture?
                     .withMethodParameter("org.bouncycastle.crypto.params.AsymmetricKeyParameter")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter(
                             "org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator")
                     .buildForContext(new CipherContext())
@@ -56,7 +56,7 @@ public final class BcIESEngineInit extends DetectionRuleSet<Tree> {
                     // TODO: capture?
                     .withMethodParameter("org.bouncycastle.crypto.params.AsymmetricKeyParameter")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.KeyParser")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "Bc")
@@ -70,11 +70,11 @@ public final class BcIESEngineInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ENCRYPTION_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

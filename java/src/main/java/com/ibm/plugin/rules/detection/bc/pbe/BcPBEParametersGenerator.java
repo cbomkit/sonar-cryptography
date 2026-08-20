@@ -91,7 +91,7 @@ public final class BcPBEParametersGenerator extends DetectionRuleSet<Tree> {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(pbeClass))
                             .withMethodParameter("org.bouncycastle.crypto.Digest")
-                            .addDependingDetectionRules(BcDigests.rules())
+                            .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                             .buildForContext(new CipherContext(Map.of("kind", "PBE")))
                             .inBundle(() -> "Bc")
                             .withoutDependingDetectionRules());

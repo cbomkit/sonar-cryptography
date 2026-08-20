@@ -46,14 +46,14 @@ public final class BcIESEngine extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(ENGINE_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.BasicAgreement")
-                    .addDependingDetectionRules(BcBasicAgreement.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcBasicAgreement.class))
                     .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                    .addDependingDetectionRules(BcDerivationFunction.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                     .withMethodParameter("org.bouncycastle.crypto.Mac")
-                    .addDependingDetectionRules(BcMac.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcMac.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcIESEngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcIESEngineInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -62,16 +62,16 @@ public final class BcIESEngine extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(ENGINE_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.BasicAgreement")
-                    .addDependingDetectionRules(BcBasicAgreement.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcBasicAgreement.class))
                     .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                    .addDependingDetectionRules(BcDerivationFunction.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                     .withMethodParameter("org.bouncycastle.crypto.Mac")
-                    .addDependingDetectionRules(BcMac.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcMac.class))
                     .withMethodParameter("org.bouncycastle.crypto.BufferedBlockCipher")
-                    .addDependingDetectionRules(BcBufferedBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcBufferedBlockCipher.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcIESEngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcIESEngineInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

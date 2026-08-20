@@ -78,7 +78,8 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
                             .withAnyParameters()
                             .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMessageSignerInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcMessageSignerInit.class)));
         }
         return constructorsList;
     }
@@ -94,15 +95,17 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("SPHINCS256Signer"))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
-                                BcDigests.rules(
+                                RuleSets.rulesOf(
+                                        BcDigests.class,
                                         new DigestContext(Map.of("kind", "ASSET_COLLECTION"))))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
-                                BcDigests.rules(
+                                RuleSets.rulesOf(
+                                        BcDigests.class,
                                         new DigestContext(Map.of("kind", "ASSET_COLLECTION"))))
                         .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMessageSignerInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMessageSignerInit.class)));
 
         return constructorsList;
     }
@@ -120,7 +123,7 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
         return Stream.of(
                         simpleConstructors().stream(),
                         specialConstructors().stream(),
-                        BcStateAwareMessageSigner.rules().stream())
+                        RuleSets.rulesOf(BcStateAwareMessageSigner.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

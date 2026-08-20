@@ -41,7 +41,8 @@ public final class JcaAlgorithmParameterGeneratorGetInstance extends DetectionRu
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaAlgorithmParameterGeneratorInit.rules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaAlgorithmParameterGeneratorInit.class));
 
     private static final IDetectionRule<Tree> PARAMETER_GENERATOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -53,7 +54,8 @@ public final class JcaAlgorithmParameterGeneratorGetInstance extends DetectionRu
                     .withMethodParameter("java.security.Provider")
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaAlgorithmParameterGeneratorInit.rules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaAlgorithmParameterGeneratorInit.class));
 
     private static final IDetectionRule<Tree> PARAMETER_GENERATOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -65,7 +67,8 @@ public final class JcaAlgorithmParameterGeneratorGetInstance extends DetectionRu
                     .withMethodParameter(STRING_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaAlgorithmParameterGeneratorInit.rules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaAlgorithmParameterGeneratorInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

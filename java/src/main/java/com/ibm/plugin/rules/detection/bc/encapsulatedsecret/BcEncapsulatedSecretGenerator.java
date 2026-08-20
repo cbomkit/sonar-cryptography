@@ -70,7 +70,8 @@ public final class BcEncapsulatedSecretGenerator extends DetectionRuleSet<Tree> 
                             .withMethodParameter("java.security.SecureRandom")
                             .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcGenerateEncapsulatedSecret.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcGenerateEncapsulatedSecret.class)));
         }
         return constructorsList;
     }
@@ -88,7 +89,7 @@ public final class BcEncapsulatedSecretGenerator extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .withMethodParameter("java.security.SecureRandom")
                         .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                         .inBundle(() -> "Bc")
@@ -104,7 +105,7 @@ public final class BcEncapsulatedSecretGenerator extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .withMethodParameter("java.security.SecureRandom")
                         .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                         .inBundle(() -> "Bc")
@@ -120,7 +121,7 @@ public final class BcEncapsulatedSecretGenerator extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .withMethodParameter("java.security.SecureRandom")
                         .withMethodParameter("boolean")
                         .withMethodParameter("boolean")

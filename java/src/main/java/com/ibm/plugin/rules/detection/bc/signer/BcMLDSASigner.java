@@ -40,7 +40,7 @@ public final class BcMLDSASigner extends DetectionRuleSet<Tree> {
                     .withoutParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

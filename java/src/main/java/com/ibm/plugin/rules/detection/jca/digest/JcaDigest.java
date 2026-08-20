@@ -38,6 +38,8 @@ public final class JcaDigest extends DetectionRuleSet<Tree> {
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
-        return Stream.of(JcaMessageDigestGetInstance.rules().stream()).flatMap(i -> i).toList();
+        return Stream.of(RuleSets.rulesOf(JcaMessageDigestGetInstance.class).stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

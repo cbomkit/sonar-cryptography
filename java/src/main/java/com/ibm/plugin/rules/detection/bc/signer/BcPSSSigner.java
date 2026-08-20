@@ -48,13 +48,13 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -63,16 +63,17 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            BcDigests.rules(new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSets.rulesOf(
+                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -81,17 +82,18 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            BcDigests.rules(new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSets.rulesOf(
+                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("byte")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_4 =
             new DetectionRuleBuilder<Tree>()
@@ -100,18 +102,19 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            BcDigests.rules(new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSets.rulesOf(
+                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_5 =
             new DetectionRuleBuilder<Tree>()
@@ -120,19 +123,20 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            BcDigests.rules(new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSets.rulesOf(
+                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("byte")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_6 =
             new DetectionRuleBuilder<Tree>()
@@ -141,15 +145,15 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_7 =
             new DetectionRuleBuilder<Tree>()
@@ -158,16 +162,16 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("byte")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

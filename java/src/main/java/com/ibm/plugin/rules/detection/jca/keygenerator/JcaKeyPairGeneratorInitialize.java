@@ -62,7 +62,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .forObjectTypes("java.security.KeyPairGenerator")
                     .forMethods("initialize")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
@@ -73,7 +73,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .forObjectTypes("java.security.KeyPairGenerator")
                     .forMethods("initialize")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")

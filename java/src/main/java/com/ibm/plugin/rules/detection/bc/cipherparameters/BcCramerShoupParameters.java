@@ -45,7 +45,7 @@ public final class BcCramerShoupParameters extends DetectionRuleSet<Tree> {
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

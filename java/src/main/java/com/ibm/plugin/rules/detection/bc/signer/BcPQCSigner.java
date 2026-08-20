@@ -45,12 +45,12 @@ public final class BcPQCSigner extends DetectionRuleSet<Tree> {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("DigestingMessageSigner"))
                         .withMethodParameter("org.bouncycastle.pqc.crypto.MessageSigner")
-                        .addDependingDetectionRules(BcMessageSigner.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcMessageSigner.class))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
-                        .addDependingDetectionRules(BcDigests.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(new SignatureContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcSignerInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -61,12 +61,13 @@ public final class BcPQCSigner extends DetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(
                                 new ValueActionFactory<>("DigestingStateAwareMessageSigner"))
                         .withMethodParameter("org.bouncycastle.pqc.crypto.StateAwareMessageSigner")
-                        .addDependingDetectionRules(BcStateAwareMessageSigner.rules())
+                        .addDependingDetectionRules(
+                                RuleSets.rulesOf(BcStateAwareMessageSigner.class))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
-                        .addDependingDetectionRules(BcDigests.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(new SignatureContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcSignerInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class)));
 
         return constructorsList;
     }

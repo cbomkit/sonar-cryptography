@@ -57,7 +57,8 @@ public final class BcBasicAgreement extends DetectionRuleSet<Tree> {
                             .withoutParameters()
                             .buildForContext(new KeyContext(Map.of("kind", "DH")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBasicAgreementInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBasicAgreementInit.class)));
         }
 
         return constructorsList;

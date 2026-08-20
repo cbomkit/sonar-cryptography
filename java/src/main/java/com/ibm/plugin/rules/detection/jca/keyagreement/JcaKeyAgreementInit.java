@@ -52,7 +52,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
@@ -64,7 +64,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")

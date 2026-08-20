@@ -39,18 +39,18 @@ public final class BcSigner extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        BcDSADigestSigner.rules().stream(),
-                        BcGenericSigner.rules().stream(),
-                        BcISO9796d2Signer.rules().stream(),
-                        BcISO9796d2PSSSigner.rules().stream(),
-                        BcPQCSigner.rules().stream(),
-                        BcPSSSigner.rules().stream(),
-                        BcRSADigestSigner.rules().stream(),
-                        BcSimpleSigner.rules().stream(),
-                        BcSM2Signer.rules().stream(),
-                        BcX931Signer.rules().stream(),
-                        BcMLDSASigner.rules().stream(),
-                        BcHashMLDSASigner.rules().stream())
+                        RuleSets.rulesOf(BcDSADigestSigner.class).stream(),
+                        RuleSets.rulesOf(BcGenericSigner.class).stream(),
+                        RuleSets.rulesOf(BcISO9796d2Signer.class).stream(),
+                        RuleSets.rulesOf(BcISO9796d2PSSSigner.class).stream(),
+                        RuleSets.rulesOf(BcPQCSigner.class).stream(),
+                        RuleSets.rulesOf(BcPSSSigner.class).stream(),
+                        RuleSets.rulesOf(BcRSADigestSigner.class).stream(),
+                        RuleSets.rulesOf(BcSimpleSigner.class).stream(),
+                        RuleSets.rulesOf(BcSM2Signer.class).stream(),
+                        RuleSets.rulesOf(BcX931Signer.class).stream(),
+                        RuleSets.rulesOf(BcMLDSASigner.class).stream(),
+                        RuleSets.rulesOf(BcHashMLDSASigner.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

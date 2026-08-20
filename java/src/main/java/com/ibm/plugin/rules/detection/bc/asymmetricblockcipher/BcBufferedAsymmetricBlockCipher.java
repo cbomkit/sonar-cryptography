@@ -44,7 +44,7 @@ public final class BcBufferedAsymmetricBlockCipher extends DetectionRuleSet<Tree
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ENCRYPTION_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -56,7 +56,7 @@ public final class BcBufferedAsymmetricBlockCipher extends DetectionRuleSet<Tree
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>("BufferedAsymmetricBlockCipher"))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .buildForContext(
                             new CipherContext(Map.of("kind", "ASYMMETRIC_BUFFERED_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")

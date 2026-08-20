@@ -39,13 +39,13 @@ public final class JcaKeySpec extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        JcaSecretKeySpec.rules().stream(),
-                        JcaDESKeySpec.rules().stream(),
-                        JcaDESedeKeySpec.rules().stream(),
-                        JcaDHPrivateKeySpec.rules().stream(),
-                        JcaPBEKeySpec.rules().stream(),
-                        JcaDSAPrivateKeySpec.rules().stream(),
-                        JcaECPrivateKeySpec.rules().stream())
+                        RuleSets.rulesOf(JcaSecretKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDESKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDESedeKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHPrivateKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaPBEKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDSAPrivateKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaECPrivateKeySpec.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

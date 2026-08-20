@@ -38,6 +38,8 @@ public final class JcaParameterSpec extends DetectionRuleSet<Tree> {
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
-        return Stream.of(JcaDHParameterSpec.rules().stream()).flatMap(i -> i).toList();
+        return Stream.of(RuleSets.rulesOf(JcaDHParameterSpec.class).stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

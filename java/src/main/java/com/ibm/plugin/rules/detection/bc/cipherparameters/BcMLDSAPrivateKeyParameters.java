@@ -97,7 +97,7 @@ public final class BcMLDSAPrivateKeyParameters extends DetectionRuleSet<Tree> {
                     .withMethodParameter("byte[]")
                     .withMethodParameter(
                             "org.bouncycastle.pqc.crypto.mldsa.MLDSAPublicKeyParameters")
-                    .addDependingDetectionRules(BcMLDSAPublicKeyParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcMLDSAPublicKeyParameters.class))
                     .buildForContext(new PrivateKeyContext(Map.of("kind", "MLDSA")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

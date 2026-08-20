@@ -41,10 +41,10 @@ public final class BcRSADigestSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -53,11 +53,11 @@ public final class BcRSADigestSigner extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.asn1.ASN1ObjectIdentifier")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

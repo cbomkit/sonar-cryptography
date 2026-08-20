@@ -46,8 +46,11 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SECRET_KEY_FACTORY_2 =
@@ -62,8 +65,11 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SECRET_KEY_FACTORY_3 =
@@ -78,8 +84,11 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
     /** Temporary shim, removed in the call-site cleanup. */

@@ -51,24 +51,24 @@ public final class JcaDetectionRules extends DetectionRuleSet<Tree> {
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         // cipher algorithm
-                        JcaCipherGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaCipherGetInstance.class).stream(),
                         // key
-                        JcaKeyFactoryGetInstance.rules().stream(),
-                        JcaKeyGeneratorGetInstance.rules().stream(),
-                        JcaKeyPairGeneratorGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaKeyFactoryGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaKeyGeneratorGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaKeyPairGeneratorGetInstance.class).stream(),
                         // secret key
-                        JcaSecretKeyFactoryGetInstance.rules().stream(),
-                        JcaSecretKeySpec.rules().stream(),
+                        RuleSets.rulesOf(JcaSecretKeyFactoryGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaSecretKeySpec.class).stream(),
                         // digest
-                        JcaDigest.rules().stream(),
+                        RuleSets.rulesOf(JcaDigest.class).stream(),
                         // signature
-                        JcaSignatureGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaSignatureGetInstance.class).stream(),
                         // mac
-                        JcaMacGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaMacGetInstance.class).stream(),
                         // algorithm
-                        JcaAlgorithmParameterGeneratorGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaAlgorithmParameterGeneratorGetInstance.class).stream(),
                         // key agreement
-                        JcaKeyAgreementGetInstance.rules().stream())
+                        RuleSets.rulesOf(JcaKeyAgreementGetInstance.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

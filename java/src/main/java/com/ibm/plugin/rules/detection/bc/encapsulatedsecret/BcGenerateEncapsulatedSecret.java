@@ -37,7 +37,7 @@ public final class BcGenerateEncapsulatedSecret extends DetectionRuleSet<Tree> {
                     .forObjectTypes("org.bouncycastle.crypto.EncapsulatedSecretGenerator")
                     .forMethods("generateEncapsulated")
                     .withMethodParameter("org.bouncycastle.crypto.params.AsymmetricKeyParameter")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
