@@ -22,21 +22,17 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class BcMLDSAPublicKeyParameters {
-
-    private BcMLDSAPublicKeyParameters() {
-        // nothing
-    }
+public final class BcMLDSAPublicKeyParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> MLDSA_PUBLIC_KEY_PARAMETERS_1 =
             new DetectionRuleBuilder<Tree>()
@@ -65,11 +61,15 @@ public final class BcMLDSAPublicKeyParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(MLDSA_PUBLIC_KEY_PARAMETERS_1, MLDSA_PUBLIC_KEY_PARAMETERS_2));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcMLDSAPublicKeyParameters.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(MLDSA_PUBLIC_KEY_PARAMETERS_1, MLDSA_PUBLIC_KEY_PARAMETERS_2);
     }
 }

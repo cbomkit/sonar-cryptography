@@ -23,17 +23,17 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JcaKeyAgreementGetInstance {
+public final class JcaKeyAgreementGetInstance extends DetectionRuleSet<Tree> {
     private static final IDetectionRule<Tree> KEY_AGREEMENT1 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -81,20 +81,15 @@ public final class JcaKeyAgreementGetInstance {
                                             JcaKeyAgreementGenerateSecret.rules().stream())
                                     .toList());
 
-    private JcaKeyAgreementGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeyAgreementGetInstance::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaKeyAgreementGetInstance.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(KEY_AGREEMENT1, KEY_AGREEMENT2, KEY_AGREEMENT3);
     }
 }

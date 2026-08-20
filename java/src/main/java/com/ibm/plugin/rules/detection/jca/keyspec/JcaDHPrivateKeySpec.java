@@ -23,15 +23,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BIGINTEGER_TYPE;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaDHPrivateKeySpec {
+public final class JcaDHPrivateKeySpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> DH_PRIVATE_KEY_SPEC =
             new DetectionRuleBuilder<Tree>()
@@ -46,20 +46,15 @@ public final class JcaDHPrivateKeySpec {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaDHPrivateKeySpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaDHPrivateKeySpec::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaDHPrivateKeySpec.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(DH_PRIVATE_KEY_SPEC);
     }
 }

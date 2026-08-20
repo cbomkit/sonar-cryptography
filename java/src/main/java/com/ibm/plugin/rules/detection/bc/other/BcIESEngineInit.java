@@ -21,21 +21,17 @@ package com.ibm.plugin.rules.detection.bc.other;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BooleanFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcIESEngineInit {
-
-    private BcIESEngineInit() {
-        // nothing
-    }
+public final class BcIESEngineInit extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -83,11 +79,15 @@ public final class BcIESEngineInit {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcIESEngineInit.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3);
     }
 }

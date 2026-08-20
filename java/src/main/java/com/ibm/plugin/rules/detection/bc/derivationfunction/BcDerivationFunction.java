@@ -22,25 +22,21 @@ package com.ibm.plugin.rules.detection.bc.derivationfunction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.OperationModeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import com.ibm.plugin.rules.detection.bc.mac.BcMac;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcDerivationFunction {
-
-    private BcDerivationFunction() {
-        // nothing
-    }
+public final class BcDerivationFunction extends DetectionRuleSet<Tree> {
 
     private static BouncyCastleInfoMap digestDerivationFunctionMap = new BouncyCastleInfoMap();
     private static BouncyCastleInfoMap macDerivationFunctionMap = new BouncyCastleInfoMap();
@@ -143,15 +139,17 @@ public final class BcDerivationFunction {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            Stream.of(simpleConstructors().stream(), specialConstructors().stream())
-                                    .flatMap(i -> i)
-                                    .toList());
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcDerivationFunction.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return Stream.of(simpleConstructors().stream(), specialConstructors().stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

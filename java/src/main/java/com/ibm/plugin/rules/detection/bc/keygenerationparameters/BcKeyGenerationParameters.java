@@ -19,29 +19,25 @@
  */
 package com.ibm.plugin.rules.detection.bc.keygenerationparameters;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcKeyGenerationParameters {
+public final class BcKeyGenerationParameters extends DetectionRuleSet<Tree> {
 
-    private BcKeyGenerationParameters() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            Stream.of(BcRSAKeyGenerationParameters.rules().stream())
-                                    .flatMap(i -> i)
-                                    .toList());
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcKeyGenerationParameters.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return Stream.of(BcRSAKeyGenerationParameters.rules().stream()).flatMap(i -> i).toList();
     }
 }

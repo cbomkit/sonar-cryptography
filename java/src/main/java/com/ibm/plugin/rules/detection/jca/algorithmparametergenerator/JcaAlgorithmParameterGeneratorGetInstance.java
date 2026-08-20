@@ -23,15 +23,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaAlgorithmParameterGeneratorGetInstance {
+public final class JcaAlgorithmParameterGeneratorGetInstance extends DetectionRuleSet<Tree> {
     private static final IDetectionRule<Tree> PARAMETER_GENERATOR_1 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -67,20 +67,15 @@ public final class JcaAlgorithmParameterGeneratorGetInstance {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(JcaAlgorithmParameterGeneratorInit.rules());
 
-    private JcaAlgorithmParameterGeneratorGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaAlgorithmParameterGeneratorGetInstance::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaAlgorithmParameterGeneratorGetInstance.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(PARAMETER_GENERATOR_1, PARAMETER_GENERATOR_2, PARAMETER_GENERATOR_3);
     }
 }

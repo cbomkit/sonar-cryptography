@@ -23,15 +23,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaMessageDigestGetInstance {
+public final class JcaMessageDigestGetInstance extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> DIGEST_GET_INSTANCE_1 =
             new DetectionRuleBuilder<Tree>()
@@ -68,20 +68,15 @@ public final class JcaMessageDigestGetInstance {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaMessageDigestGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaMessageDigestGetInstance::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaMessageDigestGetInstance.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(DIGEST_GET_INSTANCE_1, DIGEST_GET_INSTANCE_2, DIGEST_GET_INSTANCE_3);
     }
 }

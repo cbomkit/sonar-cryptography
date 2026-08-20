@@ -23,22 +23,18 @@ import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAEADCipherEngine {
-
-    private BcAEADCipherEngine() {
-        // nothing
-    }
+public final class BcAEADCipherEngine extends DetectionRuleSet<Tree> {
 
     private static final BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
@@ -96,11 +92,15 @@ public final class BcAEADCipherEngine {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> constructors());
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcAEADCipherEngine.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return constructors();
     }
 }

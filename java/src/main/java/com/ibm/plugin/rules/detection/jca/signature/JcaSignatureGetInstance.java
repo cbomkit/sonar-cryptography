@@ -23,16 +23,16 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaSignatureGetInstance {
+public final class JcaSignatureGetInstance extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SIGNATURE_1 =
             new DetectionRuleBuilder<Tree>()
@@ -81,20 +81,15 @@ public final class JcaSignatureGetInstance {
                                             JcaSignatureSetParameter.rules().stream())
                                     .toList());
 
-    private JcaSignatureGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaSignatureGetInstance::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaSignatureGetInstance.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SIGNATURE_1, SIGNATURE_2, SIGNATURE_3);
     }
 }

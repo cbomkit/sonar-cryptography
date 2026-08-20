@@ -24,16 +24,16 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.InitializationVectorSizeFactory;
 import com.ibm.engine.model.factory.TagSizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaGCMParameterSpec {
+public final class JcaGCMParameterSpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> GCM_PARAMETER_SPEC1 =
             new DetectionRuleBuilder<Tree>()
@@ -65,20 +65,15 @@ public final class JcaGCMParameterSpec {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaGCMParameterSpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaGCMParameterSpec::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaGCMParameterSpec.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GCM_PARAMETER_SPEC1, GCM_PARAMETER_SPEC2);
     }
 }

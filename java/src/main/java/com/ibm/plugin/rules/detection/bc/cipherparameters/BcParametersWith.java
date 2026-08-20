@@ -22,19 +22,15 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
 import com.ibm.engine.model.context.AlgorithmParameterContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcParametersWith {
-
-    private BcParametersWith() {
-        // nothing
-    }
+public final class BcParametersWith extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -42,7 +38,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithID")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -54,7 +50,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithIV")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -66,7 +62,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithIV")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("int")
                     .withMethodParameter("int")
@@ -80,7 +76,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithRandom")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -91,7 +87,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithRandom")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter("java.security.SecureRandom")
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -103,7 +99,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithSalt")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -115,7 +111,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithSalt")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("int")
                     .withMethodParameter("int")
@@ -129,7 +125,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithSBox")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -141,7 +137,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithUKM")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
@@ -153,7 +149,7 @@ public final class BcParametersWith {
                     .forObjectTypes("org.bouncycastle.crypto.params.ParametersWithUKM")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.bases())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParametersBases.class))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("int")
                     .withMethodParameter("int")
@@ -161,23 +157,25 @@ public final class BcParametersWith {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            List.of(
-                                    CONSTRUCTOR_1,
-                                    CONSTRUCTOR_2,
-                                    CONSTRUCTOR_3,
-                                    CONSTRUCTOR_4,
-                                    CONSTRUCTOR_5,
-                                    CONSTRUCTOR_6,
-                                    CONSTRUCTOR_7,
-                                    CONSTRUCTOR_8,
-                                    CONSTRUCTOR_9,
-                                    CONSTRUCTOR_10));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcParametersWith.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(
+                CONSTRUCTOR_1,
+                CONSTRUCTOR_2,
+                CONSTRUCTOR_3,
+                CONSTRUCTOR_4,
+                CONSTRUCTOR_5,
+                CONSTRUCTOR_6,
+                CONSTRUCTOR_7,
+                CONSTRUCTOR_8,
+                CONSTRUCTOR_9,
+                CONSTRUCTOR_10);
     }
 }
