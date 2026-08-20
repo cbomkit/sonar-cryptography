@@ -28,4 +28,14 @@ public class PRNGContext implements IDetectionContext {
     public Class<? extends IDetectionContext> type() {
         return PRNGContext.class;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        return other != null && getClass() == other.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

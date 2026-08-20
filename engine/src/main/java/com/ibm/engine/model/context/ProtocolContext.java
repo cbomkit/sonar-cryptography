@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.model.context;
 
+import java.util.Objects;
 import javax.annotation.Nonnull;
 
 public class ProtocolContext implements IDetectionContext, ISupportKind<ProtocolContext.Kind> {
@@ -48,5 +49,21 @@ public class ProtocolContext implements IDetectionContext, ISupportKind<Protocol
     @Override
     public Kind kind() {
         return this.kind;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        return kind == ((ProtocolContext) other).kind;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getClass(), kind);
     }
 }
