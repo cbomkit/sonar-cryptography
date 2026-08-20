@@ -22,23 +22,19 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BooleanFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBufferedAsymmetricBlockCipher {
+public final class BcBufferedAsymmetricBlockCipher extends DetectionRuleSet<Tree> {
 
     /* Note that BufferedAsymmetricBlockCipher does *not* implement the AsymmetricBlockCipher interface */
-
-    private BcBufferedAsymmetricBlockCipher() {
-        // nothing
-    }
 
     private static final IDetectionRule<Tree> INIT =
             new DetectionRuleBuilder<Tree>()
@@ -66,11 +62,15 @@ public final class BcBufferedAsymmetricBlockCipher {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(List.of(INIT));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcBufferedAsymmetricBlockCipher.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR);
     }
 }

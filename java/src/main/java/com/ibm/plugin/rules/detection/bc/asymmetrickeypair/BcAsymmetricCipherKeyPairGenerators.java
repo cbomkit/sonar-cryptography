@@ -19,24 +19,24 @@
  */
 package com.ibm.plugin.rules.detection.bc.asymmetrickeypair;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymmetricCipherKeyPairGenerators {
+public final class BcAsymmetricCipherKeyPairGenerators extends DetectionRuleSet<Tree> {
 
-    private BcAsymmetricCipherKeyPairGenerators() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> BcRSAKeyPairGenerator.rules());
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcAsymmetricCipherKeyPairGenerators.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return BcRSAKeyPairGenerator.rules();
     }
 }

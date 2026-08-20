@@ -22,16 +22,16 @@ package com.ibm.plugin.rules.detection.jca.algorithmparametergenerator;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaAlgorithmParameterSpec;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaAlgorithmParameterGeneratorInit {
+public final class JcaAlgorithmParameterGeneratorInit extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> PARAMETER_INIT_1 =
             new DetectionRuleBuilder<Tree>()
@@ -78,20 +78,15 @@ public final class JcaAlgorithmParameterGeneratorInit {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaAlgorithmParameterGeneratorInit() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaAlgorithmParameterGeneratorInit::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaAlgorithmParameterGeneratorInit.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(PARAMETER_INIT_1, PARAMETER_INIT_2, PARAMETER_INIT_3, PARAMETER_INIT_4);
     }
 }

@@ -26,16 +26,16 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaKeySpec;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaKeyFactoryGenerate {
+public final class JcaKeyFactoryGenerate extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> GENERATE_PRIVATE =
             new DetectionRuleBuilder<Tree>()
@@ -63,20 +63,15 @@ public final class JcaKeyFactoryGenerate {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaKeyFactoryGenerate() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeyFactoryGenerate::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaKeyFactoryGenerate.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATE_PRIVATE, GENERATE_PUBLIC);
     }
 }

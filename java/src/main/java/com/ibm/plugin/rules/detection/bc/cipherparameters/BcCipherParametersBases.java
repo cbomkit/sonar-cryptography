@@ -21,26 +21,33 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcCipherParameters extends DetectionRuleSet<Tree> {
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcCipherParameters.class);
-    }
+public final class BcCipherParametersBases extends DetectionRuleSet<Tree> {
 
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        RuleSets.rulesOf(BcCipherParametersBases.class).stream(),
-                        BcParametersWith.rules().stream())
+                        BcAEADParameters.rules().stream(),
+                        BcCCMParameters.rules().stream(),
+                        BcCramerShoupParameters.rules().stream(),
+                        BcGMSSParameters.rules().stream(),
+                        BcIESParameters.rules().stream(),
+                        BcKeyParameter.rules().stream(),
+                        BcNTRUEncryptionParameters.rules().stream(),
+                        BcNTRUSigningPrivateKeyParameters.rules().stream(),
+                        BcNTRUSigningPublicKeyParameters.rules().stream(),
+                        BcSABERParameters.rules().stream(),
+                        BcMLKEMKeyParameters.rules().stream(),
+                        BcMLKEMPrivateKeyParameters.rules().stream(),
+                        BcMLKEMPublicKeyParameters.rules().stream(),
+                        BcMLDSAKeyParameters.rules().stream(),
+                        BcMLDSAPrivateKeyParameters.rules().stream(),
+                        BcMLDSAPublicKeyParameters.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }

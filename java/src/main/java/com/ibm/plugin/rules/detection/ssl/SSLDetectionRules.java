@@ -19,31 +19,26 @@
  */
 package com.ibm.plugin.rules.detection.ssl;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 // https://www.baeldung.com/java-7-tls-v12
-public final class SSLDetectionRules {
+public final class SSLDetectionRules extends DetectionRuleSet<Tree> {
 
-    private SSLDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(SSLDetectionRules::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(SSLDetectionRules.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         SSLServerSocketSetEnabledProtocols.rules().stream(),
                         SSLSetParameters.rules().stream(),

@@ -21,15 +21,15 @@ package com.ibm.plugin.rules.detection.ssl;
 
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.factory.CipherSuiteFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class SSLServerSocketSetEnabledCipherSuites {
+public final class SSLServerSocketSetEnabledCipherSuites extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SSL_CIPHER_SUITES =
             new DetectionRuleBuilder<Tree>()
@@ -42,20 +42,15 @@ public final class SSLServerSocketSetEnabledCipherSuites {
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 
-    private SSLServerSocketSetEnabledCipherSuites() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(SSLServerSocketSetEnabledCipherSuites::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(SSLServerSocketSetEnabledCipherSuites.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SSL_CIPHER_SUITES);
     }
 }

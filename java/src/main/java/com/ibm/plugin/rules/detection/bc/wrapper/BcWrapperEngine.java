@@ -23,24 +23,20 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherEngine;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcWrapperEngine {
-
-    private BcWrapperEngine() {
-        // nothing
-    }
+public final class BcWrapperEngine extends DetectionRuleSet<Tree> {
 
     private static final List<String> engines =
             Arrays.asList(
@@ -132,15 +128,17 @@ public final class BcWrapperEngine {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            Stream.of(simpleConstructors().stream(), specialConstructors().stream())
-                                    .flatMap(i -> i)
-                                    .toList());
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcWrapperEngine.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return Stream.of(simpleConstructors().stream(), specialConstructors().stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

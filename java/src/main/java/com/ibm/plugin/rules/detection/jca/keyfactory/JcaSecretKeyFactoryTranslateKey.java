@@ -21,16 +21,16 @@ package com.ibm.plugin.rules.detection.jca.keyfactory;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaSecretKeySpec;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaSecretKeyFactoryTranslateKey {
+public final class JcaSecretKeyFactoryTranslateKey extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> TRANSLATE_KEY_1 =
             new DetectionRuleBuilder<Tree>()
@@ -43,20 +43,15 @@ public final class JcaSecretKeyFactoryTranslateKey {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaSecretKeyFactoryTranslateKey() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaSecretKeyFactoryTranslateKey::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(TRANSLATE_KEY_1);
     }
 }

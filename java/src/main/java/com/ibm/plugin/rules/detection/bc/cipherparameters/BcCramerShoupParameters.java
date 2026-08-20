@@ -22,20 +22,16 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BIGINTEGER_TYPE;
 
 import com.ibm.engine.model.context.AlgorithmParameterContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcCramerShoupParameters {
-
-    private BcCramerShoupParameters() {
-        // nothing
-    }
+public final class BcCramerShoupParameters extends DetectionRuleSet<Tree> {
 
     /*
      * This base constructor is the only rule where we have to specify the context.
@@ -85,16 +81,15 @@ public final class BcCramerShoupParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            List.of(
-                                    BASE_CONSTRUCTOR,
-                                    PRIVATE_KEY_CONSTRUCTOR,
-                                    PUBLIC_KEY_CONSTRUCTOR));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcCramerShoupParameters.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(BASE_CONSTRUCTOR, PRIVATE_KEY_CONSTRUCTOR, PUBLIC_KEY_CONSTRUCTOR);
     }
 }

@@ -22,21 +22,17 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class BcMLDSAPrivateKeyParameters {
-
-    private BcMLDSAPrivateKeyParameters() {
-        // nothing
-    }
+public final class BcMLDSAPrivateKeyParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> MLDSA_PRIVATE_KEY_PARAMETERS_1 =
             new DetectionRuleBuilder<Tree>()
@@ -106,17 +102,19 @@ public final class BcMLDSAPrivateKeyParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            List.of(
-                                    MLDSA_PRIVATE_KEY_PARAMETERS_1,
-                                    MLDSA_PRIVATE_KEY_PARAMETERS_2,
-                                    MLDSA_PRIVATE_KEY_PARAMETERS_3,
-                                    MLDSA_PRIVATE_KEY_PARAMETERS_4));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcMLDSAPrivateKeyParameters.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(
+                MLDSA_PRIVATE_KEY_PARAMETERS_1,
+                MLDSA_PRIVATE_KEY_PARAMETERS_2,
+                MLDSA_PRIVATE_KEY_PARAMETERS_3,
+                MLDSA_PRIVATE_KEY_PARAMETERS_4);
     }
 }

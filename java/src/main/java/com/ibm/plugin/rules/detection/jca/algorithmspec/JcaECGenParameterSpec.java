@@ -23,16 +23,16 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.CurveFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JcaECGenParameterSpec {
+public final class JcaECGenParameterSpec extends DetectionRuleSet<Tree> {
     private static final IDetectionRule<Tree> EC_GEN_PARAMETER_SPEC2 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -44,20 +44,15 @@ public final class JcaECGenParameterSpec {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaECGenParameterSpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaECGenParameterSpec::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(JcaECGenParameterSpec.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(EC_GEN_PARAMETER_SPEC2);
     }
 }

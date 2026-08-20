@@ -22,21 +22,17 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class BcMLKEMPrivateKeyParameters {
-
-    private BcMLKEMPrivateKeyParameters() {
-        // nothing
-    }
+public final class BcMLKEMPrivateKeyParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> MLKEM_PRIVATE_KEY_PARAMETERS_1 =
             new DetectionRuleBuilder<Tree>()
@@ -86,16 +82,18 @@ public final class BcMLKEMPrivateKeyParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            List.of(
-                                    MLKEM_PRIVATE_KEY_PARAMETERS_1,
-                                    MLKEM_PRIVATE_KEY_PARAMETERS_2,
-                                    MLKEM_PRIVATE_KEY_PARAMETERS_3));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcMLKEMPrivateKeyParameters.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(
+                MLKEM_PRIVATE_KEY_PARAMETERS_1,
+                MLKEM_PRIVATE_KEY_PARAMETERS_2,
+                MLKEM_PRIVATE_KEY_PARAMETERS_3);
     }
 }

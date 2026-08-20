@@ -20,15 +20,15 @@
 package com.ibm.plugin.rules.detection.ssl;
 
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class SSLSetParameters {
+public final class SSLSetParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SSL_PARAMETERS =
             new DetectionRuleBuilder<Tree>()
@@ -41,20 +41,15 @@ public final class SSLSetParameters {
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 
-    private SSLSetParameters() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(SSLSetParameters::buildRules);
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(SSLSetParameters.class);
     }
 
     @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SSL_PARAMETERS);
     }
 }

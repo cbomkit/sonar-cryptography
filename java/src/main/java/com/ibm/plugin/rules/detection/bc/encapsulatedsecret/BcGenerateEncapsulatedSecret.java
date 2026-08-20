@@ -20,20 +20,16 @@
 package com.ibm.plugin.rules.detection.bc.encapsulatedsecret;
 
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcGenerateEncapsulatedSecret {
-
-    private BcGenerateEncapsulatedSecret() {
-        // nothing
-    }
+public final class BcGenerateEncapsulatedSecret extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> GENERATE_ENCAPSULATED_RULE =
             new DetectionRuleBuilder<Tree>()
@@ -46,11 +42,15 @@ public final class BcGenerateEncapsulatedSecret {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(GENERATE_ENCAPSULATED_RULE));
-
+    /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull
     public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+        return RuleSets.rulesOf(BcGenerateEncapsulatedSecret.class);
+    }
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(GENERATE_ENCAPSULATED_RULE);
     }
 }
