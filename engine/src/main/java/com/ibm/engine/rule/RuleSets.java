@@ -19,8 +19,13 @@
  */
 package com.ibm.engine.rule;
 
+import com.ibm.engine.model.context.IDetectionContext;
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 
 /**
@@ -46,6 +51,39 @@ public final class RuleSets {
     public static <T> List<IDetectionRule<T>> rulesOf(
             @Nonnull Class<? extends DetectionRuleSet<T>> type) {
         return (List<IDetectionRule<T>>) DEFAULTS.get(type);
+    }
+
+    private static final ConcurrentMap<CacheKey, List<? extends IDetectionRule<?>>> CONTEXTUAL =
+            new ConcurrentHashMap<>();
+
+    private record CacheKey(Class<?> type, List<IDetectionContext> contexts) {}
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static <T> List<IDetectionRule<T>> rulesOf(
+            @Nonnull Class<? extends ContextualDetectionRuleSet<T>> type,
+            @Nonnull IDetectionContext... contexts) {
+        if (contexts.length == 0) {
+            return (List<IDetectionRule<T>>) DEFAULTS.get(type);
+        }
+        // Arrays.asList, not List.of: a context may legitimately be null, meaning "use the
+        // default for that position".
+        List<IDetectionContext> key = Collections.unmodifiableList(Arrays.asList(contexts.clone()));
+        CacheKey cacheKey = new CacheKey(type, key);
+
+        List<? extends IDetectionRule<?>> cached = CONTEXTUAL.get(cacheKey);
+        if (cached == null) {
+            // Deliberately not computeIfAbsent: builds are recursive (a set asks the registry for
+            // another set while it is being built) and a nested update throws
+            // IllegalStateException.
+            ContextualDetectionRuleSet<T> set = (ContextualDetectionRuleSet<T>) instantiate(type);
+            cached = List.copyOf(set.buildRules(key));
+            List<? extends IDetectionRule<?>> raced = CONTEXTUAL.putIfAbsent(cacheKey, cached);
+            if (raced != null) {
+                cached = raced;
+            }
+        }
+        return (List<IDetectionRule<T>>) cached;
     }
 
     @Nonnull
