@@ -45,7 +45,7 @@ public final class BcSM2Engine extends DetectionRuleSet<Tree> {
                     .withoutParameters()
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSM2EngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSM2EngineInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -54,10 +54,10 @@ public final class BcSM2Engine extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(ENGINE_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSM2EngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSM2EngineInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -66,11 +66,11 @@ public final class BcSM2Engine extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(ENGINE_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.engines.SM2Engine$Mode")
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSM2EngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSM2EngineInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_4 =
             new DetectionRuleBuilder<Tree>()
@@ -81,7 +81,7 @@ public final class BcSM2Engine extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.engines.SM2Engine$Mode")
                     .buildForContext(new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSM2EngineInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSM2EngineInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

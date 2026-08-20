@@ -42,7 +42,7 @@ public final class JcaCipherWrap extends DetectionRuleSet<Tree> {
                     .forMethods("wrap")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.WRAP))
                     .withMethodParameter(KEY_TYPE)
-                    .addDependingDetectionRules(JcaKeySpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaKeySpec.class))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();

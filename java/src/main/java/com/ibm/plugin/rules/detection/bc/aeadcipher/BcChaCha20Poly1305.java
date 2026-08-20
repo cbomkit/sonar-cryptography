@@ -44,7 +44,7 @@ public final class BcChaCha20Poly1305 extends DetectionRuleSet<Tree> {
                     .withoutParameters()
                     .buildForContext(new CipherContext(Map.of("kind", "CHACHA20POLY1305")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -57,10 +57,10 @@ public final class BcChaCha20Poly1305 extends DetectionRuleSet<Tree> {
                      */
                     .shouldBeDetectedAs(new ValueActionFactory<>(AEAD + "[WITH_MAC]"))
                     .withMethodParameter("org.bouncycastle.crypto.Mac")
-                    .addDependingDetectionRules(BcMac.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcMac.class))
                     .buildForContext(new CipherContext(Map.of("kind", "CHACHA20POLY1305")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

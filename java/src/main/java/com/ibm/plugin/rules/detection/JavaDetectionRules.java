@@ -42,9 +42,9 @@ public final class JavaDetectionRules extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        JcaDetectionRules.rules().stream(),
-                        BouncyCastleDetectionRules.rules().stream(),
-                        SSLDetectionRules.rules().stream())
+                        RuleSets.rulesOf(JcaDetectionRules.class).stream(),
+                        RuleSets.rulesOf(BouncyCastleDetectionRules.class).stream(),
+                        RuleSets.rulesOf(SSLDetectionRules.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

@@ -43,7 +43,7 @@ public final class BcSM2Signer extends DetectionRuleSet<Tree> {
                     .withoutParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -52,10 +52,10 @@ public final class BcSM2Signer extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -66,7 +66,7 @@ public final class BcSM2Signer extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.signers.DSAEncoding")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_4 =
             new DetectionRuleBuilder<Tree>()
@@ -76,10 +76,10 @@ public final class BcSM2Signer extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.signers.DSAEncoding")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

@@ -56,7 +56,7 @@ public final class BcNTRUEncryptionParameters extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .withMethodParameter("boolean")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -86,7 +86,7 @@ public final class BcNTRUEncryptionParameters extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .withMethodParameter("boolean")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

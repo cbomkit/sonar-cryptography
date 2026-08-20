@@ -40,7 +40,7 @@ public final class BcCipherParameters extends DetectionRuleSet<Tree> {
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         RuleSets.rulesOf(BcCipherParametersBases.class).stream(),
-                        BcParametersWith.rules().stream())
+                        RuleSets.rulesOf(BcParametersWith.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

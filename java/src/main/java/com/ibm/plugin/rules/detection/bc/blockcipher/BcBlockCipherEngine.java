@@ -93,7 +93,8 @@ public final class BcBlockCipherEngine extends ContextualDetectionRuleSet<Tree> 
                             .withoutParameters()
                             .buildForContext(context)
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherInit.class)));
         }
 
         // Constructors with the block size
@@ -109,7 +110,8 @@ public final class BcBlockCipherEngine extends ContextualDetectionRuleSet<Tree> 
                             .asChildOfParameterWithId(-1)
                             .buildForContext(context)
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherInit.class)));
         }
 
         // `newInstance` for AESEngine
@@ -123,7 +125,7 @@ public final class BcBlockCipherEngine extends ContextualDetectionRuleSet<Tree> 
                         .withoutParameters()
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         return constructorsList;
     }

@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -32,22 +33,22 @@ public final class BcCipherParametersBases extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        BcAEADParameters.rules().stream(),
-                        BcCCMParameters.rules().stream(),
-                        BcCramerShoupParameters.rules().stream(),
-                        BcGMSSParameters.rules().stream(),
-                        BcIESParameters.rules().stream(),
-                        BcKeyParameter.rules().stream(),
-                        BcNTRUEncryptionParameters.rules().stream(),
-                        BcNTRUSigningPrivateKeyParameters.rules().stream(),
-                        BcNTRUSigningPublicKeyParameters.rules().stream(),
-                        BcSABERParameters.rules().stream(),
-                        BcMLKEMKeyParameters.rules().stream(),
-                        BcMLKEMPrivateKeyParameters.rules().stream(),
-                        BcMLKEMPublicKeyParameters.rules().stream(),
-                        BcMLDSAKeyParameters.rules().stream(),
-                        BcMLDSAPrivateKeyParameters.rules().stream(),
-                        BcMLDSAPublicKeyParameters.rules().stream())
+                        RuleSets.rulesOf(BcAEADParameters.class).stream(),
+                        RuleSets.rulesOf(BcCCMParameters.class).stream(),
+                        RuleSets.rulesOf(BcCramerShoupParameters.class).stream(),
+                        RuleSets.rulesOf(BcGMSSParameters.class).stream(),
+                        RuleSets.rulesOf(BcIESParameters.class).stream(),
+                        RuleSets.rulesOf(BcKeyParameter.class).stream(),
+                        RuleSets.rulesOf(BcNTRUEncryptionParameters.class).stream(),
+                        RuleSets.rulesOf(BcNTRUSigningPrivateKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcNTRUSigningPublicKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcSABERParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLKEMKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLKEMPrivateKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLKEMPublicKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLDSAKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLDSAPrivateKeyParameters.class).stream(),
+                        RuleSets.rulesOf(BcMLDSAPublicKeyParameters.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

@@ -45,8 +45,9 @@ public final class JcaSignatureGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSignatureAction.rules().stream(),
-                                            JcaSignatureSetParameter.rules().stream())
+                                            RuleSets.rulesOf(JcaSignatureAction.class).stream(),
+                                            RuleSets.rulesOf(JcaSignatureSetParameter.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SIGNATURE_2 =
@@ -61,8 +62,9 @@ public final class JcaSignatureGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSignatureAction.rules().stream(),
-                                            JcaSignatureSetParameter.rules().stream())
+                                            RuleSets.rulesOf(JcaSignatureAction.class).stream(),
+                                            RuleSets.rulesOf(JcaSignatureSetParameter.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SIGNATURE_3 =
@@ -77,8 +79,9 @@ public final class JcaSignatureGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSignatureAction.rules().stream(),
-                                            JcaSignatureSetParameter.rules().stream())
+                                            RuleSets.rulesOf(JcaSignatureAction.class).stream(),
+                                            RuleSets.rulesOf(JcaSignatureSetParameter.class)
+                                                    .stream())
                                     .toList());
 
     /** Temporary shim, removed in the call-site cleanup. */

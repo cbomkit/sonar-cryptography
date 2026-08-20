@@ -57,7 +57,7 @@ public final class BcDSA extends DetectionRuleSet<Tree> {
                             .withAnyParameters()
                             .buildForContext(new SignatureContext(Map.of("kind", "DSA")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcDSAInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcDSAInit.class)));
         }
         return constructorsList;
     }

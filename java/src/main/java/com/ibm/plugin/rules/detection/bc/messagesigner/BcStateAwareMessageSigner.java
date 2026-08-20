@@ -60,7 +60,8 @@ public final class BcStateAwareMessageSigner extends DetectionRuleSet<Tree> {
                             .withoutParameters()
                             .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMessageSignerInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcMessageSignerInit.class)));
         }
         return constructorsList;
     }
@@ -76,10 +77,10 @@ public final class BcStateAwareMessageSigner extends DetectionRuleSet<Tree> {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("GMSSStateAwareSigner"))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
-                        .addDependingDetectionRules(BcDigests.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMessageSignerInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMessageSignerInit.class)));
 
         return constructorsList;
     }

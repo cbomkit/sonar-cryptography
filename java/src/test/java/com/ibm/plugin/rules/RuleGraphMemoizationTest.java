@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.JavaDetectionRules;
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -48,7 +49,8 @@ class RuleGraphMemoizationTest {
     @Test
     void distinctRuleObjectFootprintStaysSmall() {
         Set<IDetectionRule<?>> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-        Deque<IDetectionRule<?>> stack = new ArrayDeque<>(JavaDetectionRules.rules());
+        Deque<IDetectionRule<?>> stack =
+                new ArrayDeque<>(RuleSets.rulesOf(JavaDetectionRules.class));
 
         while (!stack.isEmpty()) {
             IDetectionRule<?> rule = stack.pop();

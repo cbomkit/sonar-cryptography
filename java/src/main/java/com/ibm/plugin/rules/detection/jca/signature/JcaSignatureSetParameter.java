@@ -37,7 +37,7 @@ public final class JcaSignatureSetParameter extends DetectionRuleSet<Tree> {
                     .forObjectTypes("java.security.Signature")
                     .forMethods("setParameter")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();

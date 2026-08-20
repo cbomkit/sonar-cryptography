@@ -40,10 +40,10 @@ public final class SSLDetectionRules extends DetectionRuleSet<Tree> {
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        SSLServerSocketSetEnabledProtocols.rules().stream(),
-                        SSLSetParameters.rules().stream(),
-                        SSLContext.rules().stream(),
-                        SSLServerSocketSetEnabledCipherSuites.rules().stream())
+                        RuleSets.rulesOf(SSLServerSocketSetEnabledProtocols.class).stream(),
+                        RuleSets.rulesOf(SSLSetParameters.class).stream(),
+                        RuleSets.rulesOf(SSLContext.class).stream(),
+                        RuleSets.rulesOf(SSLServerSocketSetEnabledCipherSuites.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

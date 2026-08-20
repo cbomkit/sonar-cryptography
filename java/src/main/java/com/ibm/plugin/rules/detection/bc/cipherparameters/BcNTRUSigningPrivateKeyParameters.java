@@ -55,7 +55,7 @@ public final class BcNTRUSigningPrivateKeyParameters extends DetectionRuleSet<Tr
                     .withMethodParameter("boolean")
                     .withMethodParameter("int")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -84,7 +84,7 @@ public final class BcNTRUSigningPrivateKeyParameters extends DetectionRuleSet<Tr
                     .withMethodParameter("boolean")
                     .withMethodParameter("int")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -129,7 +129,8 @@ public final class BcNTRUSigningPrivateKeyParameters extends DetectionRuleSet<Tr
                     .withMethodParameter("java.util.List")
                     .withMethodParameter(
                             "org.bouncycastle.pqc.legacy.crypto.ntru.NTRUSigningPublicKeyParameters")
-                    .addDependingDetectionRules(BcNTRUSigningPublicKeyParameters.rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(BcNTRUSigningPublicKeyParameters.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

@@ -45,15 +45,16 @@ public final class BcGenericSigner extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                     .addDependingDetectionRules(
-                            BcAsymmetricBlockCipher.rules(
+                            RuleSets.rulesOf(
+                                    BcAsymmetricBlockCipher.class,
                                     new CipherContext(Map.of("kind", "ENCODING_SIGNATURE")),
                                     new CipherContext(
                                             Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE_SIGNATURE"))))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

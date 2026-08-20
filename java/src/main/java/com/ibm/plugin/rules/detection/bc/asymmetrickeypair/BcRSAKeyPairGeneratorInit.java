@@ -40,7 +40,8 @@ public final class BcRSAKeyPairGeneratorInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("org.bouncycastle.crypto.generators." + CLASS)
                     .forMethods("init")
                     .withMethodParameter("org.bouncycastle.crypto.KeyGenerationParameters")
-                    .addDependingDetectionRules(BcRSAKeyGenerationParameters.rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(BcRSAKeyGenerationParameters.class))
                     .buildForContext(new KeyContext(Map.of("kind", "PKE")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

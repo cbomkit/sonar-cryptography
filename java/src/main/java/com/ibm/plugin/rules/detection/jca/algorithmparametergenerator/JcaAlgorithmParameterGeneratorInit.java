@@ -39,7 +39,7 @@ public final class JcaAlgorithmParameterGeneratorInit extends DetectionRuleSet<T
                     .forObjectTypes("java.security.AlgorithmParameterGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
@@ -50,7 +50,7 @@ public final class JcaAlgorithmParameterGeneratorInit extends DetectionRuleSet<T
                     .forObjectTypes("java.security.AlgorithmParameterGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")

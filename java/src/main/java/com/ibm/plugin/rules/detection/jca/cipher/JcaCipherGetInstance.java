@@ -47,8 +47,8 @@ public final class JcaCipherGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaCipherInit.rules().stream(),
-                                            JcaCipherWrap.rules().stream())
+                                            RuleSets.rulesOf(JcaCipherInit.class).stream(),
+                                            RuleSets.rulesOf(JcaCipherWrap.class).stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> CIPHER_GET_INSTANCE_2 =
@@ -63,8 +63,8 @@ public final class JcaCipherGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaCipherInit.rules().stream(),
-                                            JcaCipherWrap.rules().stream())
+                                            RuleSets.rulesOf(JcaCipherInit.class).stream(),
+                                            RuleSets.rulesOf(JcaCipherWrap.class).stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> CIPHER_GET_INSTANCE_3 =
@@ -79,8 +79,8 @@ public final class JcaCipherGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaCipherInit.rules().stream(),
-                                            JcaCipherWrap.rules().stream())
+                                            RuleSets.rulesOf(JcaCipherInit.class).stream(),
+                                            RuleSets.rulesOf(JcaCipherWrap.class).stream())
                                     .toList());
 
     /** Temporary shim, removed in the call-site cleanup. */

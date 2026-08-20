@@ -40,7 +40,7 @@ public final class BcSignerInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

@@ -55,7 +55,7 @@ public final class BcSimpleSigner extends DetectionRuleSet<Tree> {
                             .withAnyParameters()
                             .buildForContext(new SignatureContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcSignerInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class)));
         }
         return constructorsList;
     }

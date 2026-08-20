@@ -40,7 +40,7 @@ public final class JcaECPrivateKeySpec extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .withMethodParameter(BIGINTEGER_TYPE) // the private value
                     .withMethodParameter("java.security.spec.ECParameterSpec")
-                    .addDependingDetectionRules(JcaECGenParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaECGenParameterSpec.class))
                     .buildForContext(new KeyContext(KeyContext.Kind.EC))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();

@@ -51,10 +51,11 @@ public final class BcISO9796d1Encoding extends ContextualDetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new ValueActionFactory<>("ISO9796d1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                BcAsymCipherEngine.rules(engineDetectionValueContext))
+                                RuleSets.rulesOf(
+                                        BcAsymCipherEngine.class, engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcAsymCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
 
         return constructorsList;
     }

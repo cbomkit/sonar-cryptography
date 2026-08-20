@@ -85,12 +85,12 @@ public final class BcEncapsulatedSecretExtractor extends DetectionRuleSet<Tree> 
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("RSAKEMExtractor"))
                         .withMethodParameter("org.bouncycastle.crypto.params.RSAKeyParameters")
-                        .addDependingDetectionRules(BcCipherParameters.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                         .inBundle(() -> "Bc")
                         .withoutDependingDetectionRules());
@@ -103,12 +103,12 @@ public final class BcEncapsulatedSecretExtractor extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new ValueActionFactory<>("ECIESKEMExtractor"))
                         .withMethodParameter(
                                 "org.bouncycastle.crypto.params.ECPrivateKeyParameters")
-                        .addDependingDetectionRules(BcCipherParameters.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                         .inBundle(() -> "Bc")
                         .withoutDependingDetectionRules());
@@ -121,12 +121,12 @@ public final class BcEncapsulatedSecretExtractor extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new ValueActionFactory<>("ECIESKEMExtractor"))
                         .withMethodParameter(
                                 "org.bouncycastle.crypto.params.ECPrivateKeyParameters")
-                        .addDependingDetectionRules(BcCipherParameters.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.DerivationFunction")
-                        .addDependingDetectionRules(BcDerivationFunction.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcDerivationFunction.class))
                         .withMethodParameter("boolean")
                         .withMethodParameter("boolean")
                         .withMethodParameter("boolean")
@@ -143,7 +143,7 @@ public final class BcEncapsulatedSecretExtractor extends DetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new ValueActionFactory<>("MLKEMExtractor"))
                         .withMethodParameter(
                                 "org.bouncycastle.pqc.crypto.mlkem.MLKEMPrivateKeyParameters")
-                        .addDependingDetectionRules(BcCipherParameters.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                         .buildForContext(new KeyContext(Map.of("kind", "KEM")))
                         .inBundle(() -> "Bc")
                         .withoutDependingDetectionRules());

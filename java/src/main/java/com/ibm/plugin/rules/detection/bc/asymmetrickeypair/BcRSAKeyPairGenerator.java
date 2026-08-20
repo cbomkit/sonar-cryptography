@@ -43,7 +43,7 @@ public final class BcRSAKeyPairGenerator extends DetectionRuleSet<Tree> {
                     .withAnyParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "PKE")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcRSAKeyPairGeneratorInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcRSAKeyPairGeneratorInit.class));
 
     /** Temporary shim, removed in the call-site cleanup. */
     @Nonnull

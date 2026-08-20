@@ -36,7 +36,7 @@ public final class BcMacInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("org.bouncycastle.crypto.Mac")
                     .forMethods("init")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();

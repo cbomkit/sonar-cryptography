@@ -71,7 +71,8 @@ public final class BcStreamCipherEngine extends DetectionRuleSet<Tree> {
                             .buildForContext(
                                     new CipherContext(Map.of("kind", "STREAM_CIPHER_ENGINE")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcStreamCipherInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcStreamCipherInit.class)));
         }
         return constructorsList;
     }

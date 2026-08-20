@@ -38,6 +38,8 @@ public final class BcKeyGenerationParameters extends DetectionRuleSet<Tree> {
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
-        return Stream.of(BcRSAKeyGenerationParameters.rules().stream()).flatMap(i -> i).toList();
+        return Stream.of(RuleSets.rulesOf(BcRSAKeyGenerationParameters.class).stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }
