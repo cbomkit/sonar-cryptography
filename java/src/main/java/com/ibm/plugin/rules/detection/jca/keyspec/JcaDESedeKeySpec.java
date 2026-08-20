@@ -26,7 +26,6 @@ import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -56,12 +55,6 @@ public final class JcaDESedeKeySpec extends DetectionRuleSet<Tree> {
                     .buildForContext(new SecretKeyContext(KeyContext.Kind.DESede))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaDESedeKeySpec.class);
-    }
 
     @Nonnull
     @Override

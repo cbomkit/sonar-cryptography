@@ -68,12 +68,6 @@ public final class JcaKeyGeneratorGetInstance extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyGeneratorInit.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaKeyGeneratorGetInstance.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

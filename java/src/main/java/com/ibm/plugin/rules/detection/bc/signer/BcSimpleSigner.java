@@ -60,12 +60,6 @@ public final class BcSimpleSigner extends DetectionRuleSet<Tree> {
         return constructorsList;
     }
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcSimpleSigner.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

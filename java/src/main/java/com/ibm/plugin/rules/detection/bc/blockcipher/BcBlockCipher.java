@@ -208,28 +208,4 @@ public final class BcBlockCipher extends ContextualDetectionRuleSet<Tree> {
                 .flatMap(i -> i)
                 .toList();
     }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcBlockCipher.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(@Nullable IDetectionContext context) {
-        return RuleSets.rulesOf(BcBlockCipher.class, context);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> all() {
-        return RuleSets.rulesOf(BcBlockCipherAndEngines.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> all(@Nullable IDetectionContext context) {
-        return RuleSets.rulesOf(BcBlockCipherAndEngines.class, context);
-    }
 }

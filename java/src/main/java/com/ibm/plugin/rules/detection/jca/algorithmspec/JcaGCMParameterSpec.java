@@ -26,7 +26,6 @@ import com.ibm.engine.model.factory.InitializationVectorSizeFactory;
 import com.ibm.engine.model.factory.TagSizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import java.util.Optional;
@@ -64,12 +63,6 @@ public final class JcaGCMParameterSpec extends DetectionRuleSet<Tree> {
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaGCMParameterSpec.class);
-    }
 
     @Nonnull
     @Override

@@ -83,12 +83,6 @@ public final class JcaCipherGetInstance extends DetectionRuleSet<Tree> {
                                             RuleSets.rulesOf(JcaCipherWrap.class).stream())
                                     .toList());
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaCipherGetInstance.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

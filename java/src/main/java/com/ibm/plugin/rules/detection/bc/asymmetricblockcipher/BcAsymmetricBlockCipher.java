@@ -37,20 +37,6 @@ public final class BcAsymmetricBlockCipher extends ContextualDetectionRuleSet<Tr
         return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
     }
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcAsymmetricBlockCipher.class);
-    }
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingContext,
-            @Nullable IDetectionContext engineContext) {
-        return RuleSets.rulesOf(BcAsymmetricBlockCipher.class, encodingContext, engineContext);
-    }
-
     @Nonnull
     private static List<IDetectionRule<Tree>> constructors(
             @Nullable IDetectionContext encodingDetectionValueContext,

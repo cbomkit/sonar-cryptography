@@ -27,7 +27,6 @@ import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -89,12 +88,6 @@ public final class BcSABERParameters extends DetectionRuleSet<Tree> {
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcSABERParameters.class);
-    }
 
     @Nonnull
     @Override

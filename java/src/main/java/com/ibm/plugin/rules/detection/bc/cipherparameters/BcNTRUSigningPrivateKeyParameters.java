@@ -135,12 +135,6 @@ public final class BcNTRUSigningPrivateKeyParameters extends DetectionRuleSet<Tr
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcNTRUSigningPrivateKeyParameters.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

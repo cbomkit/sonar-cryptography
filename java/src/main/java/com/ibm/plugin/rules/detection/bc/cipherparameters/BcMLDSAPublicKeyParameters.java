@@ -24,7 +24,6 @@ import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +59,6 @@ public final class BcMLDSAPublicKeyParameters extends DetectionRuleSet<Tree> {
                     .buildForContext(new PublicKeyContext(Map.of("kind", "MLDSA")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcMLDSAPublicKeyParameters.class);
-    }
 
     @Nonnull
     @Override

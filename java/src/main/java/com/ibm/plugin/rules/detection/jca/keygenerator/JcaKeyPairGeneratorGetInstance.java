@@ -71,12 +71,6 @@ public final class JcaKeyPairGeneratorGetInstance extends DetectionRuleSet<Tree>
                     .withDependingDetectionRules(
                             RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaKeyPairGeneratorGetInstance.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

@@ -65,12 +65,6 @@ public final class BcAEADParameters extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcAEADParameters.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

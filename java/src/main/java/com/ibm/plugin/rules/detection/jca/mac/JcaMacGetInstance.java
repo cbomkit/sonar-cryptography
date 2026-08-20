@@ -25,7 +25,6 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -68,12 +67,6 @@ public final class JcaMacGetInstance extends DetectionRuleSet<Tree> {
                     .buildForContext(new MacContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaMacGetInstance.class);
-    }
 
     @Nonnull
     @Override

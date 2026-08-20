@@ -23,7 +23,6 @@ import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.factory.ProtocolFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -41,12 +40,6 @@ public final class SSLServerSocketSetEnabledProtocols extends DetectionRuleSet<T
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
-
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(SSLServerSocketSetEnabledProtocols.class);
-    }
 
     @Nonnull
     @Override

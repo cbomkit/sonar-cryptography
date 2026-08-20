@@ -64,12 +64,6 @@ public final class BcDSADigestSigner extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcDSADigestSigner.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

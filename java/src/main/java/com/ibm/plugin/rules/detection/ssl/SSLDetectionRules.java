@@ -30,12 +30,6 @@ import org.sonar.plugins.java.api.tree.Tree;
 // https://www.baeldung.com/java-7-tls-v12
 public final class SSLDetectionRules extends DetectionRuleSet<Tree> {
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(SSLDetectionRules.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

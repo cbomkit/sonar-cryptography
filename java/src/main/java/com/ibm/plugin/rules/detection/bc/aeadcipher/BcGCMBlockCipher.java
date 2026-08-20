@@ -101,12 +101,6 @@ public final class BcGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcGCMBlockCipher.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

@@ -72,12 +72,6 @@ public final class BcISO9796d2PSSSigner extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(BcISO9796d2PSSSigner.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

@@ -42,12 +42,6 @@ public final class JcaSignatureSetParameter extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaSignatureSetParameter.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {

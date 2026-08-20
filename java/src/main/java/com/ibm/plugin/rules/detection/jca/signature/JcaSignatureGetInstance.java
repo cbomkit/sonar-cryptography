@@ -84,12 +84,6 @@ public final class JcaSignatureGetInstance extends DetectionRuleSet<Tree> {
                                                     .stream())
                                     .toList());
 
-    /** Temporary shim, removed in the call-site cleanup. */
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RuleSets.rulesOf(JcaSignatureGetInstance.class);
-    }
-
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules() {
