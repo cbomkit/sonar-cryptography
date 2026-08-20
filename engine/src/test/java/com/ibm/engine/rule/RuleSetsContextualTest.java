@@ -139,9 +139,15 @@ class RuleSetsContextualTest {
     }
 
     @Test
-    void aNullContextIsAllowedAndIsItsOwnKey() {
+    void aTrailingNullResolvesToTheDefaultPath() {
         assertThat(RuleSets.rulesOf(ContextualLeaf.class, (IDetectionContext) null))
-                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class, (IDetectionContext) null));
+                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class));
+    }
+
+    @Test
+    void aTrailingNullAfterARealContextResolvesToTheSameKeyAsWithoutIt() {
+        assertThat(RuleSets.rulesOf(ContextualLeaf.class, mgf1(), null))
+                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1()));
     }
 
     @Test
