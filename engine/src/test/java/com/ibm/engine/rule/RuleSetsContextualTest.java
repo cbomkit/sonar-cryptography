@@ -21,32 +21,69 @@ package com.ibm.engine.rule;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 
 class RuleSetsContextualTest {
 
     /**
-     * Counts how often the leaf was actually built, so tests can prove two contexts were cached
-     * separately without relying on list identity: {@code buildRules} here always returns {@code
-     * List.of()}, and the JDK interns that as a single shared empty-list instance, so two
-     * independently-cached empty results would be {@code isSameAs} regardless of whether the cache
-     * treated them as separate entries.
+     * A trivial, hand-rolled {@link IDetectionRule} so {@code buildRules} below can return a
+     * non-empty list. A shared instance is fine: only the enclosing {@code List} needs to be a
+     * fresh allocation per build, not this rule.
      */
-    static final AtomicInteger LEAF_BUILDS = new AtomicInteger();
+    static final class StubRule implements IDetectionRule<Object> {
+        @Override
+        public boolean is(@Nonnull Class<? extends IDetectionRule> kind) {
+            return false;
+        }
+
+        @Override
+        public boolean match(
+                @Nonnull Object expression, @Nonnull ILanguageTranslation<Object> translation) {
+            return false;
+        }
+
+        @Override
+        public boolean shouldMatchExactTypes() {
+            return false;
+        }
+
+        @Nonnull
+        @Override
+        public IDetectionContext detectionValueContext() {
+            return new DigestContext();
+        }
+
+        @Nonnull
+        @Override
+        public IBundle bundle() {
+            return () -> "stub";
+        }
+
+        @Nonnull
+        @Override
+        public List<IDetectionRule<Object>> nextDetectionRules() {
+            return List.of();
+        }
+    }
+
+    static final IDetectionRule<Object> STUB_RULE = new StubRule();
 
     static final class ContextualLeaf extends ContextualDetectionRuleSet<Object> {
         @Nonnull
         @Override
         protected List<IDetectionRule<Object>> buildRules(
                 @Nonnull List<IDetectionContext> contexts) {
-            LEAF_BUILDS.incrementAndGet();
-            return List.of();
+            // A fresh, mutable, non-empty list per call: List.copyOf hands back its argument
+            // unchanged when it is already an immutable list, so returning List.of(STUB_RULE)
+            // directly would collapse every build back to one shared instance.
+            return new ArrayList<>(List.of(STUB_RULE));
         }
     }
 
@@ -72,13 +109,10 @@ class RuleSetsContextualTest {
 
     @Test
     void differentContextsGetDifferentLists() {
-        // Distinct markers, unused by any other test: each must trigger its own build.
-        DigestContext a = new DigestContext(Map.of("kind", "DIFF_A"));
-        DigestContext b = new DigestContext(Map.of("kind", "DIFF_B"));
-        int before = LEAF_BUILDS.get();
-        RuleSets.rulesOf(ContextualLeaf.class, a);
-        RuleSets.rulesOf(ContextualLeaf.class, b);
-        assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
+        assertThat(RuleSets.rulesOf(ContextualLeaf.class, mgf1()))
+                .isNotSameAs(
+                        RuleSets.rulesOf(
+                                ContextualLeaf.class, new DigestContext(Map.of("kind", "SHA"))));
     }
 
     @Test
@@ -95,12 +129,8 @@ class RuleSetsContextualTest {
 
     @Test
     void positionMattersWhenOneOfTwoContextsIsNull() {
-        // A marker unused by any other test: each ordering must trigger its own build.
-        DigestContext c = new DigestContext(Map.of("kind", "POSITION"));
-        int before = LEAF_BUILDS.get();
-        RuleSets.rulesOf(ContextualLeaf.class, null, c);
-        RuleSets.rulesOf(ContextualLeaf.class, c, null);
-        assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
+        assertThat(RuleSets.rulesOf(ContextualLeaf.class, null, mgf1()))
+                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1(), null));
     }
 
     @Test
