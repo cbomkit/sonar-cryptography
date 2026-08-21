@@ -21,6 +21,12 @@ package com.ibm.engine.model.context;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Implementations are used as cache keys by {@link com.ibm.engine.rule.RuleSets}, so they must
+ * implement value-based {@code equals}/{@code hashCode} covering all of their state, including any
+ * state added by a subclass. A context that compares equal to a sibling with different state would
+ * make {@code RuleSets} hand that sibling's cached rules back to the wrong caller.
+ */
 public interface IDetectionContext {
 
     @Nonnull
