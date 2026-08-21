@@ -34,6 +34,7 @@ import org.sonar.plugins.java.api.tree.Tree;
  */
 public final class BcBlockCipherAndEngines extends ContextualDetectionRuleSet<Tree> {
 
+    /** Only the first context (index 0) is used; any further contexts are ignored. */
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
