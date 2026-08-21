@@ -23,7 +23,6 @@ import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
-import com.ibm.plugin.rules.detection.dotnet.DotNetChaCha20Poly1305;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
@@ -59,7 +58,6 @@ public final class CSharpDetectionRules {
     public static List<IDetectionRule<CSharpTree>> rules() {
         return Stream.of(
                         DotNetAES.rules().stream(),
-                        DotNetChaCha20Poly1305.rules().stream(),
                         DotNetDES.rules().stream(),
                         DotNetTripleDES.rules().stream(),
                         DotNetRC2.rules().stream(),

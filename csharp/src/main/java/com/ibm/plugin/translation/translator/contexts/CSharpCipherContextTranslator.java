@@ -38,7 +38,6 @@ import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.ChaCha20Poly1305;
 import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.RC2;
@@ -76,8 +75,6 @@ public final class CSharpCipherContextTranslator
                                 Optional.of(new DESede(detectionLocation));
                         case "RSA" -> Optional.of(new RSA(detectionLocation));
                         case "RC2" -> Optional.of(new RC2(detectionLocation));
-                        case "CHACHA20-POLY1305" ->
-                                Optional.of(new ChaCha20Poly1305(detectionLocation));
                         case "GENERATEKEY" -> Optional.of(new KeyGeneration(detectionLocation));
                         case "GENERATEIV" -> Optional.of(new Generate(detectionLocation));
                         // DPAPI (System.Security.Cryptography.ProtectedData / ProtectedMemory /
