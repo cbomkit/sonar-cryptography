@@ -58,6 +58,13 @@ class DetectionContextEqualityTest {
     }
 
     @Test
+    void keyContextsWithTheSameKindAndPropertiesAreEqual() {
+        assertThat(new KeyContext(KeyContext.Kind.EC))
+                .isEqualTo(new KeyContext(KeyContext.Kind.EC))
+                .hasSameHashCodeAs(new KeyContext(KeyContext.Kind.EC));
+    }
+
+    @Test
     void signatureContextsDifferingOnlyByKindAreNotEqual() {
         assertThat(new SignatureContext(SignatureContext.Kind.PSS))
                 .isNotEqualTo(new SignatureContext(SignatureContext.Kind.MGF1));
