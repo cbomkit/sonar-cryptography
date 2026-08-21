@@ -41,6 +41,15 @@ jobs:
           git diff --stat
           exit 1
         fi
+    # Uploads the full, resolved dependency graph to GitHub. Without this,
+    # GitHub guesses the graph by parsing the pom.xml files and reports
+    # Dependabot alerts for versions we do not actually build with.
+    # This has to run before the CBOM step. That step is a Docker action and
+    # runs as root, so it leaves root-owned temp folders in the workspace. This
+    # action walks the whole workspace and would then stop with EACCES.
+    - name: Update dependency graph
+      uses: advanced-security/maven-dependency-submission-action@v5
+      if: github.event_name != 'pull_request'
     - name: Create CBOM
       uses: cbomkit/cbomkit-action@v2.2.0
       id: cbom
@@ -52,9 +61,3 @@ jobs:
         name: "CBOM"
         path: ${{ steps.cbom.outputs.pattern }}
         if-no-files-found: warn
-    # Uploads the full, resolved dependency graph to GitHub. Without this,
-    # GitHub guesses the graph by parsing the pom.xml files and reports
-    # Dependabot alerts for versions we do not actually build with.
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@v5
-      if: github.event_name != 'pull_request'
