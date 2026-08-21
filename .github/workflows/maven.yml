@@ -42,7 +42,9 @@ jobs:
         name: "CBOM"
         path: ${{ steps.cbom.outputs.pattern }}
         if-no-files-found: warn
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    #- name: Update dependency graph
-    #  uses: advanced-security/maven-dependency-submission-action@v5
-    #  if: github.event_name != 'pull_request'
+    # Uploads the full, resolved dependency graph to GitHub. Without this,
+    # GitHub guesses the graph by parsing the pom.xml files and reports
+    # Dependabot alerts for versions we do not actually build with.
+    - name: Update dependency graph
+      uses: advanced-security/maven-dependency-submission-action@v5
+      if: github.event_name != 'pull_request'
