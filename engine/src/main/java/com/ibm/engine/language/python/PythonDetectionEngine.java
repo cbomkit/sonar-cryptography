@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -467,19 +466,32 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 return;
             }
 
-            // Reject if any keyword argument name is not declared in the rule.
-            Set<String> declaredKeywordNames =
-                    detectionRule.parameters().stream()
-                            .flatMap(p -> p.getKeywordName().stream())
-                            .collect(Collectors.toSet());
+            // Reject if any keyword argument does not match any rule parameter — neither by
+            // keyword name nor by positional index. The index check handles mixed rules where a
+            // leading withMethodParameter slot is passed by name at the call site, which Python
+            // allows.
+            List<Parameter<Tree>> params = detectionRule.parameters();
             boolean hasUnknownKeyword =
-                    arguments.stream()
+                    IntStream.range(0, arguments.size())
                             .anyMatch(
-                                    a ->
-                                            a instanceof RegularArgument ra
-                                                    && ra.keywordArgument() != null
-                                                    && !declaredKeywordNames.contains(
-                                                            ra.keywordArgument().name()));
+                                    i -> {
+                                        Argument a = arguments.get(i);
+                                        if (!(a instanceof RegularArgument ra)
+                                                || ra.keywordArgument() == null) {
+                                            return false;
+                                        }
+                                        String name = ra.keywordArgument().name();
+                                        return params.stream()
+                                                .noneMatch(
+                                                        p ->
+                                                                p.getKeywordName()
+                                                                                .map(name::equals)
+                                                                                .orElse(false)
+                                                                        || (p.getKeywordName()
+                                                                                        .isEmpty()
+                                                                                && p.getIndex()
+                                                                                        == i));
+                                    });
             if (hasUnknownKeyword) {
                 return;
             }
@@ -487,17 +499,15 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             // Reject if any required named parameter is absent from the call site.
             // This must run before MethodDetection is emitted so that a call that is missing a
             // required argument produces no finding at all (not just a missing child detection).
-            int preCheckIndex = 0;
             for (Parameter<Tree> p : detectionRule.parameters()) {
                 if (p.getKeywordName().isPresent() && !p.isKeywordOptional()) {
                     Optional<Argument> present =
                             findArgumentByKeyword(
-                                    p.getKeywordName().get(), preCheckIndex, arguments);
+                                    p.getKeywordName().get(), p.getIndex(), arguments);
                     if (present.isEmpty()) {
                         return;
                     }
                 }
-                preCheckIndex++;
             }
         }
 
@@ -509,24 +519,22 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         // Track whether a preceding optional named parameter was skipped (Hole 1 mitigation).
         boolean precedingOptionalNamedParamWasSkipped = false;
 
-        int positionalIndex = 0; // tracks the index among all parameters (for positional fallback)
         for (Parameter<Tree> parameter : detectionRule.parameters()) {
             Optional<String> keywordName = parameter.getKeywordName();
 
             if (keywordName.isPresent()) {
                 // --- Named parameter extraction (proposal §3) ---
                 Optional<Argument> resolvedArg =
-                        findArgumentByKeyword(keywordName.get(), positionalIndex, arguments);
+                        findArgumentByKeyword(keywordName.get(), parameter.getIndex(), arguments);
 
                 if (resolvedArg.isEmpty()) {
                     if (parameter.isKeywordOptional()) {
                         // optional parameter absent → skip silently
                         precedingOptionalNamedParamWasSkipped = true;
-                        positionalIndex++;
                         continue;
                     } else {
                         // required named parameter absent → stop processing
-                        // (pre-flight at line 490 already guarantees this branch is unreachable
+                        // (pre-flight already guarantees this branch is unreachable
                         // for named parameters; kept as a defensive fallback)
                         return;
                     }
@@ -538,15 +546,16 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 boolean usedPositionalFallback =
                         (arg instanceof RegularArgument ra && ra.keywordArgument() == null);
                 if (usedPositionalFallback && precedingOptionalNamedParamWasSkipped) {
-                    LOG.warn(
+                    LOG.debug(
                             "Named parameter \"{}\" resolved via positional fallback at index {},"
                                     + " but a preceding optional named parameter was not found."
                                     + " The positional argument may belong to a different parameter."
-                                    + " Rule: {}, location: {}",
+                                    + " File: {}, line: {}, column: {}",
                             keywordName.get(),
-                            positionalIndex,
-                            detectionStore.getDetectionRule().getClass().getSimpleName(),
-                            expressionTree.firstToken().value());
+                            parameter.getIndex(),
+                            detectionStore.getScanContext().getRelativePath(),
+                            expressionTree.firstToken().line(),
+                            expressionTree.firstToken().column());
                 }
 
                 // extract expression from the resolved argument
@@ -567,7 +576,6 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         if (parameter.isKeywordOptional()) {
                             // Type mismatch on an optional param: treat as absent and skip.
                             precedingOptionalNamedParamWasSkipped = true;
-                            positionalIndex++;
                             continue;
                         } else {
                             // Type mismatch on a required param: rule does not fire.
@@ -577,7 +585,6 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 }
 
                 if (!checkSymbolTraceState(isInvocation, traceSymbol, expressionTree)) {
-                    positionalIndex++;
                     continue;
                 }
 
@@ -585,19 +592,20 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             } else {
                 // --- Positional parameter extraction (original behaviour) ---
                 if (!checkCurrentIndexState(
-                        positionalIndex, arguments, isInvocation, traceSymbol, expressionTree)) {
-                    positionalIndex++;
+                        parameter.getIndex(),
+                        arguments,
+                        isInvocation,
+                        traceSymbol,
+                        expressionTree)) {
                     continue;
                 }
-                Tree expression = arguments.get(positionalIndex);
+                Tree expression = arguments.get(parameter.getIndex());
                 if (expression instanceof RegularArgument regularArgument) {
                     expression = regularArgument.expression();
                 }
 
                 processParameterExpression(parameter, expression, expressionTree);
             }
-
-            positionalIndex++;
         }
     }
 
