@@ -19,7 +19,9 @@
  */
 package com.ibm.plugin.rules.detection;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.aead.PycaAEAD;
 import com.ibm.plugin.rules.detection.aead.PycaAES;
 import com.ibm.plugin.rules.detection.asymmetric.PycaDSA;
@@ -28,49 +30,38 @@ import com.ibm.plugin.rules.detection.asymmetric.PycaEllipticCurve;
 import com.ibm.plugin.rules.detection.asymmetric.PycaRSA;
 import com.ibm.plugin.rules.detection.asymmetric.PycaSign;
 import com.ibm.plugin.rules.detection.fernet.PycaFernet;
-import com.ibm.plugin.rules.detection.hash.PycaHash;
+import com.ibm.plugin.rules.detection.hash.PycaHashWrapper;
 import com.ibm.plugin.rules.detection.kdf.PycaKDF;
 import com.ibm.plugin.rules.detection.keyagreement.PycaKeyAgreement;
 import com.ibm.plugin.rules.detection.mac.PycaMAC;
 import com.ibm.plugin.rules.detection.symmetric.PycaCipher;
 import com.ibm.plugin.rules.detection.wrapping.PycaWrapping;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
-public final class PythonDetectionRules {
-    private PythonDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PythonDetectionRules::buildRules);
+public final class PythonDetectionRules extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         // rules
-                        PycaKeyAgreement.rules().stream(),
-                        PycaSign.rules().stream(),
-                        PycaEllipticCurve.rules().stream(),
-                        PycaRSA.rules().stream(),
-                        PycaDiffieHellman.rules().stream(),
-                        PycaDSA.rules().stream(),
-                        PycaAEAD.rules().stream(),
-                        PycaAES.rules().stream(),
-                        PycaCipher.rules().stream(),
-                        PycaHash.wrapperRules().stream(),
-                        PycaMAC.rules().stream(),
-                        PycaWrapping.rules().stream(),
-                        PycaKDF.rules().stream(),
-                        PycaFernet.rules().stream())
+                        RuleSets.rulesOf(PycaKeyAgreement.class).stream(),
+                        RuleSets.rulesOf(PycaSign.class).stream(),
+                        RuleSets.rulesOf(PycaEllipticCurve.class).stream(),
+                        RuleSets.rulesOf(PycaRSA.class).stream(),
+                        RuleSets.rulesOf(PycaDiffieHellman.class).stream(),
+                        RuleSets.rulesOf(PycaDSA.class).stream(),
+                        RuleSets.rulesOf(PycaAEAD.class).stream(),
+                        RuleSets.rulesOf(PycaAES.class).stream(),
+                        RuleSets.rulesOf(PycaCipher.class).stream(),
+                        RuleSets.rulesOf(PycaHashWrapper.class).stream(),
+                        RuleSets.rulesOf(PycaMAC.class).stream(),
+                        RuleSets.rulesOf(PycaWrapping.class).stream(),
+                        RuleSets.rulesOf(PycaKDF.class).stream(),
+                        RuleSets.rulesOf(PycaFernet.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

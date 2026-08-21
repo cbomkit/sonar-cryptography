@@ -25,21 +25,16 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeyActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaAEAD {
-
-    private PycaAEAD() {
-        // private
-    }
+public final class PycaAEAD extends DetectionRuleSet<Tree> {
 
     private static final String TYPE =
             "cryptography.hazmat.primitives.ciphers.aead.ChaCha20Poly1305";
@@ -80,16 +75,9 @@ public final class PycaAEAD {
                     .withDependingDetectionRules(
                             List.of(ENCRYPT_CHACHA20POLY1305, DECRYPT_CHACHA20POLY1305));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaAEAD::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATION_CHACHA20POLY1305);
     }
 }

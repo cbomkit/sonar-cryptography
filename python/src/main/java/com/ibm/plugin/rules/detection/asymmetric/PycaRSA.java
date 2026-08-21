@@ -34,22 +34,18 @@ import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.hash.PycaHash;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaRSA {
-
-    private PycaRSA() {
-        // private
-    }
+public final class PycaRSA extends DetectionRuleSet<Tree> {
 
     private static final String PADDING_TYPE = "cryptography.hazmat.primitives.asymmetric.padding";
     private static final String HASH_TYPE = "cryptography.hazmat.primitives.*";
@@ -63,7 +59,7 @@ public final class PycaRSA {
                     .shouldBeDetectedAs(new ValueActionFactory<>("MGF1"))
                     .withMethodParameter(HASH_TYPE) // This "type" accepts both hashes
                     // and pre-hashes
-                    .addDependingDetectionRules(PycaHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(PycaHash.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
@@ -108,7 +104,9 @@ public final class PycaRSA {
                     .withMethodParameter(HASH_TYPE) // This "type" accepts both hashes
                     // and pre-hashes
                     .addDependingDetectionRules(
-                            PycaHash.rules()) // The parameter of sign can either be an immediate
+                            RuleSets.rulesOf(
+                                    PycaHash.class)) // The parameter of sign can either be an
+                    // immediate
                     // hash, or a hash enclosed in the pre-hash
                     .withMethodParameter(ANY)
                     .buildForContext(new CipherContext(Map.of("kind", "padding")))
@@ -131,7 +129,9 @@ public final class PycaRSA {
                     .withMethodParameter(
                             HASH_TYPE) // This "type" accepts both hashes and pre-hashes
                     .addDependingDetectionRules(
-                            PycaHash.rules()) // The parameter of sign can either be an immediate
+                            RuleSets.rulesOf(
+                                    PycaHash.class)) // The parameter of sign can either be an
+                    // immediate
                     // hash, or a hash enclosed in the pre-hash
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Pyca")
@@ -189,16 +189,9 @@ public final class PycaRSA {
                     .inBundle(() -> "Pyca")
                     .withDependingDetectionRules(List.of(SIGN_RSA /*, VERIFY_RSA*/, DECRYPT_RSA));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaRSA::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATION_RSA, PUBLIC_NUMBERS_RSA, PRIVATE_NUMBERS_RSA);
     }
 }

@@ -22,22 +22,17 @@ package com.ibm.plugin.rules.detection.hash;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaHash {
-
-    private PycaHash() {
-        // private
-    }
+public final class PycaHash extends DetectionRuleSet<Tree> {
 
     @SuppressWarnings("java:S2386")
     public static final List<String> hashes =
@@ -89,7 +84,7 @@ public final class PycaHash {
                     .withoutDependingDetectionRules();
 
     // Detects hashes.Hash(hashes.SHA256()) and similar direct hash-computation usages.
-    private static final IDetectionRule<Tree> HASH_WRAPPER =
+    static final IDetectionRule<Tree> HASH_WRAPPER =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
                     .forObjectTypes("cryptography.hazmat.primitives.hashes")
@@ -100,23 +95,11 @@ public final class PycaHash {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaHash::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         final List<IDetectionRule<Tree>> hashAndPrehashRules = new LinkedList<>(hashesRules());
         hashAndPrehashRules.add(PRE_HASH);
         return hashAndPrehashRules;
-    }
-
-    @Nonnull
-    public static List<IDetectionRule<Tree>> wrapperRules() {
-        return List.of(HASH_WRAPPER);
     }
 }

@@ -25,23 +25,18 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaAES {
-
-    private PycaAES() {
-        // private
-    }
+public final class PycaAES extends DetectionRuleSet<Tree> {
 
     private static final List<String> aesAlgorithms =
             Arrays.asList("AESGCM", "AESGCMIV", "AESOCB3", "AESSIV", "AESCCM");
@@ -94,16 +89,9 @@ public final class PycaAES {
         return rules;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaAES::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return generationRulesAES();
     }
 }
