@@ -34,17 +34,21 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Guards the fix for issue #476: memoization must keep the distinct-object footprint of the Java
- * detection-rule graph far below its pre-fix size (~521k objects). Counts distinct
- * DetectionRule/MethodDetectionRule instances reachable via nextDetectionRules() and
- * parameter-attached depending rules, deduped by object identity.
+ * Guards the fix for issue #476: rule sets read through {@link RuleSets} must be built once and
+ * then shared by reference, so the same rule subtree is not duplicated every time it is depended
+ * on. Counts distinct DetectionRule/MethodDetectionRule instances reachable via
+ * nextDetectionRules() and parameter-attached depending rules, deduped by object identity.
+ *
+ * <p>Pre-fix distinct-object count was ~521,017; after the fix it is 1,015. The threshold below
+ * leaves modest headroom over that measured value while staying well under the acceptance criterion
+ * of 2,563 from issue #476. A regression that reintroduces duplication — most likely a {@code
+ * buildRules} that builds a fresh {@link com.ibm.engine.model.context.IDetectionContext} per call,
+ * which gets a fresh {@link RuleSets} cache entry each time instead of being shared — will show up
+ * here as the count climbing back up.
  */
 class RuleGraphMemoizationTest {
 
-    /**
-     * Pre-fix distinct-object count was ~521,017; memoization targets the low tens of thousands.
-     */
-    private static final int MAX_DISTINCT_RULES = 60_000;
+    private static final int MAX_DISTINCT_RULES = 1500;
 
     @Test
     void distinctRuleObjectFootprintStaysSmall() {
