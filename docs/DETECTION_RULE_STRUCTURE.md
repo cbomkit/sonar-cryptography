@@ -137,14 +137,16 @@ new DetectionRuleBuilder<Tree>()
     .forConstructor()
     .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipher"))
     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
     .withMethodParameter("int")
         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
         .asChildOfParameterWithId(-1)
-    .buildForContext(new CipherContext(Map.of("kind", "BLOCK_CIPHER")))
+    .buildForContext(context)
     .inBundle(() -> "Bc")
-    .withDependingDetectionRules(BcBlockCipherInit.rules());
+    .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class));
 ```
+
+Here `context` is `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))` by default, but `BcBlockCipher` extends [`ContextualDetectionRuleSet<Tree>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java), so a caller can override it by passing its own context to `RuleSets.rulesOf(BcBlockCipher.class, someContext)`. See the section on `ContextualDetectionRuleSet` and `RuleSets` in [*Extending the Sonar Cryptography Plugin for another language*](./LANGUAGE_SUPPORT.md#registering-your-rule) for how this works.
 
 We first specify the exact function call that we want to capture, which is here the constructor of the `org.bouncycastle.crypto.modes.CFBBlockCipher` object, with two parameters (of type `org.bouncycastle.crypto.BlockCipher` and `int`).
 
@@ -152,9 +154,9 @@ The value "CFBBlockCipher" (from which the translation later extracts the CFB mo
 We also capture directly the second parameter of the function rule; the block size "256" (it will be attributed the same context, but we can distinguish it from the top level detection as it will be captured as a `BlockSize` object).
 This parameter detection is placed below the top level detection using `asChildOfParameterWithId(-1)`.
 
-To capture the first parameter, we rely instead on a list of dependent detection rules `BcBlockCipherEngine.rules()`, that should capture all the possible `BlockCipher` classes existing in the library. In our case, a dependent rule targeting `AESEngine.newInstance()` should capture the value "AES", with a context that should specify that it is the base cipher.
+To capture the first parameter, we rely instead on a list of dependent detection rules `RuleSets.rulesOf(BcBlockCipherEngine.class)`, that should capture all the possible `BlockCipher` classes existing in the library. In our case, a dependent rule targeting `AESEngine.newInstance()` should capture the value "AES", with a context that should specify that it is the base cipher.
 
-Finally, a list of top level dependent detection rules `BcBlockCipherInit.rules()` should capture some information contained in the `cfb.init(...)` function call.
+Finally, a list of top level dependent detection rules `RuleSets.rulesOf(BcBlockCipherInit.class)` should capture some information contained in the `cfb.init(...)` function call.
 This top level dependent detection should be placed only below the `BlockCipher` detection (and not below the `int` detection because it uses `asChildOfParameterWithId`).
 
 
