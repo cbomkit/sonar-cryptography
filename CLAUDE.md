@@ -33,6 +33,12 @@ mvn spotless:check
 mvn checkstyle:check
 ```
 
+**Cipher-suite data:** `mapper/ciphersuites.json` and the generated
+`mapper/src/main/java/.../ssl/json/JsonCipherSuites.java` are checked into git. The build does
+not touch them. To refresh them from ciphersuite.info, run `mapper/download-cipher-suites.sh`
+and then `mvn -pl mapper spotless:apply`, or trigger the `Update cipher suites` workflow, which
+opens a pull request with the change.
+
 ## Testing
 
 ```bash

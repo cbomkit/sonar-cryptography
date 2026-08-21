@@ -31,6 +31,16 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B clean package
+    # The build must not write into the source tree. It used to: the mapper
+    # module regenerated ciphersuites.json and JsonCipherSuites.java from a live
+    # API on every compile. Fail here if that ever comes back.
+    - name: Check the build left the working tree clean
+      run: |
+        if ! git diff --quiet; then
+          echo "The build modified tracked files:"
+          git diff --stat
+          exit 1
+        fi
     - name: Create CBOM
       uses: cbomkit/cbomkit-action@v2.2.0
       id: cbom
