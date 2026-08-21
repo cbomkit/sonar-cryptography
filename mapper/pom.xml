@@ -24,26 +24,17 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.3</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <executable>${basedir}/download-cipher-suites.sh</executable>
-                    <workingDirectory>${basedir}</workingDirectory>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <!--
+        ciphersuites.json and src/main/java/.../ssl/json/JsonCipherSuites.java are
+        generated files that we keep in git on purpose.
+
+        They used to be regenerated on every build by download-cipher-suites.sh,
+        bound to the compile phase. That overwrote both files in the source tree
+        from a live third-party API, so every build left the working tree dirty
+        and the shipped cipher-suite data depended on the build date.
+
+        To refresh them, run mapper/download-cipher-suites.sh by hand, or let the
+        update-cipher-suites workflow do it and open a pull request.
+    -->
 
 </project>
