@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -34,11 +35,7 @@ import javax.annotation.Nonnull;
  * the full class name (e.g., {@code "HMACSHA256"}) so the translator can resolve the inner hash.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetHMAC {
-
-    private DotNetHMAC() {
-        // nothing
-    }
+public final class DotNetHMAC extends DetectionRuleSet<CSharpTree> {
 
     private static IDetectionRule<CSharpTree> hmacRule(String className) {
         return new DetectionRuleBuilder<CSharpTree>()
@@ -53,7 +50,8 @@ public final class DotNetHMAC {
     }
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 hmacRule("HMACSHA1"),
                 hmacRule("HMACSHA256"),

@@ -21,6 +21,7 @@ package com.ibm.plugin.rules;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.CSharpBaseDetectionRule;
 import com.ibm.plugin.rules.detection.CSharpDetectionRules;
@@ -37,7 +38,7 @@ import org.sonar.java.annotations.VisibleForTesting;
 public class CSharpInventoryRule extends CSharpBaseDetectionRule {
 
     public CSharpInventoryRule() {
-        super(true, CSharpDetectionRules.rules(), CSharpReorganizerRules.rules());
+        super(true, RuleSets.rulesOf(CSharpDetectionRules.class), CSharpReorganizerRules.rules());
     }
 
     @VisibleForTesting

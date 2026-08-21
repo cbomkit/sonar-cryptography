@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -34,11 +35,7 @@ import javax.annotation.Nonnull;
  * SHA-512 (and their {@code Managed} concrete variants).
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetSHA {
-
-    private DotNetSHA() {
-        // nothing
-    }
+public final class DotNetSHA extends DetectionRuleSet<CSharpTree> {
 
     // SHA1
     private static final IDetectionRule<CSharpTree> SHA1_CREATE =
@@ -156,7 +153,8 @@ public final class DotNetSHA {
                     .withDependingDetectionRules(List.of());
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 SHA1_CREATE,
                 SHA1_MANAGED,

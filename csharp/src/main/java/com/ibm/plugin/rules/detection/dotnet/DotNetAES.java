@@ -27,6 +27,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ModeFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -45,11 +46,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetAES {
-
-    private DotNetAES() {
-        // nothing
-    }
+public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
 
     // aes.Mode = CipherMode.CBC  →  synthetic set_Mode(CipherMode.CBC)
     private static final IDetectionRule<CSharpTree> AES_SET_MODE =
@@ -153,7 +150,8 @@ public final class DotNetAES {
                     .withDependingDetectionRules(List.of());
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(AES_CREATE, AES_MANAGED, AES_CNG, AES_GCM, AES_CCM);
     }
 }
