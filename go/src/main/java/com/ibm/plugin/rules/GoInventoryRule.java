@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.GoBaseDetectionRule;
 import com.ibm.plugin.rules.detection.GoDetectionRules;
@@ -36,7 +37,7 @@ import org.sonar.plugins.go.api.Tree;
 public class GoInventoryRule extends GoBaseDetectionRule {
 
     public GoInventoryRule() {
-        super(true, GoDetectionRules.rules(), GoReorganizerRules.rules());
+        super(true, RuleSets.rulesOf(GoDetectionRules.class), GoReorganizerRules.rules());
     }
 
     @VisibleForTesting

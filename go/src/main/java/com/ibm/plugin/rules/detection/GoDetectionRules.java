@@ -19,7 +19,9 @@
  */
 package com.ibm.plugin.rules.detection;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoAES;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoDES;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoDSA;
@@ -41,47 +43,36 @@ import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA3;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoSHA512;
 import com.ibm.plugin.rules.detection.gocrypto.GoCryptoTLS;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
-public final class GoDetectionRules {
-    private GoDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoDetectionRules::buildRules);
+public final class GoDetectionRules extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        GoCryptoAES.rules().stream(),
-                        GoCryptoDES.rules().stream(),
-                        GoCryptoDSA.rules().stream(),
-                        GoCryptoECDH.rules().stream(),
-                        GoCryptoECDSA.rules().stream(),
-                        GoCryptoEd25519.rules().stream(),
-                        GoCryptoElliptic.rules().stream(),
-                        GoCryptoHKDF.rules().stream(),
-                        GoCryptoHMAC.rules().stream(),
-                        GoCryptoMLKEM.rules().stream(),
-                        GoCryptoMD5.rules().stream(),
-                        GoCryptoPBKDF2.rules().stream(),
-                        GoCryptoRC4.rules().stream(),
-                        GoCryptoRSA.rules().stream(),
-                        GoCryptoRand.rules().stream(),
-                        GoCryptoSHA1.rules().stream(),
-                        GoCryptoSHA256.rules().stream(),
-                        GoCryptoSHA3.rules().stream(),
-                        GoCryptoSHA512.rules().stream(),
-                        GoCryptoTLS.rules().stream())
+                        RuleSets.rulesOf(GoCryptoAES.class).stream(),
+                        RuleSets.rulesOf(GoCryptoDES.class).stream(),
+                        RuleSets.rulesOf(GoCryptoDSA.class).stream(),
+                        RuleSets.rulesOf(GoCryptoECDH.class).stream(),
+                        RuleSets.rulesOf(GoCryptoECDSA.class).stream(),
+                        RuleSets.rulesOf(GoCryptoEd25519.class).stream(),
+                        RuleSets.rulesOf(GoCryptoElliptic.class).stream(),
+                        RuleSets.rulesOf(GoCryptoHKDF.class).stream(),
+                        RuleSets.rulesOf(GoCryptoHMAC.class).stream(),
+                        RuleSets.rulesOf(GoCryptoMLKEM.class).stream(),
+                        RuleSets.rulesOf(GoCryptoMD5.class).stream(),
+                        RuleSets.rulesOf(GoCryptoPBKDF2.class).stream(),
+                        RuleSets.rulesOf(GoCryptoRC4.class).stream(),
+                        RuleSets.rulesOf(GoCryptoRSA.class).stream(),
+                        RuleSets.rulesOf(GoCryptoRand.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA1.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA256.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA3.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA512.class).stream(),
+                        RuleSets.rulesOf(GoCryptoTLS.class).stream())
                 // TODO: GoCryptoX509
                 .flatMap(i -> i)
                 .toList();

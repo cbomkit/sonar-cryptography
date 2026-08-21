@@ -25,12 +25,12 @@ import com.ibm.engine.model.factory.IterationCountFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -45,11 +45,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoPBKDF2 {
-
-    private GoCryptoPBKDF2() {
-        // private
-    }
+public final class GoCryptoPBKDF2 extends DetectionRuleSet<Tree> {
 
     // golang.org/x/crypto/pbkdf2.Key(password, salt []byte, iter, keyLen int, h func() hash.Hash)
     // Legacy API - derives a key from a password using PBKDF2
@@ -70,7 +66,7 @@ public final class GoCryptoPBKDF2 {
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("func() hash.Hash") // h
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .buildForContext(new KeyContext(Map.of("kind", "KDF")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -85,7 +81,7 @@ public final class GoCryptoPBKDF2 {
                     .forMethods("Key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2"))
                     .withMethodParameter("func() hash.Hash") // h
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("string") // password
                     .withMethodParameter("[]byte") // salt
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
@@ -100,16 +96,9 @@ public final class GoCryptoPBKDF2 {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoPBKDF2::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(KEY_LEGACY, KEY_STDLIB);
     }
 }

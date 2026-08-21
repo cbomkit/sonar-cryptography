@@ -21,12 +21,12 @@ package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -44,11 +44,7 @@ import org.sonar.plugins.go.api.Tree;
  * is detected through depending detection rules.
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoHMAC {
-
-    private GoCryptoHMAC() {
-        // private
-    }
+public final class GoCryptoHMAC extends DetectionRuleSet<Tree> {
 
     // hmac.New(h func() hash.Hash, key []byte) hash.Hash
     // Returns a new HMAC hash using the given hash function and key
@@ -59,22 +55,15 @@ public final class GoCryptoHMAC {
                     .forMethods("New")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withMethodParameter("func() hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("[]byte")
                     .buildForContext(new MacContext(Map.of("kind", "HMAC")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoHMAC::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW);
     }
 }

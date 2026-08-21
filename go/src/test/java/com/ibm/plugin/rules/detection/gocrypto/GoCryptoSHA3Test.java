@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.plugin.TestBase;
@@ -40,7 +41,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoSHA3Test extends TestBase {
 
     public GoCryptoSHA3Test() {
-        super(GoCryptoSHA3.rules());
+        super(RuleSets.rulesOf(GoCryptoSHA3.class));
     }
 
     @Test

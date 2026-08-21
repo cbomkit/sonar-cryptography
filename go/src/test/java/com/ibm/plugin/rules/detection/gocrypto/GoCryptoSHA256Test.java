@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
@@ -41,7 +42,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoSHA256Test extends TestBase {
 
     public GoCryptoSHA256Test() {
-        super(GoCryptoSHA256.rules());
+        super(RuleSets.rulesOf(GoCryptoSHA256.class));
     }
 
     @Test

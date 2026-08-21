@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Signature;
 import com.ibm.plugin.TestBase;
@@ -40,7 +41,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoECDSATest extends TestBase {
 
     public GoCryptoECDSATest() {
-        super(GoCryptoECDSA.rules());
+        super(RuleSets.rulesOf(GoCryptoECDSA.class));
     }
 
     @Test

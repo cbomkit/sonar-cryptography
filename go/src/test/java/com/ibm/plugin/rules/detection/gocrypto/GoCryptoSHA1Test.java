@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
@@ -43,7 +44,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoSHA1Test extends TestBase {
 
     public GoCryptoSHA1Test() {
-        super(GoCryptoSHA1.rules());
+        super(RuleSets.rulesOf(GoCryptoSHA1.class));
     }
 
     @Test

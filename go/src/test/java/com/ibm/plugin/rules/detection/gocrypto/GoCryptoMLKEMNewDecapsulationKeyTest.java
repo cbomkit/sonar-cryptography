@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.KeyLength;
@@ -44,7 +45,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoMLKEMNewDecapsulationKeyTest extends TestBase {
 
     public GoCryptoMLKEMNewDecapsulationKeyTest() {
-        super(GoCryptoMLKEM.rules());
+        super(RuleSets.rulesOf(GoCryptoMLKEM.class));
     }
 
     @Test

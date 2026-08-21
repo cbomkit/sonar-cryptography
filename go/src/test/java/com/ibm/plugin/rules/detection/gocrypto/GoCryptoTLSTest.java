@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.Protocol;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
@@ -43,7 +44,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoTLSTest extends TestBase {
 
     public GoCryptoTLSTest() {
-        super(GoCryptoTLS.rules());
+        super(RuleSets.rulesOf(GoCryptoTLS.class));
     }
 
     @Test
