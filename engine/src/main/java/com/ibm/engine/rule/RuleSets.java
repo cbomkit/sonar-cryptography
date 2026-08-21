@@ -29,8 +29,10 @@ import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 
 /**
- * The single way to read a {@link DetectionRuleSet}. Every set is built at most once and shared by
- * reference, which is what keeps the rule graph small (issue #476).
+ * The single way to read a {@link DetectionRuleSet}. Every set is built lazily and, once installed,
+ * is shared by reference, so all callers see the same list instance — which is what keeps the rule
+ * graph small (issue #476). Under a race, two threads may both build the same set; one result wins
+ * and is installed, and the other is discarded.
  */
 public final class RuleSets {
 
@@ -106,7 +108,10 @@ public final class RuleSets {
             return (DetectionRuleSet<?>) constructor.newInstance();
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(
-                    type.getName() + " must have a no-argument constructor", e);
+                    type.getName()
+                            + " could not be instantiated; it needs an accessible no-argument"
+                            + " constructor",
+                    e);
         }
     }
 }
