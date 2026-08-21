@@ -47,9 +47,10 @@ import org.junit.jupiter.api.Test;
  * <ul>
  *   <li>{@code RandomNumberGenerator.Create()} / {@code Create(string)} + instance {@code
  *       GetBytes}/{@code GetNonZeroBytes}
- *   <li>{@code RandomNumberGenerator}'s static-only methods: {@code Fill}, {@code GetBytes(int)},
- *       {@code GetHexString}, {@code GetInt32} (both overloads), {@code GetItems}, {@code
- *       GetNonZeroBytes(Span<byte>)}, {@code GetString}, {@code Shuffle}
+ *   <li>{@code RandomNumberGenerator}'s genuinely static-only methods (verified against the real
+ *       .NET compiler -- {@code GetNonZeroBytes} has no static overload at all): {@code Fill},
+ *       {@code GetBytes(int)}, {@code GetHexString}, {@code GetInt32} (both overloads), {@code
+ *       GetItems}, {@code GetString}, {@code Shuffle}
  *   <li>{@code RNGCryptoServiceProvider} constructor overloads + instance {@code GetBytes}/{@code
  *       GetNonZeroBytes}
  * </ul>
@@ -69,13 +70,18 @@ import org.junit.jupiter.api.Test;
  *  6 TestStaticGetInt32            → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
  *  7 TestStaticGetInt32Range       → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
  *  8 TestStaticGetItems            → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
- *  9 TestStaticGetNonZeroBytes     → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
- * 10 TestStaticGetString           → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
- * 11 TestStaticShuffle             → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
- * 12 TestRngCspGetBytes            → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
- * 13 TestRngCspGetNonZeroBytes     → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
- * 14 TestRngCspWithSeed            → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
+ *  9 TestStaticGetString           → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
+ * 10 TestStaticShuffle             → PseudorandomNumberGenerator "NATIVEPRNG" (no children)
+ * 11 TestRngCspGetBytes            → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
+ * 12 TestRngCspGetNonZeroBytes     → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
+ * 13 TestRngCspWithSeed            → PseudorandomNumberGenerator "NATIVEPRNG" + Generate "GENERATE" child
  * </pre>
+ *
+ * <p>Note: {@code GetNonZeroBytes} has no static overload at all (unlike {@code GetBytes}, which
+ * has a genuinely static {@code GetBytes(int)} alongside its instance overloads) -- verified by
+ * compiling {@code RandomNumberGenerator.GetNonZeroBytes(data)} against the real .NET 10 compiler
+ * (CS0120). There is therefore no "static GetNonZeroBytes" finding; finding 1 ( {@code
+ * TestCreateAndGetNonZeroBytes}) already exercises the only instance form.
  */
 class DotNetRandomNumberGeneratorTest extends TestBase {
 
@@ -114,12 +120,12 @@ class DotNetRandomNumberGeneratorTest extends TestBase {
             // Section 2: RandomNumberGenerator static-only methods — self-contained,
             // no depending rules, no children.
             // -----------------------------------------------------------------
-            case 3, 4, 5, 6, 7, 8, 9, 10, 11 -> assertThat(node.getChildren()).isEmpty();
+            case 3, 4, 5, 6, 7, 8, 9, 10 -> assertThat(node.getChildren()).isEmpty();
 
             // -----------------------------------------------------------------
             // Section 3: RNGCryptoServiceProvider
             // -----------------------------------------------------------------
-            case 12, 13, 14 -> assertGenerateChild(detectionStore, node);
+            case 11, 12, 13 -> assertGenerateChild(detectionStore, node);
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

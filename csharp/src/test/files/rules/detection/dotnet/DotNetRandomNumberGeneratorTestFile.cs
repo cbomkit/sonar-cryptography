@@ -4,9 +4,16 @@
  *
  * Covers:
  *   - RandomNumberGenerator.Create() / Create(string) + instance GetBytes/GetNonZeroBytes
- *   - RandomNumberGenerator's static-only methods: Fill, GetBytes(int)/(Span<byte>),
- *     GetHexString, GetInt32, GetItems, GetNonZeroBytes(Span<byte>), GetString, Shuffle
+ *     (including their Span<byte> overloads, which are virtual instance methods, not static --
+ *     confirmed by compiling this exact file against the real .NET 10 compiler)
+ *   - RandomNumberGenerator's genuinely static-only methods: Fill, GetBytes(int),
+ *     GetHexString, GetInt32, GetItems, GetString, Shuffle
  *   - RNGCryptoServiceProvider constructor overloads + instance GetBytes/GetNonZeroBytes
+ *
+ * Note: GetNonZeroBytes has NO static overload at all (unlike GetBytes, which has a genuinely
+ * static GetBytes(int) alongside its instance overloads) -- `RandomNumberGenerator.GetNonZeroBytes(data)`
+ * does not compile (CS0120). There is therefore no "static GetNonZeroBytes" test case in this file;
+ * TestCreateAndGetNonZeroBytes below already exercises the (only) instance form.
  */
 
 using System.Security.Cryptography;
@@ -72,12 +79,6 @@ public class DotNetRandomNumberGeneratorTest
     {
         int[] choices = new int[] { 1, 2, 3, 4, 5 };
         int[] items = RandomNumberGenerator.GetItems(choices, 3);
-    }
-
-    public void TestStaticGetNonZeroBytes()
-    {
-        byte[] data = new byte[32];
-        RandomNumberGenerator.GetNonZeroBytes(data);
     }
 
     public void TestStaticGetString()

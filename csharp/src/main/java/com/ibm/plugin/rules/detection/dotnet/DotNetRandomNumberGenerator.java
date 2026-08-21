@@ -38,17 +38,30 @@ import javax.annotation.Nonnull;
  * <ul>
  *   <li>{@code RandomNumberGenerator.Create()} / {@code Create(string)} — instance factory (the
  *       {@code Create(string)} overload is marked {@code Obsolete} in recent .NET versions but
- *       remains valid, detectable legacy source). The returned instance exposes the abstract
- *       instance methods {@code GetBytes(byte[])}, {@code GetBytes(byte[], int, int)} and {@code
- *       GetNonZeroBytes(byte[])}, tracked as depending rules.
- *   <li><b>{@code RandomNumberGenerator}'s static-only members</b> — the actual focus of this
- *       batch, not just {@code Create()}: {@code Fill(Span<byte>)}, {@code GetBytes(int)} / {@code
- *       GetBytes(Span<byte>)}, {@code GetHexString(int, bool)} / {@code GetHexString(Span<char>,
- *       bool)}, {@code GetInt32(int)} / {@code GetInt32(int, int)}, {@code
- *       GetItems<T>(ReadOnlySpan<T>, int)} / {@code GetItems<T>(ReadOnlySpan<T>, Span<T>)}, {@code
- *       GetNonZeroBytes(Span<byte>)}, {@code GetString(ReadOnlySpan<char>, int)}, and {@code
- *       Shuffle<T>(Span<T>)}. "Using the static members of this class is the preferred way to
- *       generate random values" per the official documentation.
+ *       remains valid, detectable legacy source). The returned instance exposes the {@code
+ *       virtual}/{@code abstract} instance methods {@code GetBytes(byte[])}, {@code
+ *       GetBytes(byte[], int, int)}, {@code GetBytes(Span<byte>)}, {@code GetNonZeroBytes(byte[])}
+ *       and {@code GetNonZeroBytes(Span<byte>)}, tracked as depending rules. <b>Verified directly
+ *       against the .NET 10 compiler (not just the doc prose), because the doc's "When overridden
+ *       in a derived class" phrasing is the only reliable signal distinguishing these from the
+ *       static overloads below</b> — {@code GetBytes(Span<byte>)} and {@code
+ *       GetNonZeroBytes(Span<byte>)} both fail to compile as {@code
+ *       RandomNumberGenerator.GetBytes(span)}/{@code RandomNumberGenerator.GetNonZeroBytes(span)}
+ *       (CS0120: "An object reference is required for the non-static ... method"), proving they are
+ *       {@code virtual} instance members despite their {@code Span}-based signature superficially
+ *       resembling the genuinely-static {@code Span}-based overloads of {@code Fill}/{@code
+ *       GetHexString}/{@code GetItems}/{@code GetString}. An earlier version of this file
+ *       incorrectly classified both as static-only; that was caught by compiling every {@code .cs}
+ *       test fixture in this module against the real Roslyn compiler (see {@code
+ *       DotNetRandomNumberGeneratorTestFile.cs}).
+ *   <li><b>{@code RandomNumberGenerator}'s genuinely static-only members</b> (each empirically
+ *       confirmed to compile as a bare {@code RandomNumberGenerator.Method(...)} call with no
+ *       instance): {@code Fill(Span<byte>)}, {@code GetBytes(int)}, {@code GetHexString(int, bool)}
+ *       / {@code GetHexString(Span<char>, bool)}, {@code GetInt32(int)} / {@code GetInt32(int,
+ *       int)}, {@code GetItems<T>(ReadOnlySpan<T>, int)} / {@code GetItems<T>(ReadOnlySpan<T>,
+ *       Span<T>)}, {@code GetString(ReadOnlySpan<char>, int)}, and {@code Shuffle<T>(Span<T>)}.
+ *       "Using the static members of this class is the preferred way to generate random values" per
+ *       the official documentation.
  *   <li>{@code RNGCryptoServiceProvider} — legacy CSP-backed implementation ({@code Obsolete} since
  *       .NET 6, still valid, detectable legacy source). Four constructor overloads ({@code ()},
  *       {@code (byte[])}, {@code (CspParameters)}, {@code (string)}), with instance {@code
@@ -77,17 +90,18 @@ import javax.annotation.Nonnull;
  *
  * <p><b>Modeling decision — static self-contained calls vs. instance depending-rule operations:</b>
  * mirrors the {@code HKDF} vs. {@code SP800108HmacCounterKdf} distinction established in {@link
- * DotNetKeyDerivation}. {@code RandomNumberGenerator}'s static methods ({@code Fill}, {@code
- * GetBytes(int)}/{@code GetBytes(Span<byte>)}, {@code GetHexString}, {@code GetInt32}, {@code
- * GetItems}, {@code GetNonZeroBytes(Span<byte>)}, {@code GetString}, {@code Shuffle}) are each a
- * complete, self-contained "the platform CSPRNG was used" event with no instance to track — they
- * are top-level rules mapping directly to the {@code NATIVEPRNG} algorithm identity, exactly like
- * {@code HKDF.Extract}/{@code Expand}/{@code DeriveKey}. Where an actual instance *is* tracked
- * ({@code RandomNumberGenerator.Create()}'s or {@code RNGCryptoServiceProvider}'s instance {@code
- * GetBytes}/{@code GetNonZeroBytes}), those calls are depending rules attached to the creation
- * rule, translated to the generic {@code Generate} functionality node (mirrors {@code
- * AES_GENERATE_IV} in {@link DotNetAES}, which also has no more specific {@code CipherAction}
- * available) as a child of the already-identified {@code NATIVEPRNG} algorithm node.
+ * DotNetKeyDerivation}. {@code RandomNumberGenerator}'s genuinely static methods ({@code Fill},
+ * {@code GetBytes(int)}, {@code GetHexString}, {@code GetInt32}, {@code GetItems}, {@code
+ * GetString}, {@code Shuffle}) are each a complete, self-contained "the platform CSPRNG was used"
+ * event with no instance to track — they are top-level rules mapping directly to the {@code
+ * NATIVEPRNG} algorithm identity, exactly like {@code HKDF.Extract}/{@code Expand}/{@code
+ * DeriveKey}. Where an actual instance *is* tracked ({@code RandomNumberGenerator.Create()}'s or
+ * {@code RNGCryptoServiceProvider}'s instance {@code GetBytes}/{@code GetNonZeroBytes}, including
+ * their {@code Span<byte>} overloads — see the "Verified directly against the .NET 10 compiler"
+ * note above), those calls are depending rules attached to the creation rule, translated to the
+ * generic {@code Generate} functionality node (mirrors {@code AES_GENERATE_IV} in {@link
+ * DotNetAES}, which also has no more specific {@code CipherAction} available) as a child of the
+ * already-identified {@code NATIVEPRNG} algorithm node.
  *
  * <p>As with every other file in this rule set, the ANTLR4-based C# engine cannot resolve parameter
  * types (see {@code CSharpLanguageTranslation}) or values held in variables (see {@code
@@ -95,16 +109,6 @@ import javax.annotation.Nonnull;
  * differ by {@code byte[]} vs. {@code Span<byte>}/{@code ReadOnlySpan<T>}, by an optional trailing
  * {@code bool}/output-buffer parameter, or by generic type argument are collapsed into a single
  * {@code withAnyParameters()} rule per method name.
- *
- * <p><b>Known gap — {@code RandomNumberGenerator.Fill}/{@code GetNonZeroBytes(Span<byte>)}/etc.
- * called through a base-class-typed local variable that is itself the result of {@code
- * RandomNumberGenerator.Create()}:</b> only the truly-static call form ({@code
- * RandomNumberGenerator.Fill(...)}, receiver text literally {@code "RandomNumberGenerator"}) is
- * covered by the top-level static rules in this file. {@code Fill} and the static {@code
- * GetBytes(Span<byte>)}/{@code GetNonZeroBytes(Span<byte>)} overloads are <em>not</em> also
- * addressable as instance methods on a concrete {@code RandomNumberGenerator} object in real .NET
- * (they are {@code static} only), so this is not an actual coverage gap — it is called out here
- * only because it might look, at a glance, like a missing depending rule.
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetRandomNumberGenerator {
@@ -194,7 +198,9 @@ public final class DotNetRandomNumberGenerator {
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
 
-    // RandomNumberGenerator.GetBytes(int count) / GetBytes(Span<byte> data)
+    // RandomNumberGenerator.GetBytes(int count) — the only genuinely static GetBytes overload
+    // (GetBytes(byte[]) and GetBytes(Span<byte>) are both virtual instance methods, covered by
+    // RNG_INSTANCE_GET_BYTES above — see class javadoc for the compiler-verified proof).
     private static final IDetectionRule<CSharpTree> RNG_STATIC_GET_BYTES =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
@@ -245,17 +251,14 @@ public final class DotNetRandomNumberGenerator {
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
 
-    // RandomNumberGenerator.GetNonZeroBytes(Span<byte> data) — static overload
-    private static final IDetectionRule<CSharpTree> RNG_STATIC_GET_NON_ZERO_BYTES =
-            new DetectionRuleBuilder<CSharpTree>()
-                    .createDetectionRule()
-                    .forObjectTypes("RandomNumberGenerator")
-                    .forMethods("GetNonZeroBytes")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
-                    .withAnyParameters()
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> "DotNet")
-                    .withoutDependingDetectionRules();
+    // NOTE: there is no static GetNonZeroBytes rule here — GetNonZeroBytes(byte[]) *and*
+    // GetNonZeroBytes(Span<byte>) are BOTH virtual instance methods (confirmed by compiling
+    // `RandomNumberGenerator.GetNonZeroBytes(data)` with the real .NET 10 compiler: CS0120,
+    // "An object reference is required for the non-static ... method"). Unlike GetBytes, which has
+    // a genuinely static GetBytes(int) overload alongside its instance overloads, GetNonZeroBytes
+    // has no static form at all. Both GetNonZeroBytes overloads are already covered by the
+    // RNG_INSTANCE_GET_NON_ZERO_BYTES depending rule above (withAnyParameters() does not
+    // distinguish byte[] from Span<byte>).
 
     // RandomNumberGenerator.GetString(ReadOnlySpan<char> choices, int length)
     private static final IDetectionRule<CSharpTree> RNG_GET_STRING =
@@ -313,7 +316,6 @@ public final class DotNetRandomNumberGenerator {
                 RNG_GET_HEX_STRING,
                 RNG_GET_INT32,
                 RNG_GET_ITEMS,
-                RNG_STATIC_GET_NON_ZERO_BYTES,
                 RNG_GET_STRING,
                 RNG_SHUFFLE,
                 RNG_CSP_CTOR);
