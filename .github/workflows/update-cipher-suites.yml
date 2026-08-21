@@ -1,0 +1,76 @@
+# Refreshes the cipher-suite data in the mapper module.
+#
+# This used to run on every build, bound to the Maven compile phase. That
+# overwrote mapper/ciphersuites.json and JsonCipherSuites.java in the source
+# tree from a live API, so every build left the working tree dirty and the
+# shipped data depended on the build date.
+#
+# Now the refresh runs on a schedule and opens a pull request instead, so any
+# change to the cipher-suite list is reviewed before it lands.
+
+name: Update cipher suites
+
+on:
+  schedule:
+    # First day of each month, 04:00 UTC.
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Download cipher suites and regenerate the Java file
+        run: ./download-cipher-suites.sh
+        working-directory: mapper
+
+      - name: Format the generated file
+        run: mvn -B -pl mapper spotless:apply
+
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet; then
+            echo "Cipher-suite data is unchanged. Nothing to do."
+            exit 0
+          fi
+
+          branch="chore/update-cipher-suites-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add mapper/ciphersuites.json \
+                  mapper/src/main/java/com/ibm/mapper/mapper/ssl/json/JsonCipherSuites.java
+          git commit -m "chore: update cipher-suite data from ciphersuite.info"
+          git push origin "$branch"
+
+          # Note: a pull request opened with GITHUB_TOKEN does not start other
+          # workflows, so CI will not run on it on its own. Close and reopen the
+          # pull request to start CI, or swap in a personal access token.
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore: update cipher-suite data from ciphersuite.info" \
+            --body "Automated refresh of \`mapper/ciphersuites.json\` and the generated \`JsonCipherSuites.java\`.
+
+          Source: https://ciphersuite.info/api/cs/
+
+          Check the diff before merging. A large drop in the number of entries means something is wrong upstream."
