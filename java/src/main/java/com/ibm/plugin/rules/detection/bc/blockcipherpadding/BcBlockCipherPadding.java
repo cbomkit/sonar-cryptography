@@ -21,21 +21,16 @@ package com.ibm.plugin.rules.detection.bc.blockcipherpadding;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBlockCipherPadding {
-    private BcBlockCipherPadding() {
-        // nothing
-    }
-
+public final class BcBlockCipherPadding extends DetectionRuleSet<Tree> {
     public static final List<String> paddings =
             List.of(
                     "ISO10126d2Padding",
@@ -63,11 +58,9 @@ public final class BcBlockCipherPadding {
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> simpleConstructors());
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return simpleConstructors();
     }
 }

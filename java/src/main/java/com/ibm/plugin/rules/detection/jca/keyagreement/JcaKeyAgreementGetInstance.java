@@ -23,17 +23,17 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JcaKeyAgreementGetInstance {
+public final class JcaKeyAgreementGetInstance extends DetectionRuleSet<Tree> {
     private static final IDetectionRule<Tree> KEY_AGREEMENT1 =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
@@ -45,8 +45,9 @@ public final class JcaKeyAgreementGetInstance {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> KEY_AGREEMENT2 =
@@ -61,8 +62,9 @@ public final class JcaKeyAgreementGetInstance {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> KEY_AGREEMENT3 =
@@ -77,24 +79,14 @@ public final class JcaKeyAgreementGetInstance {
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaKeyAgreementInit.rules().stream(),
-                                            JcaKeyAgreementGenerateSecret.rules().stream())
+                                            RuleSets.rulesOf(JcaKeyAgreementInit.class).stream(),
+                                            RuleSets.rulesOf(JcaKeyAgreementGenerateSecret.class)
+                                                    .stream())
                                     .toList());
 
-    private JcaKeyAgreementGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeyAgreementGetInstance::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(KEY_AGREEMENT1, KEY_AGREEMENT2, KEY_AGREEMENT3);
     }
 }

@@ -23,15 +23,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaKeyPairGeneratorGetInstance {
+public final class JcaKeyPairGeneratorGetInstance extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> KEY_PAIR_GENERATOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -42,7 +42,8 @@ public final class JcaKeyPairGeneratorGetInstance {
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyPairGeneratorInitialize.rules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
 
     private static final IDetectionRule<Tree> KEY_PAIR_GENERATOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -54,7 +55,8 @@ public final class JcaKeyPairGeneratorGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyPairGeneratorInitialize.rules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
 
     private static final IDetectionRule<Tree> KEY_PAIR_GENERATOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -66,22 +68,12 @@ public final class JcaKeyPairGeneratorGetInstance {
                     .withMethodParameter("java.security.Provider")
                     .buildForContext(new KeyContext(KeyContext.Kind.NONE))
                     .inBundle(() -> "Jca")
-                    .withDependingDetectionRules(JcaKeyPairGeneratorInitialize.rules());
-
-    private JcaKeyPairGeneratorGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeyPairGeneratorGetInstance::buildRules);
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(KEY_PAIR_GENERATOR_1, KEY_PAIR_GENERATOR_2, KEY_PAIR_GENERATOR_3);
     }
 }

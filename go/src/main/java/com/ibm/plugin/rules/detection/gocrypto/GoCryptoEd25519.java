@@ -24,12 +24,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -47,11 +47,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoEd25519 {
-
-    private GoCryptoEd25519() {
-        // private
-    }
+public final class GoCryptoEd25519 extends DetectionRuleSet<Tree> {
 
     // ed25519.GenerateKey(rand io.Reader) (PublicKey, PrivateKey, error)
     // Generates a public/private key pair using entropy from rand
@@ -62,7 +58,7 @@ public final class GoCryptoEd25519 {
                     .forMethods("GenerateKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("Ed25519"))
                     .withMethodParameter("io.Reader")
-                    .addDependingDetectionRules(GoCryptoRand.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoRand.class))
                     .buildForContext(new KeyContext(Map.of("kind", "Ed25519")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -128,16 +124,9 @@ public final class GoCryptoEd25519 {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoEd25519::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATE_KEY, NEW_KEY_FROM_SEED, SIGN, VERIFY, VERIFY_WITH_OPTIONS);
     }
 }

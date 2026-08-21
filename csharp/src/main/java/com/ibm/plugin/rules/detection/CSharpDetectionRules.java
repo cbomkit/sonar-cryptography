@@ -20,7 +20,9 @@
 package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
@@ -37,26 +39,23 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /** Aggregates all C# detection rule lists. */
-public final class CSharpDetectionRules {
-
-    private CSharpDetectionRules() {
-        // nothing
-    }
+public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return Stream.of(
-                        DotNetAES.rules().stream(),
-                        DotNetDES.rules().stream(),
-                        DotNetTripleDES.rules().stream(),
-                        DotNetRC2.rules().stream(),
-                        DotNetRSA.rules().stream(),
-                        DotNetECDsa.rules().stream(),
-                        DotNetECDiffieHellman.rules().stream(),
-                        DotNetDSA.rules().stream(),
-                        DotNetSHA.rules().stream(),
-                        DotNetHMAC.rules().stream(),
-                        DotNetRfc2898DeriveBytes.rules().stream())
+                        RuleSets.rulesOf(DotNetAES.class).stream(),
+                        RuleSets.rulesOf(DotNetDES.class).stream(),
+                        RuleSets.rulesOf(DotNetTripleDES.class).stream(),
+                        RuleSets.rulesOf(DotNetRC2.class).stream(),
+                        RuleSets.rulesOf(DotNetRSA.class).stream(),
+                        RuleSets.rulesOf(DotNetECDsa.class).stream(),
+                        RuleSets.rulesOf(DotNetECDiffieHellman.class).stream(),
+                        RuleSets.rulesOf(DotNetDSA.class).stream(),
+                        RuleSets.rulesOf(DotNetSHA.class).stream(),
+                        RuleSets.rulesOf(DotNetHMAC.class).stream(),
+                        RuleSets.rulesOf(DotNetRfc2898DeriveBytes.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

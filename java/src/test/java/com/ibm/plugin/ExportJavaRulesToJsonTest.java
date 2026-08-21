@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.serializer.ExportRules;
 import com.ibm.plugin.rules.detection.JavaDetectionRules;
 import java.io.FileWriter;
@@ -34,7 +35,7 @@ class ExportJavaRulesToJsonTest extends ExportRules {
     @Test
     void test() {
         try (FileWriter fileWriter = new FileWriter("target/rules.json")) {
-            exportToJSON(JavaDetectionRules.rules(), fileWriter);
+            exportToJSON(RuleSets.rulesOf(JavaDetectionRules.class), fileWriter);
         } catch (IOException e) {
             LOGGER.warn("Error exporting Java rules to JSON file: " + e.getMessage());
         }

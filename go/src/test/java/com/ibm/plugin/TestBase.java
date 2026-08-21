@@ -24,6 +24,7 @@ import com.ibm.engine.detection.Finding;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.GoInventoryRule;
@@ -52,7 +53,7 @@ public abstract class TestBase extends GoInventoryRule {
     }
 
     public TestBase() {
-        super(GoDetectionRules.rules());
+        super(RuleSets.rulesOf(GoDetectionRules.class));
     }
 
     @BeforeEach

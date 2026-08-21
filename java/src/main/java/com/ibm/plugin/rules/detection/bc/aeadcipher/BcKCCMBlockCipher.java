@@ -21,21 +21,17 @@ package com.ibm.plugin.rules.detection.bc.aeadcipher;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipher;
+import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherAndEngines;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcKCCMBlockCipher {
-
-    private BcKCCMBlockCipher() {
-        // nothing
-    }
+public final class BcKCCMBlockCipher extends DetectionRuleSet<Tree> {
 
     private static final String MODE = "KCCMBlockCipher";
 
@@ -47,12 +43,13 @@ public final class BcKCCMBlockCipher {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -62,19 +59,18 @@ public final class BcKCCMBlockCipher {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            BcBlockCipher.all(
+                            RuleSets.rulesOf(
+                                    BcBlockCipherAndEngines.class,
                                     new CipherContext(
                                             Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .withMethodParameter("int")
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2));
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2);
     }
 }

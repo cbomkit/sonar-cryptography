@@ -21,21 +21,17 @@ package com.ibm.plugin.rules.detection.bc.aeadcipher;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.mac.BcMac;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcChaCha20Poly1305 {
-
-    private BcChaCha20Poly1305() {
-        // nothing
-    }
+public final class BcChaCha20Poly1305 extends DetectionRuleSet<Tree> {
 
     private static final String AEAD = "ChaCha20Poly1305";
 
@@ -48,7 +44,7 @@ public final class BcChaCha20Poly1305 {
                     .withoutParameters()
                     .buildForContext(new CipherContext(Map.of("kind", "CHACHA20POLY1305")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -61,16 +57,14 @@ public final class BcChaCha20Poly1305 {
                      */
                     .shouldBeDetectedAs(new ValueActionFactory<>(AEAD + "[WITH_MAC]"))
                     .withMethodParameter("org.bouncycastle.crypto.Mac")
-                    .addDependingDetectionRules(BcMac.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcMac.class))
                     .buildForContext(new CipherContext(Map.of("kind", "CHACHA20POLY1305")))
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcAEADCipherInit.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2));
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2);
     }
 }

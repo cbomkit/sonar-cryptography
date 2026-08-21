@@ -24,12 +24,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -45,11 +45,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoECDSA {
-
-    private GoCryptoECDSA() {
-        // private
-    }
+public final class GoCryptoECDSA extends DetectionRuleSet<Tree> {
 
     // ecdsa.GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error)
     // Generates a public and private key pair using the specified elliptic curve
@@ -60,9 +56,9 @@ public final class GoCryptoECDSA {
                     .forMethods("GenerateKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
                     .withMethodParameter("elliptic.Curve")
-                    .addDependingDetectionRules(GoCryptoElliptic.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoElliptic.class))
                     .withMethodParameter("io.Reader")
-                    .addDependingDetectionRules(GoCryptoRand.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoRand.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -109,7 +105,7 @@ public final class GoCryptoECDSA {
                     .forMethods("SignASN1")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withMethodParameter("io.Reader")
-                    .addDependingDetectionRules(GoCryptoRand.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoRand.class))
                     .withMethodParameter("*ecdsa.PrivateKey")
                     .addDependingDetectionRules(List.of(GoCryptoECDSA.GENERATE_KEY))
                     .withMethodParameter("[]byte")
@@ -133,16 +129,9 @@ public final class GoCryptoECDSA {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoECDSA::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATE_KEY, SIGN, VERIFY, SIGN_ASN1, VERIFY_ASN1);
     }
 }

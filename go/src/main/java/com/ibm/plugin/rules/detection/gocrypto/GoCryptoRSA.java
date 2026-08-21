@@ -25,12 +25,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -52,11 +52,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoRSA {
-
-    private GoCryptoRSA() {
-        // private
-    }
+public final class GoCryptoRSA extends DetectionRuleSet<Tree> {
 
     // rsa.GenerateKey(random io.Reader, bits int) (*PrivateKey, error)
     private static final IDetectionRule<Tree> GENERATE_KEY =
@@ -82,7 +78,7 @@ public final class GoCryptoRSA {
                     .forMethods("EncryptOAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
                     .withMethodParameter("hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("*rsa.PublicKey")
                     .addDependingDetectionRules(List.of(GENERATE_KEY))
@@ -101,7 +97,7 @@ public final class GoCryptoRSA {
                     .forMethods("DecryptOAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
                     .withMethodParameter("hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("io.Reader")
                     .withMethodParameter("*rsa.PrivateKey")
                     .addDependingDetectionRules(List.of(GENERATE_KEY))
@@ -210,16 +206,9 @@ public final class GoCryptoRSA {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoRSA::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 GENERATE_KEY,
                 ENCRYPT_OAEP,

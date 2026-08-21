@@ -20,53 +20,45 @@
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymmetricBlockCipher {
-
-    private BcAsymmetricBlockCipher() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> buildRules(null, null));
+public final class BcAsymmetricBlockCipher extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
+        return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
     }
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
-        return encodingDetectionValueContext == null && engineDetectionValueContext == null
-                ? RULES.get()
-                : buildRules(encodingDetectionValueContext, engineDetectionValueContext);
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules(
+    private static List<IDetectionRule<Tree>> constructors(
             @Nullable IDetectionContext encodingDetectionValueContext,
             @Nullable IDetectionContext engineDetectionValueContext) {
         return Stream.of(
-                        BcPKCS1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcPKCS1Encoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcOAEPEncoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcOAEPEncoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcISO9796d1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
+                        RuleSets.rulesOf(
+                                BcISO9796d1Encoding.class,
+                                encodingDetectionValueContext,
+                                engineDetectionValueContext)
                                 .stream(),
-                        BcAsymCipherEngine.rules(engineDetectionValueContext).stream())
+                        RuleSets.rulesOf(BcAsymCipherEngine.class, engineDetectionValueContext)
+                                .stream())
                 .flatMap(i -> i)
                 .toList();
     }

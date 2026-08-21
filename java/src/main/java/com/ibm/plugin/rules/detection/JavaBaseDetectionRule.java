@@ -24,6 +24,7 @@ import com.ibm.engine.detection.Finding;
 import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.java.JavaScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.JavaAggregator;
@@ -50,7 +51,7 @@ public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
 
     protected JavaBaseDetectionRule() {
         this.isInventory = false;
-        this.detectionRules = JavaDetectionRules.rules();
+        this.detectionRules = RuleSets.rulesOf(JavaDetectionRules.class);
         this.javaTranslationProcess = new JavaTranslationProcess(JavaReorganizerRules.rules());
     }
 

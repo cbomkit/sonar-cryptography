@@ -21,11 +21,10 @@ package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -42,11 +41,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoSHA256 {
-
-    private GoCryptoSHA256() {
-        // private
-    }
+public final class GoCryptoSHA256 extends DetectionRuleSet<Tree> {
 
     // sha256.New() hash.Hash
     // Returns a new hash.Hash computing the SHA-256 checksum
@@ -100,16 +95,9 @@ public final class GoCryptoSHA256 {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoSHA256::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW, NEW224, SUM256, SUM224);
     }
 }

@@ -22,19 +22,14 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcMLKEMKeyParameters {
-
-    private BcMLKEMKeyParameters() {
-        // nothing
-    }
+public final class BcMLKEMKeyParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> MLKEM_KEY_PARAMETERS =
             new DetectionRuleBuilder<Tree>()
@@ -49,11 +44,9 @@ public final class BcMLKEMKeyParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(MLKEM_KEY_PARAMETERS));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(MLKEM_KEY_PARAMETERS);
     }
 }

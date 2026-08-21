@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -38,11 +39,7 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetTripleDES {
-
-    private DotNetTripleDES() {
-        // nothing
-    }
+public final class DotNetTripleDES extends DetectionRuleSet<CSharpTree> {
 
     private static final IDetectionRule<CSharpTree> TRIPLE_DES_CREATE =
             new DetectionRuleBuilder<CSharpTree>()
@@ -67,7 +64,8 @@ public final class DotNetTripleDES {
                     .withDependingDetectionRules(List.of());
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(TRIPLE_DES_CREATE, TRIPLE_DES_CSP);
     }
 }

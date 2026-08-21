@@ -21,21 +21,17 @@ package com.ibm.plugin.rules.detection.bc.other;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BooleanFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcIESEngineInit {
-
-    private BcIESEngineInit() {
-        // nothing
-    }
+public final class BcIESEngineInit extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -45,7 +41,7 @@ public final class BcIESEngineInit {
                     // TODO: capture?
                     .withMethodParameter("org.bouncycastle.crypto.params.AsymmetricKeyParameter")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter(
                             "org.bouncycastle.crypto.generators.EphemeralKeyPairGenerator")
                     .buildForContext(new CipherContext())
@@ -60,7 +56,7 @@ public final class BcIESEngineInit {
                     // TODO: capture?
                     .withMethodParameter("org.bouncycastle.crypto.params.AsymmetricKeyParameter")
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.KeyParser")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "Bc")
@@ -74,20 +70,18 @@ public final class BcIESEngineInit {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ENCRYPTION_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3);
     }
 }

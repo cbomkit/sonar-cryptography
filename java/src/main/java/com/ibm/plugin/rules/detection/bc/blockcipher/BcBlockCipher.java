@@ -24,22 +24,19 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBlockCipher {
-    private BcBlockCipher() {
-        // nothing
-    }
+public final class BcBlockCipher extends ContextualDetectionRuleSet<Tree> {
 
     public static final List<String> blockCiphers =
             List.of(
@@ -70,10 +67,11 @@ public final class BcBlockCipher {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(blockCipher))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                            .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                             .buildForContext(context)
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherInit.class)));
         }
         return constructorsList;
     }
@@ -93,10 +91,10 @@ public final class BcBlockCipher {
                         .forMethods("newInstance")
                         .shouldBeDetectedAs(new ValueActionFactory<>("CBCBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -105,10 +103,10 @@ public final class BcBlockCipher {
                         .forMethods("newInstance")
                         .shouldBeDetectedAs(new ValueActionFactory<>("SICBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -117,13 +115,13 @@ public final class BcBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -132,13 +130,13 @@ public final class BcBlockCipher {
                         .forMethods("newInstance")
                         .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -147,13 +145,13 @@ public final class BcBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("G3413CFBBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -162,13 +160,13 @@ public final class BcBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("G3413CTRBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -177,13 +175,13 @@ public final class BcBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("OFBBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -192,62 +190,21 @@ public final class BcBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("PGPCFBBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipherEngine.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherEngine.class))
                         .withMethodParameter("boolean")
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBlockCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class)));
 
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> buildRules(null));
-    private static final Supplier<List<IDetectionRule<Tree>>> ALL =
-            Memoize.of(() -> buildAll(null));
-
     @Nonnull
-    // Rules defined in this file (classes finishing with BlockCipher)
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    // All BlockCipher rules including all the engines
-    public static List<IDetectionRule<Tree>> all() {
-        return ALL.get();
-    }
-
-    @Nonnull
-    // Rules defined in this file (classes finishing with BlockCipher)
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext detectionValueContext) {
-        return detectionValueContext == null ? RULES.get() : buildRules(detectionValueContext);
-    }
-
-    @Nonnull
-    // All BlockCipher rules including all the engines
-    public static List<IDetectionRule<Tree>> all(
-            @Nullable IDetectionContext detectionValueContext) {
-        return detectionValueContext == null ? ALL.get() : buildAll(detectionValueContext);
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules(
-            @Nullable IDetectionContext detectionValueContext) {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
+        IDetectionContext context = contextAt(contexts, 0);
         return Stream.of(
-                        simpleConstructors(detectionValueContext).stream(),
-                        specialConstructors(detectionValueContext).stream())
-                .flatMap(i -> i)
-                .toList();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildAll(
-            @Nullable IDetectionContext detectionValueContext) {
-        return Stream.of(
-                        rules(detectionValueContext).stream(),
-                        BcBlockCipherEngine.rules(detectionValueContext).stream())
+                        simpleConstructors(context).stream(), specialConstructors(context).stream())
                 .flatMap(i -> i)
                 .toList();
     }

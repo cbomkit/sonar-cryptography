@@ -28,6 +28,7 @@ import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.CSharpAggregator;
@@ -56,7 +57,7 @@ public abstract class CSharpBaseDetectionRule
 
     protected CSharpBaseDetectionRule() {
         this.isInventory = false;
-        this.detectionRules = CSharpDetectionRules.rules();
+        this.detectionRules = RuleSets.rulesOf(CSharpDetectionRules.class);
         this.csharpTranslationProcess =
                 new CSharpTranslationProcess(CSharpReorganizerRules.rules());
     }

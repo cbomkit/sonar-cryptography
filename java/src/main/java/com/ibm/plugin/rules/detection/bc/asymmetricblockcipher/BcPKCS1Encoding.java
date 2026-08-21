@@ -24,22 +24,18 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcPKCS1Encoding {
-
-    private BcPKCS1Encoding() {
-        // nothing
-    }
+public final class BcPKCS1Encoding extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull
     private static List<IDetectionRule<Tree>> constructors(
@@ -59,10 +55,11 @@ public final class BcPKCS1Encoding {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                BcAsymCipherEngine.rules(engineDetectionValueContext))
+                                RuleSets.rulesOf(
+                                        BcAsymCipherEngine.class, engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcAsymCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -72,11 +69,12 @@ public final class BcPKCS1Encoding {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                BcAsymCipherEngine.rules(engineDetectionValueContext))
+                                RuleSets.rulesOf(
+                                        BcAsymCipherEngine.class, engineDetectionValueContext))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcAsymCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -86,29 +84,19 @@ public final class BcPKCS1Encoding {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                BcAsymCipherEngine.rules(engineDetectionValueContext))
+                                RuleSets.rulesOf(
+                                        BcAsymCipherEngine.class, engineDetectionValueContext))
                         .withMethodParameter("int")
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcAsymCipherInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
 
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> constructors(null, null));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
-        return encodingDetectionValueContext == null && engineDetectionValueContext == null
-                ? RULES.get()
-                : constructors(encodingDetectionValueContext, engineDetectionValueContext);
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
+        return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
     }
 }

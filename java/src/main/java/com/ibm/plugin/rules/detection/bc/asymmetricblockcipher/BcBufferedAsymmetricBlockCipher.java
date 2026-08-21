@@ -22,23 +22,19 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BooleanFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.cipherparameters.BcCipherParameters;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBufferedAsymmetricBlockCipher {
+public final class BcBufferedAsymmetricBlockCipher extends DetectionRuleSet<Tree> {
 
     /* Note that BufferedAsymmetricBlockCipher does *not* implement the AsymmetricBlockCipher interface */
-
-    private BcBufferedAsymmetricBlockCipher() {
-        // nothing
-    }
 
     private static final IDetectionRule<Tree> INIT =
             new DetectionRuleBuilder<Tree>()
@@ -48,7 +44,7 @@ public final class BcBufferedAsymmetricBlockCipher {
                     .withMethodParameter("boolean")
                     .shouldBeDetectedAs(new BooleanFactory<>())
                     .withMethodParameter("org.bouncycastle.crypto.CipherParameters")
-                    .addDependingDetectionRules(BcCipherParameters.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcCipherParameters.class))
                     .buildForContext(new CipherContext(Map.of("kind", "ENCRYPTION_STATUS")))
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -60,17 +56,15 @@ public final class BcBufferedAsymmetricBlockCipher {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>("BufferedAsymmetricBlockCipher"))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .buildForContext(
                             new CipherContext(Map.of("kind", "ASYMMETRIC_BUFFERED_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(List.of(INIT));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR);
     }
 }

@@ -29,6 +29,7 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.EllipticCurve;
@@ -51,7 +52,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoEd25519SignTest extends TestBase {
 
     public GoCryptoEd25519SignTest() {
-        super(GoCryptoEd25519.rules());
+        super(RuleSets.rulesOf(GoCryptoEd25519.class));
     }
 
     @Test

@@ -24,23 +24,19 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.ModeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.padding.PycaPadding;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings({"java:S2386", "java:S1192"})
-public final class PycaCipher {
-
-    private PycaCipher() {
-        // private
-    }
+public final class PycaCipher extends DetectionRuleSet<Tree> {
 
     public static final List<String> blockCiphers =
             Arrays.asList(
@@ -84,7 +80,7 @@ public final class PycaCipher {
     private static @Nonnull List<IDetectionRule<Tree>> followingNewCipherRules() {
         final List<IDetectionRule<Tree>> encryptionRules =
                 new LinkedList<>(List.of(DECRYPT_CIPHER, ENCRYPT_CIPHER));
-        encryptionRules.addAll(PycaPadding.rules());
+        encryptionRules.addAll(RuleSets.rulesOf(PycaPadding.class));
         return encryptionRules;
     }
 
@@ -118,16 +114,9 @@ public final class PycaCipher {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaCipher::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW_CIPHER, STREAM_CIPHER);
     }
 }

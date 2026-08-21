@@ -19,36 +19,25 @@
  */
 package com.ibm.plugin.rules.detection.ssl;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 // https://www.baeldung.com/java-7-tls-v12
-public final class SSLDetectionRules {
-
-    private SSLDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(SSLDetectionRules::buildRules);
+public final class SSLDetectionRules extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        SSLServerSocketSetEnabledProtocols.rules().stream(),
-                        SSLSetParameters.rules().stream(),
-                        SSLContext.rules().stream(),
-                        SSLServerSocketSetEnabledCipherSuites.rules().stream())
+                        RuleSets.rulesOf(SSLServerSocketSetEnabledProtocols.class).stream(),
+                        RuleSets.rulesOf(SSLSetParameters.class).stream(),
+                        RuleSets.rulesOf(SSLContext.class).stream(),
+                        RuleSets.rulesOf(SSLServerSocketSetEnabledCipherSuites.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

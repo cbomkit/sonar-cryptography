@@ -27,6 +27,7 @@ import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.CSharpInventoryRule;
@@ -59,7 +60,7 @@ public abstract class TestBase extends CSharpInventoryRule {
     }
 
     public TestBase() {
-        super(CSharpDetectionRules.rules());
+        super(RuleSets.rulesOf(CSharpDetectionRules.class));
     }
 
     @BeforeEach

@@ -23,6 +23,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.PythonInventoryRule;
@@ -52,7 +53,7 @@ public abstract class TestBase extends PythonInventoryRule {
     }
 
     public TestBase() {
-        super(PythonDetectionRules.rules());
+        super(RuleSets.rulesOf(PythonDetectionRules.class));
     }
 
     @Before

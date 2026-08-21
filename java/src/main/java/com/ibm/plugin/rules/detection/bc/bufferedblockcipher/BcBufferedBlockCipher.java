@@ -21,25 +21,21 @@ package com.ibm.plugin.rules.detection.bc.bufferedblockcipher;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
-import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipher;
+import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherAndEngines;
 import com.ibm.plugin.rules.detection.bc.blockcipherpadding.BcBlockCipherPadding;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBufferedBlockCipher {
-
-    private BcBufferedBlockCipher() {
-        // nothing
-    }
+public final class BcBufferedBlockCipher extends DetectionRuleSet<Tree> {
 
     private static BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
@@ -65,11 +61,13 @@ public final class BcBufferedBlockCipher {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(blockCipher))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipher.all())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                             .buildForContext(
                                     new CipherContext(Map.of("kind", "BUFFERED_BLOCK_CIPHER")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBufferedBlockCipherInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBufferedBlockCipherInit.class)));
         }
         return constructorsList;
     }
@@ -85,10 +83,11 @@ public final class BcBufferedBlockCipher {
                         .shouldBeDetectedAs(new ValueActionFactory<>("NISTCTSBlockCipher"))
                         .withMethodParameter("int")
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .buildForContext(new CipherContext(Map.of("kind", "BUFFERED_BLOCK_CIPHER")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBufferedBlockCipherInit.rules()));
+                        .withDependingDetectionRules(
+                                RuleSets.rulesOf(BcBufferedBlockCipherInit.class)));
 
         // This PaddedBufferedBlockCipher constructor has a PKCS7 default padding
         constructorsList.add(
@@ -100,10 +99,11 @@ public final class BcBufferedBlockCipher {
                         .shouldBeDetectedAs(
                                 new ValueActionFactory<>("PaddedBufferedBlockCipher[PKCS7]"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .buildForContext(new CipherContext(Map.of("kind", "BUFFERED_BLOCK_CIPHER")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBufferedBlockCipherInit.rules()));
+                        .withDependingDetectionRules(
+                                RuleSets.rulesOf(BcBufferedBlockCipherInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -113,25 +113,22 @@ public final class BcBufferedBlockCipher {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("PaddedBufferedBlockCipher"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .withMethodParameter("org.bouncycastle.crypto.paddings.BlockCipherPadding")
-                        .addDependingDetectionRules(BcBlockCipherPadding.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherPadding.class))
                         .buildForContext(new CipherContext(Map.of("kind", "BUFFERED_BLOCK_CIPHER")))
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcBufferedBlockCipherInit.rules()));
+                        .withDependingDetectionRules(
+                                RuleSets.rulesOf(BcBufferedBlockCipherInit.class)));
 
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            Stream.of(simpleConstructors().stream(), specialConstructors().stream())
-                                    .flatMap(i -> i)
-                                    .toList());
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return Stream.of(simpleConstructors().stream(), specialConstructors().stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

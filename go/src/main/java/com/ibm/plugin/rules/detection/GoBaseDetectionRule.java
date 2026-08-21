@@ -24,6 +24,7 @@ import com.ibm.engine.detection.Finding;
 import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.GoAggregator;
@@ -56,7 +57,7 @@ public abstract class GoBaseDetectionRule
 
     protected GoBaseDetectionRule() {
         this.isInventory = false;
-        this.detectionRules = GoDetectionRules.rules();
+        this.detectionRules = RuleSets.rulesOf(GoDetectionRules.class);
         this.goTranslationProcess = new GoTranslationProcess(GoReorganizerRules.rules());
     }
 

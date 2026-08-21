@@ -22,16 +22,16 @@ package com.ibm.plugin.rules.detection.jca.keyspec;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BIGINTEGER_TYPE;
 
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaECGenParameterSpec;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaECPrivateKeySpec {
+public final class JcaECPrivateKeySpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> EC_PRIVATE_KEY_SPEC =
             new DetectionRuleBuilder<Tree>()
@@ -40,25 +40,14 @@ public final class JcaECPrivateKeySpec {
                     .forConstructor()
                     .withMethodParameter(BIGINTEGER_TYPE) // the private value
                     .withMethodParameter("java.security.spec.ECParameterSpec")
-                    .addDependingDetectionRules(JcaECGenParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaECGenParameterSpec.class))
                     .buildForContext(new KeyContext(KeyContext.Kind.EC))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaECPrivateKeySpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaECPrivateKeySpec::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(EC_PRIVATE_KEY_SPEC);
     }
 }

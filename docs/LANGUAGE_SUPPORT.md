@@ -305,7 +305,7 @@ Implementing this class will require defining a translation process, but we will
 
 [^3]: It may also take a list of [`IReorganizerRule`](../mapper/src/main/java/com/ibm/mapper/reorganizer/IReorganizerRule.java) if necessary. More about this in the section [*Reorganizing the translation tree*](./DETECTION_RULE_STRUCTURE.md#reorganizing-the-translation-tree) of *Writing new detection rules for the Sonar Cryptography Plugin*.
 
-This list of `IDetectionRule` is defined in the same directory, in a file listing all the detection rules for this language under a function `rules()`. In Java, we call this file [`JavaDetectionRules`](../java/src/main/java/com/ibm/plugin/rules/detection/JavaDetectionRules.java).
+This list of `IDetectionRule` is defined in the same directory, in a file listing all the detection rules for this language as a [`DetectionRuleSet`](../engine/src/main/java/com/ibm/engine/rule/DetectionRuleSet.java). In Java, we call this file [`JavaDetectionRules`](../java/src/main/java/com/ibm/plugin/rules/detection/JavaDetectionRules.java).
 You can currently leave this list of rules empty, and we will discuss [later](#adding-support-for-another-cryptography-library) how to structure these detection rules in the module. 
 
 Back to the intermediary class (`JavaBaseDetectionRule` in Java), this is also the place where we have to check and apply our list of `IDetectionRule`. This can be done by overriding the relevant "visit" method(s) of the visitor class. For example in Java (note that we have not yet defined `JavaAggregator`, which we will do just after):
@@ -444,7 +444,7 @@ Note that implementing `TestBase` requires a translation process, but we will co
 > At this point, if you have not done it yet, you should read the section [*Writing a detection rule*](./DETECTION_RULE_STRUCTURE.md#writing-a-detection-rule) of *Writing new detection rules for the Sonar Cryptography Plugin* to understand how to write a detection rule.
 
 Now suppose that you want to write your first rule *MyRule* of your *mycrypto* library (that we are shortening to `Mc` in file names). You will need to create three files, in the three directories previously mentioned:
-- `McMyRule.java` in `main/.../plugin/rules/detection/mycrypto/`: this is where you should define a class containing the *IDetectionRule MyRule*. Add a private constructor to your class, and define *MyRule* as a private and static variable. Create a public and static method `rules()` returning the list of all detection rules of your file, in your case simply `List.of(MyRule)`.
+- `McMyRule.java` in `main/.../plugin/rules/detection/mycrypto/`: this is where you should define a class containing the *IDetectionRule MyRule*. Make this class extend [`DetectionRuleSet<Tree>`](../engine/src/main/java/com/ibm/engine/rule/DetectionRuleSet.java) (using your language's own tree type in place of `Tree`), and implement the single method it requires, `protected List<IDetectionRule<Tree>> buildRules()`, returning the list of all detection rules of your file, in your case simply `List.of(MyRule)`. You do not need a private constructor or a static accessor method: `DetectionRuleSet` already has a `protected` no-argument constructor, and rules are read back through the registry described below, not by calling your class directly.
 - `McMyRuleTestFile.XXX` in `test/.../files/rules/detection/mycrypto/`: this is where you should write a code example containing the function call that you aim to capture with `MyRule`. This file is written in your target programming language that you want to scan (so you should set the file extension `.XXX` accordingly).
 - `McMyRuleTest.java` in `test/.../plugin/rules/detection/mycrypto/`: this is where you should define your unit test class, which should `extends TestBase`. Create a `test()` method with a `@Test` annotation, in which you call the language-specific test function on the test file that you just defined. You should also override the `asserts` method, but leave it empty for now, we will [come back to it](#writing-assert-statements).
 
@@ -455,13 +455,15 @@ Don't hesitate to look into the existing rules written for other libraries and l
 You need to create another class `MyCryptoDetectionRules` listing the detection rules of your library, that you should create under `plugin/rules/detection/mycrypto/`, similarly to the class [`BouncyCastleDetectionRules`](../java/src/main/java/com/ibm/plugin/rules/detection/bc/BouncyCastleDetectionRules.java) for the BouncyCastle library in Java.
 
 At this point, you should have already created a class listing all of your detection rules, like [`JavaDetectionRules`](../java/src/main/java/com/ibm/plugin/rules/detection/JavaDetectionRules.java) for Java, in `plugin/rules/detection/`.
-Therefore, register your library rules by adding them to the `rules` method of this main file containing all detection rules.
+Therefore, register your library rules by adding them to the `buildRules()` method of this main file containing all detection rules.
 This step is done only once, to register your new cryptography library:
 ```java
-public static List<IDetectionRule<Tree>> rules() {
+@Nonnull
+@Override
+protected List<IDetectionRule<Tree>> buildRules() {
     return Stream.of(
             // ...
-            MyCryptoDetectionRules.rules().stream(),
+            RuleSets.rulesOf(MyCryptoDetectionRules.class).stream(),
             // ...
             )
         .flatMap(i -> i)
@@ -469,19 +471,25 @@ public static List<IDetectionRule<Tree>> rules() {
 }
 ```
 
-Finally, register your rule `McMyRule` in your class `MyCryptoDetectionRules` listing your library rules by adding it to its `rules` method.
+Finally, register your rule `McMyRule` in your class `MyCryptoDetectionRules` listing your library rules by adding it to its `buildRules()` method.
 This step should be done each time you are creating a new detection rule in a new file:
 ```java
-public static List<IDetectionRule<Tree>> rules() {
+@Nonnull
+@Override
+protected List<IDetectionRule<Tree>> buildRules() {
     return Stream.of(
             // ...
-            McMyRule.rules().stream(),
+            RuleSets.rulesOf(McMyRule.class).stream(),
             // ...
             )
         .flatMap(i -> i)
         .toList();
 }
 ```
+
+Every detection rule list is read back the same way, through [`RuleSets`](../engine/src/main/java/com/ibm/engine/rule/RuleSets.java): `RuleSets.rulesOf(SomeDetectionRules.class)`. This is the only supported way to read a rule list — `RuleSets` builds each `DetectionRuleSet` lazily, on first use, and then shares the resulting list by reference with every later caller, instead of rebuilding it (and its whole subtree of dependent rules) on every call.
+
+Some rule sets need to change their rules depending on the detection context they are built for, for example to specialize a shared list of rules for the caller's `CipherContext` versus a caller's `SecretKeyContext`. For these, extend [`ContextualDetectionRuleSet<T>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java) instead of `DetectionRuleSet<T>`, and implement `protected List<IDetectionRule<T>> buildRules(List<IDetectionContext> contexts)`. The `contexts` list is positional: read a given position with the static helper `contextAt(contexts, index)`, which returns `null` when that position was not supplied, meaning "use the default for that position". Callers read these rule sets with `RuleSets.rulesOf(SomeDetectionRules.class, someContext)`, which caches per class *and* per context so that different contexts do not collide.
 
 
 #### Testing

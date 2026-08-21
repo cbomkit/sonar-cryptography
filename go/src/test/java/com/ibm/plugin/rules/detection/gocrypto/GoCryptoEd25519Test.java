@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Signature;
 import com.ibm.plugin.TestBase;
@@ -40,7 +41,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoEd25519Test extends TestBase {
 
     public GoCryptoEd25519Test() {
-        super(GoCryptoEd25519.rules());
+        super(RuleSets.rulesOf(GoCryptoEd25519.class));
     }
 
     @Test

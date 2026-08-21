@@ -22,22 +22,18 @@ package com.ibm.plugin.rules.detection.bc.signer;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.asymmetricblockcipher.BcAsymmetricBlockCipher;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcGenericSigner {
-
-    private BcGenericSigner() {
-        // nothing
-    }
+public final class BcGenericSigner extends DetectionRuleSet<Tree> {
 
     private static final String CLASS_NAME = "GenericSigner";
 
@@ -49,21 +45,20 @@ public final class BcGenericSigner {
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                     .addDependingDetectionRules(
-                            BcAsymmetricBlockCipher.rules(
+                            RuleSets.rulesOf(
+                                    BcAsymmetricBlockCipher.class,
                                     new CipherContext(Map.of("kind", "ENCODING_SIGNATURE")),
                                     new CipherContext(
                                             Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE_SIGNATURE"))))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1));
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1);
     }
 }

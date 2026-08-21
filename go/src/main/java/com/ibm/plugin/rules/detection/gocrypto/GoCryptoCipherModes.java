@@ -21,19 +21,14 @@ package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
-public final class GoCryptoCipherModes {
-
-    private GoCryptoCipherModes() {
-        // nothing
-    }
+public final class GoCryptoCipherModes extends DetectionRuleSet<Tree> {
 
     // cipher.NewGCM(cipher cipher.Block) (cipher.AEAD, error)
     // Returns a new GCM mode wrapper for the given cipher block
@@ -173,16 +168,9 @@ public final class GoCryptoCipherModes {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoCipherModes::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 NEW_GCM,
                 NEW_GCM_WITH_NONCE_SIZE,

@@ -23,11 +23,11 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -41,11 +41,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoAES {
-
-    private GoCryptoAES() {
-        // private
-    }
+public final class GoCryptoAES extends DetectionRuleSet<Tree> {
 
     // aes.NewCipher(key []byte) (cipher.Block, error)
     // The key argument should be the AES key, either 16, 24, or 32 bytes
@@ -61,18 +57,11 @@ public final class GoCryptoAES {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "GoCrypto")
-                    .withDependingDetectionRules(GoCryptoCipherModes.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoAES::buildRules);
+                    .withDependingDetectionRules(RuleSets.rulesOf(GoCryptoCipherModes.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW_CIPHER);
     }
 }

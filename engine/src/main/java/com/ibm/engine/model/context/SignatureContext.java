@@ -21,6 +21,7 @@ package com.ibm.engine.model.context;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 
 public class SignatureContext extends DetectionContext
@@ -69,5 +70,15 @@ public class SignatureContext extends DetectionContext
     @Override
     public Class<? extends IDetectionContext> type() {
         return SignatureContext.class;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return super.equals(other) && kind == ((SignatureContext) other).kind;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), kind);
     }
 }

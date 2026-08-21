@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.serializer.ExportRules;
 import com.ibm.plugin.rules.detection.PythonDetectionRules;
 import java.io.FileWriter;
@@ -34,7 +35,7 @@ class ExportPythonRulesToJsonTest extends ExportRules {
     @Test
     void test() {
         try (FileWriter fileWriter = new FileWriter("target/rules.json")) {
-            exportToJSON(PythonDetectionRules.rules(), fileWriter);
+            exportToJSON(RuleSets.rulesOf(PythonDetectionRules.class), fileWriter);
         } catch (IOException e) {
             LOGGER.warn("Error exporting Java rules to JSON file: " + e.getMessage());
         }

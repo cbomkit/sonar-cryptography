@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.StreamCipher;
@@ -42,7 +43,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoRC4Test extends TestBase {
 
     public GoCryptoRC4Test() {
-        super(GoCryptoRC4.rules());
+        super(RuleSets.rulesOf(GoCryptoRC4.class));
     }
 
     @Test
