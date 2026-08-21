@@ -21,12 +21,11 @@ package com.ibm.plugin.rules.detection.gocrypto;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -42,11 +41,7 @@ import org.sonar.plugins.go.api.Tree;
  *   <li>elliptic.P521() - returns a Curve implementing NIST P-521
  * </ul>
  */
-public final class GoCryptoElliptic {
-
-    private GoCryptoElliptic() {
-        // private
-    }
+public final class GoCryptoElliptic extends DetectionRuleSet<Tree> {
 
     // elliptic.P224() elliptic.Curve
     // Returns a Curve which implements NIST P-224
@@ -100,16 +95,9 @@ public final class GoCryptoElliptic {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoElliptic::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(P224, P256, P384, P521);
     }
 }

@@ -25,12 +25,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -49,11 +49,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoECDH {
-
-    private GoCryptoECDH() {
-        // private
-    }
+public final class GoCryptoECDH extends DetectionRuleSet<Tree> {
 
     // Curve.GenerateKey(rand io.Reader) (*PrivateKey, error)
     // Generates a new private key for the curve
@@ -65,7 +61,7 @@ public final class GoCryptoECDH {
                     .shouldBeDetectedAs(
                             new KeyActionFactory<>(KeyAction.Action.PRIVATE_KEY_GENERATION))
                     .withMethodParameter("io.Reader")
-                    .addDependingDetectionRules(GoCryptoRand.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoRand.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
@@ -152,16 +148,9 @@ public final class GoCryptoECDH {
                     .withDependingDetectionRules(
                             List.of(GENERATE_KEY, NEW_PRIVATE_KEY, NEW_PUBLIC_KEY));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoECDH::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(P256, P384, P521, X25519);
     }
 }

@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
@@ -47,7 +48,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoHMACTest extends TestBase {
 
     public GoCryptoHMACTest() {
-        super(GoCryptoHMAC.rules());
+        super(RuleSets.rulesOf(GoCryptoHMAC.class));
     }
 
     @Test

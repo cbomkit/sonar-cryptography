@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
@@ -43,7 +44,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoRSATest extends TestBase {
 
     public GoCryptoRSATest() {
-        super(GoCryptoRSA.rules());
+        super(RuleSets.rulesOf(GoCryptoRSA.class));
     }
 
     @Test
