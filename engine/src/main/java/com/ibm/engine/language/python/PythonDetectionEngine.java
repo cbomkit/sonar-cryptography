@@ -363,9 +363,6 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             Optional<Argument> resolved =
                     findArgumentByKeyword(keywordName.get(), parameter.getIndex(), arguments);
             if (resolved.isEmpty()) {
-                if (parameter.isKeywordOptional()) {
-                    return Optional.of(TraceSymbol.createWithStateDifferent());
-                }
                 return Optional.of(TraceSymbol.createWithStateDifferent());
             }
             Argument arg = resolved.get();
@@ -486,6 +483,22 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             if (hasUnknownKeyword) {
                 return;
             }
+
+            // Reject if any required named parameter is absent from the call site.
+            // This must run before MethodDetection is emitted so that a call that is missing a
+            // required argument produces no finding at all (not just a missing child detection).
+            int preCheckIndex = 0;
+            for (Parameter<Tree> p : detectionRule.parameters()) {
+                if (p.getKeywordName().isPresent() && !p.isKeywordOptional()) {
+                    Optional<Argument> present =
+                            findArgumentByKeyword(
+                                    p.getKeywordName().get(), preCheckIndex, arguments);
+                    if (present.isEmpty()) {
+                        return;
+                    }
+                }
+                preCheckIndex++;
+            }
         }
 
         if (detectionRule.actionFactory() != null) {
@@ -512,7 +525,9 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         positionalIndex++;
                         continue;
                     } else {
-                        // required named parameter absent → rule does not fire; stop processing
+                        // required named parameter absent → stop processing
+                        // (pre-flight at line 490 already guarantees this branch is unreachable
+                        // for named parameters; kept as a defensive fallback)
                         return;
                     }
                 }
@@ -561,8 +576,7 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     }
                 }
 
-                if (!checkCurrentIndexState(
-                        positionalIndex, arguments, isInvocation, traceSymbol, expressionTree)) {
+                if (!checkSymbolTraceState(isInvocation, traceSymbol, expressionTree)) {
                     positionalIndex++;
                     continue;
                 }
@@ -675,6 +689,19 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             return false;
         }
 
+        return checkSymbolTraceState(isInvocation, traceSymbol, expressionTree);
+    }
+
+    /**
+     * Checks whether the call-graph symbol-trace context allows the rule to fire. This is the
+     * second half of {@link #checkCurrentIndexState} without the arity guard, and is used on the
+     * named-parameter path where the argument has already been resolved by keyword name and its
+     * physical existence is guaranteed by {@link #findArgumentByKeyword}.
+     */
+    private boolean checkSymbolTraceState(
+            boolean isInvocation,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull CallExpression expressionTree) {
         // Check if the variable symbols for the method (if applicable) are connected
         Optional<Symbol> assignedSymbol =
                 getAssignedSymbol(expressionTree).map(ts -> ts.getSymbol());

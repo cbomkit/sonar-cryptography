@@ -62,25 +62,19 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
 
     private static final String BASE_PATH = "src/test/files/rules/detection/pycrypto/hash/";
 
+    /**
+     * Set by each test method before calling {@code verify()} to tell {@link #asserts} whether the
+     * current fixture is expected to produce a truncate child detection.
+     */
+    private boolean expectTruncateChild = false;
+
     public PycryptoCryptoHashSHA512Test() {
         super(PycryptoCryptoHash.rules());
     }
 
     // -------------------------------------------------------------------------
-    // Positive tests
+    // Positive tests — truncate child expected
     // -------------------------------------------------------------------------
-
-    /** SHA512.new() — no arguments; both optional params absent; rule must still fire. */
-    @Test
-    void testNoArgs() {
-        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewNoArgsTest.py", this);
-    }
-
-    /** SHA512.new(data=b"msg") — data by keyword; truncate absent (optional). */
-    @Test
-    void testDataKeyword() {
-        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewDataKeywordTest.py", this);
-    }
 
     /**
      * SHA512.new(truncate="256") — truncate by keyword, data absent; truncate child must be
@@ -88,6 +82,7 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testTruncateKeywordOnly() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewTruncateKeywordOnlyTest.py", this);
     }
 
@@ -97,6 +92,7 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testBothKeywordsCanonicalOrder() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewBothKeywordsCanonicalOrderTest.py", this);
     }
 
@@ -106,6 +102,7 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testBothKeywordsReordered() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewBothKeywordsReorderedTest.py", this);
     }
 
@@ -115,6 +112,7 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testBothPositional() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewBothPositionalTest.py", this);
     }
 
@@ -124,19 +122,40 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testMixedPositionalKeyword() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewMixedPositionalKeywordTest.py", this);
-    }
-
-    /** SHA512.new(b"msg") — data by positional fallback, truncate absent (optional). */
-    @Test
-    void testDataPositionalOnly() {
-        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewDataPositionalOnlyTest.py", this);
     }
 
     /** Cryptodome.Hash.SHA512 — same rule, different import module name. */
     @Test
     void testCryptodome() {
+        expectTruncateChild = true;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewCryptodomeTest.py", this);
+    }
+
+    // -------------------------------------------------------------------------
+    // Positive tests — truncate child must be ABSENT
+    // -------------------------------------------------------------------------
+
+    /** SHA512.new() — no arguments; both optional params absent; rule must still fire. */
+    @Test
+    void testNoArgs() {
+        expectTruncateChild = false;
+        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewNoArgsTest.py", this);
+    }
+
+    /** SHA512.new(data=b"msg") — data by keyword; truncate absent (optional). */
+    @Test
+    void testDataKeyword() {
+        expectTruncateChild = false;
+        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewDataKeywordTest.py", this);
+    }
+
+    /** SHA512.new(b"msg") — data by positional fallback, truncate absent (optional). */
+    @Test
+    void testDataPositionalOnly() {
+        expectTruncateChild = false;
+        PythonCheckVerifier.verify(BASE_PATH + "SHA512NewDataPositionalOnlyTest.py", this);
     }
 
     /**
@@ -146,6 +165,7 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
      */
     @Test
     void testWrongTypeTruncateOptionalSkipped() {
+        expectTruncateChild = false;
         PythonCheckVerifier.verify(BASE_PATH + "SHA512NewNegativeWrongTypeTest.py", this);
     }
 
@@ -226,18 +246,26 @@ class PycryptoCryptoHashSHA512Test extends TestBase {
         assertThat(digestNode.asString()).isEqualTo("DIGEST");
 
         /*
-         * If a truncate child detection store is present, validate its value.
-         * Tests that pass truncate="256" produce one AlgorithmParameter child.
-         * Tests that do NOT pass truncate produce no AlgorithmParameter child.
+         * Assert the presence or absence of the truncate child detection store, depending on
+         * which call site the current test exercises. expectTruncateChild is set by each test
+         * method before calling verify() so this shared asserts() method can distinguish the
+         * two cases.
          */
         DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> truncateStore =
                 getStoreOfValueType(AlgorithmParameter.class, detectionStore.getChildren());
-        if (truncateStore != null) {
+        if (expectTruncateChild) {
+            assertThat(truncateStore)
+                    .as("expected a truncate child detection store but found none")
+                    .isNotNull();
             assertThat(truncateStore.getDetectionValues()).hasSize(1);
             assertThat(truncateStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
             IValue<Tree> truncateValue = truncateStore.getDetectionValues().get(0);
             assertThat(truncateValue).isInstanceOf(AlgorithmParameter.class);
             assertThat(truncateValue.asString()).isEqualTo("256");
+        } else {
+            assertThat(truncateStore)
+                    .as("expected no truncate child detection store but one was produced")
+                    .isNull();
         }
     }
 }
