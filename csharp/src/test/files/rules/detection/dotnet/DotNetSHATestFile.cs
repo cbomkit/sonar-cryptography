@@ -25,4 +25,10 @@ public class DotNetSHATest {
     public void TestRipemd160Create()      { var h = RIPEMD160.Create(); }             // Noncompliant
     public void TestRipemd160CreateNamed() { var h = RIPEMD160.Create("RIPEMD160"); }   // Noncompliant
     public void TestRipemd160Managed()     { var h = new RIPEMD160Managed(); }          // Noncompliant
+
+    public void TestMd5Csp()      { var h = new MD5CryptoServiceProvider(); }  // Noncompliant
+    public void TestSha1Managed() { var h = new SHA1Managed(); }               // Noncompliant
+    public void TestSha256Managed() { var h = new SHA256Managed(); }           // Noncompliant
+    public void TestSha384Managed() { var h = new SHA384Managed(); }           // Noncompliant
+    public void TestSha512Managed() { var h = new SHA512Managed(); }           // Noncompliant
 }

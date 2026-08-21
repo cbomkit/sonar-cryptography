@@ -62,18 +62,20 @@ import org.junit.jupiter.api.Test;
  * <p>Finding mapping (one finding per test method in DotNetX25519DiffieHellmanTestFile.cs):
  *
  * <pre>
- * Section 1 – factory method / constructors (findings 0–2):
- *   0 TestX25519GenerateKey   → X25519
- *   1 TestX25519Cng           → X25519
- *   2 TestX25519OpenSsl       → X25519
+ * Section 1 – factory method / constructors / static Import* factories (findings 0–4):
+ *   0 TestX25519GenerateKey              → X25519
+ *   1 TestX25519Cng                      → X25519
+ *   2 TestX25519OpenSsl                  → X25519
+ *   3 TestX25519ImportPrivateKeyByteArray → X25519
+ *   4 TestX25519ImportPublicKeyByteArray  → X25519
  *
- * Section 2 – DeriveRawSecretAgreement operation (findings 3–4):
- *   3 TestDeriveRawSecretAgreementByteArray  → X25519 + Generate child
- *   4 TestDeriveRawSecretAgreementOtherParty → X25519 + Generate child
+ * Section 2 – DeriveRawSecretAgreement operation (findings 5–6):
+ *   5 TestDeriveRawSecretAgreementByteArray  → X25519 + Generate child
+ *   6 TestDeriveRawSecretAgreementOtherParty → X25519 + Generate child
  *
- * Section 3 – combined usage patterns (findings 5–6):
- *   5 TestX25519CngDeriveFlow       → X25519 + Generate child
- *   6 TestX25519OpenSslDeriveFlow   → X25519 + Generate child
+ * Section 3 – combined usage patterns (findings 7–8):
+ *   7 TestX25519CngDeriveFlow       → X25519 + Generate child
+ *   8 TestX25519OpenSslDeriveFlow   → X25519 + Generate child
  * </pre>
  */
 class DotNetX25519DiffieHellmanTest extends TestBase {
@@ -114,21 +116,22 @@ class DotNetX25519DiffieHellmanTest extends TestBase {
         switch (findingId) {
 
             // -----------------------------------------------------------------
-            // Section 1: simple constructors — only X25519, no extra children
+            // Section 1: simple constructors / static Import* factories — only X25519, no extra
+            // children
             // -----------------------------------------------------------------
-            case 0, 1, 2 -> {
+            case 0, 1, 2, 3, 4 -> {
                 // node.asString() already asserted to be "x25519" above
             }
 
             // -----------------------------------------------------------------
             // Section 2: DeriveRawSecretAgreement operation
             // -----------------------------------------------------------------
-            case 3, 4 -> assertRawSecretAgreement(detectionStore, node);
+            case 5, 6 -> assertRawSecretAgreement(detectionStore, node);
 
             // -----------------------------------------------------------------
             // Section 3: combined usage patterns
             // -----------------------------------------------------------------
-            case 5, 6 -> assertRawSecretAgreement(detectionStore, node);
+            case 7, 8 -> assertRawSecretAgreement(detectionStore, node);
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

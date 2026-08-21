@@ -133,6 +133,14 @@ import org.junit.jupiter.api.Test;
  *   50 TestAesEcbEncrypt            → AES-ECB-None
  *   51 TestAesGcmFullFlow           → AES + Encrypt
  *   52 TestAesCcmFullFlow           → AES + Encrypt
+ *
+ * Section 11 – EncryptKeyWrapPadded / DecryptKeyWrapPadded /
+ * TryDecryptKeyWrapPadded (RFC 5649 AES Key Wrap with Padding, findings 53–57):
+ *   53 TestEncryptKeyWrapPadded1    → AES + Encrypt
+ *   54 TestEncryptKeyWrapPadded2    → AES + Encrypt
+ *   55 TestDecryptKeyWrapPadded1    → AES + Decrypt
+ *   56 TestDecryptKeyWrapPadded2    → AES + Decrypt
+ *   57 TestTryDecryptKeyWrapPadded  → AES + Decrypt
  * </pre>
  */
 class DotNetAESComprehensiveTest extends TestBase {
@@ -324,6 +332,14 @@ class DotNetAESComprehensiveTest extends TestBase {
                     assertModePaddingFindings(detectionStore, nodes, "ECB", "None", "AES-ECB-None");
             case 51 -> assertEncryptFindings(detectionStore, nodes, "AES");
             case 52 -> assertEncryptFindings(detectionStore, nodes, "AES");
+
+            // -----------------------------------------------------------------
+            // Section 11: EncryptKeyWrapPadded / DecryptKeyWrapPadded /
+            // TryDecryptKeyWrapPadded — generic Encrypt/Decrypt findings (no
+            // Mode/Padding concept for RFC 5649 Key Wrap with Padding)
+            // -----------------------------------------------------------------
+            case 53, 54 -> assertEncryptFindings(detectionStore, nodes, "AES");
+            case 55, 56, 57 -> assertDecryptFindings(detectionStore, nodes, "AES");
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

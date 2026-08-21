@@ -21,7 +21,10 @@ package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.model.factory.IterationCountFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -96,6 +99,38 @@ import javax.annotation.Nonnull;
  * withAnyParameters()} call site). Not a gap in coverage of the class's cryptographic identity or
  * of the "a key was derived" signal — only a granularity choice, called out here rather than
  * decided silently.
+ *
+ * <p><b>Modeling decision — {@code PasswordDeriveBytes}'s {@code HashName}/{@code IterationCount}/
+ * {@code Salt} property setters:</b> unlike {@code HMAC.Key} (see {@code DotNetHMAC}'s "Known gap"
+ * javadoc, {@code byte[]}-typed, never a literal in realistic code), {@code HashName} ({@code
+ * string}) and {@code IterationCount} ({@code int}) are verified (learn.microsoft.com,
+ * PasswordDeriveBytes class reference) to be plain {@code get; set;} properties of literal-friendly
+ * types — structurally identical to {@code Aes.KeySize}/{@code Aes.Mode} in {@link DotNetAES},
+ * which are modeled as synthetic {@code set_X(literal)} depending rules. {@code pdb.IterationCount
+ * = 100000;} and {@code pdb.HashName = "SHA256";} are realistic, common patterns (raising the
+ * iteration count / picking a stronger digest are the two knobs this legacy PBKDF1 API exposes), so
+ * both are modeled below: {@code PDB_SET_ITERATION_COUNT} reuses {@code IterationCountFactory} (the
+ * same factory already used by {@code GoCryptoPBKDF2} for the equivalent Go PBKDF2 {@code iter}
+ * parameter — see {@code IterationCountFactory}/{@code GoKeyContextTranslator}), translated to the
+ * mapper's {@code NumberOfIterations} node. {@code PDB_SET_HASH_NAME} reuses {@code
+ * AlgorithmFactory} (already used elsewhere in this module for {@code
+ * HashAlgorithm.Create(string)}, see {@code DotNetAlgorithmFactory}) under a {@code DigestContext}
+ * rather than {@code KeyContext} — a depending rule is free to declare any context via {@code
+ * buildForContext(...)}; dispatch in {@code CSharpTranslator} is by each finding's own declared
+ * context, not its parent's, and this exact cross-context nesting (a {@code DigestContext} child
+ * rule attached under a {@code KeyContext} parent) is already precedented by the Go module (see
+ * {@code GoCryptoPBKDF2}'s {@code KEY_STDLIB} rule, which attaches {@code GoCryptoHash.rules()} —
+ * all {@code DigestContext}-based — as depending rules of a {@code KeyContext} PBKDF2 rule). This
+ * lets {@code CSharpDigestContextTranslator} resolve the captured hash-name string (e.g. {@code
+ * "SHA256"} -> {@code SHA2(256)}) with its existing, already-tested {@code Algorithm<?>} branch,
+ * with no new translation code needed.
+ *
+ * <p>{@code Salt} ({@code byte[]}), by contrast, is deliberately <b>not</b> modeled: it is
+ * structurally identical to the excluded {@code HMAC.Key} case above (a byte-array-typed property
+ * that is realistically always assigned from a variable, e.g. {@code pdb.Salt = saltBytes;}, never
+ * a literal the ANTLR4 engine can read), so recording only that "a Salt was set" (no value) would
+ * require the same unprecedented valueless-marker mechanism rejected for {@code HMAC.Key} — this is
+ * an intentional, documented exclusion, not an oversight.
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetKeyDerivation {
@@ -220,8 +255,39 @@ public final class DotNetKeyDerivation {
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
 
+    // pdb.IterationCount = 100000  →  synthetic set_IterationCount(100000)
+    // (see class javadoc "Modeling decision" for why this is captured, unlike HMAC.Key/PDB's Salt)
+    private static final IDetectionRule<CSharpTree> PDB_SET_ITERATION_COUNT =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("set_IterationCount")
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new IterationCountFactory<>())
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // pdb.HashName = "SHA256"  →  synthetic set_HashName("SHA256")
+    // Uses DigestContext (not KeyContext) so CSharpDigestContextTranslator's existing
+    // Algorithm<?> branch resolves the digest name — see class javadoc "Modeling decision".
+    private static final IDetectionRule<CSharpTree> PDB_SET_HASH_NAME =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("set_HashName")
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
     private static final List<IDetectionRule<CSharpTree>> PDB_DEPENDING_RULES =
-            List.of(PDB_GET_BYTES, PDB_CRYPT_DERIVE_KEY);
+            List.of(
+                    PDB_GET_BYTES,
+                    PDB_CRYPT_DERIVE_KEY,
+                    PDB_SET_ITERATION_COUNT,
+                    PDB_SET_HASH_NAME);
 
     // new PasswordDeriveBytes(password, salt[, hashName, iterations][, cspParams]) — 8
     // constructor overloads (password as string or byte[]; optional hashName/iterations;

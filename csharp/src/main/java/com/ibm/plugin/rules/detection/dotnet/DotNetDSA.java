@@ -48,10 +48,12 @@ import javax.annotation.Nonnull;
  * </ul>
  *
  * <p>Architecture: all methods inherited from {@code AsymmetricAlgorithm} / {@code DSA} (KeySize
- * property, CreateSignature, VerifySignature, SignData, VerifyData, Try* variants, etc.) are
- * expressed as <em>depending rules</em> attached to each primary creation rule. The detection
- * engine tracks the variable and fires these rules on every matching method call, regardless of the
- * concrete DSA subclass.
+ * property, CreateSignature, VerifySignature, SignData, VerifyData, Try* variants, etc.), as well
+ * as the legacy {@code SignHash}/{@code VerifyHash} methods that exist only on {@code
+ * DSACryptoServiceProvider} (not on the abstract {@code DSA} base class; {@code DSA} has no {@code
+ * TrySignHash}), are expressed as <em>depending rules</em> attached to each primary creation rule.
+ * The detection engine tracks the variable and fires these rules on every matching method call,
+ * regardless of the concrete DSA subclass.
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetDSA {
@@ -155,6 +157,34 @@ public final class DotNetDSA {
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
 
+    // dsa.SignHash(hash, hashAlgorithmName) — legacy CSP-era method, only real on
+    // DSACryptoServiceProvider (not present on the abstract DSA base class), mirroring
+    // RSA_SIGN_HASH in DotNetRSA.java. Note that unlike RSA, DSA has no TrySignHash.
+    private static final IDetectionRule<CSharpTree> DSA_SIGN_HASH =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("SignHash")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // dsa.VerifyHash(hash, hashAlgorithmName, signature) — legacy CSP-era method, only real
+    // on DSACryptoServiceProvider (not present on the abstract DSA base class), mirroring
+    // RSA_VERIFY_HASH in DotNetRSA.java.
+    private static final IDetectionRule<CSharpTree> DSA_VERIFY_HASH =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("VerifyHash")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
     // =========================================================================
     // Aggregated depending-rule list
     // =========================================================================
@@ -168,7 +198,9 @@ public final class DotNetDSA {
                     DSA_SIGN_DATA,
                     DSA_TRY_SIGN_DATA,
                     DSA_VERIFY_SIGNATURE,
-                    DSA_VERIFY_DATA);
+                    DSA_VERIFY_DATA,
+                    DSA_SIGN_HASH,
+                    DSA_VERIFY_HASH);
 
     // =========================================================================
     // Primary creation rules

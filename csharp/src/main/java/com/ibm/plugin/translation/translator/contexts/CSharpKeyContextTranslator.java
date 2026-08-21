@@ -22,6 +22,7 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ParameterIdentifier;
@@ -32,6 +33,7 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
@@ -124,10 +126,16 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                 case "KDF_PASSWORD_DERIVE_BYTES" -> Optional.of(new PBKDF1(detectionLocation));
                 // Instance derive-operations on an already-identified KDF object
                 // (SP800108HmacCounterKdf.DeriveKey, PasswordDeriveBytes.GetBytes/
-                // CryptDeriveKey): reuses the same generic KeyDerivation functionality node as
-                // the ECDiffieHellman derive operations below (Batch 3 pattern), captured as a
-                // child of the already-typed KDF algorithm node rather than folded into it.
-                case "KDF_SP800108_DERIVE_KEY", "KDF_PDB_GET_BYTES", "KDF_PDB_CRYPT_DERIVE_KEY" ->
+                // CryptDeriveKey, and Rfc2898DeriveBytes.GetBytes/CryptDeriveKey — see
+                // DotNetRfc2898DeriveBytes.java): reuses the same generic KeyDerivation
+                // functionality node as the ECDiffieHellman derive operations below (Batch 3
+                // pattern), captured as a child of the already-typed KDF algorithm node rather
+                // than folded into it.
+                case "KDF_SP800108_DERIVE_KEY",
+                        "KDF_PDB_GET_BYTES",
+                        "KDF_PDB_CRYPT_DERIVE_KEY",
+                        "KDF_RFC2898_GET_BYTES",
+                        "KDF_RFC2898_CRYPT_DERIVE_KEY" ->
                         Optional.of(new KeyDerivation(detectionLocation));
                 // ECDiffieHellman key-derivation operations (DotNetECDiffieHellman.java):
                 // no typed CipherAction.Action fits "derive a key", so each operation is
@@ -153,6 +161,13 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
             };
         } else if (value instanceof KeySize<?> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
+        } else if (value instanceof IterationCount<?> iterationCount) {
+            // From set_IterationCount property setter (PasswordDeriveBytes.IterationCount —
+            // DotNetKeyDerivation.java): mirrors the Go module's identical IterationCount ->
+            // NumberOfIterations mapping (see GoKeyContextTranslator), the only other place in
+            // this codebase that produces an IterationCount value under a KeyContext today.
+            return Optional.of(
+                    new NumberOfIterations(iterationCount.getValue(), detectionLocation));
         } else if (value instanceof ParameterIdentifier<?> parameterIdentifier
                 && detectionContext instanceof DetectionContext context
                 && "KEM".equals(context.get("kind").orElse(""))) {

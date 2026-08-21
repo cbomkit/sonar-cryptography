@@ -454,4 +454,48 @@ public class DotNetAESComprehensiveTest
         byte[] aad = new byte[8];
         aesCcm.Encrypt(nonce, plaintext, ciphertext, tag, aad);
     }
+
+    // -------------------------------------------------------------------------
+    // Section 11: EncryptKeyWrapPadded / DecryptKeyWrapPadded /
+    // TryDecryptKeyWrapPadded (RFC 5649 AES Key Wrap with Padding, .NET 10.0+)
+    // -------------------------------------------------------------------------
+
+    public void TestEncryptKeyWrapPadded1()
+    {
+        var aes = Aes.Create();
+        byte[] plaintext = new byte[32];
+        byte[] wrapped = aes.EncryptKeyWrapPadded(plaintext);
+    }
+
+    public void TestEncryptKeyWrapPadded2()
+    {
+        var aes = Aes.Create();
+        byte[] plaintext = new byte[32];
+        byte[] destination = new byte[40];
+        aes.EncryptKeyWrapPadded(plaintext, destination);
+    }
+
+    public void TestDecryptKeyWrapPadded1()
+    {
+        var aes = Aes.Create();
+        byte[] ciphertext = new byte[40];
+        byte[] unwrapped = aes.DecryptKeyWrapPadded(ciphertext);
+    }
+
+    public void TestDecryptKeyWrapPadded2()
+    {
+        var aes = Aes.Create();
+        byte[] ciphertext = new byte[40];
+        byte[] destination = new byte[32];
+        int written = aes.DecryptKeyWrapPadded(ciphertext, destination);
+    }
+
+    public void TestTryDecryptKeyWrapPadded()
+    {
+        var aes = Aes.Create();
+        byte[] ciphertext = new byte[40];
+        byte[] destination = new byte[32];
+        int bytesWritten;
+        aes.TryDecryptKeyWrapPadded(ciphertext, destination, out bytesWritten);
+    }
 }

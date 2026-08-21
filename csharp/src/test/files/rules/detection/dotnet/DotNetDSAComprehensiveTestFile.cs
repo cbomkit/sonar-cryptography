@@ -151,7 +151,27 @@ public class DotNetDSAComprehensiveTest
     }
 
     // -------------------------------------------------------------------------
-    // Section 7: Combined usage patterns (real-world scenarios)
+    // Section 7: SignHash / VerifyHash (legacy CSP-era methods; only real on
+    // DSACryptoServiceProvider, not on the abstract DSA base class)
+    // -------------------------------------------------------------------------
+
+    public void TestSignHash()
+    {
+        var dsa = new DSACryptoServiceProvider();
+        byte[] hash = new byte[20];
+        byte[] signature = dsa.SignHash(hash, "SHA1");
+    }
+
+    public void TestVerifyHash()
+    {
+        var dsa = new DSACryptoServiceProvider();
+        byte[] hash = new byte[20];
+        byte[] signature = new byte[40];
+        bool valid = dsa.VerifyHash(hash, "SHA1", signature);
+    }
+
+    // -------------------------------------------------------------------------
+    // Section 8: Combined usage patterns (real-world scenarios)
     // Demonstrates that depending rules fire correctly for ALL derived classes.
     // -------------------------------------------------------------------------
 

@@ -26,11 +26,15 @@ import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpScanContext;
 import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.model.functionality.KeyDerivation;
 import com.ibm.plugin.CSharpVerifier;
@@ -70,6 +74,9 @@ import org.junit.jupiter.api.Test;
  *                                          + KeyDerivation "KEYDERIVATION" child
  * 6 TestPasswordDeriveBytesCryptDeriveKey → PasswordBasedKeyDerivationFunction "PBKDF1"
  *                                          + KeyDerivation "KEYDERIVATION" child
+ * 7 TestPasswordDeriveBytesProperties    → PasswordBasedKeyDerivationFunction "PBKDF1-SHA-256"
+ *                                          + NumberOfIterations "100000" child
+ *                                          + MessageDigest "SHA-256" child (from set_HashName)
  * </pre>
  */
 class DotNetKeyDerivationTest extends TestBase {
@@ -130,6 +137,43 @@ class DotNetKeyDerivationTest extends TestBase {
                 assertThat(node.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
                 assertThat(node.asString()).isEqualTo("PBKDF1");
                 assertKeyDerivationChild(detectionStore, node);
+            }
+            case 7 -> {
+                /*
+                 * TestPasswordDeriveBytesProperties: pdb.IterationCount = 100000;
+                 * pdb.HashName = "SHA256"; — property-setter depending rules
+                 */
+                assertThat(primary.asString()).isEqualTo("PBKDF1");
+                assertThat(node.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
+
+                // Depending rule: set_IterationCount detected IterationCount(100000)
+                DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+                        iterationStore =
+                                getStoreOfValueType(
+                                        IterationCount.class, detectionStore.getChildren());
+                assertThat(iterationStore).isNotNull();
+                assertThat(iterationStore.getDetectionValues()).hasSize(1);
+                assertThat(iterationStore.getDetectionValues().get(0).asString())
+                        .isEqualTo("100000");
+
+                // Depending rule: set_HashName detected Algorithm("SHA256")
+                DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+                        hashNameStore =
+                                getStoreOfValueType(Algorithm.class, detectionStore.getChildren());
+                assertThat(hashNameStore).isNotNull();
+                assertThat(hashNameStore.getDetectionValues()).hasSize(1);
+                assertThat(hashNameStore.getDetectionValues().get(0).asString())
+                        .isEqualTo("SHA256");
+
+                // Translation: PBKDF1 node with NumberOfIterations + MessageDigest children
+                // (PBKDF1#asString() appends the digest child's name, per its own source)
+                assertThat(node.asString()).isEqualTo("PBKDF1-SHA-256");
+                INode iterations = node.getChildren().get(NumberOfIterations.class);
+                assertThat(iterations).isNotNull();
+                assertThat(iterations.asString()).isEqualTo("100000");
+                INode digest = node.getChildren().get(MessageDigest.class);
+                assertThat(digest).isNotNull();
+                assertThat(digest.asString()).isEqualTo("SHA-256");
             }
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);

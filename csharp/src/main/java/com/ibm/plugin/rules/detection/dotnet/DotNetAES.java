@@ -489,6 +489,91 @@ public final class DotNetAES {
                     .withoutDependingDetectionRules();
 
     // =========================================================================
+    // EncryptKeyWrapPadded / DecryptKeyWrapPadded / TryDecryptKeyWrapPadded rules
+    // RFC 5649 AES Key Wrap with Padding — declared on Aes (not SymmetricAlgorithm),
+    // introduced in .NET 10.0. Unlike EncryptCbc/EncryptEcb/EncryptCfb, this algorithm has
+    // no CipherMode/PaddingMode concept, so findings are generic Encrypt/Decrypt (same
+    // modeling as AesGcm/AesCcm below) rather than Mode/Padding-tagged.
+    //
+    // Verified overloads (Microsoft Learn, Aes class, net-10.0/net-11.0):
+    //   EncryptKeyWrapPadded(byte[] plaintext)                                       — 1 param
+    //   EncryptKeyWrapPadded(ReadOnlySpan<byte> plaintext)                           — 1 param
+    //     (same arity as above; the engine cannot distinguish by type, so one rule
+    //     covers both overloads)
+    //   EncryptKeyWrapPadded(ReadOnlySpan<byte> plaintext, Span<byte> destination)   — 2 params
+    //   DecryptKeyWrapPadded(byte[] ciphertext)                                      — 1 param
+    //   DecryptKeyWrapPadded(ReadOnlySpan<byte> ciphertext)                          — 1 param
+    //   DecryptKeyWrapPadded(ReadOnlySpan<byte> ciphertext, Span<byte> destination)  — 2 params
+    //   TryDecryptKeyWrapPadded(ReadOnlySpan<byte> ciphertext, Span<byte> destination,
+    //                            out int bytesWritten)                               — 3 params
+    // There is no TryEncryptKeyWrapPadded overload (confirmed 404 on Microsoft Learn).
+    // =========================================================================
+
+    // aes.EncryptKeyWrapPadded(plaintext)
+    private static final IDetectionRule<CSharpTree> AES_ENCRYPT_KEY_WRAP_PADDED_1 =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("EncryptKeyWrapPadded")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
+                    .withMethodParameter(MethodMatcher.ANY) // plaintext
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.EncryptKeyWrapPadded(plaintext, destination)
+    private static final IDetectionRule<CSharpTree> AES_ENCRYPT_KEY_WRAP_PADDED_2 =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("EncryptKeyWrapPadded")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
+                    .withMethodParameter(MethodMatcher.ANY) // plaintext
+                    .withMethodParameter(MethodMatcher.ANY) // destination buffer
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.DecryptKeyWrapPadded(ciphertext)
+    private static final IDetectionRule<CSharpTree> AES_DECRYPT_KEY_WRAP_PADDED_1 =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("DecryptKeyWrapPadded")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
+                    .withMethodParameter(MethodMatcher.ANY) // ciphertext
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.DecryptKeyWrapPadded(ciphertext, destination)
+    private static final IDetectionRule<CSharpTree> AES_DECRYPT_KEY_WRAP_PADDED_2 =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("DecryptKeyWrapPadded")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
+                    .withMethodParameter(MethodMatcher.ANY) // ciphertext
+                    .withMethodParameter(MethodMatcher.ANY) // destination buffer
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // aes.TryDecryptKeyWrapPadded(ciphertext, destination, out bytesWritten)
+    private static final IDetectionRule<CSharpTree> AES_TRY_DECRYPT_KEY_WRAP_PADDED =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes(MethodMatcher.ANY)
+                    .forMethods("TryDecryptKeyWrapPadded")
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
+                    .withMethodParameter(MethodMatcher.ANY) // ciphertext
+                    .withMethodParameter(MethodMatcher.ANY) // destination buffer
+                    .withMethodParameter(MethodMatcher.ANY) // out bytesWritten
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withoutDependingDetectionRules();
+
+    // =========================================================================
     // Key / IV generation rules
     // =========================================================================
 
@@ -549,6 +634,11 @@ public final class DotNetAES {
                     AES_TRY_DECRYPT_ECB,
                     AES_TRY_ENCRYPT_CFB,
                     AES_TRY_DECRYPT_CFB,
+                    AES_ENCRYPT_KEY_WRAP_PADDED_1,
+                    AES_ENCRYPT_KEY_WRAP_PADDED_2,
+                    AES_DECRYPT_KEY_WRAP_PADDED_1,
+                    AES_DECRYPT_KEY_WRAP_PADDED_2,
+                    AES_TRY_DECRYPT_KEY_WRAP_PADDED,
                     AES_GENERATE_KEY,
                     AES_GENERATE_IV);
 

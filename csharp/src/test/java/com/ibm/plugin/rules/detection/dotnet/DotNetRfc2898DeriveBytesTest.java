@@ -31,6 +31,7 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
+import com.ibm.mapper.model.functionality.KeyDerivation;
 import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -51,14 +52,43 @@ class DotNetRfc2898DeriveBytesTest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        IValue<CSharpTree> value0 = detectionStore.getDetectionValues().get(0);
-        assertThat(value0).isInstanceOf(ValueAction.class);
-        assertThat(value0.asString()).isEqualTo("PBKDF2");
+        assertThat(detectionStore.getDetectionValues()).hasSize(1);
+        IValue<CSharpTree> primary = detectionStore.getDetectionValues().get(0);
+        assertThat(primary).isInstanceOf(ValueAction.class);
+        assertThat(primary.asString()).isEqualTo("PBKDF2");
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
-        assertThat(nodes.get(0).asString()).isEqualTo("PBKDF2");
+        INode node = nodes.get(0);
+        assertThat(node.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
+        assertThat(node.asString()).isEqualTo("PBKDF2");
+
+        switch (findingId) {
+            // 0: new Rfc2898DeriveBytes(...) alone — no operations called afterwards
+            case 0 -> assertThat(node.getChildren()).isEmpty();
+            // 1: new Rfc2898DeriveBytes(...) followed by kdf.GetBytes(32)
+            case 1 -> assertKeyDerivationChild(detectionStore, node);
+            // 2: new Rfc2898DeriveBytes(...) followed by kdf.CryptDeriveKey(...)
+            case 2 -> assertKeyDerivationChild(detectionStore, node);
+            // 3: Rfc2898DeriveBytes.Pbkdf2(byte[], byte[], int, HashAlgorithmName, int) — static,
+            // self-contained, no depending operations
+            case 3 -> assertThat(node.getChildren()).isEmpty();
+            // 4: Rfc2898DeriveBytes.Pbkdf2(string, byte[], int, HashAlgorithmName, int) — static
+            case 4 -> assertThat(node.getChildren()).isEmpty();
+            default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
+        }
+    }
+
+    private void assertKeyDerivationChild(
+            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
+            @Nonnull INode node) {
+        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> deriveStore =
+                getStoreOfValueType(ValueAction.class, store.getChildren());
+        assertThat(deriveStore).isNotNull();
+        assertThat(deriveStore.getDetectionValues()).hasSize(1);
+
+        assertThat(node.getChildren().get(KeyDerivation.class)).isNotNull();
+        assertThat(node.getChildren().get(KeyDerivation.class).asString())
+                .isEqualTo("KEYDERIVATION");
     }
 }

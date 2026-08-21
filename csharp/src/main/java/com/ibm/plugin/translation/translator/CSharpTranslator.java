@@ -30,6 +30,7 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.context.ProtocolContext;
@@ -101,6 +102,23 @@ public class CSharpTranslator
         }
 
         if (detectionValueContext.is(ProtocolContext.class)) {
+            return Optional.empty();
+        }
+
+        if (detectionValueContext.is(KeyDerivationFunctionContext.class)) {
+            // No C# rule currently builds a KeyDerivationFunctionContext: unlike the Python
+            // module (see PycaKDF/PycaKeyDerivationContextTranslator), every KDF rule in this
+            // module (DotNetKeyDerivation, DotNetRfc2898DeriveBytes; also mirrored by the Java
+            // BouncyCastle rules in BcDerivationFunction) reuses the generic KeyContext with a
+            // "kind" discriminator (e.g. "KDF_HKDF", "KDF_SP800108") instead, dispatched in
+            // CSharpKeyContextTranslator. That already produces the correct KDF-specific model
+            // nodes (HKDF/PBKDF1/PBKDF2/KDFCounter, which implement KeyDerivationFunction /
+            // PasswordBasedKeyDerivationFunction in the mapper model), so no information is lost
+            // by not using this context. This branch is a deliberate, documented no-op — it
+            // behaves the same as the default fallthrough below, but exists so this gap reads as
+            // an intentional choice rather than a missed dispatch case if a future C# rule ever
+            // reaches for KeyDerivationFunctionContext (at which point a real translator, mirroring
+            // CSharpKeyContextTranslator's "KDF_*" cases, would need to be wired in here).
             return Optional.empty();
         }
 

@@ -17,6 +17,11 @@
  * Known gap: reading/exporting the public key (e.g. ExportPublicKey()) cannot be meaningfully
  * modeled as a depending rule (see DotNetX25519DiffieHellman.java class javadoc) — no test
  * attempts it.
+ *
+ * ImportPrivateKey/ImportPublicKey are static factories on X25519DiffieHellman itself (each with
+ * byte[] and ReadOnlySpan<byte> overloads collapsed into one rule) that build a brand-new instance
+ * directly from raw 32-byte key material — modeled as primary creation rules, mirroring
+ * MLKem.ImportDecapsulationKey/ImportEncapsulationKey in DotNetMLKem.java.
  */
 
 using System.Security.Cryptography;
@@ -42,6 +47,18 @@ public class DotNetX25519DiffieHellmanTest
     {
         SafeEvpPKeyHandle handle = null;
         var x25519 = new X25519DiffieHellmanOpenSsl(handle);
+    }
+
+    public void TestX25519ImportPrivateKeyByteArray()
+    {
+        byte[] privateKey = new byte[32];
+        var x25519 = X25519DiffieHellman.ImportPrivateKey(privateKey);
+    }
+
+    public void TestX25519ImportPublicKeyByteArray()
+    {
+        byte[] publicKey = new byte[32];
+        var x25519 = X25519DiffieHellman.ImportPublicKey(publicKey);
     }
 
     // -------------------------------------------------------------------------

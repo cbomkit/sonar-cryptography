@@ -189,6 +189,50 @@ class DotNetSHATest extends TestBase {
                 assertThat(digestSize).isNotNull();
                 assertThat(digestSize.asString()).isEqualTo("160");
             }
+            // new MD5CryptoServiceProvider(): legacy CAPI implementation, same translation as
+            // MD5.Create() (case 4).
+            case 22 -> {
+                assertThat(value0.asString()).isEqualTo("MD5");
+                assertThat(node.asString()).isEqualTo("MD5");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("128");
+            }
+            // new SHA1Managed(): pure-managed implementation, same translation as SHA1.Create().
+            case 23 -> {
+                assertThat(value0.asString()).isEqualTo("SHA1");
+                assertThat(node.asString()).isEqualTo("SHA-1");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("160");
+            }
+            // new SHA256Managed(): pure-managed implementation, same translation as
+            // SHA256.Create().
+            case 24 -> {
+                assertThat(value0.asString()).isEqualTo("SHA256");
+                assertThat(node.asString()).isEqualTo("SHA-256");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("256");
+            }
+            // new SHA384Managed(): pure-managed implementation, same translation as
+            // SHA384.Create().
+            case 25 -> {
+                assertThat(value0.asString()).isEqualTo("SHA384");
+                assertThat(node.asString()).isEqualTo("SHA-384");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("384");
+            }
+            // new SHA512Managed(): pure-managed implementation, same translation as
+            // SHA512.Create().
+            case 26 -> {
+                assertThat(value0.asString()).isEqualTo("SHA512");
+                assertThat(node.asString()).isEqualTo("SHA-512");
+                INode digestSize = node.getChildren().get(DigestSize.class);
+                assertThat(digestSize).isNotNull();
+                assertThat(digestSize.asString()).isEqualTo("512");
+            }
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
     }

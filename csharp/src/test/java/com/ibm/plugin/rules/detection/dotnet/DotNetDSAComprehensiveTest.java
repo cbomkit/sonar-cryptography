@@ -81,10 +81,14 @@ import org.junit.jupiter.api.Test;
  * Section 6 – VerifyData (finding 16):
  *   16 TestVerifyData → DSA + Verify
  *
- * Section 7 – combined usage patterns (findings 17–19):
- *   17 TestDsaCngFullFlow      → DSA-2048 + Sign
- *   18 TestDsaCspVerifyFlow    → DSA + Verify
- *   19 TestDsaOpenSslSignFlow  → DSA + Sign
+ * Section 7 – SignHash / VerifyHash (findings 17–18):
+ *   17 TestSignHash   → DSA + Sign
+ *   18 TestVerifyHash → DSA + Verify
+ *
+ * Section 8 – combined usage patterns (findings 19–21):
+ *   19 TestDsaCngFullFlow      → DSA-2048 + Sign
+ *   20 TestDsaCspVerifyFlow    → DSA + Verify
+ *   21 TestDsaOpenSslSignFlow  → DSA + Sign
  * </pre>
  */
 class DotNetDSAComprehensiveTest extends TestBase {
@@ -145,16 +149,22 @@ class DotNetDSAComprehensiveTest extends TestBase {
             case 16 -> assertVerify(node);
 
             // -----------------------------------------------------------------
-            // Section 7: combined usage patterns
+            // Section 7: SignHash / VerifyHash
             // -----------------------------------------------------------------
-            case 17 -> {
+            case 17 -> assertSign(node);
+            case 18 -> assertVerify(node);
+
+            // -----------------------------------------------------------------
+            // Section 8: combined usage patterns
+            // -----------------------------------------------------------------
+            case 19 -> {
                 assertThat(node.asString()).isEqualTo("DSA-2048");
                 assertThat(node.getChildren().get(KeyLength.class)).isNotNull();
                 assertThat(node.getChildren().get(KeyLength.class).asString()).isEqualTo("2048");
                 assertThat(node.getChildren().get(Sign.class)).isNotNull();
             }
-            case 18 -> assertVerify(node);
-            case 19 -> assertSign(node);
+            case 20 -> assertVerify(node);
+            case 21 -> assertSign(node);
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

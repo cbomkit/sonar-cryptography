@@ -80,4 +80,12 @@ public class DotNetKeyDerivationTest
         byte[] iv = new byte[8];
         byte[] key = pdb.CryptDeriveKey("TripleDES", "SHA1", 192, iv);
     }
+
+    public void TestPasswordDeriveBytesProperties()
+    {
+        byte[] salt = new byte[16];
+        var pdb = new PasswordDeriveBytes("password", salt);
+        pdb.IterationCount = 100000;
+        pdb.HashName = "SHA256";
+    }
 }

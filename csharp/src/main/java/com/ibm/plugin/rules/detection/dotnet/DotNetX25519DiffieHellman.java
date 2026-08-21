@@ -48,12 +48,16 @@ import javax.annotation.Nonnull;
  *
  * <ul>
  *   <li>{@code X25519DiffieHellman} — abstract base. Verified to have <em>no</em> {@code Create()}
- *       factory (unlike {@code ECDiffieHellman}); the only way to obtain a fresh instance is the
- *       static factory {@code X25519DiffieHellman.GenerateKey()} (confirmed via the dedicated
- *       method-reference page: {@code public static X25519DiffieHellman GenerateKey()}). Its
- *       constructor is {@code protected X25519DiffieHellman()} (confirmed via the dedicated
- *       constructor page), so the class cannot be instantiated directly — only through {@code
- *       GenerateKey()} or one of the two concrete subclasses below.
+ *       factory (unlike {@code ECDiffieHellman}); fresh instances are obtained only through the
+ *       static factories {@code X25519DiffieHellman.GenerateKey()} (confirmed via the dedicated
+ *       method-reference page: {@code public static X25519DiffieHellman GenerateKey()}), {@code
+ *       ImportPrivateKey(byte[]/ReadOnlySpan<byte>)}, or {@code
+ *       ImportPublicKey(byte[]/ReadOnlySpan<byte>)} (both confirmed via their own dedicated
+ *       method-reference pages, each declared directly on {@code X25519DiffieHellman} itself, each
+ *       returning a new {@code X25519DiffieHellman}). Its constructor is {@code protected
+ *       X25519DiffieHellman()} (confirmed via the dedicated constructor page), so the class cannot
+ *       be instantiated directly — only through one of those static factories or one of the two
+ *       concrete subclasses below.
  *   <li>{@code X25519DiffieHellmanCng} — CNG-backed implementation. Single constructor {@code
  *       X25519DiffieHellmanCng(CngKey)} (wraps an existing key).
  *   <li>{@code X25519DiffieHellmanOpenSsl} — OpenSSL-backed implementation. Single constructor
@@ -94,6 +98,21 @@ import javax.annotation.Nonnull;
  * by the JCA {@code XDH}/{@code X25519} key-agreement translation and by the Go {@code crypto/ecdh}
  * curve translation), so it is reused as-is here; no new mapper model class was needed.
  *
+ * <p><b>{@code ImportPrivateKey}/{@code ImportPublicKey} — modeled as primary creation rules, not
+ * skipped:</b> confirmed via the dedicated method-reference pages ({@code
+ * X25519DiffieHellman.ImportPrivateKey} / {@code X25519DiffieHellman.ImportPublicKey}, {@code
+ * learn.microsoft.com}, checked 2026-08-21) that both are declared directly on {@code
+ * X25519DiffieHellman} itself (not on a subclass) as {@code public static X25519DiffieHellman
+ * ImportPrivateKey(byte[])} / {@code ImportPrivateKey(ReadOnlySpan<byte>)}, and {@code public
+ * static X25519DiffieHellman ImportPublicKey(byte[])} / {@code ImportPublicKey(ReadOnlySpan<byte>)}
+ * — two overloads each, both returning a brand-new {@code X25519DiffieHellman} instance built
+ * directly from raw 32-byte key material. This is structurally identical to {@code
+ * MLKem.ImportDecapsulationKey}/{@code ImportEncapsulationKey} in {@code DotNetMLKem.java} (both
+ * static factories that are themselves the only way, besides {@code GenerateKey}, to obtain an
+ * instance) — the two overloads per method are collapsed with a single {@code withAnyParameters()}
+ * rule per method name, following the same ANTLR4-cannot-resolve-parameter-types rationale used
+ * throughout this file.
+ *
  * <p><b>Known gaps (same reasoning as {@code DotNetECDiffieHellman.java}):</b>
  *
  * <ul>
@@ -101,11 +120,10 @@ import javax.annotation.Nonnull;
  *       modeled as a depending rule, mirroring the {@code PublicKey} property gap documented in
  *       {@code DotNetECDiffieHellman.java} for the same underlying reason: these calls carry no
  *       additional cryptographic information beyond "an X25519 key exists" (already captured by the
- *       primary creation rule), and speculatively wiring up the full family of {@code Import} /
- *       {@code Export} / {@code TryExport} methods (PKCS8, SPKI, PEM, encrypted-PKCS8 — none of
- *       which are X25519-specific) would add many rules without adding any new detectable
- *       cryptographic fact. // TODO: revisit if a future need arises to track key material
- *       export/import as its own finding.
+ *       primary creation rule), and speculatively wiring up the remaining family of {@code Export}
+ *       / {@code TryExport} methods (PKCS8, SPKI, PEM, encrypted-PKCS8) would add many rules
+ *       without adding any new detectable cryptographic fact. // TODO: revisit if a future need
+ *       arises to track key material export as its own finding.
  *   <li>{@code X25519DiffieHellmanCng.GetKey()} and {@code
  *       X25519DiffieHellmanOpenSsl.DuplicateKeyHandle()} — these return the underlying platform key
  *       handle ({@code CngKey} / {@code SafeEvpPKeyHandle}), not a new cryptographic fact; skipped
@@ -161,6 +179,36 @@ public final class DotNetX25519DiffieHellman {
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(X25519_DEPENDING_RULES);
 
+    // X25519DiffieHellman.ImportPrivateKey(source) — static factory, builds a new instance
+    // directly from raw 32-byte private key material. Collapses both overloads (byte[] /
+    // ReadOnlySpan<byte>) with withAnyParameters(), mirroring MLKEM_IMPORT_DECAPSULATION_KEY in
+    // DotNetMLKem.java.
+    private static final IDetectionRule<CSharpTree> X25519_IMPORT_PRIVATE_KEY =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("X25519DiffieHellman")
+                    .forMethods("ImportPrivateKey")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "X25519")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(X25519_DEPENDING_RULES);
+
+    // X25519DiffieHellman.ImportPublicKey(source) — static factory, builds a new instance
+    // directly from raw 32-byte public key material. Collapses both overloads (byte[] /
+    // ReadOnlySpan<byte>) with withAnyParameters(), mirroring MLKEM_IMPORT_ENCAPSULATION_KEY in
+    // DotNetMLKem.java.
+    private static final IDetectionRule<CSharpTree> X25519_IMPORT_PUBLIC_KEY =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("X25519DiffieHellman")
+                    .forMethods("ImportPublicKey")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("X25519"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext(Map.of("kind", "X25519")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(X25519_DEPENDING_RULES);
+
     // new X25519DiffieHellmanCng(CngKey) — CNG-backed implementation, wraps an existing key.
     // Uses withAnyParameters() for consistency with ECDH_CNG / AES_CNG_NAMED even though only one
     // constructor overload exists, to avoid a brittle single-parameter-type assumption.
@@ -190,6 +238,11 @@ public final class DotNetX25519DiffieHellman {
 
     @Nonnull
     public static List<IDetectionRule<CSharpTree>> rules() {
-        return List.of(X25519_GENERATE_KEY, X25519_CNG, X25519_OPENSSL);
+        return List.of(
+                X25519_GENERATE_KEY,
+                X25519_IMPORT_PRIVATE_KEY,
+                X25519_IMPORT_PUBLIC_KEY,
+                X25519_CNG,
+                X25519_OPENSSL);
     }
 }
