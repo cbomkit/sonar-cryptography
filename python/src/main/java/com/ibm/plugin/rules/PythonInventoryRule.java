@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.PythonBaseDetectionRule;
 import com.ibm.plugin.rules.detection.PythonDetectionRules;
@@ -36,7 +37,7 @@ import org.sonar.plugins.python.api.tree.Tree;
 public class PythonInventoryRule extends PythonBaseDetectionRule {
 
     public PythonInventoryRule() {
-        super(true, PythonDetectionRules.rules(), PythonReorganizerRules.rules());
+        super(true, RuleSets.rulesOf(PythonDetectionRules.class), PythonReorganizerRules.rules());
     }
 
     @VisibleForTesting

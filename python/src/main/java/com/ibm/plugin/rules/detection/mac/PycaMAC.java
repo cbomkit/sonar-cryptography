@@ -24,21 +24,16 @@ import static com.ibm.engine.detection.MethodMatcher.ANY;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaMAC {
-
-    private PycaMAC() {
-        // private
-    }
+public final class PycaMAC extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> NEW_CMAC =
             new DetectionRuleBuilder<Tree>()
@@ -76,16 +71,9 @@ public final class PycaMAC {
                     .inBundle(() -> "Pyca")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaMAC::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW_CMAC, NEW_HMAC, NEW_POLY1305);
     }
 }
