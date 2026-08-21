@@ -32,6 +32,7 @@ import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -153,11 +154,8 @@ import javax.annotation.Nonnull;
  * right-hand sides — only literals and bare identifiers), so they are likewise left undetected.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetLegacyFormatters {
+public final class DotNetLegacyFormatters extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetLegacyFormatters() {
-        // nothing
-    }
 
     // =========================================================================
     // Shared depending rules: signature operations (DSA + RSA PKCS#1 formatters)
@@ -435,7 +433,8 @@ public final class DotNetLegacyFormatters {
                     .withDependingDetectionRules(List.of(MGF1_SET_HASH_NAME));
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 DSA_SIGNATURE_FORMATTER,
                 DSA_SIGNATURE_DEFORMATTER,

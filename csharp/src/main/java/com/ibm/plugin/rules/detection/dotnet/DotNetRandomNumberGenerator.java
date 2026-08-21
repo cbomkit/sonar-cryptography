@@ -23,6 +23,7 @@ import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -111,11 +112,8 @@ import javax.annotation.Nonnull;
  * {@code withAnyParameters()} rule per method name.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetRandomNumberGenerator {
+public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetRandomNumberGenerator() {
-        // nothing
-    }
 
     // =========================================================================
     // Depending rules — instance operations on an already-tracked RNG object,
@@ -307,7 +305,8 @@ public final class DotNetRandomNumberGenerator {
                     .withDependingDetectionRules(RNG_INSTANCE_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 RNG_CREATE,
                 RNG_CREATE_NAMED,

@@ -23,6 +23,7 @@ import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -131,11 +132,8 @@ import javax.annotation.Nonnull;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetX25519DiffieHellman {
+public final class DotNetX25519DiffieHellman extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetX25519DiffieHellman() {
-        // nothing
-    }
 
     // =========================================================================
     // Key-derivation / secret-agreement operation rule
@@ -237,7 +235,8 @@ public final class DotNetX25519DiffieHellman {
                     .withDependingDetectionRules(X25519_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 X25519_GENERATE_KEY,
                 X25519_IMPORT_PRIVATE_KEY,

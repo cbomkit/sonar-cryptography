@@ -26,6 +26,7 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.ParameterIdentifierFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -141,11 +142,8 @@ import javax.annotation.Nonnull;
  * PKCS#8/SPKI/PEM export — same convention as RSA/ECDsa/ECDiffieHellman).
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetMLKem {
+public final class DotNetMLKem extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetMLKem() {
-        // nothing
-    }
 
     // =========================================================================
     // Encapsulate / Decapsulate operation rules (depending rules on any tracked MLKem-family
@@ -310,7 +308,8 @@ public final class DotNetMLKem {
                     .withDependingDetectionRules(MLKEM_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 MLKEM_GENERATE_KEY,
                 MLKEM_IMPORT_DECAPSULATION_KEY,

@@ -30,6 +30,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ModeFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -60,11 +61,7 @@ import javax.annotation.Nonnull;
  * // TODO: RC2CryptoServiceProvider.UseSalt is not detected as a known gap.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetRC2 {
-
-    private DotNetRC2() {
-        // nothing
-    }
+public final class DotNetRC2 extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Property setter rules (synthetic set_X method invocations)
@@ -621,7 +618,8 @@ public final class DotNetRC2 {
                     .withDependingDetectionRules(RC2_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(RC2_CREATE, RC2_CREATE_NAMED, RC2_CSP);
     }
 }

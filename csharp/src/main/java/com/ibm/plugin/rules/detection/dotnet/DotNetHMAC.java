@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -79,11 +80,7 @@ import javax.annotation.Nonnull;
 // TODO: the `Key` property setter (`hmac.Key = ...`) is not modeled as a depending rule — see
 // class javadoc "Known gap" section above for the rationale.
 @SuppressWarnings("java:S1192")
-public final class DotNetHMAC {
-
-    private DotNetHMAC() {
-        // nothing
-    }
+public final class DotNetHMAC extends DetectionRuleSet<CSharpTree> {
 
     private static IDetectionRule<CSharpTree> hmacRule(String className) {
         return new DetectionRuleBuilder<CSharpTree>()
@@ -113,7 +110,8 @@ public final class DotNetHMAC {
                     .withDependingDetectionRules(List.of());
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 hmacRule("HMACSHA1"),
                 hmacRule("HMACSHA256"),

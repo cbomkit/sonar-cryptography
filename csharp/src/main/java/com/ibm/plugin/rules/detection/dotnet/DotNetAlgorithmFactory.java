@@ -34,6 +34,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ModeFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -165,11 +166,8 @@ import javax.annotation.Nonnull;
  *       inventing an unverifiable table.
  * </ul>
  */
-public final class DotNetAlgorithmFactory {
+public final class DotNetAlgorithmFactory extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetAlgorithmFactory() {
-        // nothing
-    }
 
     // =========================================================================
     // SymmetricAlgorithm.Create(string) depending rules
@@ -710,7 +708,8 @@ public final class DotNetAlgorithmFactory {
                     .withoutDependingDetectionRules();
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 SYMMETRIC_ALGORITHM_CREATE,
                 HASH_ALGORITHM_CREATE,

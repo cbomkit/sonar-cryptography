@@ -25,6 +25,7 @@ import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -141,11 +142,8 @@ import javax.annotation.Nonnull;
  * not cryptographic identifiers) and its {@code Scope} property setter are not decoded either.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetProtectedData {
+public final class DotNetProtectedData extends DetectionRuleSet<CSharpTree> {
 
-    private DotNetProtectedData() {
-        // nothing
-    }
 
     // =========================================================================
     // ProtectedData — static-only class. Each static call is both the "creation" and
@@ -279,7 +277,8 @@ public final class DotNetProtectedData {
                     .withDependingDetectionRules(DPAPI_INSTANCE_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 PROTECTED_DATA_PROTECT,
                 PROTECTED_DATA_UNPROTECT,

@@ -25,15 +25,13 @@ import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-public final class DotNetChaCha20Poly1305 {
-    private DotNetChaCha20Poly1305() {
-        // nothing
-    }
+public final class DotNetChaCha20Poly1305 extends DetectionRuleSet<CSharpTree> {
 
     // chaCha20Poly1305.Encrypt(nonce, plaintext, ciphertext, tag [, associatedData])
     private static final IDetectionRule<CSharpTree> CHACHA20POLY1305_ENCRYPT_OP =
@@ -75,7 +73,8 @@ public final class DotNetChaCha20Poly1305 {
                     .withDependingDetectionRules(CHACHA20POLY1305_OP_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(CHACHA20POLY1305);
     }
 }
