@@ -36,6 +36,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +51,15 @@ class RuleAccessorEnforcementTest {
 
     /** Guards against the scan silently matching nothing (e.g. a package rename). */
     private static final int MIN_EXPECTED_RULE_SETS = 10;
+
+    /**
+     * Matches the synthetic classes the JVM generates for anonymous/local classes and lambdas (e.g.
+     * {@code Outer$1.class}), which are never rule accessors and would only add noise. Deliberately
+     * does NOT match named nested classes (e.g. {@code Outer$Inner.class}) — those are real
+     * declared types that can carry a static accessor just like a top-level class, so they must
+     * stay in the scan.
+     */
+    private static final Pattern SYNTHETIC_NESTED_CLASS = Pattern.compile("\\$\\d");
 
     @Test
     void noRuleClassExposesAStaticRuleAccessor() throws Exception {
@@ -81,14 +91,30 @@ class RuleAccessorEnforcementTest {
                 .isEmpty();
     }
 
+    /**
+     * Guards against three ways a static accessor can hide from a naive check: a raw {@code List}
+     * return (no generic signature to inspect at all — treated as a violation because we cannot
+     * prove it is safe), a raw {@code IDetectionRule} element (e.g. {@code List<IDetectionRule>}),
+     * and the parameterized element this test originally checked (e.g. {@code
+     * List<IDetectionRule<Tree>>}). Do not loosen this back to "only the parameterized case" — the
+     * first two are genuine second doors that a raw-typed shim could use to dodge detection.
+     */
     private static boolean returnsRuleList(Method method) {
         if (!List.class.isAssignableFrom(method.getReturnType())) {
             return false;
         }
         Type returnType = method.getGenericReturnType();
-        return returnType instanceof ParameterizedType list
-                && list.getActualTypeArguments()[0] instanceof ParameterizedType element
-                && element.getRawType().equals(IDetectionRule.class);
+        if (!(returnType instanceof ParameterizedType list)) {
+            // Raw `List` — no generic signature to inspect, so we cannot prove it is not a
+            // rule list. Treat it as a violation rather than let it pass silently.
+            return true;
+        }
+        Type element = list.getActualTypeArguments()[0];
+        if (element instanceof ParameterizedType parameterizedElement) {
+            return parameterizedElement.getRawType().equals(IDetectionRule.class);
+        }
+        // Raw `IDetectionRule` element, e.g. `List<IDetectionRule>`.
+        return element.equals(IDetectionRule.class);
     }
 
     private Set<String> discoverClassNames() throws Exception {
@@ -99,7 +125,11 @@ class RuleAccessorEnforcementTest {
             Path base = Path.of(roots.nextElement().toURI());
             try (Stream<Path> paths = Files.walk(base)) {
                 paths.filter(p -> p.toString().endsWith(".class"))
-                        .filter(p -> !p.getFileName().toString().contains("$"))
+                        .filter(
+                                p ->
+                                        !SYNTHETIC_NESTED_CLASS
+                                                .matcher(p.getFileName().toString())
+                                                .find())
                         .forEach(
                                 p -> {
                                     String relative =
