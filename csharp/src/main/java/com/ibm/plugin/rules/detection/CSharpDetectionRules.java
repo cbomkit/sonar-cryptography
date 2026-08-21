@@ -27,6 +27,8 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDsa;
 import com.ibm.plugin.rules.detection.dotnet.DotNetHMAC;
+import com.ibm.plugin.rules.detection.dotnet.DotNetMLDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetMLKem;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRC2;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRfc2898DeriveBytes;
@@ -56,7 +58,9 @@ public final class CSharpDetectionRules {
                         DotNetDSA.rules().stream(),
                         DotNetSHA.rules().stream(),
                         DotNetHMAC.rules().stream(),
-                        DotNetRfc2898DeriveBytes.rules().stream())
+                        DotNetRfc2898DeriveBytes.rules().stream(),
+                        DotNetMLKem.rules().stream(),
+                        DotNetMLDsa.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }
