@@ -17,9 +17,10 @@ void test_evp_mac() {
 
     // EVP_MAC_CTX_set_params: the "digest" entry in the OSSL_PARAM array is traced back to
     // this declaration and resolved as its own finding, separate from the HMAC fetch above.
+    // Digest name given as the OpenSSL 3.x provider fetch name.
     EVP_MAC_CTX* hmac_ctx = NULL;
     OSSL_PARAM hmac_params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0),
+        OSSL_PARAM_construct_utf8_string("digest", "SHA2-256", 0),
         OSSL_PARAM_construct_end()
     };
     EVP_MAC_CTX_set_params(hmac_ctx, hmac_params);

@@ -39,6 +39,8 @@ class PluginTest {
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
         CryptographyPlugin plugin = new CryptographyPlugin();
         plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
+        // 10 of our own extensions plus everything sonar-cxx's own Plugin.define() registers
+        // (language, sensor, built-in rules, one sensor/rule-repository/property set per tool).
+        Assertions.assertEquals(93, context.getExtensions().size());
     }
 }

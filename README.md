@@ -21,11 +21,10 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Version compatibility
 
-| Plugin Version  | SonarQube Version              |
-| --------------- | ------------------------------ |
-| 1.3.7 and up    | SonarQube 9.9 (LTS) and up     |
-| 1.3.2 and 1.3.6 | SonarQube 9.8 (LTS) up to 10.8 |
-| 1.2.0 to 1.3.1  | SonarQube 9.8 (LTS) up to 10.4 |
+| Plugin Version | SonarQube Version               |
+| -------------- | ------------------------------- |
+| 1.3.2 and up   | SonarQube 9.14 (LTS) and up     |
+| 1.2.0 to 1.3.1 | SonarQube 9.14 (LTS) up to 10.4 |
 
 ## Supported languages and libraries
 
@@ -64,6 +63,12 @@ Copy the plugin (the JAR file from the [latest releases](https://github.com/cbom
 to `$SONARQUBE_HOME/extensions/plugins` and restart
 SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-plugin/)).
 
+> [!IMPORTANT]
+> C/C++ support is provided by bundling [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx)
+> inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. Do not
+> also install a standalone sonar-cxx plugin on the same SonarQube instance: both would
+> register the same sonar-cxx configuration properties and SonarQube will fail to start.
+
 ## Using
 
 The plugin provides new inventory rules (Cbomkit Cryptography Repository) regarding the use of cryptography for
@@ -92,6 +97,7 @@ to start your first scan.
 ### Visualizing your CBOM
 
 Once you have scanned your source code with the plugin, and obtained a `cbom.json` file, you can use [CBOMkit](https://github.com/cbomkit/cbomkit) service to know more about it.
+
 It provides you with general insights about the cryptography used in your source code and its compliance with post-quantum safety.
 It also allows you to explore precisely each cryptography asset and its detailed specification, and displays where it appears in your code.
 
@@ -297,7 +303,7 @@ Run with `go run gen_package.go`, then delete the script.
 
 If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [_Testing your configuration and troubleshooting_](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
 
-To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [*Performance & Heap Testing*](docs/PERFORMANCE_TESTING.md).
+To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [_Performance & Heap Testing_](docs/PERFORMANCE_TESTING.md).
 
 ## Contribution Guidelines
 

@@ -34,4 +34,7 @@ void test_evp_message_digest() {
     // Digest name via a local variable, not a literal.
     const char *digest_name = "SHA256";
     EVP_MD_fetch(NULL, digest_name, NULL);
+
+    // Digest name as the OpenSSL 3.x provider fetch name (OSSL_DIGEST_NAME_SHA2_256).
+    EVP_MD_fetch(NULL, "SHA2-256", NULL);
 }

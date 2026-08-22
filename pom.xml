@@ -54,9 +54,9 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.25.0.34794</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
-        <!-- sonar-cxx (community plugin) version, via JitPack: chmodshubham/sonar-cxx@symbol-resol -->
-        <sonar.cxx.groupId>com.github.chmodshubham.sonar-cxx</sonar.cxx.groupId>
-        <sonar.cxx.version>e490e4c89df4c182759600447a0df2707881ad1</sonar.cxx.version>
+        <!-- sonar-cxx (community plugin) version -->
+        <sonar.cxx.groupId>org.sonarsource.sonarqube-plugins.cxx</sonar.cxx.groupId>
+        <sonar.cxx.version>2.3.1-SNAPSHOT</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>

@@ -9,7 +9,8 @@ void test_evp_keygen() {
     EVP_PKEY_CTX_set_dsa_paramgen_type(ctx, 0);
     const EVP_MD* dsa_paramgen_md = EVP_sha256();
     EVP_PKEY_CTX_set_dsa_paramgen_md(ctx, dsa_paramgen_md);
-    EVP_PKEY_CTX_set_dsa_paramgen_md_props(ctx, "SHA256", NULL);
+    // Digest name given as the OpenSSL 3.x provider fetch name.
+    EVP_PKEY_CTX_set_dsa_paramgen_md_props(ctx, "SHA2-256", NULL);
 
     EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, 415);
     EVP_PKEY_CTX_set_ec_param_enc(ctx, 0);

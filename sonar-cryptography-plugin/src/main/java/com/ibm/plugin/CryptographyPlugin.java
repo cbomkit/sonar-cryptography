@@ -37,6 +37,11 @@ public class CryptographyPlugin implements Plugin {
 
         LOGGER.info("Sonar Cryptography initialized in context (" + product + ")");
 
+        // sonar-cxx is not shipped as a core SonarQube analyzer like sonar-java/python/go, so its
+        // own extensions (language, sensor, built-in rules) are registered by delegating to its
+        // real Plugin.define() alongside ours.
+        new org.sonar.plugins.cxx.CxxPlugin().define(context);
+
         context.addExtensions(Configuration.getPropertyDefinitions()); // add configuration
         context.addExtensions(
                 // java
@@ -48,7 +53,7 @@ public class CryptographyPlugin implements Plugin {
                 // golang
                 GoScannerRuleDefinition.class, // Define Go rules
                 CryptoGoSensor.class, // Custom sensor (sonar-go has no CheckRegistrar API)
-                // cpp
+                // cxx
                 CxxScannerRuleDefinition.class, // Define C++ rules
                 CxxCheckRegistrar.class, // Register C++ rules by sonar-cxx sensor
                 // general

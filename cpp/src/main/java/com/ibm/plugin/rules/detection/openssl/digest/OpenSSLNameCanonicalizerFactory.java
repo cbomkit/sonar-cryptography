@@ -49,7 +49,14 @@ public final class OpenSSLNameCanonicalizerFactory implements IValueFactory<AstN
                     Map.entry("SHA384", "SHA-384"),
                     Map.entry("SHA512", "SHA-512"),
                     Map.entry("SHA512-224", "SHA-512/224"),
-                    Map.entry("SHA512-256", "SHA-512/256"));
+                    Map.entry("SHA512-256", "SHA-512/256"),
+                    // OpenSSL 3.x provider fetch names (OSSL_DIGEST_NAME_*)
+                    Map.entry("SHA2-224", "SHA-224"),
+                    Map.entry("SHA2-256", "SHA-256"),
+                    Map.entry("SHA2-384", "SHA-384"),
+                    Map.entry("SHA2-512", "SHA-512"),
+                    Map.entry("SHA2-512/224", "SHA-512/224"),
+                    Map.entry("SHA2-512/256", "SHA-512/256"));
 
     /** Curve/group name argument (e.g. {@code EVP_PKEY_CTX_set_group_name}) → {@code "EC-P256"}. */
     public static final Map<String, String> GROUP_NAMES =

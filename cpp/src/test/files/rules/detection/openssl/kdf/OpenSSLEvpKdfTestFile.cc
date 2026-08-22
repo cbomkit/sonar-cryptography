@@ -72,9 +72,10 @@ void test_evp_kdf() {
 
     // EVP_KDF_CTX_set_params: the "digest" entry in the OSSL_PARAM array is traced back to
     // this declaration and resolved as its own finding, separate from the fetch above.
+    // Digest name given as the OpenSSL 3.x provider fetch name.
     EVP_KDF_CTX* kctx = NULL;
     OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0),
+        OSSL_PARAM_construct_utf8_string("digest", "SHA2-256", 0),
         OSSL_PARAM_construct_end()
     };
     EVP_KDF_CTX_set_params(kctx, params);
