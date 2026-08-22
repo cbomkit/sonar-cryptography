@@ -60,9 +60,9 @@
         <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
-        <!-- sonar-cxx (community plugin) version, via JitPack: chmodshubham/sonar-cxx@symbol-resol -->
-        <sonar.cxx.groupId>com.github.chmodshubham.sonar-cxx</sonar.cxx.groupId>
-        <sonar.cxx.version>e490e4c89df4c182759600447a0df2707881ad1</sonar.cxx.version>
+        <!-- sonar-cxx (community plugin) version -->
+        <sonar.cxx.groupId>org.sonarsource.sonarqube-plugins.cxx</sonar.cxx.groupId>
+        <sonar.cxx.version>2.3.1-SNAPSHOT</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>

@@ -18,8 +18,9 @@ void test_evp_signature() {
     const EVP_MD* verify_md = EVP_sha256();
     EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL);
     // *_ex's mdname is a real digest-name string, resolved into its own DigestContext finding,
-    // separate from the SIGN/VERIFY action marker.
-    EVP_DigestSignInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
+    // separate from the SIGN/VERIFY action marker. Given as the OpenSSL 3.x provider fetch name
+    // here and the legacy alias below.
+    EVP_DigestSignInit_ex(ctx, NULL, "SHA2-256", NULL, NULL, NULL, NULL);
     EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
     EVP_DigestSign(ctx, NULL, NULL, 0, NULL, 0);
     EVP_DigestVerify(ctx, NULL, 0, NULL, 0);

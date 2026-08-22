@@ -223,6 +223,12 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 assertThat(value.asString()).isEqualTo("SHA-256");
                 assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
+            case 30 -> {
+                // EVP_MD_fetch(NULL, "SHA2-256", NULL): OpenSSL 3.x provider fetch name
+                // resolved via OpenSSLNameCanonicalizerFactory.
+                assertThat(value.asString()).isEqualTo("SHA-256");
+                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
+            }
             default -> throw new AssertionError("Unexpected findingId: " + findingId);
         }
     }

@@ -58,6 +58,12 @@
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>sonar-cxx-plugin</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -156,7 +162,6 @@
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
                     <!-- This line must specify all language keys which should be scanned by the plugin -->
                     <requiredForLanguages>java,jsp,py,ipynb,go,cs,cxx,cpp,c++,c</requiredForLanguages>
-                    <requirePlugins>cxx</requirePlugins>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
@@ -184,6 +189,15 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                         <exclude>META-INF/*.SF</exclude>
                                     </excludes>
+                                </filter>
+                                <!-- Keep every sonar-cxx class: minimizeJar only keeps classes
+                                     reachable from our own imports, but sonar-cxx's classes are
+                                     loaded by SonarQube via reflection, not imported directly. -->
+                                <filter>
+                                    <artifact>${sonar.cxx.groupId}:*</artifact>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
                                 </filter>
                             </filters>
                             <transformers>
