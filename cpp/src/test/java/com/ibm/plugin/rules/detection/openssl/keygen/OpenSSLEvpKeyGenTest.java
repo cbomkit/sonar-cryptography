@@ -42,8 +42,8 @@ import com.ibm.mapper.model.algorithms.Ed448;
 import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.MLKEM;
 import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.SLHDSA;
 import com.ibm.mapper.model.algorithms.SM2;
+import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.model.algorithms.SecP256r1MLKEM768;
 import com.ibm.mapper.model.algorithms.SecP384r1MLKEM1024;
 import com.ibm.mapper.model.algorithms.X25519;
@@ -134,9 +134,9 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     assertHybridKem(nodes, SecP256r1MLKEM768.class, "SecP256r1MLKEM768");
             case "SecP384r1MLKEM1024" ->
                     assertHybridKem(nodes, SecP384r1MLKEM1024.class, "SecP384r1MLKEM1024");
-            case "ML-DSA-44" -> assertMldsa(nodes, "ML-DSA-2", "2.16.840.1.101.3.4.3", 2);
-            case "ML-DSA-65" -> assertMldsa(nodes, "ML-DSA-3", "2.16.840.1.101.3.4.3", 3);
-            case "ML-DSA-87" -> assertMldsa(nodes, "ML-DSA-5", "2.16.840.1.101.3.4.3", 5);
+            case "ML-DSA-44" -> assertMldsa(nodes, "ML-DSA-44", "2.16.840.1.101.3.4.3.17", 44);
+            case "ML-DSA-65" -> assertMldsa(nodes, "ML-DSA-65", "2.16.840.1.101.3.4.3.18", 65);
+            case "ML-DSA-87" -> assertMldsa(nodes, "ML-DSA-87", "2.16.840.1.101.3.4.3.19", 87);
             case "SLH-DSA-SHA2-128F",
                     "SLH-DSA-SHA2-128S",
                     "SLH-DSA-SHAKE-128F",
@@ -313,7 +313,7 @@ class OpenSSLEvpKeyGenTest extends TestBase {
 
     private static void assertSlhdsa(List<INode> nodes) {
         INode n = head(nodes);
-        assertThat(n).isInstanceOf(SLHDSA.class);
+        assertThat(n).isInstanceOf(SPHINCSPlus.class);
         assertThat(n.getKind()).isEqualTo(Signature.class);
         assertThat(n.asString()).isEqualTo("SLH-DSA");
     }

@@ -36,8 +36,8 @@ import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.model.algorithms.SHA3;
-import com.ibm.mapper.model.algorithms.SLHDSA;
 import com.ibm.mapper.model.algorithms.SM2;
+import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -140,17 +140,17 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
             // Post-Quantum: ML-DSA
             if (algorithmName.startsWith("ML-DSA-")) {
                 if (algorithmName.equals("ML-DSA-44")) {
-                    return Optional.of(new MLDSA(2, detectionLocation));
+                    return Optional.of(new MLDSA(44, detectionLocation));
                 } else if (algorithmName.equals("ML-DSA-65")) {
-                    return Optional.of(new MLDSA(3, detectionLocation));
+                    return Optional.of(new MLDSA(65, detectionLocation));
                 } else if (algorithmName.equals("ML-DSA-87")) {
-                    return Optional.of(new MLDSA(5, detectionLocation));
+                    return Optional.of(new MLDSA(87, detectionLocation));
                 }
             }
 
             // Post-Quantum: SLH-DSA
             if (algorithmName.startsWith("SLH-DSA-")) {
-                return Optional.of(new SLHDSA(detectionLocation));
+                return Optional.of(new SPHINCSPlus(detectionLocation));
             }
 
             // SM2

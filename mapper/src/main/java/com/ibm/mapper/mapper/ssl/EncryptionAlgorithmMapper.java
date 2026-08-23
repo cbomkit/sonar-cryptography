@@ -32,7 +32,7 @@ import com.ibm.mapper.model.algorithms.RC4;
 import com.ibm.mapper.model.algorithms.SM4;
 import com.ibm.mapper.model.algorithms.Skipjack;
 import com.ibm.mapper.model.algorithms.TripleDES;
-import com.ibm.mapper.model.algorithms.ascon.AsconAead128;
+import com.ibm.mapper.model.algorithms.ascon.Ascon128;
 import com.ibm.mapper.model.algorithms.gost.GOST28147;
 import com.ibm.mapper.model.algorithms.gost.GOSTR34122015;
 import com.ibm.mapper.model.mode.CBC;
@@ -113,7 +113,7 @@ public final class EncryptionAlgorithmMapper implements IMapper {
             case "IDEA CBC" -> Optional.of(new IDEA(new CBC(detectionLocation), detectionLocation));
             case "SM4 CCM" -> Optional.of(new SM4(new CCM(detectionLocation), detectionLocation));
             case "SM4 GCM" -> Optional.of(new SM4(new GCM(detectionLocation), detectionLocation));
-            case "ASCONAEAD128" -> Optional.of(new AsconAead128(detectionLocation));
+            case "ASCONAEAD128" -> Optional.of(new Ascon128(detectionLocation));
             default -> Optional.empty();
         };
     }

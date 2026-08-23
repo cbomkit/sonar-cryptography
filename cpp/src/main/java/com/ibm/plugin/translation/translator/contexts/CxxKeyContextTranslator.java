@@ -35,7 +35,7 @@ import com.ibm.mapper.model.algorithms.Ed448;
 import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.MLKEM;
 import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.SLHDSA;
+import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.model.algorithms.SecP256r1MLKEM768;
 import com.ibm.mapper.model.algorithms.SecP384r1MLKEM1024;
 import com.ibm.mapper.model.algorithms.X25519;
@@ -118,9 +118,9 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
                 case "ML-KEM-1024" -> Optional.of(new MLKEM(1024, detectionLocation));
 
                 // ML-DSA (Post-Quantum)
-                case "ML-DSA-44" -> Optional.of(new MLDSA(2, detectionLocation));
-                case "ML-DSA-65" -> Optional.of(new MLDSA(3, detectionLocation));
-                case "ML-DSA-87" -> Optional.of(new MLDSA(5, detectionLocation));
+                case "ML-DSA-44" -> Optional.of(new MLDSA(44, detectionLocation));
+                case "ML-DSA-65" -> Optional.of(new MLDSA(65, detectionLocation));
+                case "ML-DSA-87" -> Optional.of(new MLDSA(87, detectionLocation));
 
                 // SLH-DSA (Post-Quantum)
                 case "SLH-DSA-SHA2-128F",
@@ -135,7 +135,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
                         "SLH-DSA-SHA2-256S",
                         "SLH-DSA-SHAKE-256F",
                         "SLH-DSA-SHAKE-256S" ->
-                        Optional.of(new SLHDSA(detectionLocation));
+                        Optional.of(new SPHINCSPlus(detectionLocation));
 
                 // Hybrid Post-Quantum KEMs (PQC + Classical)
                 case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));
