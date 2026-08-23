@@ -42,7 +42,9 @@ import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.model.algorithms.SHA3;
+import com.ibm.mapper.model.algorithms.SSHKDF;
 import com.ibm.mapper.model.algorithms.Scrypt;
+import com.ibm.mapper.model.algorithms.TLSPRF;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -86,8 +88,10 @@ public final class CxxKeyDerivationFunctionContextTranslator
                 case "SCRYPT" -> Optional.of(new Scrypt(detectionLocation));
 
                 // TLS PRF
-                case "TLS1-PRF-MD5-SHA1", "TLS1-PRF-SHA256", "TLS1-PRF-SHA384", "TLS1-PRF-SHA512" ->
-                        Optional.of(new PBKDF2(detectionLocation));
+                case "TLS1-PRF-MD5-SHA1" -> Optional.of(new TLSPRF(detectionLocation));
+                case "TLS1-PRF-SHA256" -> Optional.of(new TLSPRF(new SHA2(256, detectionLocation)));
+                case "TLS1-PRF-SHA384" -> Optional.of(new TLSPRF(new SHA2(384, detectionLocation)));
+                case "TLS1-PRF-SHA512" -> Optional.of(new TLSPRF(new SHA2(512, detectionLocation)));
 
                 // TLS 1.3 KDF
                 case "TLS13-KDF-SHA256" -> Optional.of(new HKDF(new SHA2(256, detectionLocation)));
@@ -128,8 +132,9 @@ public final class CxxKeyDerivationFunctionContextTranslator
                         Optional.of(new ConcatenationKDF(detectionLocation));
 
                 // SSHKDF
-                case "SSHKDF-SHA1", "SSHKDF-SHA256", "SSHKDF-SHA512" ->
-                        Optional.of(new PBKDF2(detectionLocation));
+                case "SSHKDF-SHA1" -> Optional.of(new SSHKDF(new SHA(detectionLocation)));
+                case "SSHKDF-SHA256" -> Optional.of(new SSHKDF(new SHA2(256, detectionLocation)));
+                case "SSHKDF-SHA512" -> Optional.of(new SSHKDF(new SHA2(512, detectionLocation)));
 
                 // KRB5KDF (Kerberos Key Derivation Function)
                 case "KRB5KDF" ->
