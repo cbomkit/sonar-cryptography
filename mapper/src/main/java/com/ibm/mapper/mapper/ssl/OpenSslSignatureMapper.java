@@ -26,7 +26,7 @@ import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.Ed448;
 import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.SLHDSA;
+import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -54,7 +54,7 @@ public final class OpenSslSignatureMapper implements IMapper {
         final String normalized = algorithm.trim().toUpperCase();
 
         if (normalized.startsWith("SLH-DSA") || normalized.startsWith("SLHDSA")) {
-            return Optional.of(new SLHDSA(detectionLocation));
+            return Optional.of(new SPHINCSPlus(detectionLocation));
         }
         if (normalized.startsWith("ML-DSA") || normalized.startsWith("MLDSA")) {
             return Optional.of(new MLDSA(detectionLocation));

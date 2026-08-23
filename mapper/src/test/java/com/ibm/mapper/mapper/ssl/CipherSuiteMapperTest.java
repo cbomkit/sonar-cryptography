@@ -29,7 +29,7 @@ import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.ascon.AsconAead128;
+import com.ibm.mapper.model.algorithms.ascon.Ascon128;
 import com.ibm.mapper.model.algorithms.ascon.AsconHash;
 import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -93,8 +93,7 @@ class CipherSuiteMapperTest {
         assertThat(cipherSuite.getAssetCollection()).isPresent();
         assertThat(cipherSuite.getAssetCollection().get().getCollection())
                 .contains(
-                        new AsconAead128(testDetectionLocation),
-                        new SHA2(256, testDetectionLocation));
+                        new Ascon128(testDetectionLocation), new SHA2(256, testDetectionLocation));
     }
 
     @Test
