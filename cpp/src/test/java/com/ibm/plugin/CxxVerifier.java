@@ -132,8 +132,6 @@ public final class CxxVerifier {
      * @param check The check (detection rule) to apply across all files
      * @param charset The character set of the test files
      */
-    @SuppressWarnings("unchecked") // CxxAstScanner.create takes SquidAstVisitor<Grammar>...
-    // varargs — passing a single typed visitor triggers a harmless generic-array creation warning
     public static void verifyFiles(
             @Nonnull List<String> relativePaths,
             @Nonnull SquidAstVisitor<Grammar> check,
@@ -159,9 +157,42 @@ public final class CxxVerifier {
                 throw new IllegalStateException("Failed to read test file: " + fullPath, e);
             }
         }
+        scan(inputFiles, check);
+    }
 
-        // No include directories are configured: detection matches the literal OpenSSL API calls,
-        // so it does not depend on the preprocessor expanding headers.
+    /**
+     * Verifies test files given as absolute filesystem paths, e.g. files generated into a JUnit
+     * {@code @TempDir} rather than checked in under {@code src/test/files/}. Otherwise identical to
+     * {@link #verifyFiles(List, SquidAstVisitor)}: one shared {@link AstScanner} across all files,
+     * scanned in order, {@code leaveFile} firing per file as production does.
+     *
+     * @param absolutePaths Absolute paths to the test files, in scan order
+     * @param check The check (detection rule) to apply across all files
+     */
+    public static void verifyAbsoluteFiles(
+            @Nonnull List<Path> absolutePaths, @Nonnull SquidAstVisitor<Grammar> check) {
+        List<InputFile> inputFiles = new ArrayList<>(absolutePaths.size());
+        for (Path path : absolutePaths) {
+            try {
+                String content =
+                        new String(java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8);
+                inputFiles.add(
+                        TestInputFileBuilder.create("", path.toAbsolutePath().toString())
+                                .setCharset(StandardCharsets.UTF_8)
+                                .setProjectBaseDir(path.getParent())
+                                .setContents(content)
+                                .build());
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to read test file: " + path, e);
+            }
+        }
+        scan(inputFiles, check);
+    }
+
+    // No include directories are configured: detection matches the literal OpenSSL API calls, so
+    // it does not depend on the preprocessor expanding headers.
+    private static void scan(
+            @Nonnull List<InputFile> inputFiles, @Nonnull SquidAstVisitor<Grammar> check) {
         CxxSquidConfiguration squidConfig = new CxxSquidConfiguration();
         AstScanner<Grammar> scanner = CxxAstScanner.create(squidConfig, check);
         scanner.scanInputFiles(inputFiles);
