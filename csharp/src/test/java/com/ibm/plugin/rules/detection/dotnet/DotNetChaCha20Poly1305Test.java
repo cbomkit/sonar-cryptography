@@ -51,6 +51,12 @@ import org.junit.jupiter.api.Test;
  *   <li>Decrypt overloads (byte[] and ReadOnlySpan&lt;byte&gt;), with and without associatedData
  * </ul>
  *
+ * <p>The constructor accepts either a {@code byte[]} key or a {@code ReadOnlySpan<byte>} key,
+ * and Encrypt/Decrypt each accept either {@code byte[]} or {@code ReadOnlySpan<byte>} buffers,
+ * giving 4 key-type/buffer-type combinations for Encrypt and 4 for Decrypt (Sections 2–5 pair a
+ * {@code byte[]} key with both buffer overloads; Sections 6–9 pair a {@code
+ * ReadOnlySpan<byte>} key with both buffer overloads).
+ *
  * <p>Finding mapping (one finding per test method in
  * DotNetChaCha20Poly1305TestFile.cs):
  *
@@ -59,21 +65,39 @@ import org.junit.jupiter.api.Test;
  *   0  TestConstructByteArrayKey             → ChaCha20-Poly1305
  *   1  TestConstructSpanKey                  → ChaCha20-Poly1305
  *
- * Section 2 – Encrypt, byte[] overload (findings 2–3):
+ * Section 2 – byte[] key + Encrypt, byte[] overload (findings 2–3):
  *   2  TestEncryptByteArrayWithAad           → ChaCha20-Poly1305 + Encrypt
  *   3  TestEncryptByteArrayNoAad             → ChaCha20-Poly1305 + Encrypt
  *
- * Section 3 – Encrypt, ReadOnlySpan&lt;byte&gt; overload (findings 4–5):
+ * Section 3 – byte[] key + Encrypt, ReadOnlySpan&lt;byte&gt; overload (findings 4–5):
  *   4  TestEncryptSpanWithAad                → ChaCha20-Poly1305 + Encrypt
  *   5  TestEncryptSpanNoAad                  → ChaCha20-Poly1305 + Encrypt
  *
- * Section 4 – Decrypt, byte[] overload (findings 6–7):
+ * Section 4 – byte[] key + Decrypt, byte[] overload (findings 6–7):
  *   6  TestDecryptByteArrayWithAad           → ChaCha20-Poly1305 + Decrypt
  *   7  TestDecryptByteArrayNoAad             → ChaCha20-Poly1305 + Decrypt
  *
- * Section 5 – Decrypt, ReadOnlySpan&lt;byte&gt; overload (findings 8–9):
+ * Section 5 – byte[] key + Decrypt, ReadOnlySpan&lt;byte&gt; overload (findings 8–9):
  *   8  TestDecryptSpanWithAad                → ChaCha20-Poly1305 + Decrypt
  *   9  TestDecryptSpanNoAad                  → ChaCha20-Poly1305 + Decrypt
+ *
+ * Section 6 – ReadOnlySpan&lt;byte&gt; key + Encrypt, byte[] overload (findings 10–11):
+ *   10 TestSpanKeyEncryptByteArrayWithAad    → ChaCha20-Poly1305 + Encrypt
+ *   11 TestSpanKeyEncryptByteArrayNoAad      → ChaCha20-Poly1305 + Encrypt
+ *
+ * Section 7 – ReadOnlySpan&lt;byte&gt; key + Encrypt, ReadOnlySpan&lt;byte&gt; overload
+ * (findings 12–13):
+ *   12 TestSpanKeyEncryptSpanWithAad         → ChaCha20-Poly1305 + Encrypt
+ *   13 TestSpanKeyEncryptSpanNoAad           → ChaCha20-Poly1305 + Encrypt
+ *
+ * Section 8 – ReadOnlySpan&lt;byte&gt; key + Decrypt, byte[] overload (findings 14–15):
+ *   14 TestSpanKeyDecryptByteArrayWithAad    → ChaCha20-Poly1305 + Decrypt
+ *   15 TestSpanKeyDecryptByteArrayNoAad      → ChaCha20-Poly1305 + Decrypt
+ *
+ * Section 9 – ReadOnlySpan&lt;byte&gt; key + Decrypt, ReadOnlySpan&lt;byte&gt; overload
+ * (findings 16–17):
+ *   16 TestSpanKeyDecryptSpanWithAad         → ChaCha20-Poly1305 + Decrypt
+ *   17 TestSpanKeyDecryptSpanNoAad           → ChaCha20-Poly1305 + Decrypt
  *
  * </pre>
  */
@@ -134,6 +158,26 @@ class DotNetChaCha20Poly1305Test extends TestBase {
             // Section 5: Decrypt — ReadOnlySpan<byte> overload
             // -----------------------------------------------------------------
             case 8, 9 -> assertDecryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 6: ReadOnlySpan<byte> key + Encrypt — byte[] overload
+            // -----------------------------------------------------------------
+            case 10, 11 -> assertEncryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 7: ReadOnlySpan<byte> key + Encrypt — ReadOnlySpan<byte> overload
+            // -----------------------------------------------------------------
+            case 12, 13 -> assertEncryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 8: ReadOnlySpan<byte> key + Decrypt — byte[] overload
+            // -----------------------------------------------------------------
+            case 14, 15 -> assertDecryptFindings(detectionStore, node);
+
+            // -----------------------------------------------------------------
+            // Section 9: ReadOnlySpan<byte> key + Decrypt — ReadOnlySpan<byte> overload
+            // -----------------------------------------------------------------
+            case 16, 17 -> assertDecryptFindings(detectionStore, node);
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
