@@ -54,6 +54,7 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.29.0.35837</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
+        <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>
@@ -91,6 +92,12 @@
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
           <version>2.0.18</version>
+        </dependency>
+        <dependency>
+          <groupId>org.sonarsource.analyzer-commons</groupId>
+          <artifactId>sonar-analyzer-test-commons</artifactId>
+          <version>${sonar.analyzer-commons.version}</version>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </dependencyManagement>
@@ -196,7 +203,7 @@
             <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.5.4</version>
+            <version>3.5.6</version>
             <configuration>
                 <excludedGroups>${excludedGroups}</excludedGroups>
             </configuration>
@@ -204,7 +211,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.9.0</version>
                 <configuration>
                     <java>
                         <includes>
