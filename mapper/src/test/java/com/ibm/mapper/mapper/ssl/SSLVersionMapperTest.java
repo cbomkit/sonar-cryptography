@@ -85,12 +85,23 @@ public class SSLVersionMapperTest {
     }
 
     @Test
-    public void sslv3IsParsedAsVersion3() {
+    public void sslv3WithExplicitMinorIsParsedAsVersion3_0() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
         final SSLVersionMapper mapper = new SSLVersionMapper();
         Optional<? extends INode> sslv3 = mapper.parse("SSLv3.0", testDetectionLocation);
+        assertThat(sslv3).isPresent();
+        assertThat(sslv3.get().asString()).isEqualTo("3.0");
+    }
+
+    @Test
+    public void sslv3WithoutMinorIsParsedAsVersion3_0() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final SSLVersionMapper mapper = new SSLVersionMapper();
+        Optional<? extends INode> sslv3 = mapper.parse("SSLv3", testDetectionLocation);
         assertThat(sslv3).isPresent();
         assertThat(sslv3.get().asString()).isEqualTo("3.0");
     }

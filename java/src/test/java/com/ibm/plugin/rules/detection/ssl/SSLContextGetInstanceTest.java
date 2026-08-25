@@ -72,7 +72,7 @@ class SSLContextGetInstanceTest extends TestBase {
             // node too, the same as a TLSv* algorithm name.
             case 1 -> {
                 assertThat(value0.asString()).isEqualTo("SSLv3");
-                assertTlsVersion(nodes, "SSLv3", "3");
+                assertTlsVersion(nodes, "SSLv3.0", "3.0");
             }
             case 2 -> {
                 assertThat(value0.asString()).isEqualTo("DTLSv1.2");

@@ -56,15 +56,35 @@ public final class OpenSSLNameCanonicalizerFactory implements IValueFactory<AstN
                     Map.entry("SHA2-384", "SHA-384"),
                     Map.entry("SHA2-512", "SHA-512"),
                     Map.entry("SHA2-512/224", "SHA-512/224"),
-                    Map.entry("SHA2-512/256", "SHA-512/256"));
+                    Map.entry("SHA2-512/256", "SHA-512/256"),
+                    // SHAKE (extendable-output functions)
+                    Map.entry("SHAKE128", "SHAKE128"),
+                    Map.entry("SHAKE256", "SHAKE256"),
+                    // RIPEMD-160 (OpenSSL's short_name is "RMD160", the long/EVP name is
+                    // "RIPEMD160")
+                    Map.entry("RIPEMD160", "RIPEMD160"),
+                    Map.entry("RMD160", "RIPEMD160"),
+                    // BLAKE2 (OpenSSL's EVP_MD names have no hyphen; the translator's canonical
+                    // form does)
+                    Map.entry("BLAKE2B512", "BLAKE2B-512"),
+                    Map.entry("BLAKE2S256", "BLAKE2S-256"),
+                    // MDC-2 (ISO/IEC 10118-2, built on DES)
+                    Map.entry("MDC2", "MDC2"),
+                    // SSLv3 MAC digest names (OBJ_sn_ssl3_sha1 / OBJ_sn_ssl3_md5): the same
+                    // SHA-1/MD5 algorithms, just under their SSLv3 cipher-suite object name
+                    Map.entry("SSL3-SHA1", "SHA-1"),
+                    Map.entry("SSL3-MD5", "MD5"));
 
     /** Curve/group name argument (e.g. {@code EVP_PKEY_CTX_set_group_name}) → {@code "EC-P256"}. */
     public static final Map<String, String> GROUP_NAMES =
             Map.ofEntries(
                     Map.entry("P-192", "EC-P192"),
                     Map.entry("PRIME192V1", "EC-P192"),
+                    Map.entry("P-224", "EC-P224"),
+                    Map.entry("SECP224R1", "EC-P224"),
                     Map.entry("P-256", "EC-P256"),
                     Map.entry("PRIME256V1", "EC-P256"),
+                    Map.entry("SECP256R1", "EC-P256"),
                     Map.entry("P-384", "EC-P384"),
                     Map.entry("SECP384R1", "EC-P384"),
                     Map.entry("P-521", "EC-P521"),
