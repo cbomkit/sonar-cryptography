@@ -50,6 +50,7 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 class OpenSSLLegacyEcTest extends TestBase {
 
     private int ecP256Count = 0;
+    private int findingCount = 0;
 
     @Test
     void test() {
@@ -60,6 +61,7 @@ class OpenSSLLegacyEcTest extends TestBase {
         // EC_KEY_new_by_curve_name(CurveNid::P256) (scoped-enum qualified reference) all
         // resolve to "EC-P256", each via CxxSymbolResolverVisitor.
         assertThat(ecP256Count).isEqualTo(6);
+        assertThat(findingCount).isGreaterThan(ecP256Count);
     }
 
     @Override
@@ -75,12 +77,16 @@ class OpenSSLLegacyEcTest extends TestBase {
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+        findingCount++;
 
         String v = value.asString();
         if (v.equals("EC-P256")) {
             ecP256Count++;
         }
         switch (v) {
+            // EC_GROUP_new_curve_GFp/GF2m fall under this shared multi-method rule (see
+            // OpenSSLLegacyEc's EC_KEY_GENERATE_KEY), producing the bare "EC" value, not a
+            // distinct "EC-GFP"/"EC-GF2M" string.
             case "EC", "EC-P256" -> assertEcdsa(nodes);
             case "ECDSA-SIGN" -> {
                 assertThat(detectionStore.getDetectionValueContext())
@@ -93,7 +99,6 @@ class OpenSSLLegacyEcTest extends TestBase {
                 assertEcdsa(nodes);
             }
             case "ECDH" -> assertEcdh(nodes);
-            case "EC-GFP", "EC-GF2M" -> assertThat(nodes).isEmpty();
             default -> throw new AssertionError("Unexpected value: " + v);
         }
     }

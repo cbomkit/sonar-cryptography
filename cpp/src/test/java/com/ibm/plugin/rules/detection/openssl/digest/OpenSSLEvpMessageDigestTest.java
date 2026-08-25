@@ -62,10 +62,13 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpMessageDigestTest extends TestBase {
 
+    private int findingCount = 0;
+
     @Test
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/digest/OpenSSLEvpMessageDigestTestFile.cc", this);
+        assertThat(findingCount).isEqualTo(31);
     }
 
     @Override
@@ -82,6 +85,7 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+        findingCount++;
 
         switch (findingId) {
             case 0 -> {
@@ -214,8 +218,11 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
             case 26, 27, 28 -> {
+                // EVP_DigestInit(_ex/_ex2)(ctx, NULL, ...): digest argument is a literal NULL,
+                // so there is no constructing call to trace back to and the marker resolves to
+                // no node.
                 assertThat(value.asString()).isEqualTo("DIGEST");
-                assertThat(nodes).isNotNull();
+                assertThat(nodes).isEmpty();
             }
             case 29 -> {
                 // EVP_MD_fetch(NULL, digest_name, NULL): digest_name is a local variable,

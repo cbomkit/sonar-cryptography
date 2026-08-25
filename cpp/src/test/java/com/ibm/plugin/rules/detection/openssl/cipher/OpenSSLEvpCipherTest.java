@@ -145,7 +145,8 @@ class OpenSSLEvpCipherTest extends TestBase {
             return;
         }
         if (v.equals("DES-EDE3-WRAP")) {
-            assertThat(nodes).isNotNull();
+            // EVP_des_ede3_wrap()'s fetch carries no separate algorithm-name parameter to trace.
+            assertThat(nodes).isEmpty();
             return;
         }
         if (v.startsWith("DESede3")) {
@@ -229,7 +230,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                 || v.equals("CMS-RECIPIENT-KEY")
                 || v.equals("PKCS7-ENCRYPT")
                 || v.equals("PKCS7-CIPHER")) {
-            assertThat(nodes).isNotNull();
+            // None of these API calls carry an algorithm-name parameter to trace.
+            assertThat(nodes).isEmpty();
             return;
         }
         // EVP_ASYM_CIPHER_fetch(NULL, "RSA", NULL): real algorithm name resolved via

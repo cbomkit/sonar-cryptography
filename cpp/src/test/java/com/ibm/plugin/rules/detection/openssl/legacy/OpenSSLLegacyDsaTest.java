@@ -50,9 +50,12 @@ class OpenSSLLegacyDsaTest extends TestBase {
 
     private static final String DSA_OID = "1.2.840.10040.4.1";
 
+    private int findingCount = 0;
+
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyDsaTestFile.cc", this);
+        assertThat(findingCount).isEqualTo(4);
     }
 
     @Override
@@ -66,14 +69,18 @@ class OpenSSLLegacyDsaTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore).isNotNull();
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
         assertThat(value).isInstanceOf(ValueAction.class);
+        findingCount++;
 
         String v = value.asString();
         if (v.equals("DSA")) {
-            assertThat(nodes).isNotNull();
+            // DSA_generate_key / DSA_generate_parameters_ex: real algorithm name resolved via
+            // CxxKeyContextTranslator's DSA branch.
+            assertThat(nodes).hasSize(1);
+            INode n = nodes.get(0);
+            assertThat(n).isInstanceOf(DSA.class);
         } else if (v.equals("DSA-SIGN")) {
             assertThat(detectionStore.getDetectionValueContext())
                     .isInstanceOf(SignatureContext.class);

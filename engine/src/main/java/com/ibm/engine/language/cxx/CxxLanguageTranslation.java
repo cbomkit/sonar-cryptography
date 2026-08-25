@@ -377,18 +377,6 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         return null;
     }
 
-    /**
-     * Builds an {@link IType} for a sonar-cxx {@link Type}, snapshotting its fully qualified name
-     * (and, for subtype matching, its base classes' FQNs) into plain strings up front rather than
-     * capturing {@code cxxType} itself. {@code Type} instances can carry a {@code TypeSymbol} whose
-     * {@code declaration()} is a live {@link AstNode}, and any reachable {@code AstNode} keeps its
-     * whole file's parse tree alive via parent/child/sibling links. Recorded calls that embed such
-     * a closure in a {@link com.ibm.engine.callstack.DetachedCall} would silently defeat the
-     * AST-detach mechanism (the call looks tree-free, but the captured lambda still pins the tree).
-     */
-    // Package-private (not private) so CxxLanguageTranslationAstDetachTest can call it directly to
-    // assert it never captures cxxType (and thus the AstNode chain reachable through it) in the
-    // returned closure.
     IType createTypeFromCxxType(@Nonnull Type cxxType, @Nonnull MatchContext matchContext) {
         final String fqn = cxxType.fullyQualifiedName();
         final boolean exactOnly =

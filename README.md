@@ -21,10 +21,11 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Version compatibility
 
-| Plugin Version | SonarQube Version               |
-| -------------- | ------------------------------- |
-| 1.3.2 and up   | SonarQube 9.14 (LTS) and up     |
-| 1.2.0 to 1.3.1 | SonarQube 9.14 (LTS) up to 10.4 |
+| Plugin Version | SonarQube Version                       | Requires Java |
+| -------------- | --------------------------------------- | ------------- |
+| 2.0.0 and up   | SonarQube 2025.1 (LTA) and up           | 21            |
+| 1.3.2 to 1.3.x | SonarQube 9.14 (LTS) up to 2025.1 (LTA) | 17            |
+| 1.2.0 to 1.3.1 | SonarQube 9.14 (LTS) up to 10.4         | 17            |
 
 ## Supported languages and libraries
 
@@ -55,9 +56,12 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 > [!NOTE]
 > To run the plugin, you need a running SonarQube instance with one of the supported
-> versions. If you don't have one but want to try the plugin, you can use the
-> included Docker Compose to set up a development environment. See
-> [here](CONTRIBUTING.md#build) for instructions.
+> versions (see [Version compatibility](#version-compatibility) above), and that
+> instance's own JVM must be Java 21 or newer — the plugin JAR is built for Java 21
+> and a SonarQube server running on Java 17 will fail to load it. If you don't have
+> a suitable instance but want to try the plugin, you can use the included Docker
+> Compose to set up a development environment. See [here](CONTRIBUTING.md#build)
+> for instructions.
 
 Copy the plugin (the JAR file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases))
 to `$SONARQUBE_HOME/extensions/plugins` and restart
