@@ -24,16 +24,11 @@ import com.ibm.engine.language.csharp.CSharpLanguageSupport;
 import com.ibm.engine.language.csharp.CSharpScanContext;
 import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
-import com.ibm.engine.language.cxx.CxxLanguageSupport;
 import com.ibm.engine.language.go.GoLanguageSupport;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.language.java.JavaLanguageSupport;
 import com.ibm.engine.language.python.PythonLanguageSupport;
-import com.sonar.cxx.sslr.api.AstNode;
-import com.sonar.cxx.sslr.api.Grammar;
 import javax.annotation.Nonnull;
-import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
-import org.sonar.cxx.squidbridge.checks.SquidCheck;
 import org.sonar.go.symbols.Symbol;
 import org.sonar.plugins.go.api.Tree;
 import org.sonar.plugins.go.api.checks.GoCheck;
@@ -77,15 +72,5 @@ public final class LanguageSupporter {
     public static ILanguageSupport<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
             csharpLanguageSupporter() {
         return new CSharpLanguageSupport();
-    }
-
-    @Nonnull
-    public static ILanguageSupport<
-                    SquidCheck<?>,
-                    AstNode,
-                    org.sonar.cxx.squidbridge.api.Symbol,
-                    SquidAstVisitorContext<? extends Grammar>>
-            cxxLanguageSupporter() {
-        return new CxxLanguageSupport();
     }
 }

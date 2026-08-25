@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -51,11 +52,13 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
 
     @Override
     public @Nonnull String asString() {
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
         final Optional<INode> digest = this.hasChildOfType(MessageDigest.class);
-        if (digest.isPresent()) {
-            return this.name + "-" + digest.get().asString();
-        }
-        return this.name;
+        digest.ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        final Optional<INode> parameterSetIdentifier =
+                this.hasChildOfType(ParameterSetIdentifier.class);
+        parameterSetIdentifier.ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        return stringBuilder.toString();
     }
 
     public ANSIX942(@Nonnull DetectionLocation detectionLocation) {
@@ -65,5 +68,10 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
     public ANSIX942(@Nonnull MessageDigest messageDigest) {
         super(NAME, KeyDerivationFunction.class, messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    public ANSIX942(@Nonnull String mode, @Nonnull DetectionLocation detectionLocation) {
+        this(detectionLocation);
+        this.put(new ParameterSetIdentifier(mode, detectionLocation));
     }
 }

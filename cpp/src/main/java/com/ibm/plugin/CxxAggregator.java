@@ -20,7 +20,7 @@
 package com.ibm.plugin;
 
 import com.ibm.engine.language.ILanguageSupport;
-import com.ibm.engine.language.LanguageSupporter;
+import com.ibm.engine.language.cxx.CxxLanguageSupporter;
 import com.ibm.mapper.model.INode;
 import com.ibm.output.IAggregator;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -37,7 +37,7 @@ public final class CxxAggregator implements IAggregator {
 
     private static ILanguageSupport<
                     SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
-            cxxLanguageSupport = LanguageSupporter.cxxLanguageSupporter();
+            cxxLanguageSupport = CxxLanguageSupporter.cxxLanguageSupporter();
     private static List<INode> detectedNodes = new ArrayList<>();
 
     private CxxAggregator() {
@@ -62,7 +62,7 @@ public final class CxxAggregator implements IAggregator {
     }
 
     public static void reset() {
-        cxxLanguageSupport = LanguageSupporter.cxxLanguageSupporter();
+        cxxLanguageSupport = CxxLanguageSupporter.cxxLanguageSupporter();
         detectedNodes = new ArrayList<>();
     }
 }

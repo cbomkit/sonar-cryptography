@@ -90,8 +90,8 @@ class OpenSSLLibsslTest extends TestBase {
         assertObservedCount("MLKEM768:X25519:secp256r1", 1);
         assertObservedCount("ECDSA+SHA256", 1);
         assertObservedCount("X25519", 1);
-        // "FRODOKEM976AES" is an unrecognized group entry mixed into a known list, dropped by
-        // OpenSslGroupMapper (see assertAlgorithmCollection).
+        // "FRODOKEM976AES" is an unrecognized group name mixed into a known list, surfacing as a
+        // raw Protocol entry alongside the recognized ones (see assertAlgorithmCollection).
         assertObservedCount("X25519:FRODOKEM976AES:secp256r1", 1);
 
         assertThat(observed).hasSize(45);
@@ -167,10 +167,11 @@ class OpenSSLLibsslTest extends TestBase {
                     assertAlgorithmCollection(nodes, "ML-KEM-768", "x25519", "ECDH");
             case "ECDSA+SHA256" -> assertAlgorithmCollection(nodes, "ECDSA");
             case "X25519" -> assertAlgorithmCollection(nodes, "x25519");
-            // Unknown group name ("FRODOKEM976AES") mixed into an otherwise-known list: skipped
-            // entirely - only OpenSslGroupMapper's recognized entries (x25519, secp256r1) appear.
+            // Unknown group name ("FRODOKEM976AES") mixed into an otherwise-known list: surfaces
+            // as a raw Protocol entry alongside OpenSslGroupMapper's recognized entries (x25519,
+            // secp256r1).
             case "X25519:FRODOKEM976AES:secp256r1" ->
-                    assertAlgorithmCollection(nodes, "x25519", "ECDH");
+                    assertAlgorithmCollection(nodes, "x25519", "FRODOKEM976AES", "ECDH");
             default -> throw new AssertionError("Unexpected value: " + v);
         }
     }
@@ -202,8 +203,9 @@ class OpenSSLLibsslTest extends TestBase {
     }
 
     /**
-     * A colon-separated sigalg/group list is translated to a single {@link AssetCollection} whose
-     * members are the resolved algorithm nodes (one per name).
+     * A colon-separated sigalg/group list is translated to a single {@link AssetCollection} with
+     * one child per name: recognized names resolve to their mapped algorithm node, unrecognized
+     * names surface as a raw {@link Protocol} node.
      */
     private static void assertAlgorithmCollection(
             List<INode> nodes, String... expectedAlgorithmNames) {

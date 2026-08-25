@@ -120,9 +120,12 @@ class OpenSSLEvpKdfTest extends TestBase {
             assertThat(nodes).isEmpty();
         } else if (v.equals("SCRYPT")) {
             assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.Scrypt.class, "scrypt");
-        } else if (v.equals("X942KDF-ASN1") || v.equals("X942KDF-CONCAT")) {
+        } else if (v.equals("X942KDF-ASN1")) {
             assertSimpleAlgo(
-                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42");
+                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42-ASN1");
+        } else if (v.equals("X942KDF-CONCAT")) {
+            assertSimpleAlgo(
+                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42-CONCAT");
         } else if (v.equals("SSKDF")) {
             assertSimpleAlgo(
                     nodes,

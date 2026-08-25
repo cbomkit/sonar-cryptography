@@ -150,7 +150,8 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
 
             // Post-Quantum: SLH-DSA
             if (algorithmName.startsWith("SLH-DSA-")) {
-                return Optional.of(new SPHINCSPlus(detectionLocation));
+                String parameterSet = algorithmName.substring("SLH-DSA-".length());
+                return Optional.of(new SPHINCSPlus(parameterSet, detectionLocation));
             }
 
             // SM2

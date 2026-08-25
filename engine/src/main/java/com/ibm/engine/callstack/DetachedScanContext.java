@@ -33,9 +33,10 @@ import org.sonar.api.batch.fs.InputFile;
  * so that replaying it does not pin the file's AST while still supporting CBOM translation and
  * cross-file SonarQube issue reporting.
  *
- * <p>{@link #reportIssue} raises the issue through {@link #issueReporter} (an AST-free location,
- * e.g. Java's {@link DetachedSyntaxToken} or C++'s {@code CxxDetachedAstNode}); if no reporter is
- * available it logs and skips (the CBOM node is still produced via translation).
+ * <p>{@link #reportIssue} raises the issue through {@link #issueReporter} when the location
+ * implements {@link DetachedLocation} (Java's {@link DetachedSyntaxToken} or C++'s {@code
+ * CxxDetachedAstNode}); if no reporter is available, or the location is not one of those AST-free
+ * stand-ins, it logs and skips (the CBOM node is still produced via translation).
  */
 public record DetachedScanContext<R, T>(
         @Nonnull InputFile inputFile,
@@ -47,7 +48,7 @@ public record DetachedScanContext<R, T>(
 
     @Override
     public void reportIssue(@Nonnull R currentRule, @Nonnull T tree, @Nonnull String message) {
-        if (issueReporter != null) {
+        if (issueReporter != null && tree instanceof DetachedLocation) {
             issueReporter.report(currentRule, tree, message);
             return;
         }

@@ -87,7 +87,8 @@ class OpenSSLLegacyEcTest extends TestBase {
             // EC_GROUP_new_curve_GFp/GF2m fall under this shared multi-method rule (see
             // OpenSSLLegacyEc's EC_KEY_GENERATE_KEY), producing the bare "EC" value, not a
             // distinct "EC-GFP"/"EC-GF2M" string.
-            case "EC", "EC-P256" -> assertEcdsa(nodes);
+            case "EC" -> assertEcdsa(nodes);
+            case "EC-P256" -> assertEcdsaWithCurve(nodes);
             case "ECDSA-SIGN" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
@@ -109,6 +110,14 @@ class OpenSSLLegacyEcTest extends TestBase {
         assertThat(n).isInstanceOf(ECDSA.class);
         assertThat(n.getKind()).isEqualTo(Signature.class);
         assertThat(n.asString()).isEqualTo("ECDSA");
+    }
+
+    private static void assertEcdsaWithCurve(List<INode> nodes) {
+        assertThat(nodes).hasSize(1);
+        INode n = nodes.get(0);
+        assertThat(n).isInstanceOf(ECDSA.class);
+        assertThat(n.getKind()).isEqualTo(Signature.class);
+        assertThat(n.asString()).isEqualTo("ECDSA-secp256r1");
     }
 
     private static void assertEcdh(List<INode> nodes) {

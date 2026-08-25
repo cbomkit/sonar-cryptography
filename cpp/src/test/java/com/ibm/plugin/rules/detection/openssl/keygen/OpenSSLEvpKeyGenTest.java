@@ -113,7 +113,7 @@ class OpenSSLEvpKeyGenTest extends TestBase {
         switch (value.asString()) {
             case "RSA", "RSA-PSS" -> assertRsaBare(nodes);
             case "DSA" -> assertSimpleSig(nodes, DSA.class, "DSA", "1.2.840.10040.4.1");
-            case "EC" -> assertEcdsa(nodes);
+            case "EC" -> assertEcdsaBare(nodes);
             case "DH" -> assertDh(nodes);
             case "ED25519" -> assertEd25519(nodes);
             case "ED448" -> assertEd448(nodes);
@@ -148,7 +148,7 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     "SLH-DSA-SHA2-256S",
                     "SLH-DSA-SHAKE-256F",
                     "SLH-DSA-SHAKE-256S" ->
-                    assertSlhdsa(nodes);
+                    assertSlhdsa(nodes, value.asString());
             case "SM2" -> {
                 INode n = head(nodes);
                 assertThat(n).isInstanceOf(SM2.class);
@@ -157,16 +157,15 @@ class OpenSSLEvpKeyGenTest extends TestBase {
             case "DH-2048", "DH-4096" -> assertDh(nodes);
             case "DSA-2048", "DSA-3072" ->
                     assertSimpleSig(nodes, DSA.class, "DSA", "1.2.840.10040.4.1");
-            case "EC-P192",
-                    "EC-P224",
-                    "EC-P256",
-                    "EC-P384",
-                    "EC-P521",
-                    "EC-SECP256K1",
-                    "EC-BRAINPOOLP256R1",
-                    "EC-BRAINPOOLP384R1",
-                    "EC-BRAINPOOLP512R1" ->
-                    assertEcdsa(nodes);
+            case "EC-P192" -> assertEcdsaWithCurve(nodes, "secp192r1");
+            case "EC-P224" -> assertEcdsaWithCurve(nodes, "secp224r1");
+            case "EC-P256" -> assertEcdsaWithCurve(nodes, "secp256r1");
+            case "EC-P384" -> assertEcdsaWithCurve(nodes, "secp384r1");
+            case "EC-P521" -> assertEcdsaWithCurve(nodes, "secp521r1");
+            case "EC-SECP256K1" -> assertEcdsaWithCurve(nodes, "secp256k1");
+            case "EC-BRAINPOOLP256R1" -> assertEcdsaWithCurve(nodes, "brainpoolP256r1");
+            case "EC-BRAINPOOLP384R1" -> assertEcdsaWithCurve(nodes, "brainpoolP384r1");
+            case "EC-BRAINPOOLP512R1" -> assertEcdsaWithCurve(nodes, "brainpoolP512r1");
             case "RSA-2048" -> assertRsaSized(nodes, 2048);
             case "RSA-3072" -> assertRsaSized(nodes, 3072);
             case "RSA-4096" -> assertRsaSized(nodes, 4096);
@@ -222,10 +221,21 @@ class OpenSSLEvpKeyGenTest extends TestBase {
         assertThat(oidNode.asString()).isEqualTo(oid);
     }
 
-    private static void assertEcdsa(List<INode> nodes) {
+    private static void assertEcdsaBare(List<INode> nodes) {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(ECDSA.class);
         assertThat(n.getKind()).isEqualTo(Signature.class);
+        assertThat(n.getChildren().get(EllipticCurve.class)).isNull();
+    }
+
+    private static void assertEcdsaWithCurve(List<INode> nodes, String curveName) {
+        INode n = head(nodes);
+        assertThat(n).isInstanceOf(ECDSA.class);
+        assertThat(n.getKind()).isEqualTo(Signature.class);
+        INode curve = n.getChildren().get(EllipticCurve.class);
+        assertThat(curve).isNotNull();
+        assertThat(curve.asString()).isEqualTo(curveName);
+        assertThat(n.asString()).isEqualTo("ECDSA-" + curveName);
     }
 
     private static void assertDh(List<INode> nodes) {
@@ -315,10 +325,10 @@ class OpenSSLEvpKeyGenTest extends TestBase {
         assertThat(psetNode.asString()).isEqualTo(Integer.toString(pset));
     }
 
-    private static void assertSlhdsa(List<INode> nodes) {
+    private static void assertSlhdsa(List<INode> nodes, String expectedAsString) {
         INode n = head(nodes);
         assertThat(n).isInstanceOf(SPHINCSPlus.class);
         assertThat(n.getKind()).isEqualTo(Signature.class);
-        assertThat(n.asString()).isEqualTo("SLH-DSA");
+        assertThat(n.asString()).isEqualTo(expectedAsString);
     }
 }
