@@ -118,9 +118,6 @@ mvn clean package -DskipTests
 ls -la sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar   # the artifact
 ```
 
-> If `mvn` reformats/regenerates `mapper/.../JsonCipherSuites.java` (a known Spotless/fetch
-> quirk), restore it before committing: `git checkout -- mapper/src/main/java/com/ibm/mapper/mapper/ssl/json/JsonCipherSuites.java`.
-
 **3b. Deploy the JAR into the compose-mounted plugins directory:**
 
 ```bash
