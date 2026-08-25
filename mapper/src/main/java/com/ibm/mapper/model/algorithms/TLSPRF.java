@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>The TLS 1.0/1.1/1.2 Pseudo-Random Function used to derive the master secret and key material
- * from a shared secret. It is not a password-based KDF.
+ * from a shared secret.
  *
  * <h3>Specification</h3>
  *

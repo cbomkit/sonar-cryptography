@@ -142,20 +142,15 @@ class OpenSSLEvpKdfTest extends TestBase {
             assertGenericKdf(nodes, "PVKKDF", PasswordBasedKeyDerivationFunction.class);
         } else if (v.equals("HMAC-DRBG-KDF")) {
             assertGenericKdf(nodes, "HMAC-DRBG-KDF", KeyDerivationFunction.class);
-        } else if (v.equals("HKDF-MODE")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("KDF-CTX")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("PBE-KEYIVGEN")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("PKCS12")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("PKCS12-MAC")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("PKCS12-PBE")) {
-            assertThat(nodes).isNotNull();
-        } else if (v.equals("PKCS12-KDF")) {
-            assertThat(nodes).isNotNull();
+        } else if (v.equals("HKDF-MODE")
+                || v.equals("KDF-CTX")
+                || v.equals("PBE-KEYIVGEN")
+                || v.equals("PKCS12")
+                || v.equals("PKCS12-MAC")
+                || v.equals("PKCS12-PBE")
+                || v.equals("PKCS12-KDF")) {
+            // None of these API calls carry an algorithm-name parameter to trace.
+            assertThat(nodes).isEmpty();
         } else {
             throw new AssertionError("Unexpected value: " + v);
         }

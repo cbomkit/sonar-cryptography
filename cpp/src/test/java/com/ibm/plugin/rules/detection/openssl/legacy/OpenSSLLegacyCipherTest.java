@@ -35,6 +35,8 @@ import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.IDEA;
 import com.ibm.mapper.model.algorithms.RC2;
 import com.ibm.mapper.model.algorithms.RC4;
+import com.ibm.mapper.model.algorithms.RC5;
+import com.ibm.mapper.model.algorithms.SEED;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
@@ -50,14 +52,14 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 43 rule entries in {@link OpenSSLLegacyCipher}.
+ * Covers all 61 rule entries in {@link OpenSSLLegacyCipher}.
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
  *
- * <p>Fixture calls every method name listed across the 43 rules — including alias names inside
- * multi-method rules ({@code forMethods(a, b, c)}) — producing 47 findings (43 rules + 4 alias
- * extras from 3 multi-method rules).
+ * <p>Fixture calls every method name listed across the rules — including alias names inside
+ * multi-method rules ({@code forMethods(a, b, c)}) — producing 56 findings, 53 of them distinct
+ * values.
  */
 class OpenSSLLegacyCipherTest extends TestBase {
 
@@ -107,15 +109,20 @@ class OpenSSLLegacyCipherTest extends TestBase {
             String mode = v.substring("IDEA-".length());
             assertIdea(nodes, mode);
         } else if (v.startsWith("RC5-")) {
-            assertThat(nodes).isNotNull();
+            String mode = v.substring("RC5-".length());
+            assertRc5(nodes, mode);
         } else if (v.startsWith("CAMELLIA-")) {
-            assertThat(nodes).isNotNull();
+            // CxxCipherContextTranslator has cases only for the keysize-qualified form
+            // ("CAMELLIA-128-CBC", covered by OpenSSLEvpCipherTest via EVP_camellia_*()); the
+            // legacy API's bare "CAMELLIA-CBC" (no keysize visible at this call site) has no
+            // case and resolves to nothing.
+            assertThat(nodes).isEmpty();
         } else if (v.startsWith("SEED-")) {
-            assertThat(nodes).isNotNull();
+            String mode = v.substring("SEED-".length());
+            assertSeed(nodes, mode);
         } else {
-            // Bare names (AES, AES-ECB, AES-CBC, ..., DES, 3DES-*, BLOWFISH, RC2, CAST5, IDEA, RC5,
-            // CAMELLIA, SEED)
-            // and AES-WRAP/IGE — translator has no case → empty nodes.
+            // Bare names (AES, AES-ECB, AES-CBC, ..., DES, 3DES-*, BLOWFISH, RC2, CAST5, IDEA,
+            // CAMELLIA, SEED) and AES-WRAP/IGE — translator has no case → empty nodes.
             assertThat(nodes).isEmpty();
         }
     }
@@ -195,6 +202,33 @@ class OpenSSLLegacyCipherTest extends TestBase {
         assertThat(n).isInstanceOf(IDEA.class);
         assertThat(n.getKind()).isEqualTo(BlockCipher.class);
         assertThat(n.asString()).isEqualTo("IDEA-" + mode);
+        INode m = n.getChildren().get(Mode.class);
+        assertThat(m).isNotNull();
+        assertThat(m.asString()).isEqualTo(mode);
+    }
+
+    private static void assertRc5(List<INode> nodes, String mode) {
+        INode n = head(nodes);
+        assertThat(n).isInstanceOf(RC5.class);
+        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
+        INode kl = n.getChildren().get(KeyLength.class);
+        assertThat(kl).isNotNull();
+        assertThat(kl.asString()).isEqualTo("128");
+        INode m = n.getChildren().get(Mode.class);
+        assertThat(m).isNotNull();
+        assertThat(m.asString()).isEqualTo(mode);
+    }
+
+    private static void assertSeed(List<INode> nodes, String mode) {
+        INode n = head(nodes);
+        assertThat(n).isInstanceOf(SEED.class);
+        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
+        INode kl = n.getChildren().get(KeyLength.class);
+        assertThat(kl).isNotNull();
+        assertThat(kl.asString()).isEqualTo("128");
+        INode bs = n.getChildren().get(BlockSize.class);
+        assertThat(bs).isNotNull();
+        assertThat(bs.asString()).isEqualTo("128");
         INode m = n.getChildren().get(Mode.class);
         assertThat(m).isNotNull();
         assertThat(m.asString()).isEqualTo(mode);

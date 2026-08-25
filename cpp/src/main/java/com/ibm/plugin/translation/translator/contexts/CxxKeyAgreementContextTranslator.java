@@ -84,11 +84,11 @@ public final class CxxKeyAgreementContextTranslator implements IContextTranslati
         }
 
         // ECDH (Elliptic Curve Diffie-Hellman)
-        if (algorithmName.equals("ECDH")) {
-            return Optional.of(new ECDH(detectionLocation));
-        }
-        if (algorithmName.startsWith("ECDH-")) {
-            // ECDH-P256, ECDH-P384, ECDH-P521, ECDH-SECP256K1
+        if (algorithmName.equals("ECDH")
+                || algorithmName.equals("ECDH-P256")
+                || algorithmName.equals("ECDH-P384")
+                || algorithmName.equals("ECDH-P521")
+                || algorithmName.equals("ECDH-SECP256K1")) {
             return Optional.of(new ECDH(detectionLocation));
         }
 

@@ -32,17 +32,13 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.api.Type;
 
 /**
- * Guards against {@code createTypeFromCxxType} closing over a sonar-cxx {@link Type} whose {@code
- * TypeSymbol} pins a live {@link AstNode} via {@code declaration()}. Any reachable {@code AstNode}
- * keeps its whole file's parse tree alive through parent/child/sibling links, so a resulting {@link
- * IType} that outlives the file (e.g. embedded in a {@code DetachedCall}) would silently defeat the
- * AST-detach mechanism documented on that record.
+ * Verifies that {@code createTypeFromCxxType}'s returned {@link IType} does not capture the
+ * sonar-cxx {@link Type} it was built from. A {@code Type}'s {@code TypeSymbol} can hold a live
+ * {@link AstNode} via {@code declaration()}, and any reachable {@code AstNode} keeps its whole
+ * file's parse tree alive through parent/child/sibling links.
  *
- * <p>This isolates the mechanism directly (build a {@code Type} backed by a real {@code AstNode},
- * drop every strong reference except the produced {@link IType}, force GC, assert the node is
- * collected) rather than relying on an end-to-end scan, since whether a real cxx parse actually
- * resolves a non-unknown {@code Type} for a given call argument depends on sonar-cxx's symbol
- * resolution and is not something this module controls or should assume.
+ * <p>Builds a {@code Type} backed by a real {@code AstNode}, drops every strong reference except
+ * the produced {@link IType}, forces GC, and asserts the node is collected.
  */
 class CxxLanguageTranslationAstDetachTest {
 
@@ -60,22 +56,15 @@ class CxxLanguageTranslationAstDetachTest {
 
     @Test
     void subtypeMatchTypeDoesNotPinTheDeclarationAstNode() {
-        // isHookContext=false, objectShouldMatchExactTypes=false takes the isSubtypeOf branch,
-        // which also walks typeSymbol.baseClasses() - must not resurrect the AST either.
         assertDeclarationNodeIsCollectable(new MatchContext(false, false, List.of()));
     }
 
     private void assertDeclarationNodeIsCollectable(MatchContext matchContext) {
         Built built = buildTypeAndDropAstReferences(matchContext);
 
-        // The produced IType must still behave correctly...
         assertThat(built.type.is("MyNamespace::MyClass")).isTrue();
         assertThat(built.type.is("Something::Else")).isFalse();
 
-        // ...without keeping the declaration AstNode (and therefore its whole file's tree) alive.
-        // buildTypeAndDropAstReferences's frame is gone by now, so wholeFileTree, declarationNode,
-        // typeSymbol and cxxType are unreachable everywhere except (if the bug is present) inside
-        // the IType closure itself.
         forceGc();
         assertThat(built.declarationRef.get())
                 .as(
@@ -85,17 +74,10 @@ class CxxLanguageTranslationAstDetachTest {
                 .isNull();
     }
 
-    /**
-     * Builds the {@code Type}/{@code TypeSymbol}/{@code AstNode} graph and the {@link IType}
-     * derived from it in its own frame, so every local here (including {@code cxxType} and {@code
-     * typeSymbol}) is truly unreachable once this method returns - only the returned {@link IType}
-     * and the weak reference survive.
-     */
     private Built buildTypeAndDropAstReferences(MatchContext matchContext) {
         AstNode wholeFileTree = new AstNode(new FakeAstNodeType(), "translationUnit", null);
         AstNode declarationNode = new AstNode(new FakeAstNodeType(), "classSpecifier", null);
-        wholeFileTree.addChild(declarationNode); // declarationNode.getParent() now reaches the
-        // whole tree, exactly like a real file's parse tree.
+        wholeFileTree.addChild(declarationNode);
         WeakReference<AstNode> declarationRef = new WeakReference<>(declarationNode);
 
         Symbol.TypeSymbol typeSymbol = new FakeTypeSymbol(declarationNode);
@@ -108,8 +90,6 @@ class CxxLanguageTranslationAstDetachTest {
     private record Built(IType type, WeakReference<AstNode> declarationRef) {}
 
     private static void forceGc() {
-        // Best-effort but reliable in practice for a single, otherwise-unreferenced object: repeat
-        // with allocation pressure so a young-gen collection cannot be skipped.
         for (int i = 0; i < 10; i++) {
             System.gc();
             byte[] pressure = new byte[4 * 1024 * 1024];

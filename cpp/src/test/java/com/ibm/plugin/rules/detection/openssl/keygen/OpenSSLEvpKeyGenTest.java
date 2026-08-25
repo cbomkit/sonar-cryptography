@@ -175,7 +175,10 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     "RSA-KEYGEN-PRIMES",
                     "DSA-PARAMGEN-Q-BITS",
                     "DSA-PARAMGEN-TYPE" ->
-                    assertThat(nodes).isNotNull();
+                    // CxxKeyContextTranslator's RSA-/DSA- bit-length branches guard on
+                    // parseBits(...) != null, so these non-numeric-suffixed values fall through
+                    // to no case.
+                    assertThat(nodes).isEmpty();
             default -> throw new AssertionError("Unexpected value: " + value.asString());
         }
         findingCount++;

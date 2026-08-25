@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>The SSH Key Derivation Function used to derive session keys and IVs from the SSH transport
- * layer shared secret and exchange hash. It is not a password-based KDF.
+ * layer shared secret and exchange hash.
  *
  * <h3>Specification</h3>
  *

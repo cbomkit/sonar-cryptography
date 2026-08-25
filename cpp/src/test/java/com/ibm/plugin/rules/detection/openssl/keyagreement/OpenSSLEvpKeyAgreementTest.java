@@ -103,13 +103,17 @@ class OpenSSLEvpKeyAgreementTest extends TestBase {
                     "DH-PARAMGEN",
                     "DH-RFC5114",
                     "DHX-RFC5114",
+                    // EVP_PKEY_CTX_set_ecdh_kdf_type(ctx, 1): CxxKeyAgreementContextTranslator
+                    // has no case for this marker, so it resolves to no node.
                     "ECDH-KDF-TYPE",
                     "ENCAPSULATE",
                     "DECAPSULATE",
                     "AUTH-ENCAPSULATE",
                     "AUTH-DECAPSULATE",
                     "HPKE" ->
-                    assertThat(nodes).isNotNull();
+                    // EVP_PKEY_derive, EVP_KEM_encapsulate, HPKE calls, ...: none of these carry
+                    // an algorithm-name parameter to trace.
+                    assertThat(nodes).isEmpty();
             default -> throw new AssertionError("Unexpected value: " + v);
         }
     }

@@ -54,6 +54,7 @@ class OpenSSLLegacyRsaTest extends TestBase {
 
     private int md5SignCount = 0;
     private int md5VerifyCount = 0;
+    private int findingCount = 0;
 
     @Test
     void test() {
@@ -62,6 +63,7 @@ class OpenSSLLegacyRsaTest extends TestBase {
         // (not an enum constant), resolved via CxxSymbolResolverVisitor.
         assertThat(md5SignCount).isEqualTo(1);
         assertThat(md5VerifyCount).isEqualTo(1);
+        assertThat(findingCount).isEqualTo(27);
     }
 
     @Override
@@ -77,6 +79,7 @@ class OpenSSLLegacyRsaTest extends TestBase {
             @Nonnull List<INode> nodes) {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
+        findingCount++;
 
         String v = value.asString();
         switch (v) {
@@ -127,7 +130,11 @@ class OpenSSLLegacyRsaTest extends TestBase {
                 assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
             }
             case "RSA-OAEP-MGF1" -> {
-                assertThat(nodes).isNotNull();
+                // RSA_padding_add/check_PKCS1_OAEP_mgf1: parameters carry no algorithm name to
+                // trace, so this resolves to no node.
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).isEmpty();
             }
             default -> throw new AssertionError("Unexpected value: " + v);
         }
