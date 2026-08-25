@@ -19,16 +19,11 @@
  */
 package com.ibm.engine.language;
 
-import com.ibm.engine.language.cxx.CxxLanguageSupport;
 import com.ibm.engine.language.go.GoLanguageSupport;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.language.java.JavaLanguageSupport;
 import com.ibm.engine.language.python.PythonLanguageSupport;
-import com.sonar.cxx.sslr.api.AstNode;
-import com.sonar.cxx.sslr.api.Grammar;
 import javax.annotation.Nonnull;
-import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
-import org.sonar.cxx.squidbridge.checks.SquidCheck;
 import org.sonar.plugins.go.api.checks.GoCheck;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
@@ -69,15 +64,5 @@ public final class LanguageSupporter {
                     GoScanContext>
             goLanguageSupporter() {
         return new GoLanguageSupport();
-    }
-
-    @Nonnull
-    public static ILanguageSupport<
-                    SquidCheck<?>,
-                    AstNode,
-                    org.sonar.cxx.squidbridge.api.Symbol,
-                    SquidAstVisitorContext<? extends Grammar>>
-            cxxLanguageSupporter() {
-        return new CxxLanguageSupport();
     }
 }

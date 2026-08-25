@@ -68,4 +68,8 @@ public final class ECDSA extends Algorithm implements Signature {
         this(detectionLocation);
         this.put(ellipticCurve);
     }
+
+    public ECDSA(@Nonnull String curveName, @Nonnull DetectionLocation detectionLocation) {
+        this(new EllipticCurve(curveName, detectionLocation), detectionLocation);
+    }
 }

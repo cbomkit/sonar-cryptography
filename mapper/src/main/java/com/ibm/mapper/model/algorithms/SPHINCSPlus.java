@@ -20,9 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -52,9 +55,15 @@ public class SPHINCSPlus extends Algorithm implements Signature {
 
     @Override
     public @Nonnull String asString() {
-        return this.hasChildOfType(MessageDigest.class)
-                .map(node -> this.name + node.asString())
-                .orElse(this.name);
+        final StringBuilder stringBuilder =
+                new StringBuilder(
+                        this.hasChildOfType(MessageDigest.class)
+                                .map(node -> this.name + node.asString())
+                                .orElse(this.name));
+        final Optional<INode> parameterSetIdentifier =
+                this.hasChildOfType(ParameterSetIdentifier.class);
+        parameterSetIdentifier.ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        return stringBuilder.toString();
     }
 
     public SPHINCSPlus(@Nonnull DetectionLocation detectionLocation) {
@@ -64,5 +73,10 @@ public class SPHINCSPlus extends Algorithm implements Signature {
     public SPHINCSPlus(MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    public SPHINCSPlus(@Nonnull String parameterSet, @Nonnull DetectionLocation detectionLocation) {
+        this(detectionLocation);
+        this.put(new ParameterSetIdentifier(parameterSet, detectionLocation));
     }
 }

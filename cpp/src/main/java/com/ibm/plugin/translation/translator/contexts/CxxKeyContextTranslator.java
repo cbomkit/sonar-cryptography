@@ -91,15 +91,18 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
 
                 // EC
                 case "EC" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-P192" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-P224" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-P256" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-P384" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-P521" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-SECP256K1" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-BRAINPOOLP256R1" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-BRAINPOOLP384R1" -> Optional.of(new ECDSA(detectionLocation));
-                case "EC-BRAINPOOLP512R1" -> Optional.of(new ECDSA(detectionLocation));
+                case "EC-P192" -> Optional.of(new ECDSA("secp192r1", detectionLocation));
+                case "EC-P224" -> Optional.of(new ECDSA("secp224r1", detectionLocation));
+                case "EC-P256" -> Optional.of(new ECDSA("secp256r1", detectionLocation));
+                case "EC-P384" -> Optional.of(new ECDSA("secp384r1", detectionLocation));
+                case "EC-P521" -> Optional.of(new ECDSA("secp521r1", detectionLocation));
+                case "EC-SECP256K1" -> Optional.of(new ECDSA("secp256k1", detectionLocation));
+                case "EC-BRAINPOOLP256R1" ->
+                        Optional.of(new ECDSA("brainpoolP256r1", detectionLocation));
+                case "EC-BRAINPOOLP384R1" ->
+                        Optional.of(new ECDSA("brainpoolP384r1", detectionLocation));
+                case "EC-BRAINPOOLP512R1" ->
+                        Optional.of(new ECDSA("brainpoolP512r1", detectionLocation));
 
                 // DH
                 case "DH" -> Optional.of(new DH(detectionLocation));
@@ -125,19 +128,30 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
                 case "ML-DSA-87" -> Optional.of(new MLDSA(87, detectionLocation));
 
                 // SLH-DSA (Post-Quantum)
-                case "SLH-DSA-SHA2-128F",
-                        "SLH-DSA-SHA2-128S",
-                        "SLH-DSA-SHAKE-128F",
-                        "SLH-DSA-SHAKE-128S",
-                        "SLH-DSA-SHA2-192F",
-                        "SLH-DSA-SHA2-192S",
-                        "SLH-DSA-SHAKE-192F",
-                        "SLH-DSA-SHAKE-192S",
-                        "SLH-DSA-SHA2-256F",
-                        "SLH-DSA-SHA2-256S",
-                        "SLH-DSA-SHAKE-256F",
-                        "SLH-DSA-SHAKE-256S" ->
-                        Optional.of(new SPHINCSPlus(detectionLocation));
+                case "SLH-DSA-SHA2-128F" ->
+                        Optional.of(new SPHINCSPlus("SHA2-128F", detectionLocation));
+                case "SLH-DSA-SHA2-128S" ->
+                        Optional.of(new SPHINCSPlus("SHA2-128S", detectionLocation));
+                case "SLH-DSA-SHAKE-128F" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-128F", detectionLocation));
+                case "SLH-DSA-SHAKE-128S" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-128S", detectionLocation));
+                case "SLH-DSA-SHA2-192F" ->
+                        Optional.of(new SPHINCSPlus("SHA2-192F", detectionLocation));
+                case "SLH-DSA-SHA2-192S" ->
+                        Optional.of(new SPHINCSPlus("SHA2-192S", detectionLocation));
+                case "SLH-DSA-SHAKE-192F" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-192F", detectionLocation));
+                case "SLH-DSA-SHAKE-192S" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-192S", detectionLocation));
+                case "SLH-DSA-SHA2-256F" ->
+                        Optional.of(new SPHINCSPlus("SHA2-256F", detectionLocation));
+                case "SLH-DSA-SHA2-256S" ->
+                        Optional.of(new SPHINCSPlus("SHA2-256S", detectionLocation));
+                case "SLH-DSA-SHAKE-256F" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-256F", detectionLocation));
+                case "SLH-DSA-SHAKE-256S" ->
+                        Optional.of(new SPHINCSPlus("SHAKE-256S", detectionLocation));
 
                 // Hybrid Post-Quantum KEMs (PQC + Classical)
                 case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));

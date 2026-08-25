@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2026 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,29 +19,31 @@
  */
 package com.ibm.engine.language.cxx;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.engine.language.ILanguageSupport;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import org.junit.jupiter.api.Test;
+import javax.annotation.Nonnull;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
-import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-class CxxLanguageSupportStatsTest {
+/**
+ * Holder for the C++ {@link ILanguageSupport} factory method, separate from {@link
+ * com.ibm.engine.language.LanguageSupporter}, which holds the equivalent factory methods for Java,
+ * Python and Go.
+ */
+public final class CxxLanguageSupporter {
 
-    @Test
-    void freshSupportReportsEmptyStatsThroughTheChain() {
-        ILanguageSupport<SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
-                support = CxxLanguageSupporter.cxxLanguageSupporter();
+    private CxxLanguageSupporter() {
+        // nothing
+    }
 
-        CallContextStats stats = support.callContextStats();
-
-        assertThat(stats).isNotNull();
-        assertThat(stats.total()).isZero();
-        assertThat(stats.retainedWithTree()).isZero();
-        assertThat(stats.detached()).isZero();
+    @Nonnull
+    public static ILanguageSupport<
+                    SquidCheck<?>,
+                    AstNode,
+                    org.sonar.cxx.squidbridge.api.Symbol,
+                    SquidAstVisitorContext<? extends Grammar>>
+            cxxLanguageSupporter() {
+        return new CxxLanguageSupport();
     }
 }

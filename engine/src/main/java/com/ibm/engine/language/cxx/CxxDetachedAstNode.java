@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.cxx;
 
+import com.ibm.engine.callstack.DetachedLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.GenericTokenType;
 import com.sonar.cxx.sslr.api.Token;
@@ -41,7 +42,7 @@ import javax.annotation.Nonnull;
  * node's type never matches {@code postfixExpression}/{@code newExpression} — {@link #keywords()}
  * carries the richer, pre-extracted keyword list for callers that want it directly.
  */
-public final class CxxDetachedAstNode extends AstNode {
+public final class CxxDetachedAstNode extends AstNode implements DetachedLocation {
 
     @Nonnull private final List<String> keywords;
 

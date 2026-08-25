@@ -21,12 +21,18 @@ package com.ibm.engine.callstack;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.sonar.api.batch.fs.InputFile;
 
 class DetachedScanContextTest {
+
+    private record FakeDetachedLocation() implements DetachedLocation {}
 
     @Test
     void exposesFilePathAndInputFileWithoutPinningAst() {
@@ -39,12 +45,40 @@ class DetachedScanContextTest {
     }
 
     @Test
-    void reportIssueIsANoOp() {
+    void reportIssueIsANoOpWhenNoReporterIsAvailable() {
         // A detached context has no live scanner context, so it cannot raise a tree-based issue; it
         // silently skips rather than failing the analysis. The CBOM node is still produced.
         DetachedScanContext<Object, Object> ctx =
                 new DetachedScanContext<>(mock(InputFile.class), "/p/F.java", null);
         assertThatCode(() -> ctx.reportIssue(new Object(), new Object(), "msg"))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportIssueDelegatesWhenLocationIsDetached() {
+        IDetachedIssueReporter<Object, Object> reporter = mock(IDetachedIssueReporter.class);
+        DetachedScanContext<Object, Object> ctx =
+                new DetachedScanContext<>(mock(InputFile.class), "/p/F.java", reporter);
+        Object rule = new Object();
+        DetachedLocation location = new FakeDetachedLocation();
+
+        ctx.reportIssue(rule, location, "msg");
+
+        verify(reporter).report(rule, location, "msg");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportIssueSkipsWhenLocationIsNotDetached() {
+        // T is shared with the non-detached path, so a plain Object (standing in for a live tree
+        // node) reaches reportIssue here without failing to compile.
+        IDetachedIssueReporter<Object, Object> reporter = mock(IDetachedIssueReporter.class);
+        DetachedScanContext<Object, Object> ctx =
+                new DetachedScanContext<>(mock(InputFile.class), "/p/F.java", reporter);
+
+        assertThatCode(() -> ctx.reportIssue(new Object(), new Object(), "msg"))
+                .doesNotThrowAnyException();
+        verify(reporter, never()).report(any(), any(), anyString());
     }
 }

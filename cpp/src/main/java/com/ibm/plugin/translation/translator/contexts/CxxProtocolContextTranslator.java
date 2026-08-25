@@ -133,9 +133,9 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
 
     /**
      * Splits a colon-separated OpenSSL algorithm list (e.g. {@code "MLKEM768:X25519"}) and maps
-     * each entry with the given per-library mapper. Unrecognized names are skipped entirely rather
-     * than kept as a raw placeholder. The result is a single {@link AssetCollection} node holding
-     * only the recognized entries.
+     * each entry with the given per-library mapper. An entry the mapper doesn't recognize surfaces
+     * as a raw {@link Protocol} node named after the original entry. The result is a single {@link
+     * AssetCollection} node holding one child per entry.
      */
     @Nonnull
     private static Optional<INode> translateList(
@@ -148,7 +148,11 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
             if (name.isEmpty()) {
                 continue;
             }
-            mapper.parse(name, detectionLocation).map(n -> (INode) n).ifPresent(nodes::add);
+            final INode node =
+                    mapper.parse(name, detectionLocation)
+                            .<INode>map(n -> n)
+                            .orElseGet(() -> new Protocol(name, detectionLocation));
+            nodes.add(node);
         }
         if (nodes.isEmpty()) {
             return Optional.empty();
