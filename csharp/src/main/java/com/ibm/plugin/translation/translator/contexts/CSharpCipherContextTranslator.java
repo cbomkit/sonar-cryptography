@@ -35,8 +35,6 @@ import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.*;
-import com.ibm.mapper.model.functionality.Decrypt;
-import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
