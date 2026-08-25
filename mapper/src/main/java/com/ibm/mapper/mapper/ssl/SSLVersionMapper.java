@@ -41,8 +41,8 @@ public final class SSLVersionMapper implements IMapper {
         Matcher matcher = pattern.matcher(str.toLowerCase());
         if (matcher.find()) {
             String number = matcher.group(1);
-            if (number.equals("1")) {
-                number = "1.0";
+            if (matcher.group(2) == null) {
+                number = number + ".0";
             }
             return Optional.of(new Version(number, detectionLocation));
         }

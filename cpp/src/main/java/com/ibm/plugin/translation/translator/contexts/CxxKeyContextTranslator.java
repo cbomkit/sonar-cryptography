@@ -91,6 +91,8 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
 
                 // EC
                 case "EC" -> Optional.of(new ECDSA(detectionLocation));
+                case "EC-P192" -> Optional.of(new ECDSA(detectionLocation));
+                case "EC-P224" -> Optional.of(new ECDSA(detectionLocation));
                 case "EC-P256" -> Optional.of(new ECDSA(detectionLocation));
                 case "EC-P384" -> Optional.of(new ECDSA(detectionLocation));
                 case "EC-P521" -> Optional.of(new ECDSA(detectionLocation));

@@ -77,11 +77,10 @@ class OpenSSLEvpKeyGenTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLEvpKeyGenTestFile.cc", this);
-        // findingCount includes the p256_nid/rsa_bits local-variable calls (resolved via
-        // CxxSymbolResolverVisitor); observed stays the same size since both resolve to values
-        // ("EC-P256", "RSA-2048") already produced by their literal counterparts.
-        assertThat(findingCount).isEqualTo(21);
-        assertThat(observed).hasSize(13);
+        // ("EC-P256", "RSA-2048") already produced by their literal counterparts. The P-192 and
+        // SECP224R1 set_group_name calls each add one finding and one new observed value.
+        assertThat(findingCount).isEqualTo(23);
+        assertThat(observed).hasSize(15);
     }
 
     @Override
@@ -158,7 +157,9 @@ class OpenSSLEvpKeyGenTest extends TestBase {
             case "DH-2048", "DH-4096" -> assertDh(nodes);
             case "DSA-2048", "DSA-3072" ->
                     assertSimpleSig(nodes, DSA.class, "DSA", "1.2.840.10040.4.1");
-            case "EC-P256",
+            case "EC-P192",
+                    "EC-P224",
+                    "EC-P256",
                     "EC-P384",
                     "EC-P521",
                     "EC-SECP256K1",

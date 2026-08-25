@@ -13,7 +13,7 @@ public class SSLContextGetInstanceTestFile {
     }
 
     void testSslv3() throws KeyManagementException, NoSuchAlgorithmException {
-        // Noncompliant@+1 {{(TLS) SSLv3}}
+        // Noncompliant@+1 {{(TLS) SSLv3.0}}
         SSLContext sslContext = SSLContext.getInstance("SSLv3");
         sslContext.init(null, null, new SecureRandom());
     }

@@ -15,6 +15,8 @@ void test_evp_keygen() {
     EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, 415);
     EVP_PKEY_CTX_set_ec_param_enc(ctx, 0);
     EVP_PKEY_CTX_set_group_name(ctx, "P-256");
+    EVP_PKEY_CTX_set_group_name(ctx, "P-192");
+    EVP_PKEY_CTX_set_group_name(ctx, "SECP224R1");
 
     // Curve NID via a local variable, not a literal.
     int p256_nid = 415;
