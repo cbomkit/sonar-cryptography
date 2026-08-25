@@ -21,7 +21,9 @@ package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -39,7 +41,7 @@ public final class DotNetChaCha20Poly1305 {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("ENCRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withAnyParameters() // Byte[] or ReadOnlySpan<Byte> overloads
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
@@ -51,7 +53,7 @@ public final class DotNetChaCha20Poly1305 {
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DECRYPT"))
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withAnyParameters() // Byte[] or ReadOnlySpan<Byte> overloads
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")

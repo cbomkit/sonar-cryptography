@@ -68,8 +68,6 @@ public final class CSharpCipherContextTranslator
                                 Optional.of(new DESede(detectionLocation));
                         case "RSA" -> Optional.of(new RSA(detectionLocation));
                         case "RC2" -> Optional.of(new RC2(detectionLocation));
-                        case "ENCRYPT" -> Optional.of(new Encrypt(detectionLocation));
-                        case "DECRYPT" -> Optional.of(new Decrypt(detectionLocation));
                         default -> Optional.empty();
                     };
             if (result.isPresent()) {
