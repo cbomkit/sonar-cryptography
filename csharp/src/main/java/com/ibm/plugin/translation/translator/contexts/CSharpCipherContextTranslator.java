@@ -19,15 +19,7 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
-import com.ibm.engine.model.Algorithm;
-import com.ibm.engine.model.BlockSize;
-import com.ibm.engine.model.CipherAction;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.KeySize;
-import com.ibm.engine.model.Mode;
-import com.ibm.engine.model.OperationMode;
-import com.ibm.engine.model.Padding;
-import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.*;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
@@ -37,15 +29,8 @@ import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.DES;
-import com.ibm.mapper.model.algorithms.DESede;
-import com.ibm.mapper.model.algorithms.RC2;
-import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.functionality.Decrypt;
-import com.ibm.mapper.model.functionality.Encrypt;
-import com.ibm.mapper.model.functionality.Generate;
-import com.ibm.mapper.model.functionality.KeyGeneration;
+import com.ibm.mapper.model.algorithms.*;
+import com.ibm.mapper.model.functionality.*;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -70,6 +55,8 @@ public final class CSharpCipherContextTranslator
             Optional<INode> result =
                     switch (valueStr) {
                         case "AES" -> Optional.of(new AES(detectionLocation));
+                        case "CHACHA20POLY1305" ->
+                                Optional.of(new ChaCha20Poly1305(detectionLocation));
                         case "DES" -> Optional.of(new DES(detectionLocation));
                         case "3DES", "DESEDE", "TRIPLEDES" ->
                                 Optional.of(new DESede(detectionLocation));
@@ -120,6 +107,12 @@ public final class CSharpCipherContextTranslator
         } else if (value instanceof BlockSize<?> blockSize) {
             return Optional.of(
                     new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));
+        } else if (value instanceof CipherAction<?> cipherAction) {
+            return switch (cipherAction.getAction()) {
+                case DECRYPT -> Optional.of(new Decrypt(detectionLocation));
+                case ENCRYPT -> Optional.of(new Encrypt(detectionLocation));
+                default -> Optional.empty();
+            };
         } else if (value instanceof KeySize<?> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
         } else if (value instanceof OperationMode<?> operationMode) {

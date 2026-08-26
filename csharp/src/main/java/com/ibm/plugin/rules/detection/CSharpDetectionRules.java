@@ -21,28 +21,7 @@ package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
-import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
-import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
-import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
-import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
-import com.ibm.plugin.rules.detection.dotnet.DotNetECDsa;
-import com.ibm.plugin.rules.detection.dotnet.DotNetHMAC;
-import com.ibm.plugin.rules.detection.dotnet.DotNetKMAC;
-import com.ibm.plugin.rules.detection.dotnet.DotNetKeyDerivation;
-import com.ibm.plugin.rules.detection.dotnet.DotNetLegacyFormatters;
-import com.ibm.plugin.rules.detection.dotnet.DotNetMLDsa;
-import com.ibm.plugin.rules.detection.dotnet.DotNetMLKem;
-import com.ibm.plugin.rules.detection.dotnet.DotNetProtectedData;
-import com.ibm.plugin.rules.detection.dotnet.DotNetRC2;
-import com.ibm.plugin.rules.detection.dotnet.DotNetRSA;
-import com.ibm.plugin.rules.detection.dotnet.DotNetRandomNumberGenerator;
-import com.ibm.plugin.rules.detection.dotnet.DotNetRfc2898DeriveBytes;
-import com.ibm.plugin.rules.detection.dotnet.DotNetSHA;
-import com.ibm.plugin.rules.detection.dotnet.DotNetSHA3;
-import com.ibm.plugin.rules.detection.dotnet.DotNetSlhDsa;
-import com.ibm.plugin.rules.detection.dotnet.DotNetTripleDES;
-import com.ibm.plugin.rules.detection.dotnet.DotNetX25519DiffieHellman;
+import com.ibm.plugin.rules.detection.dotnet.*;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -58,6 +37,7 @@ public final class CSharpDetectionRules {
     public static List<IDetectionRule<CSharpTree>> rules() {
         return Stream.of(
                         DotNetAES.rules().stream(),
+                        DotNetChaCha20Poly1305.rules().stream(),
                         DotNetDES.rules().stream(),
                         DotNetTripleDES.rules().stream(),
                         DotNetRC2.rules().stream(),
