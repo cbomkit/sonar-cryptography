@@ -19,7 +19,9 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.BlockSize;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Mode;
@@ -32,6 +34,7 @@ import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.jca.JcaCipherOperationModeMapper;
 import com.ibm.mapper.mapper.jca.JcaModeMapper;
 import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
+import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
@@ -39,6 +42,10 @@ import com.ibm.mapper.model.algorithms.DES;
 import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.RC2;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.functionality.Decrypt;
+import com.ibm.mapper.model.functionality.Encrypt;
+import com.ibm.mapper.model.functionality.Generate;
+import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -68,6 +75,34 @@ public final class CSharpCipherContextTranslator
                                 Optional.of(new DESede(detectionLocation));
                         case "RSA" -> Optional.of(new RSA(detectionLocation));
                         case "RC2" -> Optional.of(new RC2(detectionLocation));
+                        case "GENERATEKEY" -> Optional.of(new KeyGeneration(detectionLocation));
+                        case "GENERATEIV" -> Optional.of(new Generate(detectionLocation));
+                        // DPAPI (System.Security.Cryptography.ProtectedData / ProtectedMemory /
+                        // DpapiDataProtector — see DotNetProtectedData): the concrete underlying
+                        // algorithm is not exposed by the API, so it is captured as a generic
+                        // Cipher-kind Algorithm rather than an invented concrete algorithm name
+                        // (mirrors the NATIVEPRNG precedent in CSharpPRNGContextTranslator).
+                        case "DPAPI" ->
+                                Optional.of(
+                                        new com.ibm.mapper.model.Algorithm(
+                                                "DPAPI", Cipher.class, detectionLocation));
+                        // Static one-shot ProtectedData/ProtectedMemory calls: identity + action
+                        // are captured together (see DotNetProtectedData class javadoc "Modeling
+                        // decision — static one-shot calls").
+                        case "DPAPI_PROTECT" -> {
+                            com.ibm.mapper.model.Algorithm dpapi =
+                                    new com.ibm.mapper.model.Algorithm(
+                                            "DPAPI", Cipher.class, detectionLocation);
+                            dpapi.put(new Encrypt(detectionLocation));
+                            yield Optional.of(dpapi);
+                        }
+                        case "DPAPI_UNPROTECT" -> {
+                            com.ibm.mapper.model.Algorithm dpapi =
+                                    new com.ibm.mapper.model.Algorithm(
+                                            "DPAPI", Cipher.class, detectionLocation);
+                            dpapi.put(new Decrypt(detectionLocation));
+                            yield Optional.of(dpapi);
+                        }
                         default -> Optional.empty();
                     };
             if (result.isPresent()) {
@@ -76,6 +111,12 @@ public final class CSharpCipherContextTranslator
             // Try operation mode
             JcaCipherOperationModeMapper modeMapper = new JcaCipherOperationModeMapper();
             return modeMapper.parse(valueStr, detectionLocation).map(mode -> mode);
+        } else if (value instanceof CipherAction<?> cipherAction) {
+            return switch (cipherAction.getAction()) {
+                case ENCRYPT -> Optional.of(new Encrypt(detectionLocation));
+                case DECRYPT -> Optional.of(new Decrypt(detectionLocation));
+                default -> Optional.empty();
+            };
         } else if (value instanceof BlockSize<?> blockSize) {
             return Optional.of(
                     new com.ibm.mapper.model.BlockSize(blockSize.getValue(), detectionLocation));
@@ -94,6 +135,19 @@ public final class CSharpCipherContextTranslator
             // From set_Padding property setter: PaddingMode.PKCS7 → "PKCS7"
             JcaPaddingMapper paddingMapper = new JcaPaddingMapper();
             return paddingMapper.parse(padding.asString(), detectionLocation).map(p -> p);
+        } else if (value instanceof Algorithm<?>) {
+            // SymmetricAlgorithm.Create(string) — unlike its four sibling Create(string) overloads
+            // (HashAlgorithm/KeyedHashAlgorithm/HMAC/AsymmetricAlgorithm), the official API
+            // reference for this one does not publish an explicit value table (see
+            // DotNetAlgorithmFactory javadoc), so this reuses the same well-known names already
+            // accepted in the ValueAction branch above for this codebase's .NET support.
+            return switch (value.asString().toUpperCase().trim()) {
+                case "AES" -> Optional.of(new AES(detectionLocation));
+                case "DES" -> Optional.of(new DES(detectionLocation));
+                case "3DES", "DESEDE", "TRIPLEDES" -> Optional.of(new DESede(detectionLocation));
+                case "RC2" -> Optional.of(new RC2(detectionLocation));
+                default -> Optional.empty();
+            };
         }
 
         return Optional.empty();

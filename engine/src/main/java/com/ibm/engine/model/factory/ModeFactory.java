@@ -24,11 +24,30 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.Mode;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class ModeFactory<T> implements IValueFactory<T> {
 
+    @Nullable private final String constant;
+
+    public ModeFactory() {
+        this.constant = null;
+    }
+
+    /**
+     * Creates a factory that always emits {@code Mode(constant)} regardless of the resolved
+     * parameter value. Useful when the mode is encoded in the method name (e.g. {@code EncryptCbc})
+     * rather than in a parameter.
+     */
+    public ModeFactory(@Nonnull String constant) {
+        this.constant = constant;
+    }
+
     @Override
     public Optional<IValue<T>> apply(@Nonnull ResolvedValue<Object, T> objectTResolvedValue) {
+        if (constant != null) {
+            return Optional.of(new Mode<>(constant, objectTResolvedValue.tree()));
+        }
         if (objectTResolvedValue.value() instanceof String s) {
             return Optional.of(new Mode<>(s, objectTResolvedValue.tree()));
         }
