@@ -125,6 +125,7 @@
             <groupId>org.sonarsource.java</groupId>
             <artifactId>sonar-java-plugin</artifactId>
             <version>${sonar.java.version}</version>
+            <scope>provided</scope>
             <exclusions>
                  <exclusion>
                      <groupId>org.apache.tomcat.embed</groupId>
@@ -136,11 +137,13 @@
             <groupId>org.sonarsource.python</groupId>
             <artifactId>sonar-python-plugin</artifactId>
             <version>${sonar.python.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- unit tests -->
