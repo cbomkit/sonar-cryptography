@@ -44,10 +44,21 @@ public final class CSharpDetectionRules {
                         DotNetRSA.rules().stream(),
                         DotNetECDsa.rules().stream(),
                         DotNetECDiffieHellman.rules().stream(),
+                        DotNetX25519DiffieHellman.rules().stream(),
+                        DotNetMLKem.rules().stream(),
+                        DotNetMLDsa.rules().stream(),
+                        DotNetSlhDsa.rules().stream(),
                         DotNetDSA.rules().stream(),
+                        DotNetLegacyFormatters.rules().stream(),
                         DotNetSHA.rules().stream(),
+                        DotNetSHA3.rules().stream(),
                         DotNetHMAC.rules().stream(),
-                        DotNetRfc2898DeriveBytes.rules().stream())
+                        DotNetKMAC.rules().stream(),
+                        DotNetRfc2898DeriveBytes.rules().stream(),
+                        DotNetKeyDerivation.rules().stream(),
+                        DotNetRandomNumberGenerator.rules().stream(),
+                        DotNetProtectedData.rules().stream(),
+                        DotNetAlgorithmFactory.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }
