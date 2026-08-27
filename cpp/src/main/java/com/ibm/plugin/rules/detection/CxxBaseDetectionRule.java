@@ -28,7 +28,6 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.CxxAggregator;
 import com.ibm.plugin.translation.CxxTranslationProcess;
-import com.ibm.plugin.translation.reorganizer.CxxReorganizerRules;
 import com.ibm.rules.IReportableDetectionRule;
 import com.ibm.rules.issue.Issue;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -81,12 +80,6 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
     private final boolean isInventory;
     @Nonnull protected final CxxTranslationProcess cxxTranslationProcess;
     @Nonnull protected final List<IDetectionRule<AstNode>> detectionRules;
-
-    protected CxxBaseDetectionRule() {
-        this.isInventory = false;
-        this.detectionRules = CxxDetectionRules.rules();
-        this.cxxTranslationProcess = new CxxTranslationProcess(CxxReorganizerRules.rules());
-    }
 
     protected CxxBaseDetectionRule(
             final boolean isInventory,
