@@ -30,12 +30,22 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>Hybrid post-quantum key encapsulation mechanism combining ECDH P-256 (secp256r1, NIST P-256)
- * with ML-KEM-768 (post-quantum KEM).
+ * with ML-KEM-768 (post-quantum KEM), for TLS 1.3 key exchange.
  *
- * <p>TLS Named Group: 0x11EB
+ * <h3>Specification</h3>
  *
- * <p>Also known as SecP256r1Kyber768Draft00 (earlier draft name). Provides quantum-safe key
- * exchange for TLS 1.3.
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>TLS Named Group 0x11EB
+ *   <li>Not to be confused with the earlier, distinct draft-Kyber group SecP256r1Kyber768Draft00
+ *       (TLS Named Group 0x639A), which predates ML-KEM standardization and uses round-3 Kyber
+ *       rather than the final FIPS 203 ML-KEM.
+ * </ul>
  */
 public final class SecP256r1MLKEM768 extends Algorithm implements KeyEncapsulationMechanism {
 

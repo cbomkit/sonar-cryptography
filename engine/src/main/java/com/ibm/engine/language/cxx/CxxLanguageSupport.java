@@ -57,14 +57,17 @@ public final class CxxLanguageSupport
     private final Handler<SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
             handler;
 
+    @Nonnull private final CxxLanguageTranslation translation;
+
     public CxxLanguageSupport() {
         this.handler = new Handler<>(this);
+        this.translation = new CxxLanguageTranslation();
     }
 
     @Nonnull
     @Override
     public ILanguageTranslation<AstNode> translation() {
-        return new CxxLanguageTranslation();
+        return translation;
     }
 
     @Nonnull

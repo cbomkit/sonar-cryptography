@@ -44,4 +44,14 @@ class CxxLanguageSupportStatsTest {
         assertThat(stats.retainedWithTree()).isZero();
         assertThat(stats.detached()).isZero();
     }
+
+    @Test
+    void translationReturnsTheSameCachedInstanceOnEveryCall() {
+        CxxLanguageSupport support = new CxxLanguageSupport();
+
+        Object first = support.translation();
+        Object second = support.translation();
+
+        assertThat(second).isSameAs(first);
+    }
 }

@@ -131,8 +131,16 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
      * possible (its arguments are pre-resolved here while the file is live). Falls back to
      * retaining the tree when the call is not detachable or an argument cannot be faithfully
      * snapshotted.
+     *
+     * <p>{@code run} is invoked once per detection rule for the same call node, so this same {@code
+     * invocation} reaches here once per rule too; only the first such call actually needs
+     * recording, so every later one exits before doing the argument-resolution and detached-call
+     * construction work below.
      */
     private void recordCall(@Nonnull AstNode invocation) {
+        if (handler.isCallAlreadyRecorded(invocation)) {
+            return;
+        }
         final IScanContext<SquidCheck<?>, AstNode> scanContext = detectionStore.getScanContext();
         DetachedCall<SquidCheck<?>, AstNode> detachedForm = null;
         if (handler.getLanguageSupport().isDetachableCall(invocation)) {

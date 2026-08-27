@@ -32,6 +32,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.cxx.parser.CxxGrammarImpl;
+import org.sonar.cxx.parser.CxxTokenType;
 import org.sonar.cxx.squidbridge.api.AstNodeSymbolExtension;
 import org.sonar.cxx.squidbridge.api.AstNodeTypeExtension;
 import org.sonar.cxx.squidbridge.api.Symbol;
@@ -337,13 +338,12 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
             return (text == null || text.isEmpty()) ? null : text;
         }
         // Walk down for STRING/NUMBER/CHARACTER tokens inside initializerClause.
-        for (AstNode d : argument.getDescendants()) {
-            String t = String.valueOf(d.getType());
-            if ("STRING".equals(t) || "NUMBER".equals(t) || "CHARACTER".equals(t)) {
-                String text = d.getTokenValue();
-                if (text != null && !text.isEmpty()) {
-                    return text;
-                }
+        for (AstNode d :
+                argument.getDescendants(
+                        CxxTokenType.STRING, CxxTokenType.NUMBER, CxxTokenType.CHARACTER)) {
+            String text = d.getTokenValue();
+            if (text != null && !text.isEmpty()) {
+                return text;
             }
         }
         return null;

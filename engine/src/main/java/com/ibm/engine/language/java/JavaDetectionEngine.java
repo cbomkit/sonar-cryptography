@@ -131,8 +131,16 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
      * when possible (its arguments are pre-resolved here while the file is live). Falls back to
      * retaining the tree when the call is not detachable or an argument cannot be faithfully
      * snapshotted.
+     *
+     * <p>{@code run} is invoked once per detection rule for the same call node, so this same {@code
+     * invocation} reaches here once per rule too; only the first such call actually needs
+     * recording, so every later one exits before doing the argument-resolution and detached-call
+     * construction work below.
      */
     private void recordCall(@Nonnull MethodInvocationTree invocation) {
+        if (handler.isCallAlreadyRecorded(invocation)) {
+            return;
+        }
         final IScanContext<JavaCheck, Tree> scanContext = detectionStore.getScanContext();
         // Record retained (with the live tree) so same-file hook detections resolve and report
         // through the live context. If detachable, pre-build the tree-free form now, while the file

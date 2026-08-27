@@ -30,11 +30,19 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>Hybrid post-quantum key encapsulation mechanism combining X448 (Curve448 elliptic curve
- * Diffie-Hellman) with ML-KEM-1024 (post-quantum KEM).
+ * Diffie-Hellman) with ML-KEM-1024 (post-quantum KEM), for high-security TLS 1.3 key exchange.
  *
- * <p>TLS Named Group: 0x11EE
+ * <h3>Specification</h3>
  *
- * <p>Provides high-security quantum-safe key exchange for TLS 1.3.
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>TLS Named Group 0x11EE
+ * </ul>
  */
 public final class X448MLKEM1024 extends Algorithm implements KeyEncapsulationMechanism {
 

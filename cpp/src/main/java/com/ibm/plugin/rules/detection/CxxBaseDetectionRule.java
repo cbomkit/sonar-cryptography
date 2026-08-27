@@ -34,18 +34,18 @@ import com.ibm.rules.issue.Issue;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.AstNodeType;
 import com.sonar.cxx.sslr.api.Grammar;
-import com.sonar.cxx.sslr.impl.ast.AstWalker;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.cxx.parser.CxxGrammarImpl;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
+import org.sonar.cxx.squidbridge.api.AstNodeSymbolExtension;
 import org.sonar.cxx.squidbridge.api.AstNodeTraversal;
+import org.sonar.cxx.squidbridge.api.AstNodeTypeExtension;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
-import org.sonar.cxx.visitors.CxxSymbolResolverVisitor;
 
 /**
  * Base class for C++ cryptography detection rules.
@@ -56,7 +56,8 @@ import org.sonar.cxx.visitors.CxxSymbolResolverVisitor;
  * <p>The detection flow works as follows:
  *
  * <ol>
- *   <li>sonar-cxx calls {@link #visitFile(AstNode)} for each C++ file
+ *   <li>sonar-cxx finishes its shared node-by-node walk of the file (symbol resolution included)
+ *       and calls {@link #leaveFile(AstNode)}
  *   <li>We traverse the AST looking for function calls and constructor invocations
  *   <li>For each relevant node, we create a {@link DetectionExecutive} and start detection
  *   <li>When a finding is detected, {@link #update(Finding)} is called
@@ -97,46 +98,49 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
     }
 
     /**
-     * Called when visiting a file. Traverses the AST to find detection targets.
+     * Called when a file finishes analysis. Traverses the AST to find detection targets, then
+     * releases this file's symbol/type extension entries.
      *
-     * @param astNode The root AST node of the file
-     */
-    @Override
-    public void visitFile(@Nonnull AstNode astNode) {
-        // Populate sonar-cxx's Symbol/SymbolTable model before detection reads it
-        resolveSymbols(astNode);
-        // Traverse the entire AST looking for function calls, new expressions, and enums
-        AstNodeTraversal.traverse(astNode, DETECTION_NODE_TYPES, this::processNode);
-    }
-
-    /**
-     * Populates sonar-cxx's Symbol/SymbolTable model for this file's AST before detection runs.
-     *
-     * <p>{@code CxxSymbolResolverVisitor} only registers symbols in {@code visitNode}/{@code
-     * leaveNode}, which run after every visitor's {@code visitFile}. Driving it here first, over
-     * the same tree, ensures symbols exist before this class's own {@code visitFile}-time detection
-     * traversal reads them.
-     *
-     * @param astNode the root AST node of the file being scanned
-     */
-    private void resolveSymbols(@Nonnull AstNode astNode) {
-        var symbolResolverVisitor = new CxxSymbolResolverVisitor<Grammar>();
-        symbolResolverVisitor.setContext(getContext());
-        symbolResolverVisitor.init();
-        new AstWalker(symbolResolverVisitor).walkAndVisit(astNode);
-    }
-
-    /**
-     * Called when a file finishes analysis. Detaches the just-analyzed file's still-retained
-     * recorded calls so its AST becomes garbage-collectable; same-file detections have already
-     * fired with the live context before this runs.
+     * <p>{@code leaveFile} runs after sonar-cxx's shared node-by-node walk of the file, over every
+     * registered visitor - including {@code CxxSymbolResolverVisitor}, which populates {@link
+     * AstNodeSymbolExtension}/{@link AstNodeTypeExtension} during that walk - so symbol resolution
+     * for the whole file is already complete by the time this runs.
      *
      * @param astNode the root AST node of the file that finished analysis, or {@code null} on a
      *     parse error
      */
     @Override
     public void leaveFile(@Nullable AstNode astNode) {
+        if (astNode != null) {
+            AstNodeTraversal.traverse(astNode, DETECTION_NODE_TYPES, this::processNode);
+            releaseSymbolExtensions(astNode);
+        }
         CxxAggregator.getLanguageSupport().notifyLeaveFile(getContext().getInputFile());
+    }
+
+    /**
+     * Removes every {@code AstNodeSymbolExtension}/{@code AstNodeTypeExtension} entry keyed on a
+     * node of this file's AST.
+     *
+     * <p>Both maps are process-wide {@code WeakHashMap}s ({@code AstNode} key); their values
+     * ({@code Symbol}/{@code Type}) hold their own key node behind a {@code WeakReference} rather
+     * than strongly ({@code SourceCodeSymbol#declarationNode} et al.), so entries do become
+     * eligible for {@code WeakHashMap} eviction once nothing else holds the node. That eviction is
+     * still lazy and GC-timed, though — it only runs on the map's own next access, and only after a
+     * collection has actually happened — so this explicit per-node removal is what frees this
+     * file's entries deterministically, right when its AST stops being needed, instead of leaving
+     * that to chance. {@code CxxSymbolResolverVisitor} is the only code that populates these maps
+     * for our own detection.
+     *
+     * @param astNode the root AST node of the file that finished analysis
+     */
+    private void releaseSymbolExtensions(@Nonnull AstNode astNode) {
+        AstNodeTraversal.traverse(
+                astNode,
+                node -> {
+                    AstNodeSymbolExtension.removeSymbol(node);
+                    AstNodeTypeExtension.removeType(node);
+                });
     }
 
     /**
