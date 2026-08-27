@@ -30,12 +30,22 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>Hybrid post-quantum key encapsulation mechanism combining X25519 (Curve25519 elliptic curve
- * Diffie-Hellman) with ML-KEM-768 (post-quantum KEM).
+ * Diffie-Hellman) with ML-KEM-768 (post-quantum KEM), for TLS 1.3 key exchange.
  *
- * <p>TLS Named Group: 0x11EC
+ * <h3>Specification</h3>
  *
- * <p>Also known as X25519Kyber768Draft00 (earlier draft name). Provides quantum-safe key exchange
- * for TLS 1.3.
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>TLS Named Group 0x11EC
+ *   <li>Not to be confused with the earlier, distinct draft-Kyber group X25519Kyber768Draft00 (TLS
+ *       Named Group 0x6399), which predates ML-KEM standardization and uses round-3 Kyber rather
+ *       than the final FIPS 203 ML-KEM.
+ * </ul>
  */
 public final class X25519MLKEM768 extends Algorithm implements KeyEncapsulationMechanism {
 

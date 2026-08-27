@@ -30,12 +30,19 @@ import javax.annotation.Nonnull;
  * <h2>{@value #NAME}</h2>
  *
  * <p>Hybrid post-quantum key encapsulation mechanism combining ECDH P-384 (secp384r1, NIST P-384)
- * with ML-KEM-1024 (post-quantum KEM).
+ * with ML-KEM-1024 (post-quantum KEM), for high-security TLS 1.3 key exchange.
  *
- * <p>TLS Named Group: 0x11ED
+ * <h3>Specification</h3>
  *
- * <p>Also known as SecP384r1Kyber1024Draft00 (earlier draft name). Provides high-security
- * quantum-safe key exchange for TLS 1.3.
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>TLS Named Group 0x11ED
+ * </ul>
  */
 public final class SecP384r1MLKEM1024 extends Algorithm implements KeyEncapsulationMechanism {
 

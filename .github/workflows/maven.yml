@@ -13,9 +13,9 @@ permissions:
 
 on:
   push:
-    branches: ["main", "dev/*"]
+    branches: [ "main", "dev/*" ]
   pull_request:
-    branches: ["main", "dev/*"]
+    branches: [ "main", "dev/*" ]
 
 jobs:
   build:
@@ -32,6 +32,12 @@ jobs:
       run: mvn -B clean package
     - name: Verify analyzer redistribution materials
       run: python3 sonar-cryptography-plugin/src/test/python/verify_analyzer_packaging.py sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar
+    - name: Upload JaCoCo coverage reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: "jacoco-coverage-reports"
+        path: "**/target/site/jacoco/"
+        if-no-files-found: warn
     # The build must not write into the source tree. It used to: the mapper
     # module regenerated ciphersuites.json and JsonCipherSuites.java from a live
     # API on every compile. Fail here if that ever comes back.

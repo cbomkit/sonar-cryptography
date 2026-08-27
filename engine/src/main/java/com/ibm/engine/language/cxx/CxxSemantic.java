@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ import org.sonar.cxx.utils.CxxConstantUtils;
 
 public final class CxxSemantic {
     private static final Logger LOGGER = LoggerFactory.getLogger(CxxSemantic.class);
+    private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlLfF]");
 
     private CxxSemantic() {
         // private
@@ -198,7 +200,7 @@ public final class CxxSemantic {
     private static <O> List<ResolvedValue<O, AstNode>> resolveNumberLiteral(
             @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
         String value = tree.getTokenValue();
-        value = value.replaceAll("[uUlLfF]", "");
+        value = INTEGER_SUFFIX_PATTERN.matcher(value).replaceAll("");
         value = value.replace("'", "");
 
         Object result;

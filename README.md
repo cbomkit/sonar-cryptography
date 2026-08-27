@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/github/license/cbomkit/sonar-cryptography.svg?)](https://opensource.org/licenses/Apache-2.0) <!--- long-description-skip-begin -->
 [![Current Release](https://img.shields.io/github/release/cbomkit/sonar-cryptography.svg?logo=IBM)](https://github.com/cbomkit/sonar-cryptography/releases)
 
+
 This repository contains a SonarQube Plugin that detects cryptographic assets
 in source code and generates [CBOM](https://cyclonedx.org/capabilities/cbom/).
 It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
@@ -22,10 +23,10 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 ## Version compatibility
 
 | Plugin Version | SonarQube Version                       | Requires Java |
-| -------------- | --------------------------------------- | ------------- |
-| 2.0.0 and up   | SonarQube 2025.1 (LTA) and up           | 21            |
-| 1.3.2 to 1.3.x | SonarQube 9.14 (LTS) up to 2025.1 (LTA) | 17            |
-| 1.2.0 to 1.3.1 | SonarQube 9.14 (LTS) up to 10.4         | 17            |
+| --------------- | ---------------------------------------- | -------------- |
+| 2.0.0 and up    | SonarQube 2025.1 (LTA) and up            | 21             |
+| 1.3.2 to 1.3.x  | SonarQube 9.14 (LTS) up to 2025.1 (LTA)  | 17             |
+| 1.2.0 to 1.3.1  | SonarQube 9.14 (LTS) up to 10.4          | 17             |
 
 ## Supported languages and libraries
 
@@ -62,8 +63,8 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 > instance's own JVM must be Java 21 or newer — the plugin JAR is built for Java 21
 > and a SonarQube server running on Java 17 will fail to load it. If you don't have
 > a suitable instance but want to try the plugin, you can use the included Docker
-> Compose to set up a development environment. See [here](CONTRIBUTING.md#build)
-> for instructions.
+> Compose to set up a development environment. See
+> [here](CONTRIBUTING.md#build) for instructions.
 
 Copy the plugin (the JAR file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases))
 to `$SONARQUBE_HOME/extensions/plugins` and restart
@@ -124,7 +125,6 @@ sonar-scanner -Dsonar.cryptoScanner.cbom=my-cbom
 ### Visualizing your CBOM
 
 Once you have scanned your source code with the plugin, and obtained a `cbom.json` file, you can use [CBOMkit](https://github.com/cbomkit/cbomkit) service to know more about it.
-
 It provides you with general insights about the cryptography used in your source code and its compliance with post-quantum safety.
 It also allows you to explore precisely each cryptography asset and its detailed specification, and displays where it appears in your code.
 
@@ -222,7 +222,6 @@ The plugin generates a `cbom.json` file in [CycloneDX CBOM format](https://cyclo
 ```
 
 The CBOM includes:
-
 - **Algorithms**: Hash functions, ciphers, key exchange mechanisms with their parameters
 - **Keys and secrets**: Private keys, secret keys, and other cryptographic materials
 - **Evidence**: Source file locations where each asset was detected
@@ -302,10 +301,10 @@ Run with `go run gen_package.go`, then delete the script.
 
 2. **Check for dependencies**: Some packages depend on types from other packages. Common dependencies:
 
-| Package           | May require  |
-| ----------------- | ------------ |
-| `crypto/hmac`     | `hash`       |
-| `crypto/cipher`   | `io`         |
+| Package | May require |
+|---------|-------------|
+| `crypto/hmac` | `hash` |
+| `crypto/cipher` | `io` |
 | `crypto/*` (most) | `io`, `hash` |
 
 3. **Add mapping entry** to `mapping_generated.go` in alphabetical order:
@@ -318,19 +317,19 @@ Run with `go run gen_package.go`, then delete the script.
 
 ### File naming convention
 
-| Package Path                 | Export Data File    |
-| ---------------------------- | ------------------- |
-| `crypto/hmac`                | `crypto_hmac.o`     |
-| `crypto/elliptic`            | `crypto_elliptic.o` |
+| Package Path | Export Data File |
+|--------------|------------------|
+| `crypto/hmac` | `crypto_hmac.o` |
+| `crypto/elliptic` | `crypto_elliptic.o` |
 | `golang.org/x/crypto/bcrypt` | `x_crypto_bcrypt.o` |
 
 </details>
 
 ## Help and troubleshooting
 
-If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [_Testing your configuration and troubleshooting_](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
+If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [*Testing your configuration and troubleshooting*](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
 
-To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [_Performance & Heap Testing_](docs/PERFORMANCE_TESTING.md).
+To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [*Performance & Heap Testing*](docs/PERFORMANCE_TESTING.md).
 
 ## Contribution Guidelines
 

@@ -44,6 +44,8 @@ import javax.annotation.Nonnull;
  */
 public final class CxxDetachedAstNode extends AstNode implements DetachedLocation {
 
+    @Nonnull private static final URI DETACHED_URI = URI.create("detached:///cross-file");
+
     @Nonnull private final List<String> keywords;
 
     public CxxDetachedAstNode(
@@ -64,7 +66,7 @@ public final class CxxDetachedAstNode extends AstNode implements DetachedLocatio
                 .setValueAndOriginalValue(text)
                 .setLine(Math.max(line, 1))
                 .setColumn(Math.max(column, 0))
-                .setURI(URI.create("detached:///cross-file"))
+                .setURI(DETACHED_URI)
                 .build();
     }
 }

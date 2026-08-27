@@ -90,6 +90,30 @@ public class CallStackAgent<R, T, S, P>
         }
     }
 
+    /**
+     * Whether {@code tree} is already present in the recorded-call population, under the same key
+     * and identity check {@link #add} itself uses to dedupe. A single call node is recorded once
+     * per matching detection rule that visits it, so callers building an expensive {@link
+     * DetachedCall} snapshot before calling {@link #add} can check this first and skip that work
+     * once the node's first recording has already happened.
+     */
+    public boolean isRecorded(@Nonnull T tree) {
+        final Optional<Integer> keyOptional = getKeyFormT(tree);
+        if (keyOptional.isEmpty()) {
+            return false;
+        }
+        final List<CallContext<R, T>> bucket = invokedCallStack.get(keyOptional.get());
+        if (bucket == null) {
+            return false;
+        }
+        for (CallContext<R, T> existing : bucket) {
+            if (tree.equals(existing.tree())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Nonnull
     private Optional<Integer> keyOf(@Nonnull CallContext<R, T> callContext) {
         if (callContext instanceof DetachedCall<R, T> detached) {
