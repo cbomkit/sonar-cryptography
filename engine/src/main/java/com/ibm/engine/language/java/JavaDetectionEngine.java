@@ -430,7 +430,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                 ExpressionTree expressionTree = newClassTree.arguments().get(0);
                 return resolveValues(clazz, expressionTree, valueFactory, selections);
             } else if (newClassTree.arguments().size() > 1) {
-                LOGGER.info(
+                LOGGER.trace(
                         "Detected constructor definition has more then one argument to resolve. Redefine the rule to explicitly define the param to resolve");
             }
         } else {
