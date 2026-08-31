@@ -50,14 +50,14 @@ jobs:
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v5
       if: github.event_name != 'pull_request'
-    - name: Create CBOM
-      uses: cbomkit/cbomkit-action@v2.2.0
-      id: cbom
-      # Persist CBOM after a job has completed and share
-      # that CBOM with another job in the same workflow.
-    - name: Commit changes to new branch
-      uses: actions/upload-artifact@v7
-      with:
-        name: "CBOM"
-        path: ${{ steps.cbom.outputs.pattern }}
-        if-no-files-found: warn
+    #- name: Create CBOM
+    #  uses: cbomkit/cbomkit-action@v2.2.0
+    #  id: cbom
+    #  # Persist CBOM after a job has completed and share
+    #  # that CBOM with another job in the same workflow.
+    #- name: Commit changes to new branch
+    #  uses: actions/upload-artifact@v7
+    #  with:
+    #    name: "CBOM"
+    #    path: ${{ steps.cbom.outputs.pattern }}
+    #    if-no-files-found: warn
