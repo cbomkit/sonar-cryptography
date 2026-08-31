@@ -38,10 +38,10 @@ import org.sonar.plugins.java.api.semantic.Symbol;
 import org.sonar.plugins.java.api.tree.Tree;
 
 /**
- * Regression test for issue #525: a cycle in the assignment graph (a field initialized from
- * another field, which is in turn assigned back from the first) must not send {@code
- * resolveValues} into infinite recursion (StackOverflowError). The value must still resolve
- * through the cycle to the constant initializer.
+ * Regression test for issue #525: a cycle in the assignment graph (a field initialized from another
+ * field, which is in turn assigned back from the first) must not send {@code resolveValues} into
+ * infinite recursion (StackOverflowError). The value must still resolve through the cycle to the
+ * constant initializer.
  */
 class JcaCipherGetInstanceCyclicAssignmentTest extends TestBase {
 
