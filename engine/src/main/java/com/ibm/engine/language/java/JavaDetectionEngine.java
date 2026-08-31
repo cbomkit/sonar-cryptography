@@ -48,10 +48,12 @@ import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -301,7 +303,8 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             @Nonnull Tree expression,
             @Nullable IValueFactory<Tree> valueFactory) {
         if (expression instanceof ExpressionTree expressionTree) {
-            return resolveValues(clazz, expressionTree, valueFactory, new LinkedList<>());
+            return resolveValues(
+                    clazz, expressionTree, valueFactory, new LinkedList<>(), new HashSet<>());
         }
         return Collections.emptyList();
     }
@@ -312,49 +315,16 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             @Nonnull Class<O> clazz,
             @Nonnull ExpressionTree tree,
             @Nullable IValueFactory<Tree> valueFactory,
-            @Nonnull LinkedList<Tree> selections) {
+            @Nonnull LinkedList<Tree> selections,
+            @Nonnull Set<Symbol> resolvingVariables) {
         if (selections.size() > 15) {
             return Collections.emptyList();
         } else if (tree.is(Tree.Kind.IDENTIFIER)) {
             IdentifierTree identifierTree = (IdentifierTree) tree;
             if (identifierTree.symbol().isVariableSymbol()) {
                 // variable
-                VariableTree variableTree = (VariableTree) identifierTree.symbol().declaration();
-                if (variableTree != null) {
-                    LinkedList<ResolvedValue<O, Tree>> result = new LinkedList<>();
-
-                    List<IdentifierTree> usages = new ArrayList<>(variableTree.symbol().usages());
-                    usages.remove(identifierTree);
-                    // not only initialization, also other declarations
-                    if (!usages.isEmpty()) {
-                        for (IdentifierTree usage : usages) {
-                            Tree parent = usage.parent();
-                            if (parent != null && parent.is(Tree.Kind.ASSIGNMENT)) {
-                                AssignmentExpressionTree assignment =
-                                        (AssignmentExpressionTree) parent;
-                                if (assignment.expression() != usage) {
-                                    result.addAll(
-                                            resolveValues(
-                                                    clazz,
-                                                    assignment.expression(),
-                                                    valueFactory,
-                                                    selections));
-                                }
-                            }
-                        }
-                    }
-
-                    ExpressionTree initializer = variableTree.initializer();
-                    if (initializer != null) {
-                        Optional<O> value = resolveConstant(clazz, initializer);
-                        if (value.isPresent()) {
-                            result.addFirst(new ResolvedValue<>(value.get(), initializer));
-                        } else {
-                            return resolveValues(clazz, initializer, valueFactory, selections);
-                        }
-                    }
-                    return result;
-                }
+                return resolveVariableValues(
+                        clazz, identifierTree, valueFactory, selections, resolvingVariables);
             } else if (identifierTree.symbol().isEnum()) {
                 ClassTree enumClassTree = (ClassTree) identifierTree.symbol().declaration();
                 if (enumClassTree != null && !selections.isEmpty()) {
@@ -385,17 +355,30 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                         (MemberSelectExpressionTree) tree;
                 selections.addFirst(memberSelectExpressionTree);
                 return resolveValues(
-                        clazz, memberSelectExpressionTree.expression(), valueFactory, selections);
+                        clazz,
+                        memberSelectExpressionTree.expression(),
+                        valueFactory,
+                        selections,
+                        resolvingVariables);
             }
             return List.of(new ResolvedValue<>(value.get(), tree));
         } else if (tree.is(Tree.Kind.METHOD_INVOCATION)) {
             MethodInvocationTree methodInvocationTree = (MethodInvocationTree) tree;
             selections.addFirst(methodInvocationTree);
             final List<ResolvedValue<O, Tree>> resolvedValues =
-                    resolveJavaProperties(clazz, methodInvocationTree, valueFactory, selections);
+                    resolveJavaProperties(
+                            clazz,
+                            methodInvocationTree,
+                            valueFactory,
+                            selections,
+                            resolvingVariables);
             if (resolvedValues.isEmpty()) {
                 return resolveValues(
-                        clazz, methodInvocationTree.methodSelect(), valueFactory, selections);
+                        clazz,
+                        methodInvocationTree.methodSelect(),
+                        valueFactory,
+                        selections,
+                        resolvingVariables);
             } else {
                 return resolvedValues;
             }
@@ -409,7 +392,12 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                     ArrayDimensionTree dimensionTree = dimensionTrees.get(0);
                     ExpressionTree dimensionDefinition = dimensionTree.expression();
                     if (dimensionDefinition != null) {
-                        return resolveValues(clazz, dimensionDefinition, valueFactory, selections);
+                        return resolveValues(
+                                clazz,
+                                dimensionDefinition,
+                                valueFactory,
+                                selections,
+                                resolvingVariables);
                     }
                 } else if (dimensionTrees.size() > 1) {
                     LOGGER.info(
@@ -419,7 +407,13 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                 ListTree<ExpressionTree> initializers = newArrayTree.initializers();
                 final List<ResolvedValue<O, Tree>> values = new ArrayList<>();
                 for (ExpressionTree initializer : initializers) {
-                    values.addAll(resolveValues(clazz, initializer, valueFactory, selections));
+                    values.addAll(
+                            resolveValues(
+                                    clazz,
+                                    initializer,
+                                    valueFactory,
+                                    selections,
+                                    resolvingVariables));
                 }
                 return values;
             }
@@ -428,7 +422,8 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             selections.addFirst(newClassTree);
             if (newClassTree.arguments().size() == 1) {
                 ExpressionTree expressionTree = newClassTree.arguments().get(0);
-                return resolveValues(clazz, expressionTree, valueFactory, selections);
+                return resolveValues(
+                        clazz, expressionTree, valueFactory, selections, resolvingVariables);
             } else if (newClassTree.arguments().size() > 1) {
                 LOGGER.trace(
                         "Detected constructor definition has more then one argument to resolve. Redefine the rule to explicitly define the param to resolve");
@@ -442,11 +437,73 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
         return Collections.emptyList();
     }
 
+    /**
+     * Resolves the possible values of a variable by following the assignments to it and its
+     * initializer. The assignment graph can contain cycles (e.g. {@code String a = b;} together
+     * with {@code b = a;}): a variable that is already being resolved further up the call chain is
+     * not followed again, since it cannot contribute a new value and following it would recurse
+     * forever (issue #525).
+     */
+    @Nonnull
+    private <O> List<ResolvedValue<O, Tree>> resolveVariableValues(
+            @Nonnull Class<O> clazz,
+            @Nonnull IdentifierTree identifierTree,
+            @Nullable IValueFactory<Tree> valueFactory,
+            @Nonnull LinkedList<Tree> selections,
+            @Nonnull Set<Symbol> resolvingVariables) {
+        final Symbol symbol = identifierTree.symbol();
+        if (!resolvingVariables.add(symbol)) {
+            // cycle: this variable is already being resolved further up the call chain
+            return Collections.emptyList();
+        }
+        try {
+            VariableTree variableTree = (VariableTree) symbol.declaration();
+            if (variableTree == null) {
+                return Collections.emptyList();
+            }
+            LinkedList<ResolvedValue<O, Tree>> result = new LinkedList<>();
+
+            List<IdentifierTree> usages = new ArrayList<>(variableTree.symbol().usages());
+            usages.remove(identifierTree);
+            // not only initialization, also other declarations
+            for (IdentifierTree usage : usages) {
+                Tree parent = usage.parent();
+                if (parent != null && parent.is(Tree.Kind.ASSIGNMENT)) {
+                    AssignmentExpressionTree assignment = (AssignmentExpressionTree) parent;
+                    if (assignment.expression() != usage) {
+                        result.addAll(
+                                resolveValues(
+                                        clazz,
+                                        assignment.expression(),
+                                        valueFactory,
+                                        selections,
+                                        resolvingVariables));
+                    }
+                }
+            }
+
+            ExpressionTree initializer = variableTree.initializer();
+            if (initializer != null) {
+                Optional<O> value = resolveConstant(clazz, initializer);
+                if (value.isPresent()) {
+                    result.addFirst(new ResolvedValue<>(value.get(), initializer));
+                } else {
+                    return resolveValues(
+                            clazz, initializer, valueFactory, selections, resolvingVariables);
+                }
+            }
+            return result;
+        } finally {
+            resolvingVariables.remove(symbol);
+        }
+    }
+
     private <O> List<ResolvedValue<O, Tree>> resolveJavaProperties(
             @Nonnull Class<O> clazz,
             @Nonnull MethodInvocationTree methodInvocationTree,
             @Nullable IValueFactory<Tree> valueFactory,
-            @Nonnull LinkedList<Tree> selections) {
+            @Nonnull LinkedList<Tree> selections,
+            @Nonnull Set<Symbol> resolvingVariables) {
         final MatchContext matchContext = new MatchContext(false, false, List.of());
         final MethodMatcher<Tree> javaPropertyWithDefaultValueMatcher =
                 new MethodMatcher<>(
@@ -460,7 +517,11 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                 return Collections.emptyList();
             }
             return resolveValues(
-                    clazz, methodInvocationTree.arguments().get(1), valueFactory, selections);
+                    clazz,
+                    methodInvocationTree.arguments().get(1),
+                    valueFactory,
+                    selections,
+                    resolvingVariables);
         }
         return Collections.emptyList();
     }
