@@ -22,7 +22,7 @@
         <module>rules</module>
     </modules>
 
-    <version>2.0.0-SNAPSHOT</version>
+    <version>1.7.0</version>
     <name>sonar-cryptography</name>
     <organization>
         <name>cbomkit</name>
