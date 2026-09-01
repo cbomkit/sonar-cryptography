@@ -56,7 +56,7 @@
         <sonar.go.version>1.32.0.5128</sonar.go.version>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
-        <google-java-format.version>1.28.0</google-java-format.version>
+        <google-java-format.version>1.36.1</google-java-format.version>
     </properties>
 
     <distributionManagement>
