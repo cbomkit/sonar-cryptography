@@ -33,8 +33,10 @@ import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -260,6 +262,26 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
         this.statusReporting.emitFinding();
     }
 
+    public void release() {
+        Deque<DetectionStore<R, T, S, P>> stack = new ArrayDeque<>();
+        stack.push(this);
+        List<DetectionStore<R, T, S, P>> order = new ArrayList<>();
+        while (!stack.isEmpty()) {
+            DetectionStore<R, T, S, P> node = stack.pop();
+            order.add(node);
+            for (List<DetectionStore<R, T, S, P>> childStores : node.children.values()) {
+                childStores.forEach(stack::push);
+            }
+        }
+        // Post-order: reverse so deepest descendants are cleared before their ancestors.
+        Collections.reverse(order);
+        for (DetectionStore<R, T, S, P> node : order) {
+            node.detectionValues.clear();
+            node.children.clear();
+            node.actionValue = null;
+        }
+    }
+
     @SuppressWarnings("java:S3776")
     public void onReceivingNewDetection(@Nonnull IDetection<T> detection) {
         if (detection instanceof MethodDetection<T> methodDetection) {
@@ -294,34 +316,32 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
 
         } else if (detection instanceof ValueDetection<?, T> valueDetection) {
             final DetectableParameter<T> detectableParameter = valueDetection.detectableParameter();
+            Optional<IValue<T>> emittedValue =
+                    valueDetection.toValue(valueDetection.detectableParameter().getiValueFactory());
 
             final Optional<Integer> positionMove = detectableParameter.getShouldBeMovedUnder();
             // Check if the parameter should be moved under
             if (positionMove.isPresent()) {
                 final int id = positionMove.get();
                 // Get the iValue to be detected and store it in a variable
-                valueDetection
-                        .toValue(valueDetection.detectableParameter().getiValueFactory())
-                        .ifPresent(
-                                iValue -> {
-                                    // Create a detection store with the given parameters
-                                    DetectionStore<R, T, S, P> detectionStore =
-                                            new DetectionStore<>(
-                                                    level + 1,
-                                                    detectionRule,
-                                                    scanContext,
-                                                    handler,
-                                                    statusReporting);
-                                    // Compute the detection values for the given id
-                                    addValue(detectionStore, id, iValue);
-                                    // Attach the detection store to the given id
-                                    this.attach(id, detectionStore);
-                                });
+                emittedValue.ifPresent(
+                        iValue -> {
+                            // Create a detection store with the given parameters
+                            DetectionStore<R, T, S, P> detectionStore =
+                                    new DetectionStore<>(
+                                            level + 1,
+                                            detectionRule,
+                                            scanContext,
+                                            handler,
+                                            statusReporting);
+                            // Compute the detection values for the given id
+                            addValue(detectionStore, id, iValue);
+                            // Attach the detection store to the given id
+                            this.attach(id, detectionStore);
+                        });
             } else {
-                valueDetection
-                        .toValue(valueDetection.detectableParameter().getiValueFactory())
-                        .ifPresent(
-                                iValue -> addValue(this, detectableParameter.getIndex(), iValue));
+                emittedValue.ifPresent(
+                        iValue -> addValue(this, detectableParameter.getIndex(), iValue));
             }
 
             // follow method parameter related detection rules
@@ -393,6 +413,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
     }
 
     public void onNewHookRegistration(@Nonnull IHook<R, T, S, P> hook) {
+        statusReporting.onDeferredHookRegistration();
         handler.subscribeToHookDetectionObservable(hook, this);
     }
 

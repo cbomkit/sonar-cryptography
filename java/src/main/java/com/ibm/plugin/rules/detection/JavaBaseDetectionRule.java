@@ -27,13 +27,17 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.JavaAggregator;
+import com.ibm.plugin.JavaScanMemoryLogger;
 import com.ibm.plugin.translation.JavaTranslationProcess;
 import com.ibm.plugin.translation.reorganizer.JavaReorganizerRules;
 import com.ibm.rules.IReportableDetectionRule;
 import com.ibm.rules.issue.Issue;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.plugins.java.api.IssuableSubscriptionVisitor;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
@@ -43,8 +47,15 @@ import org.sonar.plugins.java.api.tree.Tree;
 public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
         implements IObserver<Finding<JavaCheck, Tree, Symbol, JavaFileScannerContext>>,
                 IReportableDetectionRule<Tree> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaBaseDetectionRule.class);
+    private static final long FILE_PROGRESS_LOG_EVERY = 2500L;
 
     private final boolean isInventory;
+
+    @Nonnull
+    private final List<DetectionExecutive<JavaCheck, Tree, Symbol, JavaFileScannerContext>>
+            deferredDetectionExecutives = new ArrayList<>();
+
     @Nonnull protected final JavaTranslationProcess javaTranslationProcess;
     @Nonnull protected final List<IDetectionRule<Tree>> detectionRules;
 
@@ -100,6 +111,9 @@ public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
                                                     tree, rule, new JavaScanContext(this.context));
                     detectionExecutive.subscribe(this);
                     detectionExecutive.start();
+                    if (detectionExecutive.hasDeferredHooks() && !detectionExecutive.isReleased()) {
+                        deferredDetectionExecutives.add(detectionExecutive);
+                    }
                 });
     }
 
@@ -124,10 +138,28 @@ public abstract class JavaBaseDetectionRule extends IssuableSubscriptionVisitor
     }
 
     @Override
+    public void leaveFile(@Nonnull JavaFileScannerContext context) {
+        try {
+            super.leaveFile(context);
+        } finally {
+            releaseDeferredExecutives();
+            JavaAggregator.resetLanguageSupport();
+            if (isInventory) {
+                JavaScanMemoryLogger.logFileProgress(LOGGER, FILE_PROGRESS_LOG_EVERY);
+            }
+        }
+    }
+
+    @Override
     @Nonnull
     public List<Issue<Tree>> report(
             @Nonnull Tree markerTree, @Nonnull List<INode> translatedNodes) {
         // override by higher level rule, to report an issue
         return Collections.emptyList();
+    }
+
+    private void releaseDeferredExecutives() {
+        deferredDetectionExecutives.forEach(DetectionExecutive::releaseDeferredResources);
+        deferredDetectionExecutives.clear();
     }
 }

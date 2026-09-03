@@ -61,5 +61,10 @@ public final class JavaAggregator implements IAggregator {
     public static void reset() {
         javaLanguageSupport = LanguageSupporter.javaLanguageSupporter();
         detectedNodes = new ArrayList<>();
+        JavaScanMemoryLogger.reset();
+    }
+
+    public static void resetLanguageSupport() {
+        javaLanguageSupport = LanguageSupporter.javaLanguageSupporter();
     }
 }

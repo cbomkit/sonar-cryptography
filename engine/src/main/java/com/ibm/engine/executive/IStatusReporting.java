@@ -30,4 +30,35 @@ public interface IStatusReporting<R, T, S, P> {
     void incrementVisitedRules();
 
     void addAdditionalExpectedRuleVisits(int number);
+
+    /**
+     * Called when a detection store registers a hook whose invocation may fire after the current
+     * rule-visit cycle has completed.
+     *
+     * @apiNote This method is triggered by {@link
+     *     com.ibm.engine.detection.DetectionStore#onNewHookRegistration} the first time a deferred
+     *     hook is registered on a given scan node. It signals that at least one pending hook
+     *     invocation may still emit findings after {@code emitFinding()} would otherwise release
+     *     resources.
+     * @implSpec Implementations that manage a release lifecycle <em>must</em> set an internal flag
+     *     to suppress eager resource cleanup until all deferred hook invocations have completed.
+     *     For example:
+     *     <pre>{@code
+     * @Override
+     * public void onDeferredHookRegistration() {
+     *     this.deferredHookRegistered = true;
+     *     // emitFinding() will now skip releaseResources() and instead wait
+     *     // for an explicit releaseDeferredResources() call from the scan driver.
+     * }
+     * }</pre>
+     *     Failing to suppress the release will cause the detection-store tree to be cleared before
+     *     the pending hook findings are emitted, silently dropping detections.
+     * @implNote The default no-op is intentional. Language-module status reporters written before
+     *     this method was introduced do not track deferred-hook lifecycles and remain fully
+     *     source-compatible without any code changes.
+     * @since PR #417
+     */
+    default void onDeferredHookRegistration() {
+        // Optional lifecycle callback for deferred hook-based findings.
+    }
 }
