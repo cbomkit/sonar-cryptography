@@ -41,7 +41,30 @@ public class DetectableParameter<T> extends Parameter<T> {
                 parameterType,
                 index,
                 shouldMatchExactTypes,
-                detectionRules);
+                detectionRules,
+                null,
+                false);
+        this.iValueFactory = iValueFactory;
+        this.shouldBeMovedUnder = shouldBeMovedUnder;
+    }
+
+    public DetectableParameter(
+            @Nonnull String parameterType,
+            int index,
+            boolean shouldMatchExactTypes,
+            @Nonnull IValueFactory<T> iValueFactory,
+            @Nonnull List<IDetectionRule<T>> detectionRules,
+            @Nullable Integer shouldBeMovedUnder,
+            @Nullable String keywordName,
+            boolean keywordOptional) {
+        super(
+                DetectableParameter.class,
+                parameterType,
+                index,
+                shouldMatchExactTypes,
+                detectionRules,
+                keywordName,
+                keywordOptional);
         this.iValueFactory = iValueFactory;
         this.shouldBeMovedUnder = shouldBeMovedUnder;
     }
