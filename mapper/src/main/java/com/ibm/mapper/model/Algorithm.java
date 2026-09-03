@@ -36,7 +36,7 @@ public class Algorithm implements IAlgorithm {
     public Algorithm(
             @Nonnull IAlgorithm algorithm, @Nonnull final Class<? extends IPrimitive> asKind) {
         this.name = algorithm.getName();
-        this.children = algorithm.getChildren();
+        this.children = new HashMap<>(algorithm.getChildren());
         this.detectionLocation = algorithm.getDetectionContext();
         this.kind = asKind;
         this.origin = algorithm.getOrigin();

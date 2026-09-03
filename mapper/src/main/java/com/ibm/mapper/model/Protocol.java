@@ -33,7 +33,7 @@ public class Protocol implements IAsset {
 
     public Protocol(@Nonnull Protocol protocol, @Nonnull final Class<? extends Protocol> asKind) {
         this.type = protocol.type;
-        this.children = protocol.getChildren();
+        this.children = new HashMap<>(protocol.getChildren());
         this.detectionLocation = protocol.detectionLocation;
         this.kind = asKind;
     }

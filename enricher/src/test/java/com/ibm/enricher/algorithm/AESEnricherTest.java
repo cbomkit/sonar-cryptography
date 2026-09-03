@@ -80,6 +80,25 @@ class AESEnricherTest extends TestBase {
     }
 
     @Test
+    void recastAesDoesNotShareChildrenWithOriginal() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+        final AES aes = new AES(128, new GCM(testDetectionLocation), testDetectionLocation);
+
+        final AESEnricher aesEnricher = new AESEnricher();
+        final INode enriched = aesEnricher.enrich(aes);
+
+        assertThat(enriched).isInstanceOf(AES.class);
+        final AES enrichedAES = (AES) enriched;
+        enrichedAES.removeChildOfType(Oid.class);
+
+        assertThat(enrichedAES.hasChildOfType(Oid.class)).isEmpty();
+        assertThat(aes.hasChildOfType(Oid.class)).isPresent();
+        assertThat(aes.hasChildOfType(Oid.class).get().asString())
+                .isEqualTo("2.16.840.1.101.3.4.1.6");
+    }
+
+    @Test
     void defaultKeyLengthForJca() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "Jca");
