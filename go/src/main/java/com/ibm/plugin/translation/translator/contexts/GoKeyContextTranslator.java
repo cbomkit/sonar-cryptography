@@ -35,15 +35,24 @@ import com.ibm.mapper.mapper.gocrypto.GoCryptoDSAParameterMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoKEMMapper;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoKeyDerivationFunctionMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NumberOfIterations;
+import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.Unknown;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.Certificate;
+import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.context.PublicKeyContext;
+import com.ibm.engine.model.context.CertificateContext;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.model.functionality.Generate;
@@ -67,33 +76,52 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof ValueAction<Tree>
                 && detectionContext instanceof DetectionContext context) {
+            
+            if (context instanceof CertificateContext) {
+                 String format = context.get("format").orElse("X.509");
+                 return Optional.of(new Certificate(format, detectionLocation));
+            }
+
             final GoCryptoCurveMapper curveMapper = new GoCryptoCurveMapper();
 
             String kind = context.get("kind").orElse("");
+            INode algorithmNode = null;
             switch (kind) {
                 case "RSA":
-                    return Optional.of(new RSA(PublicKeyEncryption.class, detectionLocation));
+                    algorithmNode = new RSA(PublicKeyEncryption.class, detectionLocation);
+                    break;
                 case "ECDSA":
-                    return Optional.of(new ECDSA(detectionLocation));
+                    algorithmNode = new ECDSA(detectionLocation);
+                    break;
                 case "Ed25519":
-                    return Optional.of(new Ed25519(detectionLocation));
+                    algorithmNode = new Ed25519(detectionLocation);
+                    break;
                 case "DSA":
-                    return Optional.of(new DSA(detectionLocation));
+                    algorithmNode = new DSA(detectionLocation);
+                    break;
                 case "ECDH":
                     // Try to parse as curve name first (e.g., "P256", "X25519")
                     Optional<? extends INode> curveResult =
                             curveMapper.parse(value.asString(), detectionLocation).map(ECDH::new);
                     if (curveResult.isPresent()) {
-                        return curveResult.map(n -> n);
+                        algorithmNode = curveResult.get();
+                    } else if ("ECDH".equals(value.asString())) {
+                        algorithmNode = new ECDH(detectionLocation);
                     }
-                    // If value is "ECDH" itself (from GenerateKey/NewPrivateKey/NewPublicKey),
-                    // return a generic ECDH node without curve details
-                    if ("ECDH".equals(value.asString())) {
-                        return Optional.of(new ECDH(detectionLocation));
-                    }
-                    return Optional.empty();
+                    break;
+                case "PKCS1":
+                    algorithmNode = new RSA(detectionLocation);
+                    break;
+                case "PKCS8":
+                case "X509":
+                    algorithmNode = new Unknown(detectionLocation);
+                    break;
                 case "EC":
-                    return curveMapper.parse(value.asString(), detectionLocation).map(f -> f);
+                    Optional<? extends INode> parsed = curveMapper.parse(value.asString(), detectionLocation);
+                    if (parsed.isPresent()) {
+                        algorithmNode = parsed.get();
+                    }
+                    break;
                 case "KDF":
                     final GoCryptoKeyDerivationFunctionMapper kdfMapper =
                             new GoCryptoKeyDerivationFunctionMapper();
@@ -103,6 +131,27 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
                     return kemMapper.parse(value.asString(), detectionLocation).map(n -> n);
                 default:
                     return Optional.empty();
+            }
+
+            if (algorithmNode != null) {
+                if (context instanceof PrivateKeyContext) {
+                    if (algorithmNode instanceof PublicKeyEncryption pke) {
+                        return Optional.of(new PrivateKey(pke));
+                    } else if (algorithmNode instanceof Signature sig) {
+                        return Optional.of(new PrivateKey(sig));
+                    } else if (algorithmNode instanceof Key key) {
+                        return Optional.of(new PrivateKey(key));
+                    }
+                } else if (context instanceof PublicKeyContext) {
+                    if (algorithmNode instanceof PublicKeyEncryption pke) {
+                        return Optional.of(new PublicKey(pke));
+                    } else if (algorithmNode instanceof Signature sig) {
+                        return Optional.of(new PublicKey(sig));
+                    } else if (algorithmNode instanceof Key key) {
+                        return Optional.of(new PublicKey(key));
+                    }
+                }
+                return Optional.of(algorithmNode);
             }
         } else if (value instanceof KeySize<Tree> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));

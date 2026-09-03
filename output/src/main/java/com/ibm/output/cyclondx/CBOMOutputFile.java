@@ -21,6 +21,7 @@ package com.ibm.output.cyclondx;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.Certificate;
 import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.EllipticCurve;
@@ -58,6 +59,7 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.Constants;
 import com.ibm.output.IOutputFile;
 import com.ibm.output.cyclondx.builder.AlgorithmComponentBuilder;
+import com.ibm.output.cyclondx.builder.CertificateComponentBuilder;
 import com.ibm.output.cyclondx.builder.ProtocolComponentBuilder;
 import com.ibm.output.cyclondx.builder.RelatedCryptoMaterialComponentBuilder;
 import com.ibm.output.util.Utils;
@@ -119,6 +121,8 @@ public class CBOMOutputFile implements IOutputFile {
                         createKeyComponent(parentBomRef, key);
                     } else if (node instanceof Protocol protocol) {
                         createProtocolComponent(parentBomRef, protocol);
+                    } else if (node instanceof Certificate certificate) {
+                        createCertificateComponent(parentBomRef, certificate);
                     } else if (node instanceof CipherSuite cipherSuite) {
                         createCipherSuiteComponent(parentBomRef, cipherSuite);
                     } else if (node instanceof SaltLength
@@ -226,6 +230,20 @@ public class CBOMOutputFile implements IOutputFile {
             return;
         }
         addComponentAndDependencies(protocol, optionalId.get(), parentBomRef, node);
+    }
+
+    private void createCertificateComponent(
+            @Nullable String parentBomRef, @Nonnull Certificate node) {
+        Component certificate =
+                CertificateComponentBuilder.create()
+                        .certificate(node)
+                        .occurrences(createOccurrenceForm(node.getDetectionContext()))
+                        .build();
+        final Optional<String> optionalId = getIdentifierFunction().apply(certificate);
+        if (optionalId.isEmpty()) {
+            return;
+        }
+        addComponentAndDependencies(certificate, optionalId.get(), parentBomRef, node);
     }
 
     private void createRelatedCryptoMaterialComponent(
