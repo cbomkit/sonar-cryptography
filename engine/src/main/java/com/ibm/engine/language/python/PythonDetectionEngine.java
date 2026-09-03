@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import org.sonar.plugins.python.api.PythonCheck;
 import org.sonar.plugins.python.api.PythonVisitorContext;
 import org.sonar.plugins.python.api.symbols.Symbol;
+import org.sonar.plugins.python.api.symbols.Usage;
 import org.sonar.plugins.python.api.tree.*;
 
 public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
@@ -380,8 +381,10 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
             QualifiedExpression qualifiedExpression = (QualifiedExpression) callee;
             if (qualifiedExpression.qualifier() instanceof Name name) {
-                Optional<String> nameString = Optional.of(name).map(Name::symbol).map(Symbol::name);
-                return nameString.isPresent() && nameString.get().equals(variable.name());
+                Symbol symbol = name.symbol();
+                if (symbol != null) {
+                    return areSymbolsEquivalent(symbol, variable);
+                }
             }
 
             return false;
@@ -402,7 +405,44 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
 
         TraceSymbol<Symbol> traceSymbol = symbolOptional.get();
         Symbol symbol = traceSymbol.getSymbol();
-        return symbol.name().equals(variable.name());
+        if (symbol == null) {
+            return false;
+        }
+        return areSymbolsEquivalent(symbol, variable);
+    }
+
+    private boolean areSymbolsEquivalent(@Nonnull Symbol s1, @Nonnull Symbol s2) {
+        if (s1.equals(s2)) {
+            return true;
+        }
+
+        Symbol t1 = traceSymbol(s1);
+        Symbol t2 = traceSymbol(s2);
+
+        return t1.equals(t2);
+    }
+
+    @Nonnull
+    private Symbol traceSymbol(@Nonnull Symbol symbol) {
+        // NOTE: symbol.usages() iteration order is not guaranteed. For a variable reassigned more
+        // than once (x = y; x = z; use(x)), this returns whichever ASSIGNMENT_LHS appears first in
+        // the iteration, which is non-deterministic. Ideally the assignment lexically nearest to
+        // the use site should be picked.
+        for (Usage usage : symbol.usages()) {
+            if (usage.kind() == Usage.Kind.ASSIGNMENT_LHS) {
+                Tree parent = usage.tree().parent();
+                if (parent instanceof AssignmentStatement assignment) {
+                    Expression rhs = assignment.assignedValue();
+                    if (rhs instanceof Name name) {
+                        Symbol rhsSymbol = name.symbol();
+                        if (rhsSymbol != null && !rhsSymbol.equals(symbol)) {
+                            return traceSymbol(rhsSymbol);
+                        }
+                    }
+                }
+            }
+        }
+        return symbol;
     }
 
     private void analyseExpression(
