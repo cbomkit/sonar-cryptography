@@ -50,3 +50,4 @@ venv/
 .claude/settings.local.json
 .claude/worktrees
 .superpowers
+javascript/src/main/resources/node/
