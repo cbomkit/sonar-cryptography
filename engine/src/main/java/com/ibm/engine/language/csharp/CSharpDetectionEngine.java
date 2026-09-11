@@ -39,9 +39,12 @@ import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -95,12 +98,20 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     @Override
     public void run(@Nonnull TraceSymbol<CSharpSymbol> traceSymbol, @Nonnull CSharpTree tree) {
         if (tree instanceof CSharpBlockTree blockTree) {
+            Map<String, String> aliases = blockTree.getAliases();
+            TraceSymbol<CSharpSymbol> currentSymbol = traceSymbol;
             for (CSharpTree statement : blockTree.getStatements()) {
-                processStatement(traceSymbol, statement);
+                if (statement instanceof CSharpIdentifierTree identifier) {
+                    String resolved = resolveAlias(identifier.getName(), aliases);
+                    if (!resolved.equals(identifier.getName())) {
+                        currentSymbol = TraceSymbol.createFrom(new CSharpSymbol(resolved));
+                    }
+                }
+                processStatement(currentSymbol, statement, aliases);
             }
         } else if (tree instanceof CSharpMethodInvocationTree invocation) {
             if (traceSymbol.is(TraceSymbol.State.SYMBOL)
-                    && !isInvocationOnVariable(invocation, traceSymbol)) {
+                    && !isInvocationOnVariable(invocation, traceSymbol, Collections.emptyMap())) {
                 return;
             }
             handler.addCallToCallStack(invocation, detectionStore.getScanContext());
@@ -111,7 +122,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             }
         } else if (tree instanceof CSharpObjectCreationTree creation) {
             if (traceSymbol.is(TraceSymbol.State.SYMBOL)
-                    && !isInitForVariable(creation, traceSymbol)) {
+                    && !isInitForVariable(creation, traceSymbol, Collections.emptyMap())) {
                 return;
             }
             handler.addCallToCallStack(creation, detectionStore.getScanContext());
@@ -131,10 +142,12 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
      * variable are processed.
      */
     private void processStatement(
-            @Nonnull TraceSymbol<CSharpSymbol> traceSymbol, @Nonnull CSharpTree statement) {
+            @Nonnull TraceSymbol<CSharpSymbol> traceSymbol,
+            @Nonnull CSharpTree statement,
+            @Nonnull Map<String, String> aliases) {
         if (statement instanceof CSharpMethodInvocationTree invocation) {
             if (traceSymbol.is(TraceSymbol.State.SYMBOL)
-                    && !isInvocationOnVariable(invocation, traceSymbol)) {
+                    && !isInvocationOnVariable(invocation, traceSymbol, aliases)) {
                 return;
             }
             handler.addCallToCallStack(invocation, detectionStore.getScanContext());
@@ -145,7 +158,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             }
         } else if (statement instanceof CSharpObjectCreationTree creation) {
             if (traceSymbol.is(TraceSymbol.State.SYMBOL)
-                    && !isInitForVariable(creation, traceSymbol)) {
+                    && !isInitForVariable(creation, traceSymbol, aliases)) {
                 return;
             }
             handler.addCallToCallStack(creation, detectionStore.getScanContext());
@@ -408,6 +421,13 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     @Override
     public boolean isInvocationOnVariable(
             CSharpTree methodInvocation, @Nonnull TraceSymbol<CSharpSymbol> variableSymbol) {
+        return isInvocationOnVariable(methodInvocation, variableSymbol, Collections.emptyMap());
+    }
+
+    private boolean isInvocationOnVariable(
+            CSharpTree methodInvocation,
+            @Nonnull TraceSymbol<CSharpSymbol> variableSymbol,
+            @Nonnull Map<String, String> aliases) {
         if (!(methodInvocation instanceof CSharpMethodInvocationTree invocation)) {
             return false;
         }
@@ -415,14 +435,21 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (sym == null) {
             return false;
         }
-        // The objectTypeName holds the receiver — matches when it equals the variable name
-        // (e.g. "aes" in aes.Encrypt(...) matches TraceSymbol("aes"))
-        return invocation.getObjectTypeName().equals(sym.getName());
+        String objectTypeName = invocation.getObjectTypeName();
+        String resolvedName = resolveAlias(objectTypeName, aliases);
+        return resolvedName.equals(sym.getName());
     }
 
     @Override
     public boolean isInitForVariable(
             CSharpTree newClass, @Nonnull TraceSymbol<CSharpSymbol> variableSymbol) {
+        return isInitForVariable(newClass, variableSymbol, Collections.emptyMap());
+    }
+
+    private boolean isInitForVariable(
+            CSharpTree newClass,
+            @Nonnull TraceSymbol<CSharpSymbol> variableSymbol,
+            @Nonnull Map<String, String> aliases) {
         String assignedId = null;
         if (newClass instanceof CSharpMethodInvocationTree invocation) {
             assignedId = invocation.getAssignedIdentifier();
@@ -436,7 +463,21 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (sym == null) {
             return false;
         }
-        return assignedId.equals(sym.getName());
+        String resolvedName = resolveAlias(assignedId, aliases);
+        return resolvedName.equals(sym.getName());
+    }
+
+    /**
+     * Resolve an alias chain transitively with cycle protection. E.g. {@code var a = b; var b = c;}
+     * resolves {@code a -> b -> c}.
+     */
+    private static String resolveAlias(@Nonnull String name, @Nonnull Map<String, String> aliases) {
+        String current = name;
+        Set<String> visited = new HashSet<>();
+        while (aliases.containsKey(current) && visited.add(current)) {
+            current = aliases.get(current);
+        }
+        return current;
     }
 
     @Nullable @Override
