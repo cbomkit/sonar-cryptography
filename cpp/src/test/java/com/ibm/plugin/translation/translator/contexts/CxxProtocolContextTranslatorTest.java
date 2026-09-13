@@ -153,19 +153,18 @@ class CxxProtocolContextTranslatorTest {
     }
 
     @Test
-    void valueActionNotStartingWithTlsUnderTlsKindFallsThroughToAGenericProtocolNode() {
-        // SSLv3/DTLS* share ProtocolContext.Kind.TLS but do not start with "tls"
+    void valueActionNotStartingWithTlsUnderTlsKindResolvesToATlsNode() {
         Optional<INode> sslNode =
                 translate(new ValueAction<>("SSLv3", (AstNode) null), ProtocolContext.Kind.TLS);
         assertThat(sslNode).isPresent();
-        assertThat(sslNode.get()).isInstanceOf(com.ibm.mapper.model.Protocol.class);
-        assertThat(sslNode.get().asString()).isEqualTo("SSLv3");
+        assertThat(sslNode.get()).isInstanceOf(TLS.class);
+        assertThat(sslNode.get().asString()).isEqualTo("SSLv3.0");
 
         Optional<INode> dtlsNode =
                 translate(new ValueAction<>("DTLSv1", (AstNode) null), ProtocolContext.Kind.TLS);
         assertThat(dtlsNode).isPresent();
-        assertThat(dtlsNode.get()).isInstanceOf(com.ibm.mapper.model.Protocol.class);
-        assertThat(dtlsNode.get().asString()).isEqualTo("DTLSv1");
+        assertThat(dtlsNode.get()).isInstanceOf(TLS.class);
+        assertThat(dtlsNode.get().asString()).isEqualTo("DTLSv1.0");
     }
 
     @Test

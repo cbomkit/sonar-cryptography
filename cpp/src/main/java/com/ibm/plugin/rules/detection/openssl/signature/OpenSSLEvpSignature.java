@@ -352,6 +352,61 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<AstNode> EVP_SIGN_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_SignInit", "EVP_SignInit_ex")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_SIGN_UPDATE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_SignUpdate")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_SIGN_FINAL =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_SignFinal")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_VERIFY_UPDATE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_VerifyUpdate")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_VERIFY_FINAL =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_VerifyFinal")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withAnyParameters()
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     // ====================================================================
     // Fetch APIs
     // ====================================================================
@@ -765,6 +820,11 @@ public final class OpenSSLEvpSignature {
                 EVP_PKEY_VERIFY_RECOVER_INIT_EX2,
                 // Legacy EVP sign/verify (deprecated 3.0)
                 EVP_VERIFY_INIT_EX,
+                EVP_SIGN_INIT,
+                EVP_SIGN_UPDATE,
+                EVP_SIGN_FINAL,
+                EVP_VERIFY_UPDATE,
+                EVP_VERIFY_FINAL,
                 // Fetch
                 EVP_SIGNATURE_FETCH,
                 // RSA setters

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.IntUnaryOperator;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,9 +175,11 @@ public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
         return Optional.empty();
     }
 
+    private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlL]+$");
+
     /** Parses a decimal or hex ("0x19f") NID literal, tolerating integer suffixes. */
     private static Integer parseNumeric(@Nonnull String raw) {
-        String s = raw.trim().replaceAll("[uUlL]+$", "");
+        String s = INTEGER_SUFFIX_PATTERN.matcher(raw.trim()).replaceAll("");
         try {
             if (s.length() > 2 && (s.startsWith("0x") || s.startsWith("0X"))) {
                 return Integer.parseInt(s.substring(2), 16);

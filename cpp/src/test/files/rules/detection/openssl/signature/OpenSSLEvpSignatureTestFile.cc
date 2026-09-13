@@ -43,6 +43,13 @@ void test_evp_signature() {
     EVP_PKEY_verify_recover_init_ex2(pctx, NULL, NULL);
     EVP_VerifyInit_ex(ctx, NULL, NULL);
 
+    // Legacy one-shot EVP sign/verify streaming API
+    EVP_SignInit(ctx, NULL);
+    EVP_SignUpdate(ctx, buf, len);
+    EVP_SignFinal(ctx, buf, &len, pctx);
+    EVP_VerifyUpdate(ctx, buf, len);
+    EVP_VerifyFinal(ctx, buf, len, pctx);
+
     // SIGNATURE fetch
     EVP_SIGNATURE_fetch(NULL, "RSA", NULL);
 

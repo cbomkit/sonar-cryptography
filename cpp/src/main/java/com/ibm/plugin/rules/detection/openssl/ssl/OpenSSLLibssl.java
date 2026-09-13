@@ -44,9 +44,7 @@ public final class OpenSSLLibssl {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // TLS Generic (Version Negotiation)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLS_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -81,9 +79,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS 1.2 (RFC 5246)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLSV1_2_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -118,9 +114,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS 1.1 (Deprecated)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLSV1_1_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -155,9 +149,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS 1.0 (Deprecated)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLSV1_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -192,9 +184,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SSL 3.0 (Insecure - disabled by default)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSLV3_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -229,9 +219,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // DTLS Generic
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> DTLS_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -266,9 +254,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // DTLS 1.2 (RFC 6347)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> DTLSV1_2_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -303,9 +289,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // DTLS 1.0 (Deprecated)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> DTLSV1_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -340,9 +324,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // QUIC (RFC 9000 - OpenSSL 3.2+)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> OSSL_QUIC_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
@@ -377,9 +359,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SSL_CTX_new - Context creation (detects SSL/TLS usage)
-    // ====================================================================
 
     /**
      * All {@code *_method()} family rules above, shared by {@code SSL_CTX_new}'s {@code method}
@@ -430,9 +410,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Cipher Suite Configuration
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_CIPHER_LIST =
             new DetectionRuleBuilder<AstNode>()
@@ -478,9 +456,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Protocol Version Configuration
-    // ====================================================================
 
     // Detection matches the literal API call (no OpenSSL headers required, so the
     // SSL_(CTX_)set_min/max_proto_version macros are not expanded). The version argument is
@@ -541,10 +517,8 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // KEX Group / Curve Configuration (literal API calls; headers not required)
     // SSL_(CTX_)set1_curves* are #define aliases of the set1_groups* forms.
-    // ====================================================================
 
     // SSL_CTX_set1_groups/SSL_set1_groups take a raw int* NID buffer, not a string or object to
     // resolve an algorithm name from - no finding is raised for these, unlike their *_list
@@ -574,9 +548,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Signature Algorithm Configuration (literal API calls; headers not required)
-    // ====================================================================
 
     // SSL_CTX_set1_sigalgs/SSL_set1_sigalgs/SSL_CTX_set1_client_sigalgs take a raw int* sigalg-ID
     // buffer, not a string or object to resolve an algorithm name from - no finding is raised for
@@ -621,9 +593,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Ephemeral DH / ECDH Parameters (literal API calls; headers not required)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_DH =
             new DetectionRuleBuilder<AstNode>()
@@ -677,9 +647,7 @@ public final class OpenSSLLibssl {
     // or EVP_PKEY_paramgen; there is no detection rule yet for those APIs to trace the pkey
     // argument back to, so no finding is raised here rather than showing an unresolved marker.
 
-    // ====================================================================
     // SSL_CONF (string-driven config)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSL_CONF_CMD =
             new DetectionRuleBuilder<AstNode>()
@@ -694,9 +662,7 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SRTP profile selection
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TLSEXT_USE_SRTP =
             new DetectionRuleBuilder<AstNode>()

@@ -34,9 +34,11 @@ import javax.annotation.Nullable;
 
 /**
  * Maps OpenSSL TLS signature-algorithm names (the {@code SSL_(CTX_)set1_sigalgs_list} argument) to
- * model classes. Handles both the {@code ALG+HASH} form (e.g. {@code ECDSA+SHA256}) and PQC scheme
- * names (e.g. {@code SLH-DSA-SHA2-256s}, {@code mldsa65}). Unrecognized names return {@link
- * Optional#empty()}; the caller emits them as a raw asset so nothing is dropped.
+ * model classes. Handles the legacy {@code ALG+HASH} form (e.g. {@code ECDSA+SHA256}), PQC scheme
+ * names (e.g. {@code SLH-DSA-SHA2-256s}, {@code mldsa65}), and the TLS 1.2/1.3 underscore
+ * wire-format names (e.g. {@code rsa_pss_rsae_sha256}, {@code ecdsa_secp256r1_sha256}, {@code
+ * rsa_pkcs1_sha256}). Unrecognized names return {@link Optional#empty()}; the caller emits them as
+ * a raw asset so nothing is dropped.
  */
 public final class OpenSslSignatureMapper implements IMapper {
 
@@ -59,13 +61,31 @@ public final class OpenSslSignatureMapper implements IMapper {
         if (normalized.startsWith("ML-DSA") || normalized.startsWith("MLDSA")) {
             return Optional.of(new MLDSA(detectionLocation));
         }
-        return switch (normalized) {
-            case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
-            case "RSA", "RSA-PSS", "RSA_PSS_RSAE", "RSA_PSS_PSS" ->
-                    Optional.of(new RSA(detectionLocation));
-            case "ED25519" -> Optional.of(new Ed25519(detectionLocation));
-            case "ED448" -> Optional.of(new Ed448(detectionLocation));
-            default -> Optional.empty();
-        };
+        switch (normalized) {
+            case "ECDSA":
+                return Optional.of(new ECDSA(detectionLocation));
+            case "RSA", "RSA-PSS", "RSA_PSS_RSAE", "RSA_PSS_PSS":
+                return Optional.of(new RSA(detectionLocation));
+            case "ED25519":
+                return Optional.of(new Ed25519(detectionLocation));
+            case "ED448":
+                return Optional.of(new Ed448(detectionLocation));
+            default:
+                // fall through to the OpenSSL 1.1.1+/3.x wire-format names below
+        }
+
+        // TLS 1.2/1.3 wire-format sigalgs (RFC 8446 §4.2.3, e.g. "rsa_pss_rsae_sha256",
+        // "ecdsa_secp256r1_sha256", "rsa_pkcs1_sha256"): underscore-separated, ending in the
+        // digest name, with no '+' separator.
+        if (normalized.startsWith("RSA_PSS_RSAE_") || normalized.startsWith("RSA_PSS_PSS_")) {
+            return Optional.of(new RSA(detectionLocation));
+        }
+        if (normalized.startsWith("RSA_PKCS1_")) {
+            return Optional.of(new RSA(detectionLocation));
+        }
+        if (normalized.startsWith("ECDSA_")) {
+            return Optional.of(new ECDSA(detectionLocation));
+        }
+        return Optional.empty();
     }
 }

@@ -1,0 +1,19 @@
+{
+  "title": "Do not use MD5 for cryptographic purposes like hashing",
+  "type": "VULNERABILITY",
+  "code": {
+    "impacts": {
+      "SECURITY": "HIGH"
+    },
+    "attribute": "TRUSTWORTHY"
+  },
+  "status": "ready",
+  "tags": [
+    "cryptography",
+    "cbom",
+    "cwe"
+  ],
+  "defaultSeverity": "Critical",
+  "scope": "Main",
+  "sqKey": "CxxNoMD5use"
+}

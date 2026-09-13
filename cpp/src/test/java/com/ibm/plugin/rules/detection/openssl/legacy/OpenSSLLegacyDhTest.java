@@ -42,7 +42,7 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 18 rule entries in {@link OpenSSLLegacyDh}.
+ * Covers all rule entries in {@link OpenSSLLegacyDh}.
  *
  * <p>Follows the deep-assert pattern documented in {@link
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.

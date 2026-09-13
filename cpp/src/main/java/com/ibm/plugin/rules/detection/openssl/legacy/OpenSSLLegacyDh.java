@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -33,7 +34,7 @@ import javax.annotation.Nonnull;
  * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
  * are deprecated but still widely used in existing codebases.
  *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114)
+ * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyDh {
@@ -103,6 +104,21 @@ public final class OpenSSLLegacyDh {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // ====================================================================
+    // Key Agreement functions
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DH_compute_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     private OpenSSLLegacyDh() {
         // nothing
     }
@@ -116,6 +132,8 @@ public final class OpenSSLLegacyDh {
                 // Predefined Groups (RFC 5114)
                 DH_GET_1024_160,
                 DH_GET_2048_224,
-                DH_GET_2048_256);
+                DH_GET_2048_256,
+                // Key Agreement
+                DH_COMPUTE_KEY);
     }
 }

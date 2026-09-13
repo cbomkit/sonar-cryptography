@@ -41,9 +41,7 @@ public final class OpenSSLEvpKdf {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // PBKDF2 - Password-Based Key Derivation Function 2
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PBKDF2_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -58,9 +56,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // HKDF - HMAC-based Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> HKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -75,9 +71,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Scrypt
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SCRYPT =
             new DetectionRuleBuilder<AstNode>()
@@ -92,9 +86,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS1-PRF - TLS 1.0/1.1/1.2 Pseudo-Random Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLS1_PRF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -109,9 +101,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS13-KDF - TLS 1.3 Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TLS13_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -126,9 +116,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // X963KDF - ANSI X9.63 Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> X963KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -143,9 +131,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // KBKDF - Key-Based Key Derivation Function (NIST SP 800-108)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> KBKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -160,9 +146,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SSHKDF - SSH Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSHKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -177,9 +161,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Argon2 - Memory-hard password hashing and KDF
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> ARGON2D =
             new DetectionRuleBuilder<AstNode>()
@@ -220,9 +202,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // KRB5KDF - Kerberos 5 Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> KRB5KDF =
             new DetectionRuleBuilder<AstNode>()
@@ -237,16 +217,12 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // X942KDF - X9.42 Key Derivation Function
-    // ====================================================================
 
     // EVP_KDF_fetch("X942KDF-ASN1", ...) has no digest argument at the fetch call site - the real
     // digest (SHA-1, SHA-256, ...) is set later via EVP_KDF_CTX_set_params and surfaces as its own
     // DigestContext finding (see EVP_KDF_CTX_SET_PARAMS above), the same pattern as HMAC/CMAC/GMAC
-    // fetch in OpenSSLEvpMac. A single X942KDF-ASN1 marker replaces what were two rules
-    // (X942KDF_SHA1/X942KDF_SHA256) matching the identical literal and colliding
-    // non-deterministically.
+    // fetch in OpenSSLEvpMac.
     private static final IDetectionRule<AstNode> X942KDF_ASN1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -273,9 +249,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SSKDF - Single Step Key Derivation Function (NIST SP 800-56C)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SSKDF =
             new DetectionRuleBuilder<AstNode>()
@@ -290,9 +264,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // HMAC-DRBG-KDF - HMAC-based DRBG as KDF (NIST SP 800-90A)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> HMAC_DRBG_KDF =
             new DetectionRuleBuilder<AstNode>()
@@ -307,9 +279,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS12KDF - PKCS#12 Key Derivation Function
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PKCS12KDF =
             new DetectionRuleBuilder<AstNode>()
@@ -324,9 +294,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PVKKDF - Microsoft PVK Key Derivation Function (Legacy)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PVKKDF =
             new DetectionRuleBuilder<AstNode>()
@@ -341,9 +309,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Legacy PBKDF2 functions
-    // ====================================================================
 
     // int PKCS5_PBKDF2_HMAC(pass, passlen, salt, saltlen, iter, const EVP_MD *digest, keylen, out)
     // -
@@ -379,9 +345,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // HKDF setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_HKDF_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -406,9 +370,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // TLS1-PRF setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_TLS1_PRF_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -422,9 +384,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS#12 KDF / MAC entry points
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PKCS12_CREATE =
             new DetectionRuleBuilder<AstNode>()
@@ -558,9 +518,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_KDF CTX/derive
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_KDF_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
@@ -573,9 +531,7 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS5 PBE keyivgen (legacy)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PKCS5_PBE_KEYIVGEN =
             new DetectionRuleBuilder<AstNode>()
