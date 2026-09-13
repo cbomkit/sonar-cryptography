@@ -23,6 +23,7 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLDetectionRules;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -46,6 +47,9 @@ public final class CxxDetectionRules {
         // private
     }
 
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(CxxDetectionRules::buildRules);
+
     /**
      * Returns all C++ cryptography detection rules.
      *
@@ -53,6 +57,11 @@ public final class CxxDetectionRules {
      */
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(OpenSSLDetectionRules.rules().stream()).flatMap(i -> i).toList();
     }
 }

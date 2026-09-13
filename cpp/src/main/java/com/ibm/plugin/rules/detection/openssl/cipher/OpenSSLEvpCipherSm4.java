@@ -17,10 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.cipher;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -31,110 +30,95 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
+ * Detection rules for OpenSSL EVP SM4 cipher algorithm specifiers.
  *
- * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
- * are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
+ * <p>Covers SM4 (the Chinese national standard cipher, GB/T 32907-2016) across all EVP modes (ECB,
+ * CBC, CFB variants, OFB, CTR).
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDh {
+public final class OpenSSLEvpCipherSm4 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> EVP_SM4_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sm4_ecb")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-ECB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Predefined Groups (RFC 5114) functions
-
-    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+    private static final IDetectionRule<AstNode> EVP_SM4_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_1024_160")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sm4_cbc")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CBC"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+    private static final IDetectionRule<AstNode> EVP_SM4_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_224")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sm4_cfb128")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CFB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+    private static final IDetectionRule<AstNode> EVP_SM4_CFB128 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sm4_cfb128")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CFB128"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> EVP_SM4_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sm4_ofb")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-OFB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
+    private static final IDetectionRule<AstNode> EVP_SM4_CTR =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
+                    .forMethods("EVP_sm4_ctr")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CTR"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDh() {
+    private OpenSSLEvpCipherSm4() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Key/Parameter Generation
-                DH_GENERATE_PARAMETERS_EX,
-                DH_GENERATE_KEY,
-                // Predefined Groups (RFC 5114)
-                DH_GET_1024_160,
-                DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Key Agreement
-                DH_COMPUTE_KEY);
+                // SM4
+                EVP_SM4_ECB, EVP_SM4_CBC, EVP_SM4_CFB, EVP_SM4_CFB128, EVP_SM4_OFB, EVP_SM4_CTR);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDh::buildRules);
+            Memoize.of(OpenSSLEvpCipherSm4::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

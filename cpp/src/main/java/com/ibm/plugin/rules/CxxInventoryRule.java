@@ -30,6 +30,7 @@ import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.check.Rule;
+import org.sonar.java.annotations.VisibleForTesting;
 
 /**
  * C++ Inventory Rule for detecting cryptographic assets.
@@ -45,6 +46,7 @@ public class CxxInventoryRule extends CxxBaseDetectionRule {
         super(true, CxxDetectionRules.rules(), CxxReorganizerRules.rules());
     }
 
+    @VisibleForTesting
     protected CxxInventoryRule(@Nonnull List<IDetectionRule<AstNode>> detectionRules) {
         super(true, detectionRules, CxxReorganizerRules.rules());
     }

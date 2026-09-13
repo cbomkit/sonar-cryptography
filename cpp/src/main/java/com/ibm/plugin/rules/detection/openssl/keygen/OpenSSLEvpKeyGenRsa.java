@@ -17,10 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.keygen;
 
 import com.ibm.engine.model.context.KeyContext;
-import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -31,83 +30,63 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL legacy DSA APIs.
- *
- * <p>These rules detect direct DSA operations using the legacy (pre-EVP) APIs from dsa.h. These
- * APIs are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: key generation, signing, verification, size/utility, and conversion functions.
+ * Detection rules for OpenSSL EVP RSA key generation setters (keygen bits, public exponent, and
+ * prime count).
  */
-@SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDsa {
+public final class OpenSSLEvpKeyGenRsa {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Signature functions
-
-    private static final IDetectionRule<AstNode> DSA_SIGN =
+    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLKeygenBitsFactory("RSA"))
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET1_RSA_KEYGEN_PUBEXP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
+                    .forMethods("EVP_PKEY_CTX_set1_rsa_keygen_pubexp")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PUBEXP"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_KEYGEN_PRIMES =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
+                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_primes")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PRIMES"))
                     .withAnyParameters()
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDsa() {
+    private OpenSSLEvpKeyGenRsa() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Signatures
-                DSA_SIGN,
-                DSA_DO_SIGN,
-                // Key Generation
-                DSA_GENERATE_KEY,
-                DSA_GENERATE_PARAMETERS_EX);
+                // RSA Key Generation
+                EVP_RSA_KEYGEN_BITS,
+                // RSA keygen pubexp/primes
+                EVP_PKEY_CTX_SET1_RSA_KEYGEN_PUBEXP,
+                EVP_PKEY_CTX_SET_RSA_KEYGEN_PRIMES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDsa::buildRules);
+            Memoize.of(OpenSSLEvpKeyGenRsa::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

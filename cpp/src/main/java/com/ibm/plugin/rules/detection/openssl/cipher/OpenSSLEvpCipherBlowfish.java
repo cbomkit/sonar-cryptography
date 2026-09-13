@@ -17,10 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.cipher;
 
-import com.ibm.engine.model.context.KeyContext;
-import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -30,84 +29,78 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rules for OpenSSL legacy DSA APIs.
- *
- * <p>These rules detect direct DSA operations using the legacy (pre-EVP) APIs from dsa.h. These
- * APIs are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: key generation, signing, verification, size/utility, and conversion functions.
- */
+/** Detection rules for OpenSSL EVP Blowfish cipher algorithm specifiers. */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDsa {
+public final class OpenSSLEvpCipherBlowfish {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Signature functions
-
-    private static final IDetectionRule<AstNode> DSA_SIGN =
+    private static final IDetectionRule<AstNode> EVP_BF_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_bf_ecb")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-ECB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
+    private static final IDetectionRule<AstNode> EVP_BF_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_bf_cbc")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CBC"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> EVP_BF_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_bf_cfb64")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> EVP_BF_CFB64 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_bf_cfb64")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB64"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDsa() {
+    private static final IDetectionRule<AstNode> EVP_BF_OFB =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_bf_ofb")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-OFB"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private OpenSSLEvpCipherBlowfish() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                // Signatures
-                DSA_SIGN,
-                DSA_DO_SIGN,
-                // Key Generation
-                DSA_GENERATE_KEY,
-                DSA_GENERATE_PARAMETERS_EX);
+        return List.of(EVP_BF_ECB, EVP_BF_CBC, EVP_BF_CFB, EVP_BF_CFB64, EVP_BF_OFB);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDsa::buildRules);
+            Memoize.of(OpenSSLEvpCipherBlowfish::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

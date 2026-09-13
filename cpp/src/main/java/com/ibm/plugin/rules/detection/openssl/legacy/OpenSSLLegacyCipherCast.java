@@ -19,8 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -30,111 +29,83 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
- *
- * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
- * are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
- */
+/** Detection rules for OpenSSL legacy (pre-EVP) CAST5 cipher APIs. */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDh {
+public final class OpenSSLLegacyCipherCast {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> CAST_SET_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("CAST_set_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Predefined Groups (RFC 5114) functions
-
-    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+    private static final IDetectionRule<AstNode> CAST_ECB_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_1024_160")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
+                    .forMethods("CAST_ecb_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-ECB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+    private static final IDetectionRule<AstNode> CAST_CBC_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_224")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
+                    .forMethods("CAST_cbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CBC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+    private static final IDetectionRule<AstNode> CAST_CFB64_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
+                    .forMethods("CAST_cfb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CFB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> CAST_OFB64_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("CAST_ofb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-OFB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private OpenSSLLegacyDh() {
+    private OpenSSLLegacyCipherCast() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Key/Parameter Generation
-                DH_GENERATE_PARAMETERS_EX,
-                DH_GENERATE_KEY,
-                // Predefined Groups (RFC 5114)
-                DH_GET_1024_160,
-                DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Key Agreement
-                DH_COMPUTE_KEY);
+                CAST_SET_KEY,
+                CAST_ECB_ENCRYPT,
+                CAST_CBC_ENCRYPT,
+                CAST_CFB64_ENCRYPT,
+                CAST_OFB64_ENCRYPT);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDh::buildRules);
+            Memoize.of(OpenSSLLegacyCipherCast::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

@@ -19,122 +19,93 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
- *
- * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
- * are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
- */
+/** Detection rules for OpenSSL legacy (pre-EVP) CMAC APIs. */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDh {
+public final class OpenSSLLegacyMacCmac {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> CMAC_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("CMAC_CTX_new")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Predefined Groups (RFC 5114) functions
-
-    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+    private static final IDetectionRule<AstNode> CMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_1024_160")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("CMAC_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.rules())
+                    .withMethodParameter("*")
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+    private static final IDetectionRule<AstNode> CMAC_UPDATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_224")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
+                    .forMethods("CMAC_Update")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+    private static final IDetectionRule<AstNode> CMAC_FINAL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
+                    .forMethods("CMAC_Final")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> CMAC_RESUME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("CMAC_resume")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private OpenSSLLegacyDh() {
+    private OpenSSLLegacyMacCmac() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                // Key/Parameter Generation
-                DH_GENERATE_PARAMETERS_EX,
-                DH_GENERATE_KEY,
-                // Predefined Groups (RFC 5114)
-                DH_GET_1024_160,
-                DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Key Agreement
-                DH_COMPUTE_KEY);
+        return List.of(CMAC_CTX_NEW, CMAC_INIT, CMAC_UPDATE, CMAC_FINAL, CMAC_RESUME);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDh::buildRules);
+            Memoize.of(OpenSSLLegacyMacCmac::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

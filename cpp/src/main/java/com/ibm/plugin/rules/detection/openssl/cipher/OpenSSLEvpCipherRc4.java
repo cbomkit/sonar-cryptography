@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -28,46 +29,56 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rule for OpenSSL provider-only cipher modes accessible via EVP_CIPHER_fetch.
- *
- * <p>These cipher modes don't have convenience EVP_* functions and must be accessed through the
- * provider API using string identifiers. Covers modern AEAD modes (AES-SIV, AES-GCM-SIV), key
- * wrapping variants, and encrypt-then-MAC constructions.
- *
- * <p>A single rule matches any second-argument shape and delegates value resolution and mode-name
- * validation to {@link OpenSSLCipherFetchFactory}, so a mode name reaching the call site via a
- * resolved local variable/constant is detected the same as a string literal (see {@link
- * OpenSSLCipherFetchFactory} javadoc).
- */
-public final class OpenSSLEvpCipherFetch {
+/** Detection rules for OpenSSL EVP RC4 stream cipher algorithm specifiers. */
+@SuppressWarnings("java:S1192")
+public final class OpenSSLEvpCipherRc4 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> EVP_CIPHER_FETCH =
+    private static final IDetectionRule<AstNode> EVP_RC4 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_CIPHER_fetch")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLCipherFetchFactory())
-                    .withMethodParameter("*")
+                    .forMethods("EVP_rc4")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC4"))
+                    .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpCipherFetch() {
+    private static final IDetectionRule<AstNode> EVP_RC4_40 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_rc4_40")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC4-40"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RC4_HMAC_MD5 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_rc4_hmac_md5")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC4-HMAC-MD5"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private OpenSSLEvpCipherRc4() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(EVP_CIPHER_FETCH);
+        return List.of(EVP_RC4, EVP_RC4_40, EVP_RC4_HMAC_MD5);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherFetch::buildRules);
+            Memoize.of(OpenSSLEvpCipherRc4::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

@@ -17,97 +17,80 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.kdf;
 
-import com.ibm.engine.model.context.KeyContext;
-import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL legacy DSA APIs.
- *
- * <p>These rules detect direct DSA operations using the legacy (pre-EVP) APIs from dsa.h. These
- * APIs are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: key generation, signing, verification, size/utility, and conversion functions.
+ * Detection rules for the OpenSSL HKDF (HMAC-based Key Derivation Function, RFC 5869), covering its
+ * fetch and EVP_PKEY_CTX digest/mode setters.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDsa {
+public final class OpenSSLEvpKdfHkdf {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Signature functions
-
-    private static final IDetectionRule<AstNode> DSA_SIGN =
+    private static final IDetectionRule<AstNode> HKDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_KDF_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("\"HKDF\"")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_HKDF_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_PKEY_CTX_set_hkdf_md")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_HKDF_MODE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
+                    .forMethods("EVP_PKEY_CTX_set_hkdf_mode")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-MODE"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private OpenSSLLegacyDsa() {
+    private OpenSSLEvpKdfHkdf() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Signatures
-                DSA_SIGN,
-                DSA_DO_SIGN,
-                // Key Generation
-                DSA_GENERATE_KEY,
-                DSA_GENERATE_PARAMETERS_EX);
+                // HKDF - HMAC-based Key Derivation Function
+                HKDF_FETCH,
+                // HKDF setters
+                EVP_PKEY_CTX_SET_HKDF_MD,
+                EVP_PKEY_CTX_SET_HKDF_MODE);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDsa::buildRules);
+            Memoize.of(OpenSSLEvpKdfHkdf::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
