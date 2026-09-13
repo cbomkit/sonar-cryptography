@@ -61,9 +61,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
 
-                // ================================================================
                 // AES (Advanced Encryption Standard)
-                // ================================================================
 
                 // AES-128
                 case "AES-128-CBC" ->
@@ -501,9 +499,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("CBC-HMAC-SHA512-ETM", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // Camellia
-                // ================================================================
 
                 // Camellia-128
                 case "CAMELLIA-128-ECB" ->
@@ -711,9 +707,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("CBC-CTS", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // ARIA
-                // ================================================================
 
                 // ARIA-128
                 case "ARIA-128-ECB" ->
@@ -901,9 +895,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("CCM", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // SM4 (Chinese National Standard)
-                // ================================================================
 
                 case "SM4-ECB" ->
                         Optional.of(new SM4(new Mode("ECB", detectionLocation), detectionLocation));
@@ -925,9 +917,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                 case "SM4-XTS" ->
                         Optional.of(new SM4(new Mode("XTS", detectionLocation), detectionLocation));
 
-                // ================================================================
                 // DES / 3DES
-                // ================================================================
 
                 case "DES-CBC" ->
                         Optional.of(new DES(new Mode("CBC", detectionLocation), detectionLocation));
@@ -1017,9 +1007,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("OFB", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // Blowfish
-                // ================================================================
 
                 case "BLOWFISH-ECB" ->
                         Optional.of(
@@ -1052,9 +1040,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("OFB", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // CAST5 (CAST-128)
-                // ================================================================
 
                 case "CAST5-ECB" ->
                         Optional.of(
@@ -1087,9 +1073,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("OFB", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // RC2
-                // ================================================================
 
                 case "RC2-ECB" ->
                         Optional.of(
@@ -1128,17 +1112,13 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                         Optional.of(
                                 new RC2(64, new Mode("CBC", detectionLocation), detectionLocation));
 
-                // ================================================================
                 // RC4 (Stream Cipher)
-                // ================================================================
 
                 case "RC4" -> Optional.of(new RC4(detectionLocation));
                 case "RC4-40" -> Optional.of(new RC4(40, detectionLocation));
                 case "RC4-HMAC-MD5" -> Optional.of(new RC4(detectionLocation));
 
-                // ================================================================
                 // RC5
-                // ================================================================
 
                 case "RC5-ECB" ->
                         Optional.of(
@@ -1171,9 +1151,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                                         new Mode("OFB", detectionLocation),
                                         detectionLocation));
 
-                // ================================================================
                 // IDEA
-                // ================================================================
 
                 case "IDEA-ECB" ->
                         Optional.of(
@@ -1191,9 +1169,7 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                         Optional.of(
                                 new IDEA(new Mode("OFB", detectionLocation), detectionLocation));
 
-                // ================================================================
                 // SEED (Korean National Standard)
-                // ================================================================
 
                 case "SEED-ECB" ->
                         Optional.of(
@@ -1211,16 +1187,12 @@ public final class CxxCipherContextTranslator implements IContextTranslation<Ast
                         Optional.of(
                                 new SEED(new Mode("OFB", detectionLocation), detectionLocation));
 
-                // ================================================================
                 // ChaCha20
-                // ================================================================
 
                 case "CHACHA20" -> Optional.of(new ChaCha20(detectionLocation));
                 case "CHACHA20-POLY1305" -> Optional.of(new ChaCha20Poly1305(detectionLocation));
 
-                // ================================================================
                 // SM2 Public Key Encryption
-                // ================================================================
 
                 case "SM2-PKE" ->
                         Optional.of(new SM2(PublicKeyEncryption.class, new SM2(detectionLocation)));

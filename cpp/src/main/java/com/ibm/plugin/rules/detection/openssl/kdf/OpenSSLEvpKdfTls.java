@@ -17,97 +17,83 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.kdf;
 
-import com.ibm.engine.model.context.KeyContext;
-import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL legacy DSA APIs.
- *
- * <p>These rules detect direct DSA operations using the legacy (pre-EVP) APIs from dsa.h. These
- * APIs are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: key generation, signing, verification, size/utility, and conversion functions.
+ * Detection rules for the OpenSSL TLS pseudo-random-function KDFs: the legacy TLS1-PRF (TLS
+ * 1.0/1.1/1.2) and TLS13-KDF (TLS 1.3), covering fetch and the TLS1-PRF digest setter.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDsa {
+public final class OpenSSLEvpKdfTls {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Signature functions
-
-    private static final IDetectionRule<AstNode> DSA_SIGN =
+    private static final IDetectionRule<AstNode> TLS1_PRF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_KDF_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("\"TLS1-PRF\"")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_DO_SIGN =
+    private static final IDetectionRule<AstNode> TLS13_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_do_sign")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
-                    .withAnyParameters()
-                    .buildForContext(new SignatureContext())
+                    .forMethods("EVP_KDF_fetch")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("\"TLS13-KDF\"")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_TLS1_PRF_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_PKEY_CTX_set_tls1_prf_md")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private OpenSSLLegacyDsa() {
+    private OpenSSLEvpKdfTls() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Signatures
-                DSA_SIGN,
-                DSA_DO_SIGN,
-                // Key Generation
-                DSA_GENERATE_KEY,
-                DSA_GENERATE_PARAMETERS_EX);
+                // TLS1-PRF - TLS 1.0/1.1/1.2 Pseudo-Random Function
+                TLS1_PRF_FETCH,
+                // TLS13-KDF - TLS 1.3 Key Derivation Function
+                TLS13_KDF_FETCH,
+                // TLS1-PRF setters
+                EVP_PKEY_CTX_SET_TLS1_PRF_MD);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDsa::buildRules);
+            Memoize.of(OpenSSLEvpKdfTls::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

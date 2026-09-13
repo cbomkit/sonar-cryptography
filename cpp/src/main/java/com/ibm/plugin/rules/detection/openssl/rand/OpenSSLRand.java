@@ -24,8 +24,10 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -40,9 +42,7 @@ public final class OpenSSLRand {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // Legacy RAND API
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RAND_BYTES =
             new DetectionRuleBuilder<AstNode>()
@@ -66,9 +66,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_RAND API - CTR-DRBG (Counter mode DRBG)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> CTR_DRBG_AES128 =
             new DetectionRuleBuilder<AstNode>()
@@ -109,9 +107,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_RAND API - HASH-DRBG (Hash-based DRBG)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> HASH_DRBG_SHA1 =
             new DetectionRuleBuilder<AstNode>()
@@ -165,9 +161,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_RAND API - HMAC-DRBG (HMAC-based DRBG)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> HMAC_DRBG_SHA1 =
             new DetectionRuleBuilder<AstNode>()
@@ -221,9 +215,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_RAND API - Entropy Sources
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> SEED_SRC =
             new DetectionRuleBuilder<AstNode>()
@@ -264,9 +256,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_RAND seed source
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RAND_SET_SEED_SOURCE_TYPE =
             new DetectionRuleBuilder<AstNode>()
@@ -281,9 +271,7 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // 3.0+ ex-variants and DRBG type selector
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RAND_BYTES_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -323,11 +311,11 @@ public final class OpenSSLRand {
                     .withoutDependingDetectionRules();
 
     private OpenSSLRand() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Legacy RAND API
                 RAND_BYTES,
@@ -356,5 +344,13 @@ public final class OpenSSLRand {
                 RAND_BYTES_EX,
                 RAND_PRIV_BYTES_EX,
                 RAND_SET_DRBG_TYPE);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLRand::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

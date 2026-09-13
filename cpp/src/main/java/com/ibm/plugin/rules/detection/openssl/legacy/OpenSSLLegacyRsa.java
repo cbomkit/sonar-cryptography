@@ -25,9 +25,11 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -43,9 +45,7 @@ public final class OpenSSLLegacyRsa {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // Signatures
-    // ====================================================================
 
     /**
      * int RSA_sign/RSA_verify(int type, ...) - {@code type} is a real NID (obj_mac.h) identifying
@@ -128,9 +128,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PSS
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_PSS =
             new DetectionRuleBuilder<AstNode>()
@@ -176,9 +174,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS1 type_1 padding (legacy direct)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_TYPE_1 =
             new DetectionRuleBuilder<AstNode>()
@@ -202,9 +198,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // X9.31 padding
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_X931 =
             new DetectionRuleBuilder<AstNode>()
@@ -228,9 +222,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Key Generation
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
@@ -265,9 +257,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Encrypt / Decrypt (raw RSA operations)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PUBLIC_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
@@ -313,9 +303,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS1 type_2 padding (encryption padding)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_TYPE_2 =
             new DetectionRuleBuilder<AstNode>()
@@ -339,9 +327,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // No-padding (raw RSA)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_NONE =
             new DetectionRuleBuilder<AstNode>()
@@ -365,9 +351,7 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // OAEP padding (encryption padding)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_OAEP =
             new DetectionRuleBuilder<AstNode>()
@@ -414,11 +398,11 @@ public final class OpenSSLLegacyRsa {
                     .withoutDependingDetectionRules();
 
     private OpenSSLLegacyRsa() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Signatures
                 RSA_SIGN,
@@ -454,5 +438,13 @@ public final class OpenSSLLegacyRsa {
                 RSA_PADDING_CHECK_PKCS1_OAEP,
                 RSA_PADDING_ADD_PKCS1_OAEP_MGF1,
                 RSA_PADDING_CHECK_PKCS1_OAEP_MGF1);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLLegacyRsa::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

@@ -17,10 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.legacy;
+package com.ibm.plugin.rules.detection.openssl.digest;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -31,110 +30,94 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
+ * Detection rules for OpenSSL EVP SHA-3 family message digest algorithm specifiers.
  *
- * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
- * are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
+ * <p>Covers SHA3-224/256/384/512 and the SHAKE128/SHAKE256 extendable-output functions (all built
+ * on the same Keccak sponge construction).
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDh {
+public final class OpenSSLEvpMessageDigestSha3 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> EVP_SHA3_224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sha3_224")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA3-224"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Predefined Groups (RFC 5114) functions
-
-    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+    private static final IDetectionRule<AstNode> EVP_SHA3_256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_1024_160")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sha3_256")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA3-256"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+    private static final IDetectionRule<AstNode> EVP_SHA3_384 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_224")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sha3_384")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA3-384"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+    private static final IDetectionRule<AstNode> EVP_SHA3_512 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_sha3_512")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA3-512"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> EVP_SHAKE128 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .forMethods("EVP_shake128")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHAKE128"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
+    private static final IDetectionRule<AstNode> EVP_SHAKE256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
+                    .forMethods("EVP_shake256")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHAKE256"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDh() {
+    private OpenSSLEvpMessageDigestSha3() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Key/Parameter Generation
-                DH_GENERATE_PARAMETERS_EX,
-                DH_GENERATE_KEY,
-                // Predefined Groups (RFC 5114)
-                DH_GET_1024_160,
-                DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Key Agreement
-                DH_COMPUTE_KEY);
+                EVP_SHA3_224, EVP_SHA3_256, EVP_SHA3_384, EVP_SHA3_512, EVP_SHAKE128, EVP_SHAKE256);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDh::buildRules);
+            Memoize.of(OpenSSLEvpMessageDigestSha3::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

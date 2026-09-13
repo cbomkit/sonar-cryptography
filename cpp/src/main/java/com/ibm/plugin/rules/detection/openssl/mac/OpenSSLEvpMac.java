@@ -25,11 +25,13 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -45,11 +47,9 @@ public final class OpenSSLEvpMac {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // HMAC / CMAC / GMAC fetch — one finding per MAC family (the real fetched name); the
     // digest (HMAC) or cipher (CMAC/GMAC) is set later via EVP_MAC_CTX_set_params and is a
     // separate, independently traced finding (see EVP_MAC_CTX_SET_PARAMS below).
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_MAC_HMAC_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -90,10 +90,8 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_MAC_CTX_set_params — the real digest (OSSL_MAC_PARAM_DIGEST, "digest") or cipher
     // (OSSL_MAC_PARAM_CIPHER, "cipher") entry in the OSSL_PARAM array.
-    // ====================================================================
 
     /** OpenSSL cipher name (e.g. {@code "AES-128-CBC"}) → CMAC/GMAC identifier string. */
     private static final Map<String, String> CIPHER_NAMES =
@@ -136,9 +134,7 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Poly1305
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_MAC_POLY1305 =
             new DetectionRuleBuilder<AstNode>()
@@ -153,9 +149,7 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SipHash
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_MAC_SIPHASH_2_4 =
             new DetectionRuleBuilder<AstNode>()
@@ -183,9 +177,7 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // KMAC (Keccak Message Authentication Code)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_MAC_KMAC128 =
             new DetectionRuleBuilder<AstNode>()
@@ -213,9 +205,7 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // BLAKE2 MAC
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_MAC_BLAKE2BMAC =
             new DetectionRuleBuilder<AstNode>()
@@ -265,11 +255,11 @@ public final class OpenSSLEvpMac {
                     .withoutDependingDetectionRules();
 
     private OpenSSLEvpMac() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // HMAC / CMAC / GMAC fetch
                 EVP_MAC_HMAC_FETCH,
@@ -290,5 +280,13 @@ public final class OpenSSLEvpMac {
                 EVP_MAC_BLAKE2BMAC,
                 EVP_MAC_BLAKE2SMAC,
                 EVP_Q_MAC);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLEvpMac::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

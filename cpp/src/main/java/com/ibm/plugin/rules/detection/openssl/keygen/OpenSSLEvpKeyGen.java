@@ -19,59 +19,32 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
-import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
+/**
+ * Detection rules for OpenSSL EVP key/parameter generation.
+ *
+ * <p>RSA and DSA key/paramgen setters live in their own {@code OpenSSLEvpKeyGen<Family>} classes;
+ * this class holds EC key generation, the generic EVP_PKEY keygen/generate/paramgen detection,
+ * KEYMGMT fetch, and group/curve selection setters, and aggregates every family's rules in {@link
+ * #rules()}.
+ */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKeyGen {
 
     private static final String BUNDLE = "OpenSSL";
-
-    // ====================================================================
-    // RSA Key Generation
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLKeygenBitsFactory("RSA"))
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // DSA Key Generation
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLKeygenBitsFactory("DSA"))
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // EC Key Generation
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_EC_PARAMGEN_CURVE_NID =
             new DetectionRuleBuilder<AstNode>()
@@ -84,10 +57,6 @@ public final class OpenSSLEvpKeyGen {
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // EVP_PKEY_keygen (generic keygen detection)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_KEYGEN =
             new DetectionRuleBuilder<AstNode>()
@@ -110,10 +79,6 @@ public final class OpenSSLEvpKeyGen {
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Generate / paramgen
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_GENERATE =
             new DetectionRuleBuilder<AstNode>()
@@ -159,10 +124,6 @@ public final class OpenSSLEvpKeyGen {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // KEYMGMT fetch
-    // ====================================================================
-
     private static final IDetectionRule<AstNode> EVP_KEYMGMT_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -175,10 +136,6 @@ public final class OpenSSLEvpKeyGen {
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // Group / curve selection setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_GROUP_NAME =
             new DetectionRuleBuilder<AstNode>()
@@ -205,99 +162,26 @@ public final class OpenSSLEvpKeyGen {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
-    // RSA keygen pubexp/primes
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET1_RSA_KEYGEN_PUBEXP =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set1_rsa_keygen_pubexp")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PUBEXP"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_KEYGEN_PRIMES =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_rsa_keygen_primes")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-KEYGEN-PRIMES"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // ====================================================================
-    // DSA paramgen extras
-    // ====================================================================
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_Q_BITS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_q_bits")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-Q-BITS"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md_props")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLNameCanonicalizerFactory(
-                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_TYPE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_type")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA-PARAMGEN-TYPE"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private OpenSSLEvpKeyGen() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
+        return Stream.of(
+                        OpenSSLEvpKeyGenRsa.rules().stream(),
+                        OpenSSLEvpKeyGenDsa.rules().stream(),
+                        directRules().stream())
+                .flatMap(i -> i)
+                .toList();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> directRules() {
         return List.of(
-                // RSA
-                EVP_RSA_KEYGEN_BITS,
-                // DSA
-                EVP_DSA_PARAMGEN_BITS,
-                // EC
+                // EC Key Generation
                 EVP_EC_PARAMGEN_CURVE_NID,
-                // Generic keygen
+                // EVP_PKEY_keygen (generic keygen detection)
                 EVP_PKEY_KEYGEN,
                 EVP_PKEY_KEYGEN_INIT,
                 // Generate / paramgen
@@ -307,16 +191,16 @@ public final class OpenSSLEvpKeyGen {
                 EVP_PKEY_PARAMGEN_INIT,
                 // KEYMGMT fetch
                 EVP_KEYMGMT_FETCH,
-                // Group/curve selection
+                // Group / curve selection setters
                 EVP_PKEY_CTX_SET_GROUP_NAME,
-                EVP_PKEY_CTX_SET_EC_PARAM_ENC,
-                // RSA keygen pubexp/primes
-                EVP_PKEY_CTX_SET1_RSA_KEYGEN_PUBEXP,
-                EVP_PKEY_CTX_SET_RSA_KEYGEN_PRIMES,
-                // DSA paramgen extras
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_Q_BITS,
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD,
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS,
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_TYPE);
+                EVP_PKEY_CTX_SET_EC_PARAM_ENC);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLEvpKeyGen::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

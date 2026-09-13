@@ -27,10 +27,12 @@ import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -47,11 +49,9 @@ public final class OpenSSLEvpSignature {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // DigestSign / DigestVerify init — the digest argument is traced back to its
     // constructing call (see OpenSSLEvpMessageDigest); the key algorithm (RSA/DSA/ECDSA/SM2)
     // is carried by the EVP_PKEY, which isn't resolvable from this call site.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -83,14 +83,12 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Streaming Digest Sign / Verify (init/update/final variants) — SIGN/VERIFY are action
     // markers only (see JcaSignatureAction for the equivalent Java pattern); they carry no key
     // algorithm identity (the EVP_PKEY isn't resolvable from this call site) but *_ex's mdname
     // (index 2) is a real digest-name string (e.g. "SHA256"), resolved via
     // OpenSSLNameCanonicalizerFactory into its own, separate DigestContext finding - same shape
     // as EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME below.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -150,10 +148,8 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_DigestSign / EVP_DigestVerify (one-shot, incl. EdDSA) — action markers only; the
     // key algorithm (e.g. Ed25519/Ed448) is carried by the EVP_PKEY, not this call site.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -177,10 +173,8 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY sign / verify (one-shot, incl. ML-DSA/SLH-DSA) — action markers only; the key
     // algorithm and parameter set are carried by the EVP_PKEY, not this call site.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -204,9 +198,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY sign / verify init variants — action markers only.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_SIGN_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -274,9 +266,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY message sign / verify (streaming, OpenSSL 3.6) — action markers only.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_SIGN_MESSAGE_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -300,9 +290,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY verify_recover — action marker only.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_VERIFY_RECOVER_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -337,9 +325,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Legacy EVP sign/verify (deprecated 3.0) — action marker only.
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_VERIFY_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -407,9 +393,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Fetch APIs
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_SIGNATURE_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -424,9 +408,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RSA setters (signature-related)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_MGF1_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -478,9 +460,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RSA-PSS keygen-side setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -546,9 +526,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS7 sign helpers
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PKCS7_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -605,9 +583,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // CMS sign helpers
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> CMS_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -653,9 +629,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // OCSP signing
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> OCSP_BASIC_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -690,9 +664,7 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RFC 3161 Timestamp (TS) digest selectors
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> TS_CONF_SET_SIGNER_DIGEST =
             new DetectionRuleBuilder<AstNode>()
@@ -783,11 +755,11 @@ public final class OpenSSLEvpSignature {
                     .withoutDependingDetectionRules();
 
     private OpenSSLEvpSignature() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // DigestSign / DigestVerify init (digest traced back; key algorithm not
                 // resolvable from this call site)
@@ -863,5 +835,13 @@ public final class OpenSSLEvpSignature {
                 OSSL_CRMF_MSG_CREATE_POPO,
                 CMS_DIGEST_CREATE,
                 CMS_DIGEST_CREATE_EX);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLEvpSignature::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

@@ -41,7 +41,7 @@ public final class CxxAggregator implements IAggregator {
     private static List<INode> detectedNodes = new ArrayList<>();
 
     private CxxAggregator() {
-        // nothing
+        // private
     }
 
     public static void addNodes(@Nonnull List<INode> newNodes) {

@@ -25,8 +25,10 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -43,9 +45,7 @@ public final class OpenSSLLegacyEc {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // ECDSA Signature functions
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> ECDSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
@@ -91,9 +91,7 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Key Generation
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
@@ -161,9 +159,7 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Key Agreement functions
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
             new DetectionRuleBuilder<AstNode>()
@@ -177,11 +173,11 @@ public final class OpenSSLLegacyEc {
                     .withoutDependingDetectionRules();
 
     private OpenSSLLegacyEc() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // ECDSA Signatures
                 ECDSA_SIGN,
@@ -196,5 +192,13 @@ public final class OpenSSLLegacyEc {
                 EC_GROUP_NEW_BY_CURVE_NAME_EX,
                 // Key Agreement
                 ECDH_COMPUTE_KEY);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLLegacyEc::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

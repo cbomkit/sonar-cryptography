@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules.detection.openssl;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherFetch;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
@@ -39,6 +40,7 @@ import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLEvpSignature;
 import com.ibm.plugin.rules.detection.openssl.ssl.OpenSSLLibssl;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -61,7 +63,7 @@ public final class OpenSSLDetectionRules {
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
                         // EVP API - Modern OpenSSL 3.x functions
                         OpenSSLEvpCipher.rules().stream(),
@@ -85,5 +87,13 @@ public final class OpenSSLDetectionRules {
                         OpenSSLLibssl.rules().stream())
                 .flatMap(i -> i)
                 .toList();
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLDetectionRules::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

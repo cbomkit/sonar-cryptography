@@ -25,11 +25,13 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyEc;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -713,11 +715,11 @@ public final class OpenSSLLibssl {
                     .withoutDependingDetectionRules();
 
     private OpenSSLLibssl() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // TLS Generic
                 TLS_METHOD,
@@ -789,5 +791,13 @@ public final class OpenSSLLibssl {
                 // SSL version / method setters
                 SSL_CTX_SET_SSL_VERSION,
                 SSL_SET_SSL_METHOD);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLLibssl::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }

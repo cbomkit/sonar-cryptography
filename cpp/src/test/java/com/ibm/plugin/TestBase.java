@@ -134,6 +134,7 @@ public abstract class TestBase extends CxxInventoryRule {
                                                     Symbol,
                                                     SquidAstVisitorContext<? extends Grammar>>>
                                     detectionStores) {
+        // Filter the relevant detection store from a list of detection stores.
         Optional<
                         DetectionStore<
                                 SquidCheck<?>,
@@ -150,6 +151,7 @@ public abstract class TestBase extends CxxInventoryRule {
                                                                         value.getClass()
                                                                                 .equals(valueType)))
                                 .findFirst();
+        // Returns the store with the closest matching value type to the given valueType.
         return relevantStore.orElseGet(
                 () ->
                         detectionStores.stream()
@@ -180,6 +182,7 @@ public abstract class TestBase extends CxxInventoryRule {
                                                     Symbol,
                                                     SquidAstVisitorContext<? extends Grammar>>>
                                     detectionStores) {
+        // Filter the relevant detection store from a list of detection stores.
         List<
                         DetectionStore<
                                 SquidCheck<?>,
@@ -196,6 +199,7 @@ public abstract class TestBase extends CxxInventoryRule {
                                                                         value.getClass()
                                                                                 .equals(valueType)))
                                 .toList();
+        // Returns the store with the closest matching value type to the given valueType.
         List<
                         DetectionStore<
                                 SquidCheck<?>,

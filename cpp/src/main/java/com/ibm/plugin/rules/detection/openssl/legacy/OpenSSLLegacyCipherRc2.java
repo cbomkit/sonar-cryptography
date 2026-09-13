@@ -19,8 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -30,111 +29,83 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/**
- * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
- *
- * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
- * are deprecated but still widely used in existing codebases.
- *
- * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
- */
+/** Detection rules for OpenSSL legacy (pre-EVP) RC2 cipher APIs. */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDh {
+public final class OpenSSLLegacyCipherRc2 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
-
-    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+    private static final IDetectionRule<AstNode> RC2_SET_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_parameters_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("RC2_set_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Predefined Groups (RFC 5114) functions
-
-    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+    private static final IDetectionRule<AstNode> RC2_ECB_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_1024_160")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
+                    .forMethods("RC2_ecb_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-ECB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+    private static final IDetectionRule<AstNode> RC2_CBC_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_224")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
+                    .forMethods("RC2_cbc_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CBC"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+    private static final IDetectionRule<AstNode> RC2_CFB64_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_get_2048_256")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
+                    .forMethods("RC2_cfb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CFB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+    private static final IDetectionRule<AstNode> RC2_OFB64_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("DH_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .forMethods("RC2_ofb64_encrypt")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-OFB"))
                     .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private OpenSSLLegacyDh() {
+    private OpenSSLLegacyCipherRc2() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Key/Parameter Generation
-                DH_GENERATE_PARAMETERS_EX,
-                DH_GENERATE_KEY,
-                // Predefined Groups (RFC 5114)
-                DH_GET_1024_160,
-                DH_GET_2048_224,
-                DH_GET_2048_256,
-                // Key Agreement
-                DH_COMPUTE_KEY);
+                RC2_SET_KEY,
+                RC2_ECB_ENCRYPT,
+                RC2_CBC_ENCRYPT,
+                RC2_CFB64_ENCRYPT,
+                RC2_OFB64_ENCRYPT);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDh::buildRules);
+            Memoize.of(OpenSSLLegacyCipherRc2::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

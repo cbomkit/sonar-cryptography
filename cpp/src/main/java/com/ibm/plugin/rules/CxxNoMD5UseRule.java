@@ -21,8 +21,6 @@ package com.ibm.plugin.rules;
 
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.CxxBaseDetectionRule;
-import com.ibm.plugin.rules.detection.CxxDetectionRules;
-import com.ibm.plugin.translation.reorganizer.CxxReorganizerRules;
 import com.ibm.rules.NoMD5UseForMessageDigestRule;
 import com.ibm.rules.issue.Issue;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -31,11 +29,7 @@ import javax.annotation.Nonnull;
 import org.sonar.check.Rule;
 
 @Rule(key = "CxxNoMD5use")
-public final class CxxNoMD5UseRule extends CxxBaseDetectionRule {
-
-    public CxxNoMD5UseRule() {
-        super(false, CxxDetectionRules.rules(), CxxReorganizerRules.rules());
-    }
+public class CxxNoMD5UseRule extends CxxBaseDetectionRule {
 
     @Nonnull
     @Override

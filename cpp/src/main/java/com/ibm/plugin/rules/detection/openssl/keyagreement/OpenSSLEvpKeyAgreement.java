@@ -24,11 +24,13 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -43,9 +45,7 @@ public final class OpenSSLEvpKeyAgreement {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // KEM / KEYEXCH fetch
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_KEYEXCH_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -60,9 +60,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY derive init
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_DERIVE_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -97,9 +95,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // ECDH / DH KDF setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_KDF_TYPE =
             new DetectionRuleBuilder<AstNode>()
@@ -147,9 +143,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // DH parameter setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN =
             new DetectionRuleBuilder<AstNode>()
@@ -202,9 +196,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // KEM fetch
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_KEM_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -219,9 +211,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY encapsulate / decapsulate
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_ENCAPSULATE_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -289,9 +279,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // HPKE (Hybrid Public Key Encryption)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> OSSL_HPKE_CTX_LIFECYCLE =
             new DetectionRuleBuilder<AstNode>()
@@ -317,11 +305,11 @@ public final class OpenSSLEvpKeyAgreement {
                     .withoutDependingDetectionRules();
 
     private OpenSSLEvpKeyAgreement() {
-        // nothing
+        // private
     }
 
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
+    private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // KEM / KEYEXCH fetch
                 EVP_KEYEXCH_FETCH,
@@ -353,5 +341,13 @@ public final class OpenSSLEvpKeyAgreement {
                 // HPKE
                 OSSL_HPKE_CTX_LIFECYCLE,
                 OSSL_HPKE_STR2SUITE);
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
+            Memoize.of(OpenSSLEvpKeyAgreement::buildRules);
+
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> rules() {
+        return RULES.get();
     }
 }
