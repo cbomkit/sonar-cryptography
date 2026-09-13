@@ -19,6 +19,7 @@
  */
 package com.ibm.output.cyclondx.builder;
 
+import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.EllipticCurve;
@@ -27,6 +28,7 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
@@ -61,7 +63,9 @@ import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.model.padding.PKCS7;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -88,6 +92,110 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     @Nullable private INode mode;
     @Nullable private INode padding;
     @Nullable private INode curve;
+
+    private static final Map<String, String> CURVE_TO_NAMESPACED = new HashMap<>();
+    private static final Map<String, String> ALGORITHM_TO_FAMILY = new HashMap<>();
+
+    static {
+        CURVE_TO_NAMESPACED.put("secp256r1", "nist/P-256");
+        CURVE_TO_NAMESPACED.put("secp384r1", "nist/P-384");
+        CURVE_TO_NAMESPACED.put("secp521r1", "nist/P-521");
+        CURVE_TO_NAMESPACED.put("secp256k1", "secg/secp256k1");
+        CURVE_TO_NAMESPACED.put("secp224r1", "nist/P-224");
+        CURVE_TO_NAMESPACED.put("secp192r1", "nist/P-192");
+        CURVE_TO_NAMESPACED.put("sect163k1", "secg/sect163k1");
+        CURVE_TO_NAMESPACED.put("sect163r2", "secg/sect163r2");
+        CURVE_TO_NAMESPACED.put("sect233k1", "secg/sect233k1");
+        CURVE_TO_NAMESPACED.put("sect233r1", "secg/sect233r1");
+        CURVE_TO_NAMESPACED.put("sect283k1", "secg/sect283k1");
+        CURVE_TO_NAMESPACED.put("sect283r1", "secg/sect283r1");
+        CURVE_TO_NAMESPACED.put("sect409k1", "secg/sect409k1");
+        CURVE_TO_NAMESPACED.put("sect409r1", "secg/sect409r1");
+        CURVE_TO_NAMESPACED.put("sect571k1", "secg/sect571k1");
+        CURVE_TO_NAMESPACED.put("sect571r1", "secg/sect571r1");
+        CURVE_TO_NAMESPACED.put("Brainpoolp256r1", "brainpool/brainpoolP256r1");
+        CURVE_TO_NAMESPACED.put("Brainpoolp384r1", "brainpool/brainpoolP384r1");
+        CURVE_TO_NAMESPACED.put("Brainpoolp512r1", "brainpool/brainpoolP512r1");
+        CURVE_TO_NAMESPACED.put("Edwards25519", "other/Ed25519");
+        CURVE_TO_NAMESPACED.put("Edwards448", "other/Ed448");
+        CURVE_TO_NAMESPACED.put("Curve25519", "other/Curve25519");
+        CURVE_TO_NAMESPACED.put("Curve448", "other/Curve448");
+
+        ALGORITHM_TO_FAMILY.put("3DES", "3DES");
+        ALGORITHM_TO_FAMILY.put("AES", "AES");
+        ALGORITHM_TO_FAMILY.put("ARIA", "ARIA");
+        ALGORITHM_TO_FAMILY.put("Argon2", "Argon2");
+        ALGORITHM_TO_FAMILY.put("Aria", "ARIA");
+        ALGORITHM_TO_FAMILY.put("Blowfish", "Blowfish");
+        ALGORITHM_TO_FAMILY.put("CAST5", "CAST5");
+        ALGORITHM_TO_FAMILY.put("CAST6", "CAST6");
+        ALGORITHM_TO_FAMILY.put("CAMELLIA", "CAMELLIA");
+        ALGORITHM_TO_FAMILY.put("ChaCha20", "ChaCha20");
+        ALGORITHM_TO_FAMILY.put("DES", "DES");
+        ALGORITHM_TO_FAMILY.put("DSA", "DSA");
+        ALGORITHM_TO_FAMILY.put("ECDH", "ECDH");
+        ALGORITHM_TO_FAMILY.put("ECDSA", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("ECIES", "ECIES");
+        ALGORITHM_TO_FAMILY.put("EdDSA", "EdDSA");
+        ALGORITHM_TO_FAMILY.put("HKDF", "HKDF");
+        ALGORITHM_TO_FAMILY.put("HMAC", "HMAC");
+        ALGORITHM_TO_FAMILY.put("ML-KEM", "ML-KEM");
+        ALGORITHM_TO_FAMILY.put("ML-DSA", "ML-DSA");
+        ALGORITHM_TO_FAMILY.put("PBKDF2", "PBKDF2");
+        ALGORITHM_TO_FAMILY.put("Poly1305", "Poly1305");
+        ALGORITHM_TO_FAMILY.put("RC2", "RC2");
+        ALGORITHM_TO_FAMILY.put("RC4", "RC4");
+        ALGORITHM_TO_FAMILY.put("RSA", "RSAES-PKCS1");
+        ALGORITHM_TO_FAMILY.put("RSA-PSS", "RSASSA-PSS");
+        ALGORITHM_TO_FAMILY.put("RSA-KEM", "RSA-KEM");
+        ALGORITHM_TO_FAMILY.put("scrypt", "scrypt");
+        ALGORITHM_TO_FAMILY.put("SEED", "SEED");
+        ALGORITHM_TO_FAMILY.put("SLH-DSA", "SLH-DSA");
+        ALGORITHM_TO_FAMILY.put("Salsa20", "Salsa20");
+        ALGORITHM_TO_FAMILY.put("Serpent", "Serpent");
+        ALGORITHM_TO_FAMILY.put("Twofish", "Twofish");
+        ALGORITHM_TO_FAMILY.put("CMAC", "CMAC");
+        ALGORITHM_TO_FAMILY.put("IDEA", "IDEA");
+        ALGORITHM_TO_FAMILY.put("SM2", "SM2");
+        ALGORITHM_TO_FAMILY.put("SM3", "SM3");
+        ALGORITHM_TO_FAMILY.put("SM4", "SM4");
+        ALGORITHM_TO_FAMILY.put("SHA-1", "SHA-1");
+        ALGORITHM_TO_FAMILY.put("SHA-256", "SHA-2");
+        ALGORITHM_TO_FAMILY.put("SHA-384", "SHA-2");
+        ALGORITHM_TO_FAMILY.put("SHA-512", "SHA-2");
+        ALGORITHM_TO_FAMILY.put("SHA3", "SHA-3");
+        ALGORITHM_TO_FAMILY.put("SHA3-256", "SHA-3");
+        ALGORITHM_TO_FAMILY.put("SHA3-384", "SHA-3");
+        ALGORITHM_TO_FAMILY.put("SHA3-512", "SHA-3");
+        ALGORITHM_TO_FAMILY.put("secp192r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("secp224r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("secp256r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("secp256k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("secp384r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("secp521r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("Brainpoolp256r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("Brainpoolp384r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("Brainpoolp512r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("Edwards25519", "EdDSA");
+        ALGORITHM_TO_FAMILY.put("Edwards448", "EdDSA");
+        ALGORITHM_TO_FAMILY.put("Curve25519", "ECDH");
+        ALGORITHM_TO_FAMILY.put("Curve448", "ECDH");
+        ALGORITHM_TO_FAMILY.put("sect163k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect163r2", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect233k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect233r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect283k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect283r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect409k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect409r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect571k1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("sect571r1", "ECDSA");
+        ALGORITHM_TO_FAMILY.put("X25519", "ECDH");
+        ALGORITHM_TO_FAMILY.put("X448", "ECDH");
+        ALGORITHM_TO_FAMILY.put("Ed25519", "EdDSA");
+        ALGORITHM_TO_FAMILY.put("Ed448", "EdDSA");
+        ALGORITHM_TO_FAMILY.put("Salsa20", "Salsa20");
+    }
 
     protected AlgorithmComponentBuilder() {
         this.component = new Component();
@@ -231,6 +339,10 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
             primitives = Primitive.KEY_AGREE;
         } else if (primitive.is(KeyEncapsulationMechanism.class)) {
             primitives = Primitive.KEM;
+        } else if (primitive.is(KeyWrap.class)) {
+            // TODO: cyclonedx-core-java 13.2.0 does not expose Primitive.KEY_WRAP; needs dependency
+            // upgrade
+            primitives = Primitive.OTHER;
         } else if (primitive.is(ExtendableOutputFunction.class)) {
             primitives = Primitive.XOF;
         } else {
@@ -291,7 +403,26 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     public @Nonnull IAlgorithmComponentBuilder curve(@Nullable INode curve) {
         this.curve = curve;
         if (curve instanceof EllipticCurve ellipticCurve) {
-            this.algorithmProperties.setCurve(ellipticCurve.asString());
+            String namespaced =
+                    CURVE_TO_NAMESPACED.getOrDefault(
+                            ellipticCurve.asString(), ellipticCurve.asString());
+            this.algorithmProperties.setEllipticCurve(namespaced);
+        }
+        return new AlgorithmComponentBuilder(
+                component,
+                cryptoProperties,
+                algorithmProperties,
+                algorithm,
+                parameterSetIdentifier,
+                mode,
+                padding,
+                curve);
+    }
+
+    @Override
+    public @Nonnull IAlgorithmComponentBuilder algorithmFamily(@Nullable String family) {
+        if (family != null) {
+            this.algorithmProperties.setAlgorithmFamily(family);
         }
         return new AlgorithmComponentBuilder(
                 component,
@@ -417,6 +548,20 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
         }
         this.cryptoProperties.setAssetType(AssetType.ALGORITHM);
         this.cryptoProperties.setAlgorithmProperties(this.algorithmProperties);
+
+        if (algorithm != null) {
+            String name = ((Algorithm) algorithm).getName();
+            String family = ALGORITHM_TO_FAMILY.get(name);
+            if (family == null && name.startsWith("EC-")) {
+                family = ALGORITHM_TO_FAMILY.get(name.substring(3));
+            }
+            if (family == null && name.startsWith("EC-")) {
+                family = "ECDSA";
+            }
+            if (family != null) {
+                this.algorithmProperties.setAlgorithmFamily(family);
+            }
+        }
 
         this.component.setCryptoProperties(this.cryptoProperties);
         this.component.setType(Component.Type.CRYPTOGRAPHIC_ASSET);

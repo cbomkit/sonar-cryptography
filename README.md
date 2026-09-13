@@ -121,7 +121,7 @@ The plugin generates a `cbom.json` file in [CycloneDX CBOM format](https://cyclo
 ```json
 {
   "bomFormat": "CycloneDX",
-  "specVersion": "1.6",
+  "specVersion": "1.7",
   "version": 1,
   "metadata": {
     "timestamp": "2026-01-20T10:58:39Z",

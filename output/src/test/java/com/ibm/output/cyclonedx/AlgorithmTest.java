@@ -102,6 +102,7 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getCryptoFunctions()).hasSize(2);
                     assertThat(algorithmProperties.getCryptoFunctions())
                             .contains(CryptoFunction.ENCRYPT, CryptoFunction.KEYGEN);
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("RSAES-PKCS1");
                 });
     }
 
@@ -280,6 +281,8 @@ class AlgorithmTest extends TestBase {
                                         .isEqualTo("1.2.840.113549.1.1.7");
                                 assertThat(algorithmProperties.getPadding())
                                         .isEqualTo(Padding.OAEP);
+                                assertThat(algorithmProperties.getAlgorithmFamily())
+                                        .isEqualTo("RSAES-PKCS1");
                                 assertThat(algorithmProperties.getCryptoFunctions())
                                         .contains(CryptoFunction.DECRYPT, CryptoFunction.KEYGEN);
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
@@ -384,8 +387,8 @@ class AlgorithmTest extends TestBase {
 
                     final AlgorithmProperties algorithmProperties =
                             component.getCryptoProperties().getAlgorithmProperties();
-                    assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.PKE);
-                    assertThat(algorithmProperties.getCurve()).isEqualTo("secp256r1");
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("nist/P-256");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDSA");
                 });
     }
 
@@ -405,9 +408,42 @@ class AlgorithmTest extends TestBase {
 
                     final AlgorithmProperties algorithmProperties =
                             component.getCryptoProperties().getAlgorithmProperties();
-                    assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.KEY_AGREE);
-                    assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("nist/P-384");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDH");
+                });
+    }
+
+    @Test
+    void sectCurve() {
+        this.assertsNode(
+                () -> {
+                    final EllipticCurveAlgorithm curve =
+                            new EllipticCurveAlgorithm(
+                                    new com.ibm.mapper.model.curves.Sect163k1(detectionLocation));
+                    return curve;
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("EC-sect163k1");
+                    final AlgorithmProperties algorithmProperties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("secg/sect163k1");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDSA");
+                });
+    }
+
+    @Test
+    void rsaPSSAlgorithmFamily() {
+        this.assertsNode(
+                () -> new RSAssaPSS(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    Component component = bom.getComponents().get(0);
+                    final AlgorithmProperties algorithmProperties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("RSASSA-PSS");
                 });
     }
 }

@@ -45,6 +45,9 @@ public interface IAlgorithmComponentBuilder {
     IAlgorithmComponentBuilder curve(@Nullable INode curve);
 
     @Nonnull
+    IAlgorithmComponentBuilder algorithmFamily(@Nullable String family);
+
+    @Nonnull
     IAlgorithmComponentBuilder cryptoFunctions(@Nullable INode... cryptoFunctions);
 
     @Nonnull
