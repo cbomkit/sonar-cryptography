@@ -112,12 +112,7 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
             };
         } else if (value instanceof ValueAction<AstNode> valueAction) {
             final String stringValue = valueAction.asString();
-            if (kind == ProtocolContext.Kind.TLS
-                    && stringValue.regionMatches(true, 0, "tls", 0, 3)) {
-                // TLSv* strings: extract the version number and emit a typed TLS node.
-                // SSLv3, DTLS* and config strings (TLS-CIPHER-CONFIG etc.) share
-                // ProtocolContext.Kind.TLS but do not start with "tls" — they fall through
-                // to the generic Protocol path below.
+            if (kind == ProtocolContext.Kind.TLS) {
                 final SSLVersionMapper sslVersionMapper = new SSLVersionMapper();
                 final Optional<Version> parsedVersion =
                         sslVersionMapper.parse(stringValue, detectionLocation);

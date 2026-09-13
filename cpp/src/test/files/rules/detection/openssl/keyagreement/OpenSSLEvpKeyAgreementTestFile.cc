@@ -9,6 +9,7 @@ void test_evp_key_agreement() {
     // derive init
     EVP_PKEY_derive_init(ctx);
     EVP_PKEY_derive_init_ex(ctx, NULL);
+    EVP_PKEY_derive(ctx, buf, &len);
 
     // DH CTX setters
     EVP_PKEY_CTX_set_dh_kdf_type(ctx, 1);

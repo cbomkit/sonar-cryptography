@@ -17,33 +17,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.plugin.rules;
 
-import com.ibm.plugin.rules.CxxInventoryRule;
-import com.ibm.plugin.rules.CxxNoMD5UseRule;
-import java.util.ArrayList;
-import java.util.Collections;
+import com.ibm.mapper.model.INode;
+import com.ibm.plugin.rules.detection.CxxBaseDetectionRule;
+import com.ibm.plugin.rules.detection.CxxDetectionRules;
+import com.ibm.plugin.translation.reorganizer.CxxReorganizerRules;
+import com.ibm.rules.NoMD5UseForMessageDigestRule;
+import com.ibm.rules.issue.Issue;
+import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.sonar.check.Rule;
 
-public final class CxxRuleList {
+@Rule(key = "CxxNoMD5use")
+public final class CxxNoMD5UseRule extends CxxBaseDetectionRule {
 
-    private CxxRuleList() {}
-
-    public static @Nonnull List<Class<?>> getChecks() {
-        List<Class<?>> checks = new ArrayList<>();
-        checks.addAll(getCxxChecks());
-        checks.addAll(getCxxTestChecks());
-        return Collections.unmodifiableList(checks);
+    public CxxNoMD5UseRule() {
+        super(false, CxxDetectionRules.rules(), CxxReorganizerRules.rules());
     }
 
-    /** These rules are going to target MAIN code only */
-    public static @Nonnull List<Class<?>> getCxxChecks() {
-        return List.of(CxxInventoryRule.class, CxxNoMD5UseRule.class);
-    }
-
-    /** These rules are going to target TEST code only */
-    public static @Nonnull List<Class<?>> getCxxTestChecks() {
-        return List.of();
+    @Nonnull
+    @Override
+    public List<Issue<AstNode>> report(
+            @Nonnull AstNode markerTree, @Nonnull List<INode> translatedNodes) {
+        return new NoMD5UseForMessageDigestRule<AstNode>().report(markerTree, translatedNodes);
     }
 }

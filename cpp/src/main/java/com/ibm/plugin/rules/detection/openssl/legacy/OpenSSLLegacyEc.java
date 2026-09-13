@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -160,6 +161,21 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // ====================================================================
+    // Key Agreement functions
+    // ====================================================================
+
+    private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("ECDH_compute_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     private OpenSSLLegacyEc() {
         // nothing
     }
@@ -177,6 +193,8 @@ public final class OpenSSLLegacyEc {
                 EC_KEY_NEW_BY_CURVE_NAME,
                 EC_KEY_NEW_BY_CURVE_NAME_EX,
                 EC_GROUP_NEW_BY_CURVE_NAME,
-                EC_GROUP_NEW_BY_CURVE_NAME_EX);
+                EC_GROUP_NEW_BY_CURVE_NAME_EX,
+                // Key Agreement
+                ECDH_COMPUTE_KEY);
     }
 }

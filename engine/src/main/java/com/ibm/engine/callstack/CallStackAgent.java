@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.Nonnull;
 import org.sonar.api.batch.fs.InputFile;
 
@@ -41,6 +42,16 @@ public class CallStackAgent<R, T, S, P>
                 INewHookSubscription<R, T, S, P> {
     @Nonnull
     private final ConcurrentMap<Integer, List<CallContext<R, T>>> invokedCallStack =
+            new ConcurrentHashMap<>();
+
+    /**
+     * Bucket-key/index pairs of each file's still-retained, detachable calls, keyed by {@link
+     * InputFile}. Populated in {@link #addedToCallContext} as calls are recorded, so {@link
+     * #detachCallsForFile} can locate a file's own entries directly instead of rescanning every
+     * bucket recorded so far.
+     */
+    @Nonnull
+    private final ConcurrentMap<InputFile, List<int[]>> detachableCallsByFile =
             new ConcurrentHashMap<>();
 
     @Nonnull private final List<IObserver<CallContext<R, T>>> listeners = new ArrayList<>();
@@ -62,13 +73,19 @@ public class CallStackAgent<R, T, S, P>
      * before this runs, so their SonarQube issues are unaffected.
      */
     public void detachCallsForFile(@Nonnull InputFile inputFile) {
-        for (List<CallContext<R, T>> bucket : invokedCallStack.values()) {
-            for (int i = 0; i < bucket.size(); i++) {
-                if (bucket.get(i) instanceof RetainedCall<R, T> retained
-                        && retained.detachedForm() != null
-                        && inputFile.equals(retained.publisher().getInputFile())) {
-                    bucket.set(i, retained.detachedForm());
-                }
+        final List<int[]> locations = detachableCallsByFile.remove(inputFile);
+        if (locations == null) {
+            return;
+        }
+        for (int[] location : locations) {
+            final List<CallContext<R, T>> bucket = invokedCallStack.get(location[0]);
+            if (bucket == null || location[1] >= bucket.size()) {
+                continue;
+            }
+            if (bucket.get(location[1]) instanceof RetainedCall<R, T> retained
+                    && retained.detachedForm() != null
+                    && inputFile.equals(retained.publisher().getInputFile())) {
+                bucket.set(location[1], retained.detachedForm());
             }
         }
     }
@@ -212,6 +229,7 @@ public class CallStackAgent<R, T, S, P>
     private boolean addedToCallContext(int key, @Nonnull CallContext<R, T> callContext) {
         final T tree = callContext.tree();
         final boolean[] added = {true};
+        final int[] insertedIndex = {-1};
         invokedCallStack.compute(
                 key,
                 (k, v) -> {
@@ -225,9 +243,19 @@ public class CallStackAgent<R, T, S, P>
                             }
                         }
                     }
+                    insertedIndex[0] = callContexts.size();
                     callContexts.add(callContext);
                     return callContexts;
                 });
+        if (added[0]
+                && callContext instanceof RetainedCall<R, T> retained
+                && retained.detachedForm() != null) {
+            final List<int[]> locations =
+                    detachableCallsByFile.computeIfAbsent(
+                            retained.publisher().getInputFile(),
+                            ignored -> new CopyOnWriteArrayList<>());
+            locations.add(new int[] {key, insertedIndex[0]});
+        }
         return added[0];
     }
 

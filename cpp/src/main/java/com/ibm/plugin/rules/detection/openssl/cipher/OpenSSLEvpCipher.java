@@ -46,9 +46,7 @@ public final class OpenSSLEvpCipher {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // ====================================================================
     // AES (Advanced Encryption Standard)
-    // ====================================================================
 
     // AES-128
     private static final IDetectionRule<AstNode> EVP_AES_128_CBC =
@@ -504,9 +502,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Camellia
-    // ====================================================================
 
     // Camellia-128
     private static final IDetectionRule<AstNode> EVP_CAMELLIA_128_ECB =
@@ -775,9 +771,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // ARIA
-    // ====================================================================
 
     // ARIA-128
     private static final IDetectionRule<AstNode> EVP_ARIA_128_ECB =
@@ -1112,9 +1106,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SM4 (Chinese National Standard)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_SM4_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1182,9 +1174,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // DES / 3DES
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DES_CBC =
             new DetectionRuleBuilder<AstNode>()
@@ -1410,9 +1400,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_des_ede3_wrap
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_DES_EDE3_WRAP =
             new DetectionRuleBuilder<AstNode>()
@@ -1425,9 +1413,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Blowfish
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_BF_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1484,9 +1470,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // CAST5
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_CAST5_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1543,9 +1527,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RC2
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_RC2_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1624,9 +1606,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RC4 (Stream Cipher)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_RC4 =
             new DetectionRuleBuilder<AstNode>()
@@ -1661,9 +1641,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RC5
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1720,9 +1698,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // IDEA
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_IDEA_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1779,9 +1755,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // SEED (Korean National Standard)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_SEED_ECB =
             new DetectionRuleBuilder<AstNode>()
@@ -1838,9 +1812,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // ChaCha20
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_CHACHA20 =
             new DetectionRuleBuilder<AstNode>()
@@ -1864,9 +1836,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // AES CBC-HMAC Combined Mode - TLS Encrypt-then-MAC
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_AES_128_CBC_HMAC_SHA1 =
             new DetectionRuleBuilder<AstNode>()
@@ -1912,9 +1882,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // NULL Cipher
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_ENC_NULL =
             new DetectionRuleBuilder<AstNode>()
@@ -1927,9 +1895,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // Legacy lookup
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_GET_CIPHERBYNAME =
             new DetectionRuleBuilder<AstNode>()
@@ -1942,9 +1908,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP cipher init
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -1979,9 +1943,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_ASYM_CIPHER_fetch - Asymmetric cipher algorithm fetch
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_ASYM_CIPHER_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -1996,9 +1958,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // EVP_PKEY encrypt / decrypt
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_ENCRYPT_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -2024,9 +1984,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // RSA OAEP context setters
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PADDING =
             new DetectionRuleBuilder<AstNode>()
@@ -2077,9 +2035,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // CMS - Cryptographic Message Syntax (enveloped / encrypted data)
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> CMS_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
@@ -2147,9 +2103,7 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // ====================================================================
     // PKCS#7 encryption functions
-    // ====================================================================
 
     private static final IDetectionRule<AstNode> PKCS7_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()

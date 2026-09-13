@@ -150,10 +150,10 @@ class OpenSSLLibsslTest extends TestBase {
             case "TLSv1.2" -> assertTlsWithVersion(nodes, "TLSv1.2", "1.2");
             case "TLSv1.1" -> assertTlsWithVersion(nodes, "TLSv1.1", "1.1");
             case "TLSv1.0" -> assertTlsWithVersion(nodes, "TLSv1.0", "1.0");
-            case "SSLv3.0" -> assertGenericProtocol(nodes, "SSLv3.0");
+            case "SSLv3.0" -> assertTlsWithVersion(nodes, "SSLv3.0", "3.0");
             case "DTLS" -> assertGenericProtocol(nodes, "DTLS");
-            case "DTLSv1.2" -> assertGenericProtocol(nodes, "DTLSv1.2");
-            case "DTLSv1.0" -> assertGenericProtocol(nodes, "DTLSv1.0");
+            case "DTLSv1.2" -> assertTlsWithVersion(nodes, "DTLSv1.2", "1.2");
+            case "DTLSv1.0" -> assertTlsWithVersion(nodes, "DTLSv1.0", "1.0");
             case "QUIC" -> assertGenericProtocol(nodes, "QUIC");
             case "TLS-CIPHER-CONFIG" -> assertGenericProtocol(nodes, "TLS-CIPHER-CONFIG");
             case "TLS1.3-CIPHER-CONFIG" -> assertGenericProtocol(nodes, "TLS1.3-CIPHER-CONFIG");

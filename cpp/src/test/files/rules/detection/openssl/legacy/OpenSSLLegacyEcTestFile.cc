@@ -40,4 +40,6 @@ void test_legacy_ec() {
     EC_GROUP_new_from_ecparameters(NULL);
     EC_GROUP_new_from_ecpkparameters(NULL);
     EC_GROUP_new_from_params(NULL, NULL, NULL);
+
+    ECDH_compute_key(buf, sizeof(buf), pt, key, NULL);
 }

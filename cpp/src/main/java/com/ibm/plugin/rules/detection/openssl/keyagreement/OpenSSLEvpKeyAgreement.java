@@ -86,6 +86,17 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<AstNode> EVP_PKEY_DERIVE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_derive")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DERIVE"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     // ====================================================================
     // ECDH / DH KDF setters
     // ====================================================================
@@ -317,6 +328,7 @@ public final class OpenSSLEvpKeyAgreement {
                 // EVP_PKEY derive init
                 EVP_PKEY_DERIVE_INIT,
                 EVP_PKEY_DERIVE_INIT_EX,
+                EVP_PKEY_DERIVE,
                 // ECDH / DH KDF setters
                 EVP_PKEY_CTX_SET_DH_KDF_TYPE,
                 EVP_PKEY_CTX_SET_DH_KDF_MD,

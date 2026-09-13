@@ -22,6 +22,7 @@ package com.ibm.plugin;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.plugin.rules.CxxInventoryRule;
+import com.ibm.plugin.rules.CxxNoMD5UseRule;
 import org.junit.jupiter.api.Test;
 
 class CxxPluginTest {
@@ -31,6 +32,7 @@ class CxxPluginTest {
         CxxCheckRegistrar registrar = new CxxCheckRegistrar();
 
         assertThat(registrar.repositoryKey()).isEqualTo(CxxScannerRuleDefinition.REPOSITORY_KEY);
-        assertThat(registrar.checkClasses()).containsExactly(CxxInventoryRule.class);
+        assertThat(registrar.checkClasses())
+                .containsExactly(CxxInventoryRule.class, CxxNoMD5UseRule.class);
     }
 }

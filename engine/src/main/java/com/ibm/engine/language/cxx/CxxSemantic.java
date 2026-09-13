@@ -24,9 +24,11 @@ import com.ibm.engine.model.factory.IValueFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.GenericTokenType;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,7 +44,8 @@ import org.sonar.cxx.utils.CxxConstantUtils;
 
 public final class CxxSemantic {
     private static final Logger LOGGER = LoggerFactory.getLogger(CxxSemantic.class);
-    private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlLfF]");
+    private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlL]+$");
+    private static final Pattern FLOAT_SUFFIX_PATTERN = Pattern.compile("[fFlL]+$");
 
     private CxxSemantic() {
         // private
@@ -57,7 +60,14 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine) {
         return resolveValuesInternal(
-                clazz, tree, selections, valueFactory, returnEnclosingParam, detectionEngine, 0);
+                clazz,
+                tree,
+                selections,
+                valueFactory,
+                returnEnclosingParam,
+                detectionEngine,
+                0,
+                new HashSet<>());
     }
 
     @Nonnull
@@ -68,7 +78,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         if (depth > 15) {
             return Collections.emptyList();
         }
@@ -87,7 +98,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.primaryExpression)) {
             return resolvePrimaryExpression(
                     clazz,
@@ -96,7 +108,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.LITERAL)) {
             return resolveLiteral(
                     clazz,
@@ -105,7 +118,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.assignmentExpression)) {
             return resolveAssignmentExpression(
                     clazz,
@@ -114,7 +128,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.initializerClause)) {
             return resolveInitializerClause(
                     clazz,
@@ -123,7 +138,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.expression)) {
             return resolveExpression(
                     clazz,
@@ -132,7 +148,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         } else if (tree.is(CxxGrammarImpl.bracedInitList)) {
             return resolveBracedInitList(clazz, tree);
         } else if (tree.is(CxxGrammarImpl.qualifiedId)) {
@@ -149,7 +166,8 @@ public final class CxxSemantic {
                         valueFactory,
                         returnEnclosingParam,
                         detectionEngine,
-                        depth + 1);
+                        depth + 1,
+                        resolvingVariables);
             }
         } else if (CxxAstNodeHelper.isFunctionCall(tree)) {
             return resolveFunctionCall(clazz, tree, returnEnclosingParam, detectionEngine, depth);
@@ -163,7 +181,8 @@ public final class CxxSemantic {
                         valueFactory,
                         returnEnclosingParam,
                         detectionEngine,
-                        depth + 1);
+                        depth + 1,
+                        resolvingVariables);
             }
         }
 
@@ -200,12 +219,20 @@ public final class CxxSemantic {
     private static <O> List<ResolvedValue<O, AstNode>> resolveNumberLiteral(
             @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
         String value = tree.getTokenValue();
-        value = INTEGER_SUFFIX_PATTERN.matcher(value).replaceAll("");
         value = value.replace("'", "");
+        boolean isHex = value.startsWith("0x") || value.startsWith("0X");
+        // Hex literals never carry an f/F suffix (f/F there are hex digits), so only strip the
+        // u/U/l/L integer suffix; non-hex literals may also carry a float f/F suffix.
+        value =
+                isHex
+                        ? INTEGER_SUFFIX_PATTERN.matcher(value).replaceAll("")
+                        : FLOAT_SUFFIX_PATTERN
+                                .matcher(INTEGER_SUFFIX_PATTERN.matcher(value).replaceAll(""))
+                                .replaceAll("");
 
         Object result;
         try {
-            if (value.startsWith("0x") || value.startsWith("0X")) {
+            if (isHex) {
                 String digits = value.substring(2);
                 // Use unsigned parsing to handle values > 0x7FFFFFFF (e.g. SSL_OP_* flags)
                 result =
@@ -273,7 +300,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         String name = tree.getTokenValue();
         if ("true".equals(name)) {
             Optional<O> result = castValue(clazz, Boolean.TRUE);
@@ -329,7 +357,8 @@ public final class CxxSemantic {
                             valueFactory,
                             returnEnclosingParam,
                             detectionEngine,
-                            depth);
+                            depth,
+                            resolvingVariables);
             if (!chased.isEmpty()) {
                 return chased;
             }
@@ -361,6 +390,11 @@ public final class CxxSemantic {
      * reassignment's value, matching how the Java engine chases {@code VariableTree.initializer()}
      * and assignment-site usages. The initializer's result (if any) comes first, followed by
      * reassignments in source order; an empty list means neither yielded a resolved value.
+     *
+     * <p>The assignment graph can contain cycles (e.g. {@code a = b;} together with {@code b =
+     * a;}): a variable that is already being resolved further up the call chain is not followed
+     * again, since it cannot contribute a new value and following it would recurse forever,
+     * matching the guard the Java engine carries for the same reason (issue #525).
      */
     @Nonnull
     private static <O> List<ResolvedValue<O, AstNode>> chaseVariableValues(
@@ -371,62 +405,73 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
-        LinkedList<ResolvedValue<O, AstNode>> result = new LinkedList<>();
-
-        for (Symbol.Usage usage : variableSymbol.usages()) {
-            if (usage.node() == currentOccurrence) {
-                continue;
-            }
-            if (usage.kind() != Symbol.Usage.UsageKind.WRITE
-                    && usage.kind() != Symbol.Usage.UsageKind.READ_WRITE) {
-                continue;
-            }
-            AstNode assignmentExpr =
-                    usage.node().getFirstAncestor(CxxGrammarImpl.assignmentExpression);
-            if (assignmentExpr == null) {
-                continue;
-            }
-            AstNode assignedValue = assignmentExpr.getLastChild();
-            if (assignedValue == null || assignedValue == usage.node()) {
-                continue;
-            }
-            result.addAll(
-                    resolveValuesInternal(
-                            clazz,
-                            assignedValue,
-                            selections,
-                            valueFactory,
-                            returnEnclosingParam,
-                            detectionEngine,
-                            depth + 1));
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+        if (!resolvingVariables.add(variableSymbol)) {
+            // cycle: this variable is already being resolved further up the call chain
+            return Collections.emptyList();
         }
+        try {
+            LinkedList<ResolvedValue<O, AstNode>> result = new LinkedList<>();
 
-        AstNode initializer = variableSymbol.initializer();
-        if (initializer != null) {
-            // braceOrEqualInitializer is declared with .skip() and initializerClause with
-            // .skipIfOneChild(), so for a plain "= <value>" declarator neither node survives in the
-            // tree: initializer ends up with the "=" token as its first child and the (possibly
-            // further-collapsed) value expression as its last child. Taking the structurally last
-            // child, as with assignmentExpression above, reaches the value regardless of how far
-            // it collapsed.
-            AstNode initializerTarget = initializer.getLastChild();
-            if (initializerTarget == null) {
-                initializerTarget = initializer;
+            for (Symbol.Usage usage : variableSymbol.usages()) {
+                if (usage.node() == currentOccurrence) {
+                    continue;
+                }
+                if (usage.kind() != Symbol.Usage.UsageKind.WRITE
+                        && usage.kind() != Symbol.Usage.UsageKind.READ_WRITE) {
+                    continue;
+                }
+                AstNode assignmentExpr =
+                        usage.node().getFirstAncestor(CxxGrammarImpl.assignmentExpression);
+                if (assignmentExpr == null) {
+                    continue;
+                }
+                AstNode assignedValue = assignmentExpr.getLastChild();
+                if (assignedValue == null || assignedValue == usage.node()) {
+                    continue;
+                }
+                result.addAll(
+                        resolveValuesInternal(
+                                clazz,
+                                assignedValue,
+                                selections,
+                                valueFactory,
+                                returnEnclosingParam,
+                                detectionEngine,
+                                depth + 1,
+                                resolvingVariables));
             }
-            List<ResolvedValue<O, AstNode>> initializerResults =
-                    resolveValuesInternal(
-                            clazz,
-                            initializerTarget,
-                            selections,
-                            valueFactory,
-                            returnEnclosingParam,
-                            detectionEngine,
-                            depth + 1);
-            result.addAll(0, initializerResults);
-        }
 
-        return result;
+            AstNode initializer = variableSymbol.initializer();
+            if (initializer != null) {
+                // braceOrEqualInitializer is declared with .skip() and initializerClause with
+                // .skipIfOneChild(), so for a plain "= <value>" declarator neither node survives in
+                // the tree: initializer ends up with the "=" token as its first child and the
+                // (possibly further-collapsed) value expression as its last child. Taking the
+                // structurally last child, as with assignmentExpression above, reaches the value
+                // regardless of how far it collapsed.
+                AstNode initializerTarget = initializer.getLastChild();
+                if (initializerTarget == null) {
+                    initializerTarget = initializer;
+                }
+                List<ResolvedValue<O, AstNode>> initializerResults =
+                        resolveValuesInternal(
+                                clazz,
+                                initializerTarget,
+                                selections,
+                                valueFactory,
+                                returnEnclosingParam,
+                                detectionEngine,
+                                depth + 1,
+                                resolvingVariables);
+                result.addAll(0, initializerResults);
+            }
+
+            return result;
+        } finally {
+            resolvingVariables.remove(variableSymbol);
+        }
     }
 
     /**
@@ -453,7 +498,14 @@ public final class CxxSemantic {
             if (constantExpr != null) {
                 List<ResolvedValue<O, AstNode>> explicitValue =
                         resolveValuesInternal(
-                                clazz, constantExpr, new LinkedList<>(), null, false, null, 0);
+                                clazz,
+                                constantExpr,
+                                new LinkedList<>(),
+                                null,
+                                false,
+                                null,
+                                0,
+                                new HashSet<>());
                 if (!explicitValue.isEmpty()) {
                     return explicitValue;
                 }
@@ -538,7 +590,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         AstNode literal = tree.getFirstChild(CxxGrammarImpl.LITERAL);
         if (literal != null) {
             return resolveLiteral(
@@ -548,7 +601,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         }
 
         AstNode firstChild = tree.getFirstChild();
@@ -560,7 +614,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth + 1);
+                    depth + 1,
+                    resolvingVariables);
         }
 
         return Collections.emptyList();
@@ -574,7 +629,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         AstNode stringLiteral = tree.getFirstChild(CxxTokenType.STRING);
         if (stringLiteral != null) {
             return resolveStringLiteral(clazz, stringLiteral);
@@ -615,7 +671,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth + 1);
+                    depth + 1,
+                    resolvingVariables);
         }
 
         return Collections.emptyList();
@@ -629,7 +686,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         List<AstNode> children = tree.getChildren();
         if (!children.isEmpty()) {
             AstNode lastChild = children.get(children.size() - 1);
@@ -640,7 +698,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth + 1);
+                    depth + 1,
+                    resolvingVariables);
         }
         return Collections.emptyList();
     }
@@ -653,7 +712,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         AstNode assignmentExpression = tree.getFirstChild(CxxGrammarImpl.assignmentExpression);
         if (assignmentExpression != null) {
             return resolveAssignmentExpression(
@@ -663,7 +723,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth);
+                    depth,
+                    resolvingVariables);
         }
         AstNode firstChild = tree.getFirstChild();
         if (firstChild != null) {
@@ -674,7 +735,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth + 1);
+                    depth + 1,
+                    resolvingVariables);
         }
         return Collections.emptyList();
     }
@@ -687,7 +749,8 @@ public final class CxxSemantic {
             @Nullable IValueFactory<AstNode> valueFactory,
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
-            int depth) {
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
         AstNode firstChild = tree.getFirstChild();
         if (firstChild != null) {
             return resolveValuesInternal(
@@ -697,7 +760,8 @@ public final class CxxSemantic {
                     valueFactory,
                     returnEnclosingParam,
                     detectionEngine,
-                    depth + 1);
+                    depth + 1,
+                    resolvingVariables);
         }
         return Collections.emptyList();
     }

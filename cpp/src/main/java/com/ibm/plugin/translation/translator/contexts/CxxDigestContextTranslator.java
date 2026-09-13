@@ -25,15 +25,12 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.jca.JcaMessageDigestMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.algorithms.MD2;
 import com.ibm.mapper.model.algorithms.MD4;
 import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.RIPEMD;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.SHA3;
 import com.ibm.mapper.model.algorithms.SM3;
 import com.ibm.mapper.model.algorithms.Whirlpool;
 import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
@@ -54,37 +51,22 @@ public final class CxxDigestContextTranslator implements IContextTranslation<Ast
             @Nonnull DetectionLocation detectionLocation) {
 
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
-            return switch (value.asString().toUpperCase().trim()) {
-                // MD Family
-                case "MD2" -> Optional.of(new MD2(detectionLocation));
+            String digestName = value.asString().toUpperCase().trim();
+
+            Optional<MessageDigest> jcaResult =
+                    new JcaMessageDigestMapper().parse(digestName, detectionLocation);
+            if (jcaResult.isPresent()) {
+                return jcaResult.map(d -> d);
+            }
+
+            return switch (digestName) {
+                // MD Family (beyond what JcaMessageDigestMapper covers)
                 case "MD4" -> Optional.of(new MD4(detectionLocation));
-                case "MD5" -> Optional.of(new MD5(detectionLocation));
                 // MDC2 (ISO/IEC 10118-2) is a hash function built on DES, not MD5
                 case "MDC2" ->
                         Optional.of(
                                 new com.ibm.mapper.model.Algorithm(
                                         "MDC2", MessageDigest.class, detectionLocation));
-
-                // SHA-1
-                case "SHA-1" -> Optional.of(new SHA(detectionLocation));
-
-                // SHA-2
-                case "SHA-224" -> Optional.of(new SHA2(224, detectionLocation));
-                case "SHA-256" -> Optional.of(new SHA2(256, detectionLocation));
-                case "SHA-384" -> Optional.of(new SHA2(384, detectionLocation));
-                case "SHA-512" -> Optional.of(new SHA2(512, detectionLocation));
-                case "SHA-512/224" ->
-                        Optional.of(
-                                new SHA2(224, new SHA2(512, detectionLocation), detectionLocation));
-                case "SHA-512/256" ->
-                        Optional.of(
-                                new SHA2(256, new SHA2(512, detectionLocation), detectionLocation));
-
-                // SHA-3
-                case "SHA3-224" -> Optional.of(new SHA3(224, detectionLocation));
-                case "SHA3-256" -> Optional.of(new SHA3(256, detectionLocation));
-                case "SHA3-384" -> Optional.of(new SHA3(384, detectionLocation));
-                case "SHA3-512" -> Optional.of(new SHA3(512, detectionLocation));
 
                 // SHAKE (Extendable-Output Functions)
                 case "SHAKE128" -> Optional.of(new SHAKE(128, detectionLocation));
