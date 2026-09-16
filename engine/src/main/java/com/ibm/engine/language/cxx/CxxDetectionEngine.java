@@ -400,7 +400,6 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 continue;
             }
             if (parameter.is(DetectableParameter.class)) {
-                @SuppressWarnings("unchecked")
                 DetectableParameter<AstNode> detectable = (DetectableParameter<AstNode>) parameter;
                 List<ResolvedValue<O, AstNode>> resolved =
                         resolveValuesInInnerScope(clazz, returnExpr, detectable.getiValueFactory());
@@ -420,7 +419,8 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             @Nonnull Class<O> clazz,
             @Nonnull AstNode enumClassDefinition,
             @Nonnull LinkedList<AstNode> selections) {
-        // C++ enum resolution not yet implemented; no current detection rule uses EnumHook
+        // CxxSemantic.resolveIdentifier resolves enum constants eagerly during traversal, unlike
+        // Java's lazy EnumHook, so no enum reference ever reaches this fallback unresolved.
         return null;
     }
 
@@ -544,6 +544,13 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             return;
         }
 
+        // A chained/builder-pattern call (foo().goo()) has no variable to trace back to - its
+        // qualifier is itself a call - so it must not be rejected by the NO_SYMBOL branch in
+        // checkCurrentIndexState the way an unrelated assigned call would be.
+        boolean isBuilderPattern =
+                CxxAstNodeHelper.isFunctionCall(
+                        CxxAstNodeHelper.getMemberAccessQualifier(expressionNode));
+
         boolean isInvocation =
                 isInvocationOnVariable(expressionNode, traceSymbol)
                         || isInitForVariable(expressionNode, traceSymbol);
@@ -566,7 +573,12 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         int index = 0;
         for (Parameter<AstNode> parameter : detectionRule.parameters()) {
             if (!checkCurrentIndexState(
-                    index, arguments, isInvocation, traceSymbol, expressionNode)) {
+                    index,
+                    arguments,
+                    isInvocation,
+                    isBuilderPattern,
+                    traceSymbol,
+                    expressionNode)) {
                 index++;
                 continue;
             }
@@ -617,6 +629,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             int index,
             List<AstNode> arguments,
             boolean isInvocation,
+            boolean isBuilderPattern,
             @Nonnull TraceSymbol<Symbol> traceSymbol,
             @Nonnull AstNode expressionNode) {
         if (arguments.size() <= index) {
@@ -628,7 +641,9 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
 
         return !(traceSymbol.is(TraceSymbol.State.DIFFERENT)
                 || (traceSymbol.is(TraceSymbol.State.SYMBOL) && !isInvocation)
-                || (traceSymbol.is(TraceSymbol.State.NO_SYMBOL) && assignedSymbol.isPresent()));
+                || (traceSymbol.is(TraceSymbol.State.NO_SYMBOL)
+                        && assignedSymbol.isPresent()
+                        && !isBuilderPattern));
     }
 
     /**

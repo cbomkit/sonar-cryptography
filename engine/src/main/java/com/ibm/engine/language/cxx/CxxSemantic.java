@@ -334,12 +334,13 @@ public final class CxxSemantic {
         // A field's or parameter's own name is never a resolved value. Parameters are still
         // returned when returnEnclosingParam is set, since that caller needs the node to hook the
         // enclosing function; a field has nothing to hook. A scoped enum's constants live only in
-        // its qualified-only member scope (see Symbol.TypeSymbol#memberScope), so a qualified
-        // reference (Mode::STRICT) is looked up there first, since the normal scope-chain lookup
-        // never finds a symbol that was never registered in an enclosing scope.
-        Symbol symbol = resolveScopedEnumConstant(tree, detectionEngine);
+        // its qualified-only member scope (see Symbol.TypeSymbol#memberScope) and are never
+        // registered in an enclosing scope, so the cheap direct lookup below always misses for
+        // them; the qualified-reference (Mode::STRICT) fallback only runs on that miss, sparing the
+        // unbounded ancestor walk it does for the overwhelmingly common non-scoped-enum identifier.
+        Symbol symbol = AstNodeSymbolExtension.getSymbol(tree);
         if (symbol == null) {
-            symbol = AstNodeSymbolExtension.getSymbol(tree);
+            symbol = resolveScopedEnumConstant(tree, detectionEngine);
         }
         if (symbol instanceof Symbol.VariableSymbol variableSymbol && !symbol.isUnknown()) {
             boolean skipField = variableSymbol.isField();
