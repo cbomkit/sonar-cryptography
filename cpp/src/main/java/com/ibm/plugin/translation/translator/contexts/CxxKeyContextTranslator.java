@@ -107,6 +107,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
                 // DH
                 case "DH" -> Optional.of(new DH(detectionLocation));
                 case "DH-2048" -> Optional.of(new DH(PublicKeyEncryption.class, detectionLocation));
+                case "DH-3072" -> Optional.of(new DH(PublicKeyEncryption.class, detectionLocation));
                 case "DH-4096" -> Optional.of(new DH(PublicKeyEncryption.class, detectionLocation));
 
                 // EdDSA
@@ -172,7 +173,8 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
 
     @Nullable private static Integer parseBits(@Nonnull String algorithmName, @Nonnull String prefix) {
         try {
-            return Integer.parseInt(algorithmName.substring(prefix.length()));
+            int bits = Integer.parseInt(algorithmName.substring(prefix.length()));
+            return bits > 0 ? bits : null;
         } catch (NumberFormatException e) {
             return null;
         }

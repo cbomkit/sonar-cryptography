@@ -37,8 +37,8 @@ import javax.annotation.Nullable;
 /**
  * Maps OpenSSL TLS group names (the {@code SSL_(CTX_)set1_groups_list} argument) to model classes.
  * Names follow OpenSSL's spelling (e.g. {@code MLKEM768}, {@code X25519MLKEM768}, {@code
- * secp256r1}). Unrecognized names return {@link Optional#empty()}; the caller emits them as a raw
- * asset so nothing is dropped.
+ * secp256r1}) matched case-insensitively. Unrecognized names return {@link Optional#empty()}; the
+ * caller emits them as a raw asset so nothing is dropped.
  */
 public final class OpenSslGroupMapper implements IMapper {
 
@@ -50,20 +50,20 @@ public final class OpenSslGroupMapper implements IMapper {
             return Optional.empty();
         }
 
-        return switch (str.trim()) {
+        return switch (str.trim().toUpperCase()) {
             case "MLKEM512" -> Optional.of(new MLKEM(512, detectionLocation));
             case "MLKEM768" -> Optional.of(new MLKEM(768, detectionLocation));
             case "MLKEM1024" -> Optional.of(new MLKEM(1024, detectionLocation));
             case "X25519" -> Optional.of(new X25519(detectionLocation));
             case "X448" -> Optional.of(new X448(detectionLocation));
             case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));
-            case "SecP256r1MLKEM768" -> Optional.of(new SecP256r1MLKEM768(detectionLocation));
-            case "SecP384r1MLKEM1024" -> Optional.of(new SecP384r1MLKEM1024(detectionLocation));
-            case "secp256r1", "prime256v1", "P-256" ->
+            case "SECP256R1MLKEM768" -> Optional.of(new SecP256r1MLKEM768(detectionLocation));
+            case "SECP384R1MLKEM1024" -> Optional.of(new SecP384r1MLKEM1024(detectionLocation));
+            case "SECP256R1", "PRIME256V1", "P-256" ->
                     Optional.of(new ECDH(new EllipticCurve("secp256r1", detectionLocation)));
-            case "secp384r1", "P-384" ->
+            case "SECP384R1", "P-384" ->
                     Optional.of(new ECDH(new EllipticCurve("secp384r1", detectionLocation)));
-            case "secp521r1", "P-521" ->
+            case "SECP521R1", "P-521" ->
                     Optional.of(new ECDH(new EllipticCurve("secp521r1", detectionLocation)));
             default -> Optional.empty();
         };
