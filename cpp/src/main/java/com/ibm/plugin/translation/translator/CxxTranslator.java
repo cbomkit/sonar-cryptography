@@ -38,6 +38,7 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
+import com.ibm.plugin.translation.translator.contexts.CxxAlgorithmParameterContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxCipherContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxKeyAgreementContextTranslator;
@@ -155,8 +156,10 @@ public final class CxxTranslator
 
             // algorithm parameter context
         } else if (detectionValueContext.is(AlgorithmParameterContext.class)) {
-            // TODO: Implement CxxAlgorithmParameterContextTranslator
-            return Optional.empty();
+            CxxAlgorithmParameterContextTranslator cxxAlgorithmParameterContextTranslation =
+                    new CxxAlgorithmParameterContextTranslator();
+            return cxxAlgorithmParameterContextTranslation.translate(
+                    bundleIdentifier, value, detectionValueContext, detectionLocation);
 
             // protocol
         } else if (detectionValueContext.is(ProtocolContext.class)) {
