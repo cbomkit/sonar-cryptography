@@ -132,6 +132,11 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
      * that to chance. {@code CxxSymbolResolverVisitor} is the only code that populates these maps
      * for our own detection.
      *
+     * <p>This runs as its own traversal, strictly after every node's detection has already
+     * completed above: a detection rule for one node can look back at a symbol/type registered on
+     * an earlier node in file order (e.g. resolving a variable's declaring node), so a symbol must
+     * stay live for the whole file's detection pass, not just for its own node's visit.
+     *
      * @param astNode the root AST node of the file that finished analysis
      */
     private void releaseSymbolExtensions(@Nonnull AstNode astNode) {

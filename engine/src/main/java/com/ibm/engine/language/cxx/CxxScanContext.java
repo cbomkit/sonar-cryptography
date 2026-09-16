@@ -30,10 +30,17 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 public record CxxScanContext(@Nonnull SquidAstVisitorContext<? extends Grammar> cxxVisitorContext)
         implements IScanContext<SquidCheck<?>, AstNode> {
 
+    /**
+     * Reports an issue through {@code createLineViolation}, which writes a {@code CheckMessage} -
+     * the API {@code CxxSquidSensor.saveViolations} actually reads back into a SonarQube issue.
+     * {@code SquidCheck.addIssue} looks like the natural counterpart, but it populates a separate
+     * {@code PreciseIssue} list that sonar-cxx's own sensor never reads: using it here would build
+     * every finding correctly and then silently drop it at the very last step, with no error.
+     */
     @Override
     public void reportIssue(
             @Nonnull SquidCheck<?> currentRule, @Nonnull AstNode tree, @Nonnull String message) {
-        currentRule.addIssue(tree, message);
+        this.cxxVisitorContext.createLineViolation(currentRule, message, tree);
     }
 
     @Nonnull
