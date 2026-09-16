@@ -14,7 +14,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "dev/*" ]
+    branches: [ "main", "dev/*", "feat/*" ]
   pull_request:
     branches: [ "main", "dev/*" ]
 
@@ -30,7 +30,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B clean package
+      run: mvn -B clean install
     # The build must not write into the source tree. It used to: the mapper
     # module regenerated ciphersuites.json and JsonCipherSuites.java from a live
     # API on every compile. Fail here if that ever comes back.

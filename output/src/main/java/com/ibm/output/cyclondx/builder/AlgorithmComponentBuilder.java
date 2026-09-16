@@ -125,7 +125,6 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
         ALGORITHM_TO_FAMILY.put("AES", "AES");
         ALGORITHM_TO_FAMILY.put("ARIA", "ARIA");
         ALGORITHM_TO_FAMILY.put("Argon2", "Argon2");
-        ALGORITHM_TO_FAMILY.put("Aria", "ARIA");
         ALGORITHM_TO_FAMILY.put("Blowfish", "Blowfish");
         ALGORITHM_TO_FAMILY.put("CAST5", "CAST5");
         ALGORITHM_TO_FAMILY.put("CAST6", "CAST6");
@@ -147,22 +146,17 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
         ALGORITHM_TO_FAMILY.put("RC4", "RC4");
         ALGORITHM_TO_FAMILY.put("RSA", "RSAES-PKCS1");
         ALGORITHM_TO_FAMILY.put("RSA-PSS", "RSASSA-PSS");
-        ALGORITHM_TO_FAMILY.put("RSA-KEM", "RSA-KEM");
         ALGORITHM_TO_FAMILY.put("scrypt", "scrypt");
         ALGORITHM_TO_FAMILY.put("SEED", "SEED");
         ALGORITHM_TO_FAMILY.put("SLH-DSA", "SLH-DSA");
         ALGORITHM_TO_FAMILY.put("Salsa20", "Salsa20");
-        ALGORITHM_TO_FAMILY.put("Serpent", "Serpent");
-        ALGORITHM_TO_FAMILY.put("Twofish", "Twofish");
-        ALGORITHM_TO_FAMILY.put("CMAC", "CMAC");
-        ALGORITHM_TO_FAMILY.put("IDEA", "IDEA");
-        ALGORITHM_TO_FAMILY.put("SM2", "SM2");
-        ALGORITHM_TO_FAMILY.put("SM3", "SM3");
-        ALGORITHM_TO_FAMILY.put("SM4", "SM4");
         ALGORITHM_TO_FAMILY.put("SHA-1", "SHA-1");
+        ALGORITHM_TO_FAMILY.put("SHA-224", "SHA-2");
         ALGORITHM_TO_FAMILY.put("SHA-256", "SHA-2");
         ALGORITHM_TO_FAMILY.put("SHA-384", "SHA-2");
         ALGORITHM_TO_FAMILY.put("SHA-512", "SHA-2");
+        ALGORITHM_TO_FAMILY.put("SHA-512/224", "SHA-2");
+        ALGORITHM_TO_FAMILY.put("SHA-512/256", "SHA-2");
         ALGORITHM_TO_FAMILY.put("SHA3", "SHA-3");
         ALGORITHM_TO_FAMILY.put("SHA3-256", "SHA-3");
         ALGORITHM_TO_FAMILY.put("SHA3-384", "SHA-3");
@@ -194,7 +188,6 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
         ALGORITHM_TO_FAMILY.put("X448", "ECDH");
         ALGORITHM_TO_FAMILY.put("Ed25519", "EdDSA");
         ALGORITHM_TO_FAMILY.put("Ed448", "EdDSA");
-        ALGORITHM_TO_FAMILY.put("Salsa20", "Salsa20");
     }
 
     protected AlgorithmComponentBuilder() {
@@ -554,9 +547,6 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
             String family = ALGORITHM_TO_FAMILY.get(name);
             if (family == null && name.startsWith("EC-")) {
                 family = ALGORITHM_TO_FAMILY.get(name.substring(3));
-            }
-            if (family == null && name.startsWith("EC-")) {
-                family = "ECDSA";
             }
             if (family != null) {
                 this.algorithmProperties.setAlgorithmFamily(family);
