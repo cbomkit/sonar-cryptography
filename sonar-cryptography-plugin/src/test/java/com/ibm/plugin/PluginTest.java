@@ -41,6 +41,6 @@ class PluginTest {
         plugin.define(context);
         // 12 of our own extensions plus everything sonar-cxx's own Plugin.define() registers
         // (language, sensor, built-in rules, one sensor/rule-repository/property set per tool).
-        Assertions.assertEquals(95, context.getExtensions().size());
+        Assertions.assertEquals(96, context.getExtensions().size());
     }
 }
