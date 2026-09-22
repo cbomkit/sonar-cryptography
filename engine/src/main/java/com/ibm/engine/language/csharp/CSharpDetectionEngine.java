@@ -26,13 +26,7 @@ import com.ibm.engine.detection.MethodDetection;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
-import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
-import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
-import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
-import com.ibm.engine.language.csharp.tree.CSharpMemberAccessTree;
-import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
-import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
-import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.language.csharp.tree.*;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
@@ -166,7 +160,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (rule == null) {
             return;
         }
-        List<CSharpTree> arguments = invocation.getArguments();
+        List<CSharpArgument> arguments = invocation.getArguments();
         processParameters(rule.parameters(), arguments, invocation);
     }
 
@@ -175,7 +169,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (rule == null) {
             return;
         }
-        List<CSharpTree> arguments = creation.getArguments();
+        List<CSharpArgument> arguments = creation.getArguments();
         processParameters(rule.parameters(), arguments, creation);
     }
 
@@ -200,14 +194,14 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     /** Processes positional parameters against the provided argument list. */
     private void processParameters(
             @Nonnull List<Parameter<CSharpTree>> parameters,
-            @Nonnull List<CSharpTree> arguments,
+            @Nonnull List<CSharpArgument> arguments,
             @Nonnull CSharpTree parentTree) {
         int index = 0;
         for (Parameter<CSharpTree> parameter : parameters) {
             if (index >= arguments.size()) {
                 break;
             }
-            processParameter(parameter, arguments.get(index), parentTree);
+            processParameter(parameter, arguments.get(index).value(), parentTree);
             index++;
         }
     }
@@ -380,7 +374,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     public Optional<TraceSymbol<CSharpSymbol>> getMethodInvocationParameterSymbol(
             @Nonnull CSharpTree methodInvocation, @Nonnull Parameter<CSharpTree> parameter) {
         if (methodInvocation instanceof CSharpMethodInvocationTree invocation) {
-            List<CSharpTree> args = invocation.getArguments();
+            List<CSharpArgument> args = invocation.getArguments();
             int idx = parameter.getIndex();
             if (idx >= 0 && idx < args.size()) {
                 return Optional.of(TraceSymbol.createWithStateNoSymbol());
@@ -395,7 +389,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     public Optional<TraceSymbol<CSharpSymbol>> getNewClassParameterSymbol(
             @Nonnull CSharpTree newClass, @Nonnull Parameter<CSharpTree> parameter) {
         if (newClass instanceof CSharpObjectCreationTree creation) {
-            List<CSharpTree> args = creation.getArguments();
+            List<CSharpArgument> args = creation.getArguments();
             int idx = parameter.getIndex();
             if (idx >= 0 && idx < args.size()) {
                 return Optional.of(TraceSymbol.createWithStateNoSymbol());
