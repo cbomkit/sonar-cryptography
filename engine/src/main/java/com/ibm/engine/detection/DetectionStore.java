@@ -108,6 +108,11 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
         return scanContext;
     }
 
+    @Nonnull
+    public IStatusReporting<R, T, S, P> getStatusReporting() {
+        return statusReporting;
+    }
+
     /** This method returns the action value, if present. */
     public Optional<IAction<T>> getActionValue() {
         return Optional.ofNullable(actionValue);

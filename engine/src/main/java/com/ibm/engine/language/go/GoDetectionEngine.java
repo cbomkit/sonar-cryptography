@@ -85,21 +85,37 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         if (tree instanceof BlockTree blockTree) {
             for (Tree item : blockTree.statementOrExpressions()) {
                 if (item instanceof VariableDeclarationTree variableDeclarationTree) {
-                    for (Tree initializer : variableDeclarationTree.initializers()) {
+                    for (int i = 0; i < variableDeclarationTree.initializers().size(); i++) {
+                        Tree initializer = variableDeclarationTree.initializers().get(i);
                         if (initializer instanceof FunctionInvocationTree functionInvocation) {
-                            handler.addCallToCallStack(
-                                    functionInvocation, detectionStore.getScanContext());
-                            if (detectionStore
+                            FunctionInvocationWIthIdentifiersTree funcTree =
+                                    new FunctionInvocationWIthIdentifiersTree(
+                                            functionInvocation,
+                                            variableDeclarationTree.identifiers(),
+                                            blockTree);
+                            if (i >= variableDeclarationTree.identifiers().size() ||
+                                    !passesTraceFilter(traceSymbol,
+                                            variableDeclarationTree.identifiers().get(i))) {
+                                continue;
+                            }
+                            if (!detectionStore
                                     .getDetectionRule()
                                     .match(
                                             functionInvocation,
                                             handler.getLanguageSupport().translation())) {
-                                this.analyseExpression(
-                                        new FunctionInvocationWIthIdentifiersTree(
-                                                functionInvocation,
-                                                variableDeclarationTree.identifiers(),
-                                                blockTree));
+                                continue;
                             }
+                            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> stmtStore =
+                                    new DetectionStore<>(
+                                            detectionStore.getLevel(),
+                                            detectionStore.getDetectionRule(),
+                                            detectionStore.getScanContext(),
+                                            handler,
+                                            detectionStore.getStatusReporting());
+                            detectionStore.attach(stmtStore);
+                            handler.addCallToCallStack(
+                                    functionInvocation, detectionStore.getScanContext());
+                            this.analyseExpression(funcTree, traceSymbol, stmtStore);
                         } else if (initializer
                                 instanceof CompositeLiteralTree compositeLiteralTree) {
                             CompositeLiteralWithBlockTree wrappedTree =
@@ -112,29 +128,50 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                     .match(
                                             wrappedTree,
                                             handler.getLanguageSupport().translation())) {
-                                this.analyseCompositeLiteral(wrappedTree);
+                                DetectionStore<GoCheck, Tree, Symbol, GoScanContext> stmtStore =
+                                        new DetectionStore<>(
+                                                detectionStore.getLevel(),
+                                                detectionStore.getDetectionRule(),
+                                                detectionStore.getScanContext(),
+                                                handler,
+                                                detectionStore.getStatusReporting());
+                                detectionStore.attach(stmtStore);
+                                this.analyseCompositeLiteral(wrappedTree, traceSymbol, stmtStore);
                             }
                         }
                     }
                 } else if (item instanceof AssignmentExpressionTree assignmentExpressionTree) {
+                    if (!passesTraceFilter(traceSymbol, assignmentExpressionTree)) {
+                        continue;
+                    }
                     Tree assignedValue = assignmentExpressionTree.statementOrExpression();
                     if (assignedValue instanceof FunctionInvocationTree functionInvocation) {
-                        handler.addCallToCallStack(
-                                functionInvocation, detectionStore.getScanContext());
-                        if (detectionStore
+                        if (!detectionStore
                                 .getDetectionRule()
                                 .match(
                                         functionInvocation,
                                         handler.getLanguageSupport().translation())) {
-                            this.analyseExpression(
-                                    new FunctionInvocationWIthIdentifiersTree(
-                                            functionInvocation,
-                                            assignmentExpressionTree.leftHandSide()
-                                                            instanceof IdentifierTree identifierTree
-                                                    ? List.of(identifierTree)
-                                                    : null,
-                                            blockTree));
+                            continue;
                         }
+                        FunctionInvocationWIthIdentifiersTree funcTree =
+                                new FunctionInvocationWIthIdentifiersTree(
+                                        functionInvocation,
+                                        assignmentExpressionTree.leftHandSide()
+                                                        instanceof IdentifierTree identifierTree
+                                                ? List.of(identifierTree)
+                                                : null,
+                                        blockTree);
+                        DetectionStore<GoCheck, Tree, Symbol, GoScanContext> stmtStore =
+                                new DetectionStore<>(
+                                        detectionStore.getLevel(),
+                                        detectionStore.getDetectionRule(),
+                                        detectionStore.getScanContext(),
+                                        handler,
+                                        detectionStore.getStatusReporting());
+                        detectionStore.attach(stmtStore);
+                        handler.addCallToCallStack(
+                                functionInvocation, detectionStore.getScanContext());
+                        this.analyseExpression(funcTree, traceSymbol, stmtStore);
                     } else if (assignedValue instanceof CompositeLiteralTree compositeLiteralTree) {
                         CompositeLiteralWithBlockTree wrappedTree =
                                 new CompositeLiteralWithBlockTree(
@@ -147,14 +184,20 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                         if (detectionStore
                                 .getDetectionRule()
                                 .match(wrappedTree, handler.getLanguageSupport().translation())) {
-                            this.analyseCompositeLiteral(wrappedTree);
+                            DetectionStore<GoCheck, Tree, Symbol, GoScanContext> stmtStore =
+                                    new DetectionStore<>(
+                                            detectionStore.getLevel(),
+                                            detectionStore.getDetectionRule(),
+                                            detectionStore.getScanContext(),
+                                            handler,
+                                            detectionStore.getStatusReporting());
+                            detectionStore.attach(stmtStore);
+                            this.analyseCompositeLiteral(wrappedTree, traceSymbol, stmtStore);
                         }
                     }
                 }
             }
         } else if (tree instanceof MemberSelectTree memberSelectTree) {
-            // Handle function reference passed as a parameter (e.g., sha256.New in hmac.New)
-            // The MemberSelectTree represents a function reference without invocation
             handler.addCallToCallStack(memberSelectTree, detectionStore.getScanContext());
             if (detectionStore
                     .getDetectionRule()
@@ -171,7 +214,8 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .match(
                             functionInvocationWIthIdentifiersTree,
                             handler.getLanguageSupport().translation())) {
-                this.analyseExpression(functionInvocationWIthIdentifiersTree);
+                this.analyseExpression(
+                        functionInvocationWIthIdentifiersTree, traceSymbol, detectionStore);
             }
         } else if (tree instanceof CompositeLiteralWithBlockTree compositeLiteralWithBlockTree) {
             if (detectionStore
@@ -179,14 +223,17 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     .match(
                             compositeLiteralWithBlockTree,
                             handler.getLanguageSupport().translation())) {
-                this.analyseCompositeLiteral(compositeLiteralWithBlockTree);
+                this.analyseCompositeLiteral(
+                        compositeLiteralWithBlockTree, traceSymbol, detectionStore);
             }
         } else if (tree instanceof IdentifierWithBlockTree identifierWithBlockTree) {
-            // Search the block for function invocations that match the detection rule.
-            // This handles cases like: privateKey.Parameters = *params, where we need
-            // to find dsa.GenerateParameters(params, ...) in the same block.
             BlockTree blockTree = identifierWithBlockTree.blockTree();
-            this.run(traceSymbol, blockTree);
+            Symbol identifierSymbol = identifierWithBlockTree.identifierTree().symbol();
+            TraceSymbol<Symbol> newTraceSymbol =
+                    identifierSymbol != null
+                            ? TraceSymbol.createFrom(identifierSymbol)
+                            : traceSymbol;
+            this.run(newTraceSymbol, blockTree);
         }
     }
 
@@ -507,10 +554,63 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         return Optional.empty();
     }
 
+    private boolean passesTraceFilter(
+            @Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull Tree tree) {
+        if (!traceSymbol.is(TraceSymbol.State.SYMBOL)) {
+            return true;
+        }
+        Symbol trackedSymbol = traceSymbol.getSymbol();
+        if (tree instanceof VariableDeclarationTree vdt) {
+            return vdt.identifiers().stream()
+                    .filter(id -> !id.type().equals("error"))
+                    .anyMatch(id -> matchesSymbol(id.symbol(), trackedSymbol));
+        } else if (tree instanceof AssignmentExpressionTree aet) {
+            Tree lhs = aet.leftHandSide();
+            if (lhs instanceof IdentifierTree identifierTree) {
+                return matchesSymbol(identifierTree.symbol(), trackedSymbol);
+            } else if (lhs instanceof MemberSelectTree memberSelectTree) {
+                Tree expr = memberSelectTree.expression();
+                if (expr instanceof IdentifierTree exprId) {
+                    return matchesSymbol(exprId.symbol(), trackedSymbol);
+                }
+            }
+        } else if (tree instanceof IdentifierTree identifierTree) {
+            return matchesSymbol(identifierTree.symbol(), trackedSymbol);
+        }
+        return true;
+    }
+
+    private boolean matchesSymbol(@Nullable Symbol a, @Nullable Symbol b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a == b) {
+            return true;
+        }
+        Tree treeA = a.getSafeValue();
+        Tree treeB = b.getSafeValue();
+        if (treeA instanceof IdentifierTree idA && treeB instanceof IdentifierTree idB) {
+            return idA.name().equals(idB.name());
+        }
+        return false;
+    }
+
     @Nonnull
     @Override
     public Optional<TraceSymbol<Symbol>> getMethodInvocationParameterSymbol(
             @Nonnull Tree methodInvocation, @Nonnull Parameter<Tree> parameter) {
+        if (methodInvocation
+                instanceof
+                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
+            for (IdentifierTree identifierTree :
+                    functionInvocationWIthIdentifiersTree.identifiers()) {
+                if (identifierTree.type().equals("error")) {
+                    continue;
+                }
+                return Optional.of(TraceSymbol.createFrom(identifierTree.symbol()));
+            }
+            return Optional.of(TraceSymbol.createWithStateNoSymbol());
+        }
         if (methodInvocation instanceof FunctionInvocationTree functionInvocation) {
             List<Tree> arguments = functionInvocation.arguments();
             if (arguments != null
@@ -522,10 +622,104 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     if (symbol != null) {
                         return Optional.of(TraceSymbol.createFrom(symbol));
                     }
+                    if (arg instanceof org.sonar.plugins.go.api.IdentifierTree identifierTree) {
+                        Symbol symbolFromIdentifier = identifierTree.symbol();
+                        if (symbolFromIdentifier != null) {
+                            return Optional.of(TraceSymbol.createFrom(symbolFromIdentifier));
+                        }
+                        String name = identifierTree.name();
+                        if (name != null) {
+                            return Optional.of(
+                                    TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                        }
+                    }
+                } else if (arg instanceof FunctionInvocationTree nestedFunc) {
+                    Tree memberSelect = nestedFunc.memberSelect();
+                    if (memberSelect
+                            instanceof org.sonar.plugins.go.api.IdentifierTree identifierTree) {
+                        Symbol symbolFromIdentifier = identifierTree.symbol();
+                        if (symbolFromIdentifier != null) {
+                            return Optional.of(TraceSymbol.createFrom(symbolFromIdentifier));
+                        }
+                        String name = identifierTree.name();
+                        if (name != null) {
+                            return Optional.of(
+                                    TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                        }
+                    } else if (memberSelect
+                            instanceof
+                            org.sonar.plugins.go.api.MemberSelectTree memberSelectTree2) {
+                        Tree expr = memberSelectTree2.expression();
+                        if (expr instanceof org.sonar.plugins.go.api.IdentifierTree exprId) {
+                            Symbol symbolFromExpr = exprId.symbol();
+                            if (symbolFromExpr != null) {
+                                return Optional.of(TraceSymbol.createFrom(symbolFromExpr));
+                            }
+                        }
+                        String name = memberSelectTree2.identifier().name();
+                        if (name != null) {
+                            return Optional.of(
+                                    TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                        }
+                    }
+                } else if (arg
+                        instanceof org.sonar.plugins.go.api.MemberSelectTree memberSelectTree) {
+                    Tree expr = memberSelectTree.expression();
+                    if (expr instanceof org.sonar.plugins.go.api.IdentifierTree exprId) {
+                        Symbol symbolFromExpr = exprId.symbol();
+                        if (symbolFromExpr != null) {
+                            return Optional.of(TraceSymbol.createFrom(symbolFromExpr));
+                        }
+                    }
+                    String name = memberSelectTree.identifier().name();
+                    if (name != null) {
+                        return Optional.of(
+                                TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                    }
                 }
                 return Optional.of(TraceSymbol.createWithStateNoSymbol());
             }
-            return Optional.of(TraceSymbol.createWithStateDifferent());
+            Tree memberSelect = functionInvocation.memberSelect();
+            if (memberSelect instanceof org.sonar.plugins.go.api.IdentifierTree identifierTree) {
+                Symbol symbolFromIdentifier = identifierTree.symbol();
+                if (symbolFromIdentifier != null) {
+                    return Optional.of(TraceSymbol.createFrom(symbolFromIdentifier));
+                }
+                String name = identifierTree.name();
+                if (name != null) {
+                    return Optional.of(
+                            TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                }
+            } else if (memberSelect
+                    instanceof org.sonar.plugins.go.api.MemberSelectTree memberSelectTree) {
+                Tree expr = memberSelectTree.expression();
+                if (expr instanceof org.sonar.plugins.go.api.IdentifierTree exprId) {
+                    Symbol symbolFromExpr = exprId.symbol();
+                    if (symbolFromExpr != null) {
+                        return Optional.of(TraceSymbol.createFrom(symbolFromExpr));
+                    }
+                }
+                org.sonar.plugins.go.api.IdentifierTree idTree = memberSelectTree.identifier();
+                String name = idTree.name();
+                if (name != null) {
+                    return Optional.of(
+                            TraceSymbol.createFrom(new org.sonar.go.symbols.Symbol(name)));
+                }
+            }
+            return Optional.of(TraceSymbol.createWithStateNoSymbol());
+        }
+        if (methodInvocation instanceof IdentifierWithBlockTree identifierWithBlockTree) {
+            Symbol symbol = identifierWithBlockTree.identifierTree().symbol();
+            if (symbol != null) {
+                return Optional.of(TraceSymbol.createFrom(symbol));
+            }
+            return Optional.of(TraceSymbol.createWithStateNoSymbol());
+        }
+        if (methodInvocation instanceof IdentifierTree identifierTree) {
+            Symbol symbol = identifierTree.symbol();
+            if (symbol != null) {
+                return Optional.of(TraceSymbol.createFrom(symbol));
+            }
         }
         return Optional.empty();
     }
@@ -595,11 +789,15 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * Analyzes a function invocation expression for cryptographic patterns.
      *
      * @param functionInvocation the function invocation to analyze
+     * @param traceSymbol the trace symbol for this detection
+     * @param store the detection store
      */
     private void analyseExpression(
-            @Nonnull FunctionInvocationWIthIdentifiersTree functionInvocation) {
+            @Nonnull FunctionInvocationWIthIdentifiersTree functionInvocation,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store) {
 
-        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(functionInvocation);
+        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(functionInvocation, store);
         if (detectionRule == null) {
             return;
         }
@@ -619,7 +817,9 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                     parameter,
                     arguments.get(index),
                     functionInvocation.blockTree(),
-                    functionInvocation);
+                    functionInvocation,
+                    traceSymbol,
+                    store);
             index++;
         }
     }
@@ -627,15 +827,14 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     /**
      * Analyzes a composite literal (struct initialization) for cryptographic patterns.
      *
-     * <p>This handles Go struct literals like {@code tls.Config{CipherSuites: [...], MinVersion:
-     * tls.VersionTLS12}}. Each key-value pair is treated as a named parameter, matched by key name
-     * rather than positional index.
-     *
      * @param compositeLiteral the composite literal to analyze
      */
-    private void analyseCompositeLiteral(@Nonnull CompositeLiteralWithBlockTree compositeLiteral) {
+    private void analyseCompositeLiteral(
+            @Nonnull CompositeLiteralWithBlockTree compositeLiteral,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store) {
 
-        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(compositeLiteral);
+        DetectionRule<Tree> detectionRule = emitDetectionAndGetRule(compositeLiteral, store);
         if (detectionRule == null) {
             return;
         }
@@ -663,7 +862,9 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                         parameter,
                                         keyValue.value(),
                                         compositeLiteral.blockTree(),
-                                        compositeLiteral);
+                                        compositeLiteral,
+                                        traceSymbol,
+                                        store);
                                 break;
                             }
                         });
@@ -674,19 +875,26 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
      * processing. Returns null if the rule is a MethodDetectionRule (already fully handled).
      *
      * @param tree the matched tree (function invocation or composite literal)
+     * @param store the detection store
      * @return the detection rule for parameter processing, or null if no further processing needed
      */
-    @Nullable private DetectionRule<Tree> emitDetectionAndGetRule(@Nonnull Tree tree) {
-        if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
+    @Nullable private DetectionRule<Tree> emitDetectionAndGetRule(
+            @Nonnull Tree tree,
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store) {
+        if (store.getDetectionRule().is(MethodDetectionRule.class)) {
+            store.onReceivingNewDetection(new MethodDetection<>(tree, null));
             return null;
         }
 
-        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
+        DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) store.getDetectionRule();
         if (detectionRule.actionFactory() != null) {
-            detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
+            store.onReceivingNewDetection(new MethodDetection<>(tree, null));
         }
         return detectionRule;
+    }
+
+    @Nullable private DetectionRule<Tree> emitDetectionAndGetRule(@Nonnull Tree tree) {
+        return emitDetectionAndGetRule(tree, detectionStore);
     }
 
     /**
@@ -706,7 +914,13 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull Parameter<Tree> parameter,
             @Nonnull Tree expression,
             @Nonnull BlockTree blockTree,
-            @Nonnull Tree parentTree) {
+            @Nonnull Tree parentTree,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store) {
+
+        if (!passesTraceFilter(traceSymbol, expression)) {
+            return;
+        }
 
         if (parameter.is(DetectableParameter.class)) {
             DetectableParameter<Tree> detectableParameter = (DetectableParameter<Tree>) parameter;
@@ -724,10 +938,10 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                                                 detectableParameter,
                                                 parentTree,
                                                 parentTree))
-                        .forEach(detectionStore::onReceivingNewDetection);
+                        .forEach(store::onReceivingNewDetection);
             }
         } else if (!parameter.getDetectionRules().isEmpty()) {
-            dispatchDependingParameter(parameter, expression, blockTree);
+            dispatchDependingParameter(parameter, expression, blockTree, traceSymbol, store);
         }
     }
 
@@ -741,12 +955,14 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     private void dispatchDependingParameter(
             @Nonnull Parameter<Tree> parameter,
             @Nonnull Tree expression,
-            @Nonnull BlockTree blockTree) {
+            @Nonnull BlockTree blockTree,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull DetectionStore<GoCheck, Tree, Symbol, GoScanContext> store) {
 
         if (expression instanceof FunctionInvocationTree newFunctionInvocation) {
             final Optional<VariableDeclarationTree> variableDeclarationTree =
                     findVariableDeclaration(newFunctionInvocation, blockTree);
-            detectionStore.onDetectedDependingParameter(
+            store.onDetectedDependingParameter(
                     parameter,
                     new FunctionInvocationWIthIdentifiersTree(
                             newFunctionInvocation,
@@ -756,28 +972,28 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                             blockTree),
                     DetectionStore.Scope.EXPRESSION);
         } else if (expression instanceof CompositeLiteralTree compositeLiteralExpr) {
-            detectionStore.onDetectedDependingParameter(
+            store.onDetectedDependingParameter(
                     parameter,
                     new CompositeLiteralWithBlockTree(compositeLiteralExpr, null, blockTree),
                     DetectionStore.Scope.EXPRESSION);
         } else if (expression instanceof IdentifierTree identifierExpression) {
-            detectionStore.onDetectedDependingParameter(
+            store.onDetectedDependingParameter(
                     parameter,
                     new IdentifierWithBlockTree(identifierExpression, blockTree),
                     DetectionStore.Scope.EXPRESSION);
         } else if (expression instanceof UnaryExpressionTree unaryExpressionTree) {
             IdentifierTree baseIdentifier = extractBaseIdentifier(unaryExpressionTree);
             if (baseIdentifier != null) {
-                detectionStore.onDetectedDependingParameter(
+                store.onDetectedDependingParameter(
                         parameter,
                         new IdentifierWithBlockTree(baseIdentifier, blockTree),
                         DetectionStore.Scope.EXPRESSION);
             }
         } else if (expression instanceof MemberSelectTree memberSelectTree) {
-            detectionStore.onDetectedDependingParameter(
+            store.onDetectedDependingParameter(
                     parameter, memberSelectTree, DetectionStore.Scope.EXPRESSION);
         } else {
-            detectionStore.onDetectedDependingParameter(
+            store.onDetectedDependingParameter(
                     parameter, expression, DetectionStore.Scope.EXPRESSION);
         }
     }
