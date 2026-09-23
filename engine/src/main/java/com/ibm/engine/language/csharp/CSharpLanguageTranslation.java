@@ -22,8 +22,13 @@ package com.ibm.engine.language.csharp;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.language.ILanguageTranslation;
-import com.ibm.engine.language.csharp.tree.*;
-
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
+import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
+import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
+import com.ibm.engine.language.csharp.tree.CSharpMemberAccessTree;
+import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
+import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
+import com.ibm.engine.language.csharp.tree.CSharpTree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

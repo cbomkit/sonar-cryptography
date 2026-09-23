@@ -21,8 +21,14 @@ package com.ibm.engine.language.csharp;
 
 import com.ibm.engine.language.csharp.antlr.CSharpParser;
 import com.ibm.engine.language.csharp.antlr.CSharpParserBaseVisitor;
-import com.ibm.engine.language.csharp.tree.*;
-
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
+import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
+import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
+import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
+import com.ibm.engine.language.csharp.tree.CSharpMemberAccessTree;
+import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
+import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
+import com.ibm.engine.language.csharp.tree.CSharpTree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -208,7 +214,9 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             }
             CSharpTree rhsTree = convertExpression(rhs); // TODO: entrypoint of args
             List<CSharpArgument> args =
-                    rhsTree != null ? Collections.singletonList(new CSharpArgument(null, rhsTree)) : Collections.emptyList();
+                    rhsTree != null
+                            ? Collections.singletonList(new CSharpArgument(null, rhsTree))
+                            : Collections.emptyList();
 
             statements.add(
                     new CSharpMethodInvocationTree(
@@ -410,7 +418,7 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             if (arg.identifier() != null && arg.COLON() != null) {
                 name = arg.identifier().getText();
                 // now we have detected that this arg is named parameter
-                //TODO: named parameter
+                // TODO: named parameter
             }
 
             return new CSharpArgument(name, value);

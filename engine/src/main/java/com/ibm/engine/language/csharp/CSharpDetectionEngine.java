@@ -26,7 +26,14 @@ import com.ibm.engine.detection.MethodDetection;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
-import com.ibm.engine.language.csharp.tree.*;
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
+import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
+import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
+import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
+import com.ibm.engine.language.csharp.tree.CSharpMemberAccessTree;
+import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
+import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
+import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
@@ -156,54 +163,120 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     // -------------------------------------------------------------------------
 
     private void analyseMethodInvocation(@Nonnull CSharpMethodInvocationTree invocation) {
-        DetectionRule<CSharpTree> rule = emitDetectionAndGetRule(invocation);
-        if (rule == null) {
-            return;
-        }
-        List<CSharpArgument> arguments = invocation.getArguments();
-        processParameters(rule.parameters(), arguments, invocation);
+        analyse(invocation, invocation.getArguments());
     }
 
     private void analyseObjectCreation(@Nonnull CSharpObjectCreationTree creation) {
-        DetectionRule<CSharpTree> rule = emitDetectionAndGetRule(creation);
-        if (rule == null) {
-            return;
-        }
-        List<CSharpArgument> arguments = creation.getArguments();
-        processParameters(rule.parameters(), arguments, creation);
+        analyse(creation, creation.getArguments());
     }
 
     /**
-     * Emits the initial method detection and returns the detection rule for parameter processing.
-     * Returns {@code null} for {@link MethodDetectionRule} (already fully handled).
+     * Emits the initial method detection (when applicable) and processes the call's parameters.
+     *
+     * <p>When the rule declares any named parameter, a pre-flight gate runs first — rejecting the
+     * call (no detection emitted at all) if a required named argument is absent — before the root
+     * {@link MethodDetection} is emitted. This mirrors {@code
+     * PythonDetectionEngine#analyseExpression}.
      */
-    @SuppressWarnings("unchecked")
-    @Nullable private DetectionRule<CSharpTree> emitDetectionAndGetRule(@Nonnull CSharpTree tree) {
+    private void analyse(@Nonnull CSharpTree tree, @Nonnull List<CSharpArgument> arguments) {
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
             detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
-            return null;
+            return;
         }
         DetectionRule<CSharpTree> detectionRule =
                 (DetectionRule<CSharpTree>) detectionStore.getDetectionRule();
+
+        boolean hasNamedParams =
+                detectionRule.parameters().stream().anyMatch(p -> p.getKeywordName().isPresent());
+        if (hasNamedParams && !passesNamedParameterGate(detectionRule.parameters(), arguments)) {
+            return;
+        }
+
         if (detectionRule.actionFactory() != null) {
             detectionStore.onReceivingNewDetection(new MethodDetection<>(tree, null));
         }
-        return detectionRule;
+
+        processParameters(detectionRule.parameters(), arguments, tree);
     }
 
-    /** Processes positional parameters against the provided argument list. */
+    /**
+     * Rejects the call when its argument count is below the number of mandatory parameters
+     * (positional + required named), or when any required named parameter cannot be resolved by
+     * keyword or positional fallback.
+     */
+    private boolean passesNamedParameterGate(
+            @Nonnull List<Parameter<CSharpTree>> parameters,
+            @Nonnull List<CSharpArgument> arguments) {
+        int minArgs =
+                (int)
+                        parameters.stream()
+                                .filter(p -> p.getKeywordName().isEmpty() || !p.isKeywordOptional())
+                                .count();
+        if (arguments.size() < minArgs) {
+            return false;
+        }
+        for (Parameter<CSharpTree> p : parameters) {
+            if (p.getKeywordName().isPresent() && !p.isKeywordOptional()) {
+                if (findArgumentByKeyword(p.getKeywordName().get(), p.getIndex(), arguments)
+                        .isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Resolves each declared parameter against the call's arguments: named parameters are matched
+     * by keyword first, falling back to positional index only when the argument at that index has
+     * no keyword of its own. Positional parameters are matched by index, unchanged from before.
+     */
     private void processParameters(
             @Nonnull List<Parameter<CSharpTree>> parameters,
             @Nonnull List<CSharpArgument> arguments,
             @Nonnull CSharpTree parentTree) {
-        int index = 0;
         for (Parameter<CSharpTree> parameter : parameters) {
-            if (index >= arguments.size()) {
-                break;
+            Optional<String> keywordName = parameter.getKeywordName();
+            CSharpArgument resolvedArg;
+            if (keywordName.isPresent()) {
+                Optional<CSharpArgument> found =
+                        findArgumentByKeyword(keywordName.get(), parameter.getIndex(), arguments);
+                if (found.isEmpty()) {
+                    continue;
+                }
+                resolvedArg = found.get();
+            } else {
+                if (parameter.getIndex() >= arguments.size()) {
+                    continue;
+                }
+                resolvedArg = arguments.get(parameter.getIndex());
             }
-            processParameter(parameter, arguments.get(index).value(), parentTree);
-            index++;
+            processParameter(parameter, resolvedArg.value(), parentTree);
         }
+    }
+
+    /**
+     * Tries to find an argument matching the given keyword name. Falls back to the positional index
+     * if no keyword-named argument is found and the argument at that index is itself positional
+     * (i.e. has no keyword name), to avoid misattributing a keyword arg to the wrong parameter.
+     */
+    @Nonnull
+    private Optional<CSharpArgument> findArgumentByKeyword(
+            @Nonnull String keywordName,
+            int positionalIndex,
+            @Nonnull List<CSharpArgument> arguments) {
+        for (CSharpArgument arg : arguments) {
+            if (keywordName.equals(arg.name())) {
+                return Optional.of(arg);
+            }
+        }
+        if (positionalIndex < arguments.size()) {
+            CSharpArgument arg = arguments.get(positionalIndex);
+            if (!arg.isNamed()) {
+                return Optional.of(arg);
+            }
+        }
+        return Optional.empty();
     }
 
     @SuppressWarnings("unchecked")

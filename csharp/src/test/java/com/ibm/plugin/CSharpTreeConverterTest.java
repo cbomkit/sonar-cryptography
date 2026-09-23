@@ -24,11 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.language.csharp.CSharpTreeConverter;
 import com.ibm.engine.language.csharp.antlr.CSharpLexer;
 import com.ibm.engine.language.csharp.antlr.CSharpParser;
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
 import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
+import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
 import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
 import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
@@ -184,5 +187,143 @@ class CSharpTreeConverterTest {
                         .findFirst()
                         .orElseThrow();
         assertThat(rsaCall.getAssignedIdentifier()).isEqualTo("rsa");
+    }
+
+    // -------------------------------------------------------------------------
+    // Named-argument capture
+    // -------------------------------------------------------------------------
+
+    @Test
+    void positionalArgumentsHaveNullNames() {
+        // Foo.Bar(1, 2) — neither argument is named
+        String code =
+                """
+                class Foo {
+                    void Bar() {
+                        Foo.Bar(1, 2);
+                    }
+                }
+                """;
+
+        CSharpMethodInvocationTree invocation = singleInvocation(code);
+        List<CSharpArgument> args = invocation.getArguments();
+
+        assertThat(args).hasSize(2);
+        assertThat(args.get(0).isNamed()).isFalse();
+        assertThat(args.get(0).name()).isNull();
+        assertThat(args.get(1).isNamed()).isFalse();
+        assertThat(args.get(1).name()).isNull();
+    }
+
+    @Test
+    void namedArgumentsAreCapturedWithCorrectNames() {
+        // Foo.Bar(param: 123, str: "hello") — both arguments named, canonical order
+        String code =
+                """
+                class Foo {
+                    void Bar() {
+                        Foo.Bar(param: 123, str: "hello");
+                    }
+                }
+                """;
+
+        CSharpMethodInvocationTree invocation = singleInvocation(code);
+        List<CSharpArgument> args = invocation.getArguments();
+
+        assertThat(args).hasSize(2);
+
+        assertThat(args.get(0).isNamed()).isTrue();
+        assertThat(args.get(0).name()).isEqualTo("param");
+        assertThat(args.get(0).value()).isInstanceOf(CSharpLiteralTree.class);
+        assertThat(((CSharpLiteralTree) args.get(0).value()).getValue()).isEqualTo("123");
+
+        assertThat(args.get(1).isNamed()).isTrue();
+        assertThat(args.get(1).name()).isEqualTo("str");
+        assertThat(args.get(1).value()).isInstanceOf(CSharpLiteralTree.class);
+        assertThat(((CSharpLiteralTree) args.get(1).value()).getValue()).isEqualTo("hello");
+    }
+
+    @Test
+    void namedArgumentsPreserveSourceOrderEvenWhenReordered() {
+        // Foo.Bar(str: "hello", param: 123) — declaration order would be (param, str);
+        // the converter must capture call-site order as written, not reorder — resolving
+        // declared-parameter order against these names is the detection engine's job.
+        String code =
+                """
+                class Foo {
+                    void Bar() {
+                        Foo.Bar(str: "hello", param: 123);
+                    }
+                }
+                """;
+
+        CSharpMethodInvocationTree invocation = singleInvocation(code);
+        List<CSharpArgument> args = invocation.getArguments();
+
+        assertThat(args).hasSize(2);
+        assertThat(args.get(0).name()).isEqualTo("str");
+        assertThat(args.get(1).name()).isEqualTo("param");
+    }
+
+    @Test
+    void mixedPositionalThenNamedArgumentsAreCapturedCorrectly() {
+        // Foo.Bar(1, str: "hello") — valid C#: positional arguments precede named ones
+        String code =
+                """
+                class Foo {
+                    void Bar() {
+                        Foo.Bar(1, str: "hello");
+                    }
+                }
+                """;
+
+        CSharpMethodInvocationTree invocation = singleInvocation(code);
+        List<CSharpArgument> args = invocation.getArguments();
+
+        assertThat(args).hasSize(2);
+        assertThat(args.get(0).isNamed()).isFalse();
+        assertThat(((CSharpLiteralTree) args.get(0).value()).getValue()).isEqualTo("1");
+        assertThat(args.get(1).isNamed()).isTrue();
+        assertThat(args.get(1).name()).isEqualTo("str");
+    }
+
+    @Test
+    void namedArgumentsAreCapturedForObjectCreation() {
+        // new AesGcm(key: k) — constructor call using a named argument
+        String code =
+                """
+                class Foo {
+                    void Bar() {
+                        new AesGcm(key: k);
+                    }
+                }
+                """;
+
+        List<CSharpBlockTree> blocks = parse(code);
+        List<CSharpObjectCreationTree> creations =
+                blocks.stream()
+                        .flatMap(b -> b.getStatements().stream())
+                        .filter(s -> s instanceof CSharpObjectCreationTree)
+                        .map(s -> (CSharpObjectCreationTree) s)
+                        .toList();
+
+        assertThat(creations).hasSize(1);
+        List<CSharpArgument> args = creations.get(0).getArguments();
+        assertThat(args).hasSize(1);
+        assertThat(args.get(0).isNamed()).isTrue();
+        assertThat(args.get(0).name()).isEqualTo("key");
+    }
+
+    @Nonnull
+    private CSharpMethodInvocationTree singleInvocation(@Nonnull String code) {
+        List<CSharpBlockTree> blocks = parse(code);
+        List<CSharpMethodInvocationTree> invocations =
+                blocks.stream()
+                        .flatMap(b -> b.getStatements().stream())
+                        .filter(s -> s instanceof CSharpMethodInvocationTree)
+                        .map(s -> (CSharpMethodInvocationTree) s)
+                        .toList();
+        assertThat(invocations).hasSize(1);
+        return invocations.get(0);
     }
 }
