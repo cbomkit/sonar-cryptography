@@ -212,7 +212,7 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             if (rhs == null) {
                 return null;
             }
-            CSharpTree rhsTree = convertExpression(rhs); // TODO: entrypoint of args
+            CSharpTree rhsTree = convertExpression(rhs);
             List<CSharpArgument> args =
                     rhsTree != null
                             ? Collections.singletonList(new CSharpArgument(null, rhsTree))
