@@ -39,7 +39,7 @@ public final class CSharpObjectCreationTree implements CSharpTree {
     @Nonnull private final String typeName;
 
     /** The constructor arguments. */
-    @Nonnull private final List<CSharpTree> arguments;
+    @Nonnull private final List<CSharpArgument> arguments;
 
     /** Optional identifier this new object is assigned to. */
     @Nullable private final String assignedIdentifier;
@@ -51,7 +51,7 @@ public final class CSharpObjectCreationTree implements CSharpTree {
             int line,
             int column,
             @Nonnull String typeName,
-            @Nonnull List<CSharpTree> arguments,
+            @Nonnull List<CSharpArgument> arguments,
             @Nullable String assignedIdentifier,
             @Nullable CSharpBlockTree enclosingBlock) {
         this.line = line;
@@ -84,7 +84,7 @@ public final class CSharpObjectCreationTree implements CSharpTree {
     }
 
     @Nonnull
-    public List<CSharpTree> getArguments() {
+    public List<CSharpArgument> getArguments() {
         return arguments;
     }
 

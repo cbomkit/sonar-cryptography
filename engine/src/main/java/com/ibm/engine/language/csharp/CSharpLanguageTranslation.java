@@ -22,6 +22,7 @@ package com.ibm.engine.language.csharp;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.language.ILanguageTranslation;
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
 import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
 import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
 import com.ibm.engine.language.csharp.tree.CSharpMemberAccessTree;
@@ -82,7 +83,7 @@ public final class CSharpLanguageTranslation implements ILanguageTranslation<CSh
     @Override
     public List<IType> getMethodParameterTypes(
             @Nonnull MatchContext matchContext, @Nonnull CSharpTree methodInvocation) {
-        List<CSharpTree> args = null;
+        List<CSharpArgument> args = null;
         if (methodInvocation instanceof CSharpMethodInvocationTree invocation) {
             args = invocation.getArguments();
         } else if (methodInvocation instanceof CSharpObjectCreationTree creation) {

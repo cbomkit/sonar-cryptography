@@ -44,7 +44,7 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
     @Nonnull private final String methodName;
 
     /** The argument trees in call order. */
-    @Nonnull private final List<CSharpTree> arguments;
+    @Nonnull private final List<CSharpArgument> arguments;
 
     /** Optional identifier this invocation result is assigned to (for depending rule tracking). */
     @Nullable private final String assignedIdentifier;
@@ -57,7 +57,7 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
             int column,
             @Nonnull String objectTypeName,
             @Nonnull String methodName,
-            @Nonnull List<CSharpTree> arguments,
+            @Nonnull List<CSharpArgument> arguments,
             @Nullable String assignedIdentifier,
             @Nullable CSharpBlockTree enclosingBlock) {
         this.line = line;
@@ -96,7 +96,7 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
     }
 
     @Nonnull
-    public List<CSharpTree> getArguments() {
+    public List<CSharpArgument> getArguments() {
         return arguments;
     }
 
