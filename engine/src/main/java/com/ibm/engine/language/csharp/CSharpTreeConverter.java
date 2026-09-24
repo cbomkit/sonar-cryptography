@@ -417,8 +417,6 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             String name = null;
             if (arg.identifier() != null && arg.COLON() != null) {
                 name = arg.identifier().getText();
-                // now we have detected that this arg is named parameter
-                // TODO: named parameter
             }
 
             return new CSharpArgument(name, value);
