@@ -31,13 +31,7 @@ public class Parameter<T> {
     protected boolean shouldMatchExactTypes;
     protected final int index;
 
-    /**
-     * Non-null when this parameter was declared with {@code withNamedMethodParameter} or {@code
-     * withOptionalNamedMethodParameter}.
-     */
     @Nullable private final String keywordName;
-
-    /** True when this named parameter may be absent from the call site. */
     private final boolean keywordOptional;
 
     protected Parameter(
@@ -109,16 +103,11 @@ public class Parameter<T> {
         return detectionRules;
     }
 
-    /** Returns the keyword-argument name if this is a named parameter, otherwise empty. */
     @Nonnull
     public Optional<String> getKeywordName() {
         return Optional.ofNullable(keywordName);
     }
 
-    /**
-     * Returns {@code true} when this is a named parameter that may be absent at the call site
-     * without preventing a match.
-     */
     public boolean isKeywordOptional() {
         return keywordOptional;
     }
