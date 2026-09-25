@@ -36,7 +36,7 @@ public record DetachedCall<R, T>(
         @Nonnull IType invokedObjectType,
         @Nonnull String methodName,
         @Nonnull List<IType> parameterTypes,
-        @Nonnull List<ArgSnapshot> arguments,
+        @Nonnull List<ArgSnapshot<T>> arguments,
         @Nonnull DetachedScanContext<R, T> detachedPublisher)
         implements CallContext<R, T> {
 

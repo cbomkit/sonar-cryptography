@@ -212,9 +212,9 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
     /**
      * Fire-time replay for a {@link DetachedCall}: the argument was already resolved at record
      * time, so we skip {@code extractArgumentFromMethodCaller}/{@code resolveValuesInInnerScope}
-     * and feed the pre-resolved snapshot (with its {@code DetachedSyntaxToken} location) straight
-     * to the hook's value factory. (Java parameter hooks never set {@code expressionToResolve}, so
-     * the cross-boundary path is not needed here.)
+     * and feed the pre-resolved snapshot (with its AST-free location) straight to the hook's value
+     * factory. (Java parameter hooks never set {@code expressionToResolve}, so the cross-boundary
+     * path is not needed here.)
      */
     private void replayDetachedParameterHook(
             @Nonnull final DetachedCall<R, T> detachedCall,
@@ -226,10 +226,9 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
         if (index >= 0
                 && index < detachedCall.arguments().size()
                 && hook.getParameter() instanceof DetectableParameter<T> detectableParameter) {
-            for (ArgSnapshot.ResolvedSnapshotValue snapshot :
+            for (ArgSnapshot.ResolvedSnapshotValue<T> snapshot :
                     detachedCall.arguments().get(index).values()) {
-                @SuppressWarnings("unchecked")
-                final T location = (T) snapshot.location();
+                final T location = snapshot.location();
                 final ResolvedValue<Object, T> resolvedValue =
                         new ResolvedValue<>(snapshot.value(), location);
                 new ValueDetection<>(resolvedValue, detectableParameter, location, null)

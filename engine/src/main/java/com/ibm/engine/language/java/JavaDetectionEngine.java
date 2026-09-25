@@ -133,8 +133,16 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
      * when possible (its arguments are pre-resolved here while the file is live). Falls back to
      * retaining the tree when the call is not detachable or an argument cannot be faithfully
      * snapshotted.
+     *
+     * <p>{@code run} is invoked once per detection rule for the same call node, so this same {@code
+     * invocation} reaches here once per rule too; only the first such call actually needs
+     * recording, so every later one exits before doing the argument-resolution and detached-call
+     * construction work below.
      */
     private void recordCall(@Nonnull MethodInvocationTree invocation) {
+        if (handler.isCallAlreadyRecorded(invocation)) {
+            return;
+        }
         final IScanContext<JavaCheck, Tree> scanContext = detectionStore.getScanContext();
         // Record retained (with the live tree) so same-file hook detections resolve and report
         // through the live context. If detachable, pre-build the tree-free form now, while the file
@@ -165,12 +173,12 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
         final List<IType> parameterTypes =
                 translation.getMethodParameterTypes(matchContext, invocation);
 
-        final List<ArgSnapshot> arguments = new ArrayList<>();
+        final List<ArgSnapshot<Tree>> arguments = new ArrayList<>();
         final List<ExpressionTree> actualArguments = invocation.arguments();
         for (int i = 0; i < actualArguments.size(); i++) {
             final List<ResolvedValue<Object, Tree>> resolved =
                     resolveValuesInInnerScope(Object.class, actualArguments.get(i), null);
-            final List<ArgSnapshot.ResolvedSnapshotValue> snapshots = new ArrayList<>();
+            final List<ArgSnapshot.ResolvedSnapshotValue<Tree>> snapshots = new ArrayList<>();
             for (ResolvedValue<Object, Tree> resolvedValue : resolved) {
                 final DetachedSyntaxToken location =
                         captureLocation(resolvedValue.tree(), resolvedValue.value().toString());
@@ -178,9 +186,9 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
                     return null; // cannot faithfully snapshot -> fall back to retaining the tree
                 }
                 snapshots.add(
-                        new ArgSnapshot.ResolvedSnapshotValue(resolvedValue.value(), location));
+                        new ArgSnapshot.ResolvedSnapshotValue<>(resolvedValue.value(), location));
             }
-            arguments.add(new ArgSnapshot(i, snapshots));
+            arguments.add(new ArgSnapshot<>(i, snapshots));
         }
 
         final JavaDetachedIssueReporter issueReporter =

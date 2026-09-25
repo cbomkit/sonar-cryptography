@@ -22,45 +22,59 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Version compatibility
 
-| Plugin Version  | SonarQube Version              |
-|-----------------|--------------------------------|
-| 1.3.7 and up    | SonarQube 9.9 (LTS) and up     |
-| 1.3.2 and 1.3.6 | SonarQube 9.8 (LTS) up to 10.8 | 
-| 1.2.0 to 1.3.1  | SonarQube 9.8 (LTS) up to 10.4 |      
-
+| Plugin Version | SonarQube Version                       | Requires Java |
+| --------------- | ---------------------------------------- | -------------- |
+| 2.0.0 and up    | SonarQube 2025.1 (LTA) and up            | 21             |
+| 1.3.2 to 1.3.x  | SonarQube 9.14 (LTS) up to 2025.1 (LTA)  | 17             |
+| 1.2.0 to 1.3.1  | SonarQube 9.14 (LTS) up to 10.4          | 17             |
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                         | Coverage         |
-|----------|-----------------------------------------------------------------------------------------------|------------------|
-| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%             |
-|          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1]         |
-| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%             |
-| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
-|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
-| C#       | [System.Security.Cryptography](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography) | In development[^4] |
+| Language | Cryptographic Library                                                                                       | Coverage            |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html)                 | 100%                |
+|          | [BouncyCastle](https://github.com/bcgit/bc-java) (_light-weight API_)                                         | 100%[^1]            |
+| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                                       | 100%                |
+| Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                                      | 100%[^2]            |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                                 | Partial[^3]         |
+| C#       | [System.Security.Cryptography](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography)     | In development[^4]  |
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                           | 100%[^5]            |
 
-[^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+[^1]: We only cover the BouncyCastle _light-weight API_ according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+
 [^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
+
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
 [^4]: C# support uses an [ANTLR v7 grammar](https://github.com/antlr/grammars-v4/tree/master/csharp) to parse source files directly. The current csharp support only covers the language support and does not contain detection rules other than the rules used for verifying the detection engine. **This is not yet meant for active usage!** **Known limitations of the detection engine:** no cross-method variable tracking (only single-method scope), only works for c# v7, string-based matching (no type resolution)
 
+[^5]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Requires the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin.
+
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
-> - To add support for another language or cryptography library, see [*Extending the Sonar Cryptography Plugin to add support for another language or cryptography library*](./docs/LANGUAGE_SUPPORT.md)
-> - If you just want to know more about the syntax for writing new detection rules, see [*Writing new detection rules for the Sonar Cryptography Plugin*](./docs/DETECTION_RULE_STRUCTURE.md)
+>
+> - To add support for another language or cryptography library, see [_Extending the Sonar Cryptography Plugin to add support for another language or cryptography library_](./docs/LANGUAGE_SUPPORT.md)
+> - If you just want to know more about the syntax for writing new detection rules, see [_Writing new detection rules for the Sonar Cryptography Plugin_](./docs/DETECTION_RULE_STRUCTURE.md)
 
 ## Installation
 
-> [!NOTE] 
-> To run the plugin, you need a running SonarQube instance with one of the supported 
-> versions. If you don't have one but want to try the plugin, you can use the
-> included Docker Compose to set up a development environment. See 
+> [!NOTE]
+> To run the plugin, you need a running SonarQube instance with one of the supported
+> versions (see [Version compatibility](#version-compatibility) above), and that
+> instance's own JVM must be Java 21 or newer — the plugin JAR is built for Java 21
+> and a SonarQube server running on Java 17 will fail to load it. If you don't have
+> a suitable instance but want to try the plugin, you can use the included Docker
+> Compose to set up a development environment. See
 > [here](CONTRIBUTING.md#build) for instructions.
 
 Copy the plugin (the JAR file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases))
-to `$SONARQUBE_HOME/extensions/plugins` and restart 
+to `$SONARQUBE_HOME/extensions/plugins` and restart
 SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-plugin/)).
+
+> [!IMPORTANT]
+> C/C++ support is provided by bundling [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx)
+> inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. Do not
+> also install a standalone sonar-cxx plugin on the same SonarQube instance: both would
+> register the same sonar-cxx configuration properties and SonarQube will fail to start.
 
 ## Using
 
@@ -92,7 +106,7 @@ issues on the scanned code. Future updates may introduce additional rules to exp
 
 ### Scan Source Code
 
-Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/) 
+Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/)
 to start your first scan.
 
 ### Configuration

@@ -16,11 +16,9 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <sonar.jreMinVersion>17</sonar.jreMinVersion>
+        <sonar.jreMinVersion>21</sonar.jreMinVersion>
     </properties>
     <dependencies>
         <dependency>
@@ -47,6 +45,18 @@
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>cpp</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>sonar-cxx-plugin</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -70,12 +80,12 @@
                     <pluginKey>sonar-crypto-plugin</pluginKey>
                     <pluginName>Sonar Crypto Plugin</pluginName>
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
-                    <!-- This line must specify all file extensions which should be scanned by the plugin -->
-                    <requiredForLanguages>java,jsp,py,ipynb,go,cs</requiredForLanguages>
+                    <!-- This line must specify all language keys which should be scanned by the plugin -->
+                    <requiredForLanguages>java,jsp,py,ipynb,go,cs,cxx,cpp,c++,c</requiredForLanguages>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
-                    <jreMinVersion>17</jreMinVersion>
+                    <jreMinVersion>21</jreMinVersion>
                 </configuration>
             </plugin>
             <plugin>
@@ -104,6 +114,15 @@
                                         <exclude>NOTICE*</exclude>
                                     </excludes>
                                 </filter>
+                                <!-- Keep every sonar-cxx class: minimizeJar only keeps classes
+                                     reachable from our own imports, but sonar-cxx's classes are
+                                     loaded by SonarQube via reflection, not imported directly. -->
+                                <filter>
+                                    <artifact>${sonar.cxx.groupId}:*</artifact>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>
@@ -115,9 +134,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>17</release>
-                    <source>17</source>
-                    <target>17</target>
+                    <release>21</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -170,7 +187,7 @@
                 </property>
             </activation>
             <properties>
-                <sonar.jreMinVersion>17</sonar.jreMinVersion>
+                <sonar.jreMinVersion>21</sonar.jreMinVersion>
             </properties>
         </profile>
     </profiles>
