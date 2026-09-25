@@ -40,6 +40,7 @@ import org.sonar.plugins.python.api.symbols.Symbol;
 import org.sonar.plugins.python.api.tree.*;
 
 public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
+
     @Nonnull
     private final DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> detectionStore;
 
@@ -351,6 +352,25 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     @Nonnull
     private Optional<TraceSymbol<Symbol>> getTraceSymbol(
             @Nonnull Parameter<Tree> parameter, @Nonnull List<Argument> arguments) {
+        Optional<String> keywordName = parameter.getKeywordName();
+        if (keywordName.isPresent()) {
+            Optional<Argument> resolved =
+                    PythonNamedArgumentBinder.findArgumentByKeyword(
+                            keywordName.get(), parameter.getIndex(), arguments);
+            if (resolved.isEmpty()) {
+                return Optional.of(TraceSymbol.createWithStateDifferent());
+            }
+            Argument arg = resolved.get();
+            if (arg instanceof RegularArgument regularArg) {
+                Expression expressionArg = regularArg.expression();
+                if (expressionArg.is(Tree.Kind.NAME)) {
+                    Name nameArg = (Name) expressionArg;
+                    return Optional.of(TraceSymbol.createFrom(nameArg.symbol()));
+                }
+            }
+            return Optional.of(TraceSymbol.createWithStateNoSymbol());
+        }
+
         if (parameter.getIndex() >= arguments.size()) {
             return Optional.of(TraceSymbol.createWithStateDifferent());
         }
@@ -414,12 +434,7 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         }
 
         DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
-        if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(expressionTree, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
-        }
 
-        // Extracts the arguments for the provided expression
         List<Argument> arguments = expressionTree.arguments();
         boolean isInvocation =
                 isInvocationOnVariable(expressionTree, traceSymbol)
@@ -427,57 +442,81 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         // TODO: It would be better to have a case disjunction to use either
         // isInvocationOnVariable or isInitForVariable, but it is difficult in Python
 
-        int index = 0;
+        final Optional<Map<Integer, Tree>> bindings;
+        if (detectionRule.hasNamedMethodParameters()) {
+            bindings = detectionStore.bindNamedArguments(expressionTree);
+            if (bindings.isEmpty()) {
+                return;
+            }
+        } else {
+            bindings = Optional.empty();
+        }
+
+        if (detectionRule.actionFactory() != null) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(expressionTree, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+        }
+
         for (Parameter<Tree> parameter : detectionRule.parameters()) {
-            if (!checkCurrentIndexState(
-                    index, arguments, isInvocation, traceSymbol, expressionTree)) {
-                index++;
-                continue;
-            }
-            // the expression tree of the parameter
-            Tree expression = arguments.get(index); // this is an Argument tree
-            if (expression instanceof RegularArgument regularArgument) {
-                expression = regularArgument.expression();
-            }
-
-            /*
-             * This method resolves the detection parameter in an inner scope.
-             * If unsuccessful, it falls back to resolving values in the outer scope using the provided expression and detectableParameter.
-             */
-            if (parameter.is(DetectableParameter.class)) {
-                DetectableParameter<Tree> detectableParameter =
-                        (DetectableParameter<Tree>) parameter;
-                // try to resolve value in inner scope
-                List<ResolvedValue<Object, Tree>> resolvedValues =
-                        resolveValuesInInnerScope(
-                                Object.class, expression, detectableParameter.getiValueFactory());
-                if (resolvedValues.isEmpty()) {
-                    // goto outer scope
-                    resolveValuesInOuterScope(expression, detectableParameter);
-                } else {
-                    resolvedValues.stream()
-                            .map(
-                                    resolvedValue ->
-                                            new ValueDetection<>(
-                                                    resolvedValue,
-                                                    detectableParameter,
-                                                    expressionTree,
-                                                    expressionTree))
-                            .forEach(detectionStore::onReceivingNewDetection);
+            if (detectionRule.hasNamedMethodParameters()) {
+                Tree expression = bindings.orElseThrow().get(parameter.getIndex());
+                if (expression != null
+                        && checkSymbolTraceState(isInvocation, traceSymbol, expressionTree)) {
+                    processParameterExpression(parameter, expression, expressionTree);
                 }
-            } else if (!parameter.getDetectionRules().isEmpty()) {
-                /*
-                 * This case is reached when the parameter is not a DetectableParameter (the rule does not contains `.shouldBeDetectedAs`),
-                 * but has depending detection rules (the rule contain `.addDependingDetectionRules`).
-                 * This happens usually for parameters that are intermediary function, that we have to resolve but we don't want to capture their value.
-                 * In this case, we resolve the parameter with the depending detection rule with an EXPRESSION scope,
-                 * this way we ensure to only resolve the right parameter content and not similar calls in the same function scope.
-                 */
-                detectionStore.onDetectedDependingParameter(
-                        parameter, expression, DetectionStore.Scope.EXPRESSION);
-            }
+            } else {
+                if (!checkCurrentIndexState(
+                        parameter.getIndex(),
+                        arguments,
+                        isInvocation,
+                        traceSymbol,
+                        expressionTree)) {
+                    continue;
+                }
+                Tree expression = arguments.get(parameter.getIndex());
+                if (expression instanceof RegularArgument regularArgument) {
+                    expression = regularArgument.expression();
+                }
 
-            index++;
+                processParameterExpression(parameter, expression, expressionTree);
+            }
+        }
+    }
+
+    private void processParameterExpression(
+            @Nonnull Parameter<Tree> parameter,
+            @Nonnull Tree expression,
+            @Nonnull CallExpression expressionTree) {
+        if (parameter.is(DetectableParameter.class)) {
+            DetectableParameter<Tree> detectableParameter = (DetectableParameter<Tree>) parameter;
+            // try to resolve value in inner scope
+            List<ResolvedValue<Object, Tree>> resolvedValues =
+                    resolveValuesInInnerScope(
+                            Object.class, expression, detectableParameter.getiValueFactory());
+            if (resolvedValues.isEmpty()) {
+                // goto outer scope
+                resolveValuesInOuterScope(expression, detectableParameter);
+            } else {
+                resolvedValues.stream()
+                        .map(
+                                resolvedValue ->
+                                        new ValueDetection<>(
+                                                resolvedValue,
+                                                detectableParameter,
+                                                expressionTree,
+                                                expressionTree))
+                        .forEach(detectionStore::onReceivingNewDetection);
+            }
+        } else if (!parameter.getDetectionRules().isEmpty()) {
+            /*
+             * This case is reached when the parameter is not a DetectableParameter (the rule does not contains `.shouldBeDetectedAs`),
+             * but has depending detection rules (the rule contain `.addDependingDetectionRules`).
+             * This happens usually for parameters that are intermediary function, that we have to resolve but we don't want to capture their value.
+             * In this case, we resolve the parameter with the depending detection rule with an EXPRESSION scope,
+             * this way we ensure to only resolve the right parameter content and not similar calls in the same function scope.
+             */
+            detectionStore.onDetectedDependingParameter(
+                    parameter, expression, DetectionStore.Scope.EXPRESSION);
         }
     }
 
@@ -495,10 +534,16 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         if (arguments.size() <= index) {
             return false;
         }
+        return checkSymbolTraceState(isInvocation, traceSymbol, expressionTree);
+    }
 
+    private boolean checkSymbolTraceState(
+            boolean isInvocation,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull CallExpression expressionTree) {
         // Check if the variable symbols for the method (if applicable) are connected
         Optional<Symbol> assignedSymbol =
-                getAssignedSymbol(expressionTree).map(ts -> ts.getSymbol());
+                getAssignedSymbol(expressionTree).map(TraceSymbol::getSymbol);
 
         return !(traceSymbol.is(TraceSymbol.State.DIFFERENT)
                 ||

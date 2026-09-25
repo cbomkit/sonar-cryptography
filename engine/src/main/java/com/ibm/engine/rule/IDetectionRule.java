@@ -26,8 +26,20 @@ import com.ibm.engine.model.factory.IValueFactory;
 import java.util.List;
 import javax.annotation.Nonnull;
 
+/**
+ * Language-independent rule declaration. Named method parameter declarations currently require
+ * Python language support; other languages reject them when creating the detection store.
+ */
 public interface IDetectionRule<T> {
     boolean is(@Nonnull Class<? extends IDetectionRule> kind);
+
+    /**
+     * Whether this rule declares a required or optional named parameter. Method-only rules return
+     * false; parameter-bearing implementations override this default.
+     */
+    default boolean hasNamedMethodParameters() {
+        return false;
+    }
 
     boolean match(@Nonnull T expression, @Nonnull ILanguageTranslation<T> translation);
 
@@ -72,6 +84,16 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        /** Declares a required keyword-aware parameter; currently supported only for Python. */
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        /** Declares an optional keyword-aware parameter; currently supported only for Python. */
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
     }
 
     interface ParametersTypeBuilder<T> {
@@ -80,6 +102,14 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
 
         @Nonnull
         FinalDetectionRuleBuilder<T> withoutParameters();
@@ -94,6 +124,14 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
 
         @Nonnull
         PositionBuilder<T> shouldBeDetectedAs(@Nonnull IValueFactory<T> valueFactory);
@@ -115,6 +153,14 @@ public interface IDetectionRule<T> {
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
         @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
         ParametersDependingRulesBuilder<T> asChildOfParameterWithId(int id);
 
         @Nonnull
@@ -134,6 +180,14 @@ public interface IDetectionRule<T> {
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
         @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
         ParametersFinalDetectionRuleBuilder<T> addDependingDetectionRules(
                 @Nonnull List<IDetectionRule<T>> detectionRules);
 
@@ -148,6 +202,14 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
+
+        @Nonnull
+        ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
+                @Nonnull String name, @Nonnull String type);
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(

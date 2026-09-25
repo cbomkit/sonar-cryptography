@@ -38,6 +38,11 @@ public record DetectionRule<T>(
         @Nonnull List<IDetectionRule<T>> nextDetectionRules)
         implements IDetectionRule<T> {
     @Override
+    public boolean hasNamedMethodParameters() {
+        return parameters.stream().anyMatch(parameter -> parameter.getKeywordName().isPresent());
+    }
+
+    @Override
     public boolean is(@Nonnull Class<? extends IDetectionRule> kind) {
         return kind.equals(DetectionRule.class);
     }

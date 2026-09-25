@@ -20,7 +20,9 @@
 package com.ibm.engine.rule;
 
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class Parameter<T> {
     @Nonnull protected final List<IDetectionRule<T>> detectionRules;
@@ -29,17 +31,24 @@ public class Parameter<T> {
     protected boolean shouldMatchExactTypes;
     protected final int index;
 
+    @Nullable private final String keywordName;
+    private final boolean keywordOptional;
+
     protected Parameter(
             @Nonnull Class<? extends Parameter> type,
             @Nonnull String parameterType,
             int index,
             boolean shouldMatchExactTypes,
-            @Nonnull List<IDetectionRule<T>> detectionRules) {
+            @Nonnull List<IDetectionRule<T>> detectionRules,
+            @Nullable String keywordName,
+            boolean keywordOptional) {
         this.type = type;
         this.parameterType = parameterType;
         this.index = index;
         this.shouldMatchExactTypes = shouldMatchExactTypes;
         this.detectionRules = detectionRules;
+        this.keywordName = keywordName;
+        this.keywordOptional = keywordOptional;
     }
 
     public Parameter(
@@ -52,6 +61,24 @@ public class Parameter<T> {
         this.index = index;
         this.shouldMatchExactTypes = shouldMatchExactTypes;
         this.detectionRules = detectionRules;
+        this.keywordName = null;
+        this.keywordOptional = false;
+    }
+
+    public Parameter(
+            @Nonnull String parameterType,
+            int index,
+            boolean shouldMatchExactTypes,
+            @Nonnull List<IDetectionRule<T>> detectionRules,
+            @Nullable String keywordName,
+            boolean keywordOptional) {
+        this.type = Parameter.class;
+        this.parameterType = parameterType;
+        this.index = index;
+        this.shouldMatchExactTypes = shouldMatchExactTypes;
+        this.detectionRules = detectionRules;
+        this.keywordName = keywordName;
+        this.keywordOptional = keywordOptional;
     }
 
     public boolean is(@Nonnull Class<? extends Parameter> type) {
@@ -74,5 +101,14 @@ public class Parameter<T> {
     @Nonnull
     public List<IDetectionRule<T>> getDetectionRules() {
         return detectionRules;
+    }
+
+    @Nonnull
+    public Optional<String> getKeywordName() {
+        return Optional.ofNullable(keywordName);
+    }
+
+    public boolean isKeywordOptional() {
+        return keywordOptional;
     }
 }
