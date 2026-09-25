@@ -1,0 +1,92 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.model.AlgorithmParameter;
+import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.mapper.model.INode;
+import com.ibm.plugin.TestBase;
+import java.util.List;
+import javax.annotation.Nonnull;
+import org.junit.jupiter.api.Test;
+import org.sonar.plugins.python.api.PythonCheck;
+import org.sonar.plugins.python.api.PythonVisitorContext;
+import org.sonar.plugins.python.api.symbols.Symbol;
+import org.sonar.plugins.python.api.tree.Tree;
+import org.sonar.python.checks.utils.PythonCheckVerifier;
+
+class NamedAllKeywordParametersTest extends TestBase {
+    private int findingCount;
+
+    NamedAllKeywordParametersTest() {
+        super(
+                List.of(
+                        new DetectionRuleBuilder<Tree>()
+                                .createDetectionRule()
+                                .forObjectTypes("test.module.Foo")
+                                .forMethods("f")
+                                .shouldBeDetectedAs(new ValueActionFactory<>("f"))
+                                .withNamedMethodParameter("a", "str")
+                                .withNamedMethodParameter("b", "int")
+                                .withOptionalNamedMethodParameter("c", "str")
+                                .shouldBeDetectedAs(
+                                        new AlgorithmParameterFactory<>(
+                                                AlgorithmParameter.Kind.ANY))
+                                .asChildOfParameterWithId(2)
+                                .buildForContext(new DigestContext())
+                                .inBundle(() -> "Test")
+                                .withoutDependingDetectionRules()));
+    }
+
+    @Test
+    void namedDeclarationsAcceptAllKeywords() {
+        PythonCheckVerifier.verifyNoIssue(
+                "src/test/files/rules/detection/named_parameters/FAllByKeywordTest.py", this);
+        assertThat(findingCount).isEqualTo(1);
+    }
+
+    @Test
+    void namedDeclarationsStillAcceptAllPositionalArguments() {
+        PythonCheckVerifier.verifyNoIssue(
+                "src/test/files/rules/detection/named_parameters/FAllPositionalTest.py", this);
+        assertThat(findingCount).isEqualTo(1);
+    }
+
+    @Override
+    public void asserts(
+            int findingId,
+            @Nonnull DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> detectionStore,
+            @Nonnull List<INode> nodes) {
+        findingCount++;
+        assertThat(detectionStore.getActionValue()).containsInstanceOf(ValueAction.class);
+        DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> child =
+                getStoreOfValueType(AlgorithmParameter.class, detectionStore.getChildren());
+        assertThat(child).isNotNull();
+        assertThat(child.getDetectionValues()).extracting(IValue::asString).containsExactly("yes");
+    }
+}

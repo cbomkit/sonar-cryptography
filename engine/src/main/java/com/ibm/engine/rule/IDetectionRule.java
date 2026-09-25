@@ -26,8 +26,20 @@ import com.ibm.engine.model.factory.IValueFactory;
 import java.util.List;
 import javax.annotation.Nonnull;
 
+/**
+ * Language-independent rule declaration. Named method parameter declarations currently require
+ * Python language support; other languages reject them when creating the detection store.
+ */
 public interface IDetectionRule<T> {
     boolean is(@Nonnull Class<? extends IDetectionRule> kind);
+
+    /**
+     * Whether this rule declares a required or optional named parameter. Method-only rules return
+     * false; parameter-bearing implementations override this default.
+     */
+    default boolean hasNamedMethodParameters() {
+        return false;
+    }
 
     boolean match(@Nonnull T expression, @Nonnull ILanguageTranslation<T> translation);
 
@@ -73,10 +85,12 @@ public interface IDetectionRule<T> {
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
+        /** Declares a required keyword-aware parameter; currently supported only for Python. */
         @Nonnull
         ParametersFactoryBuilder<T> withNamedMethodParameter(
                 @Nonnull String name, @Nonnull String type);
 
+        /** Declares an optional keyword-aware parameter; currently supported only for Python. */
         @Nonnull
         ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
                 @Nonnull String name, @Nonnull String type);

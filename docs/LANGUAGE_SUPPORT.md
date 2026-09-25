@@ -100,6 +100,18 @@ Because all these detection rules follow a similar structure, our goal was to ma
 Indeed, defining rules directly using the AST APIs would be very verbose, with a lot of duplicated code to perform similar actions, and consequently hard to read.
 This higher level syntax is defined by the interface [`IDetectionRule`](../engine/src/main/java/com/ibm/engine/rule/IDetectionRule.java).
 
+The shared rule builder also declares `withNamedMethodParameter(name, type)` and
+`withOptionalNamedMethodParameter(name, type)` for keyword-aware calls. **Named method
+parameters are currently supported only for Python.** A language support must provide an
+argument binder for these declarations; trying to run a named-parameter rule with Java, Go,
+or another language without a binder fails with an explicit error rather than silently
+misinterpreting the call. Python's binder matches by keyword first, then by an unmarked
+positional argument at the declared index. It checks required parameters before recording a
+finding and ignores an absent or wrong-type optional parameter. A `withMethodParameter`
+declaration in a mixed rule still requires an unmarked positional argument. See
+[*Named method parameters*](./DETECTION_RULE_STRUCTURE.md#named-method-parameters-python-only)
+for a rule example and the declaration-order constraints.
+
 > [!TIP]  
 > We explain with much more details this higher level syntax for writing detection rules in [*Writing new detection rules for the Sonar Cryptography Plugin*](./DETECTION_RULE_STRUCTURE.md).
 

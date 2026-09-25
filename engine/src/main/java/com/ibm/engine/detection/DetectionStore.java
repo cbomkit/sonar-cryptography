@@ -24,6 +24,7 @@ import com.ibm.engine.executive.IStatusReporting;
 import com.ibm.engine.hooks.IHook;
 import com.ibm.engine.hooks.IHookDetectionObserver;
 import com.ibm.engine.hooks.IMethodInvocationHook;
+import com.ibm.engine.language.IArgumentBinder;
 import com.ibm.engine.language.IScanContext;
 import com.ibm.engine.model.IAction;
 import com.ibm.engine.model.IValue;
@@ -82,6 +83,32 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
         this.children = new TreeMap<>();
         this.handler = handler;
         this.statusReporting = statusReporting;
+        if (detectionRule.hasNamedMethodParameters()) {
+            requireNamedArgumentBinder();
+        }
+    }
+
+    /**
+     * Binds a named {@link DetectionRule} before any detections are stored. Returns empty if the
+     * call does not match. Only named rules may invoke this method; the constructor has already
+     * rejected languages without a binder.
+     */
+    @Nonnull
+    public Optional<Map<Integer, T>> bindNamedArguments(@Nonnull T call) {
+        return requireNamedArgumentBinder().bind((DetectionRule<T>) detectionRule, call);
+    }
+
+    @Nonnull
+    private IArgumentBinder<T> requireNamedArgumentBinder() {
+        return handler.getLanguageSupport()
+                .namedArgumentBinder()
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "This language does not support named method parameters in detection rules: "
+                                                + handler.getLanguageSupport()
+                                                        .getClass()
+                                                        .getSimpleName()));
     }
 
     public int getLevel() {

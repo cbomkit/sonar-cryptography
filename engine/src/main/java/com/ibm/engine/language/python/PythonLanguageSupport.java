@@ -29,6 +29,7 @@ import com.ibm.engine.detection.IDetectionEngine;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.executive.DetectionExecutive;
+import com.ibm.engine.language.IArgumentBinder;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.language.IScanContext;
@@ -75,6 +76,12 @@ public class PythonLanguageSupport
                     DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext>
                             detectionStore) {
         return new PythonDetectionEngine(detectionStore, this.handler);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<IArgumentBinder<Tree>> namedArgumentBinder() {
+        return Optional.of(new PythonNamedArgumentBinder());
     }
 
     @Override

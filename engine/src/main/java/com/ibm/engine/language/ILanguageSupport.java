@@ -74,6 +74,17 @@ public interface ILanguageSupport<R, T, S, P> {
             @Nonnull DetectionStore<R, T, S, P> detectionStore);
 
     /**
+     * Supplies the binder for named method parameters. The default means this language does not
+     * support named rules; {@link DetectionStore} rejects such rules when they are instantiated.
+     *
+     * @return the binder if this language supports named arguments, otherwise empty
+     */
+    @Nonnull
+    default Optional<IArgumentBinder<T>> namedArgumentBinder() {
+        return Optional.empty();
+    }
+
+    /**
      * Returns an object that can be used to visit methods and perform analysis.
      *
      * <p>The returned visitor will be used to analyze the methods in the code represented by the
