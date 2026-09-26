@@ -16,6 +16,7 @@
         <module>csharp</module>
         <module>engine</module>
         <module>output</module>
+        <module>javascript</module>
         <module>common</module>
         <module>enricher</module>
         <module>sonar-cryptography-plugin</module>

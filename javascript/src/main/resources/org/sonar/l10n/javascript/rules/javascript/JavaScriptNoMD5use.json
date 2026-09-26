@@ -1,0 +1,12 @@
+{
+  "title": "Do not use MD5 for cryptographic purposes like hashing",
+  "type": "Bug",
+  "status": "ready",
+  "tags": [
+    "cryptography",
+    "cbom",
+    "cwe"
+  ],
+  "defaultSeverity": "Critical",
+  "scope": "Main"
+}

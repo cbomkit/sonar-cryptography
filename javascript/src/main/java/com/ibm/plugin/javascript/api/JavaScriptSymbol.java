@@ -17,28 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.plugin.javascript.api;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-class PluginTest {
+/** Lightweight symbol used for variable tracing during detection. */
+public final class JavaScriptSymbol {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(13, context.getExtensions().size());
+    @Nonnull private final String name;
+    @Nullable private final String inferredType;
+
+    public JavaScriptSymbol(@Nonnull String name, @Nullable String inferredType) {
+        this.name = name;
+        this.inferredType = inferredType;
+    }
+
+    @Nonnull
+    public String name() {
+        return name;
+    }
+
+    @Nullable public String inferredType() {
+        return inferredType;
     }
 }

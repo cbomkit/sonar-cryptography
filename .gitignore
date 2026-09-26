@@ -50,3 +50,8 @@ venv/
 .claude/settings.local.json
 .claude/worktrees
 .superpowers
+*.code-workspace
+
+### Downloaded Node runtime (build-time only) ###
+javascript/src/main/resources/node/node/
+javascript/src/main/resources/node/node_modules/

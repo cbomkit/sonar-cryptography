@@ -19,26 +19,25 @@
  */
 package com.ibm.plugin;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import static org.assertj.core.api.Assertions.assertThat;
 
-class PluginTest {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class JavaScriptAggregatorTest {
+
+    @BeforeEach
+    void setUp() {
+        JavaScriptAggregator.reset();
+    }
 
     @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(13, context.getExtensions().size());
+    void shouldProvideLanguageSupport() {
+        assertThat(JavaScriptAggregator.getLanguageSupport()).isNotNull();
+    }
+
+    @Test
+    void shouldStartWithEmptyDetectedNodes() {
+        assertThat(JavaScriptAggregator.getDetectedNodes()).isEmpty();
     }
 }

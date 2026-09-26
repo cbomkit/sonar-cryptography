@@ -17,28 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.plugin.bridge.model;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 
-class PluginTest {
+/** Request payload sent to the ESLint runner via stdin. */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class EslintAnalysisRequest {
+    public List<EslintInputFile> files;
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(13, context.getExtensions().size());
+    public EslintAnalysisRequest() {
+        // Jackson
+    }
+
+    public EslintAnalysisRequest(List<EslintInputFile> files) {
+        this.files = files;
     }
 }

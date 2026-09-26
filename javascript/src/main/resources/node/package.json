@@ -1,0 +1,9 @@
+{
+  "name": "sonar-cryptography-eslint-runner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ESLint-based Node.js crypto/tls inventory runner",
+  "dependencies": {
+    "eslint": "8.57.1"
+  }
+}

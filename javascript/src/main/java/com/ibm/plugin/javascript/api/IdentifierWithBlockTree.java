@@ -17,28 +17,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.plugin.javascript.api;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import javax.annotation.Nonnull;
 
-class PluginTest {
+/**
+ * Identifier with enclosing block context, used when a depending parameter is a variable reference
+ * within the same scope.
+ */
+public final class IdentifierWithBlockTree implements Tree, HasLocation {
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(13, context.getExtensions().size());
+    @Nonnull private final IdentifierTree identifier;
+    @Nonnull private final BlockTree blockTree;
+
+    public IdentifierWithBlockTree(
+            @Nonnull IdentifierTree identifier, @Nonnull BlockTree blockTree) {
+        this.identifier = identifier;
+        this.blockTree = blockTree;
+    }
+
+    @Nonnull
+    public IdentifierTree identifier() {
+        return identifier;
+    }
+
+    @Nonnull
+    public BlockTree blockTree() {
+        return blockTree;
+    }
+
+    @Nonnull
+    @Override
+    public SourceLocation location() {
+        return identifier.location();
     }
 }

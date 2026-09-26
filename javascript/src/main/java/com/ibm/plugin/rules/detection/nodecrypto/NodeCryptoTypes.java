@@ -17,28 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.plugin.rules.detection.nodecrypto;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.SonarRuntime;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+/** Shared module and object type identifiers for Node.js built-in crypto APIs. */
+final class NodeCryptoTypes {
 
-class PluginTest {
+    static final String CRYPTO = "crypto";
+    static final String NODE_CRYPTO = "node:crypto";
+    static final String TLS = "tls";
+    static final String NODE_TLS = "node:tls";
 
-    @Test
-    void testExtensions() {
-        SonarRuntime runtime =
-                SonarRuntimeImpl.forSonarQube(
-                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
-        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        Assertions.assertEquals(13, context.getExtensions().size());
+    static final String HASH = "crypto.Hash";
+    static final String HMAC = "crypto.Hmac";
+    static final String CIPHER = "crypto.Cipher";
+    static final String DECIPHER = "crypto.Decipher";
+    static final String SIGN = "crypto.Sign";
+    static final String VERIFY = "crypto.Verify";
+    static final String DIFFIE_HELLMAN = "crypto.DiffieHellman";
+    static final String ECDH = "crypto.ECDH";
+
+    static final String BUNDLE = "NodeCrypto";
+
+    private NodeCryptoTypes() {
+        // utility
     }
 }
