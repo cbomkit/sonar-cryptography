@@ -42,6 +42,7 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
 import org.cyclonedx.model.component.crypto.ProtocolProperties;
+import org.cyclonedx.model.component.crypto.RelatedCryptographicAsset;
 import org.cyclonedx.model.component.crypto.enums.AssetType;
 import org.cyclonedx.model.component.crypto.enums.Mode;
 import org.cyclonedx.model.component.crypto.enums.Primitive;
@@ -225,8 +226,23 @@ class ProtocolTest extends TestBase {
                             assertThat(protocolProperties.getVersion()).isEqualTo("1.3");
                             assertThat(protocolProperties.getCipherSuites()).isNotNull();
                             assertThat(protocolProperties.getCipherSuites()).hasSize(1);
-                            assertThat(protocolProperties.getCryptoRefArray()).isNotNull();
-                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(3);
+                            assertThat(protocolProperties.getCryptoRefArray()).isNull();
+                            if (protocolProperties instanceof ProtocolProperties) {
+                                List<RelatedCryptographicAsset> relatedAssets =
+                                        protocolProperties.getRelatedCryptographicAssets();
+                                assertThat(relatedAssets).hasSize(3);
+                                assertThat(
+                                                relatedAssets.stream()
+                                                        .map(RelatedCryptographicAsset::getRef)
+                                                        .toList())
+                                        .allMatch(ref -> !ref.isEmpty());
+                                assertThat(
+                                                relatedAssets.stream()
+                                                        .map(RelatedCryptographicAsset::getType)
+                                                        .toList())
+                                        .containsExactlyInAnyOrder(
+                                                "algorithm", "algorithm", "algorithm");
+                            }
 
                             final org.cyclonedx.model.component.crypto.CipherSuite cipherSuite =
                                     protocolProperties.getCipherSuites().get(0);
@@ -266,8 +282,17 @@ class ProtocolTest extends TestBase {
                             assertThat(protocolProperties.getType()).isEqualTo(ProtocolType.IPSEC);
                             assertThat(protocolProperties.getVersion()).isNull();
                             assertThat(protocolProperties.getCipherSuites()).isNull();
-                            assertThat(protocolProperties.getCryptoRefArray()).isNotNull();
-                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(2);
+                            assertThat(protocolProperties.getCryptoRefArray()).isNull();
+                            if (protocolProperties instanceof ProtocolProperties) {
+                                List<RelatedCryptographicAsset> relatedAssets =
+                                        protocolProperties.getRelatedCryptographicAssets();
+                                assertThat(relatedAssets).hasSize(2);
+                                assertThat(
+                                                relatedAssets.stream()
+                                                        .map(RelatedCryptographicAsset::getType)
+                                                        .toList())
+                                        .containsExactlyInAnyOrder("algorithm", "algorithm");
+                            }
                         }
                     }
                 });

@@ -38,6 +38,7 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Evidence;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
 import org.cyclonedx.model.component.crypto.ProtocolProperties;
+import org.cyclonedx.model.component.crypto.RelatedCryptographicAsset;
 import org.cyclonedx.model.component.crypto.enums.AssetType;
 import org.cyclonedx.model.component.crypto.enums.ProtocolType;
 import org.cyclonedx.model.component.evidence.Occurrence;
@@ -170,6 +171,19 @@ public class ProtocolComponentBuilder implements IProtocolComponentBuilder {
             protocolProperties.setCipherSuites(suites);
         }
 
+        return new ProtocolComponentBuilder(
+                component, cryptoProperties, protocolProperties, algorithmComponentBuilder);
+    }
+
+    @Nonnull
+    @Override
+    public IProtocolComponentBuilder relatedCryptographicAssets(
+            @Nullable List<RelatedCryptographicAsset> assets) {
+        if (assets == null) {
+            return new ProtocolComponentBuilder(
+                    component, cryptoProperties, protocolProperties, algorithmComponentBuilder);
+        }
+        this.protocolProperties.setRelatedCryptographicAssets(assets);
         return new ProtocolComponentBuilder(
                 component, cryptoProperties, protocolProperties, algorithmComponentBuilder);
     }
