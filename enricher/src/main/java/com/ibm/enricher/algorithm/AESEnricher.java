@@ -21,6 +21,7 @@ package com.ibm.enricher.algorithm;
 
 import com.ibm.enricher.IEnricher;
 import com.ibm.mapper.model.AuthenticatedEncryption;
+import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
@@ -34,7 +35,9 @@ import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.model.mode.KW;
 import com.ibm.mapper.model.mode.KWP;
 import com.ibm.mapper.model.mode.OFB;
+import com.ibm.mapper.utils.Utils;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -97,12 +100,30 @@ public class AESEnricher implements IEnricher, IEnrichWithDefaultKeySize {
             return builder.toString();
         }
         Integer modeOidNumber = MODE_OID_MAP.get(mode.getClass());
-        if (modeOidNumber != null) {
+        if (modeOidNumber != null && hasFullBlockFeedback(mode)) {
             if (keySizeOidNumber == null) {
                 builder.append(".");
             }
             builder.append(modeOidNumber);
         }
         return builder.toString();
+    }
+
+    /**
+     * The OIDs of AES in CFB and OFB mode are for a feedback of one block (128 bits). The feedback
+     * size is given in the name of the mode (e.g. {@code CFB8}) or as its block size.
+     */
+    private static boolean hasFullBlockFeedback(@Nonnull Mode mode) {
+        if (!(mode instanceof CFB) && !(mode instanceof OFB)) {
+            return true;
+        }
+        final Optional<Integer> feedbackSize =
+                mode.getBlockSize()
+                        .map(BlockSize::getValue)
+                        .or(
+                                () ->
+                                        Utils.extractNumberFormString(mode.getName())
+                                                .map(Integer::valueOf));
+        return feedbackSize.map(size -> size == 128).orElse(true);
     }
 }

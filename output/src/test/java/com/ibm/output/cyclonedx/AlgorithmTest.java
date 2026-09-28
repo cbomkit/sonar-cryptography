@@ -37,14 +37,17 @@ import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.algorithms.X25519;
 import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.model.curves.Secp384r1;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Encrypt;
+import com.ibm.mapper.model.functionality.KeyDerivation;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.padding.OAEP;
+import java.util.List;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
@@ -408,6 +411,30 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.KEY_AGREE);
                     assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
+                });
+    }
+
+    @Test
+    void functionsOfTheSameAlgorithmFoundTwice() {
+        this.assertsNodes(
+                () -> {
+                    final X25519 group = new X25519(detectionLocation);
+                    final X25519 keyAgreement = new X25519(detectionLocation);
+                    keyAgreement.put(new KeyGeneration(detectionLocation));
+                    keyAgreement.put(new KeyDerivation(detectionLocation));
+                    return List.of(group, keyAgreement);
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("x25519");
+                    assertThat(
+                                    component
+                                            .getCryptoProperties()
+                                            .getAlgorithmProperties()
+                                            .getCryptoFunctions())
+                            .containsExactlyInAnyOrder(
+                                    CryptoFunction.KEYGEN, CryptoFunction.KEYDERIVE);
                 });
     }
 }

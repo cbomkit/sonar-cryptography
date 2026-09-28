@@ -24,12 +24,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.enricher.TestBase;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.mode.CFB;
 import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.model.mode.GCM;
+import com.ibm.mapper.model.mode.OFB;
 import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
@@ -135,5 +138,34 @@ class AESEnricherTest extends TestBase {
         final AES enrichedAES = (AES) enriched;
         assertThat(enrichedAES.getKeyLength()).isPresent();
         assertThat(enrichedAES.getKeyLength().get().asString()).isEqualTo("128");
+    }
+
+    @Test
+    void cfbAndOfbOidsOnlyForFullBlockFeedback() {
+        DetectionLocation location =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+        final AESEnricher aesEnricher = new AESEnricher();
+
+        // the NIST OIDs for AES in CFB and OFB mode are for a 128-bit feedback
+        assertThat(oidOf(aesEnricher.enrich(new AES(128, new CFB(location), location))))
+                .isEqualTo("2.16.840.1.101.3.4.1.4");
+        assertThat(oidOf(aesEnricher.enrich(new AES(256, new CFB(128, location), location))))
+                .isEqualTo("2.16.840.1.101.3.4.1.44");
+        assertThat(oidOf(aesEnricher.enrich(new AES(192, new OFB(location), location))))
+                .isEqualTo("2.16.840.1.101.3.4.1.23");
+        // CFB1 and CFB8 have no OID of their own, whether the width is in the name or given as the
+        // block size of the mode
+        assertThat(oidOf(aesEnricher.enrich(new AES(128, new CFB(8, location), location))))
+                .isEqualTo("2.16.840.1.101.3.4.1");
+        assertThat(oidOf(aesEnricher.enrich(new AES(256, new CFB(1, location), location))))
+                .isEqualTo("2.16.840.1.101.3.4.1.4");
+        final CFB cfbWithBlockSize = new CFB(location);
+        cfbWithBlockSize.put(new BlockSize(8, location));
+        assertThat(oidOf(aesEnricher.enrich(new AES(128, cfbWithBlockSize, location))))
+                .isEqualTo("2.16.840.1.101.3.4.1");
+    }
+
+    private static String oidOf(INode node) {
+        return node.hasChildOfType(Oid.class).map(INode::asString).orElseThrow();
     }
 }

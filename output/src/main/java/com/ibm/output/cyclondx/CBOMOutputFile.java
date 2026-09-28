@@ -39,6 +39,7 @@ import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.PasswordLength;
 import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.collections.AssetCollection;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Decrypt;
@@ -87,6 +88,8 @@ import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
+import org.cyclonedx.model.component.crypto.AlgorithmProperties;
+import org.cyclonedx.model.component.crypto.enums.CryptoFunction;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
 import org.slf4j.Logger;
@@ -127,6 +130,9 @@ public class CBOMOutputFile implements IOutputFile {
                             || node instanceof NonceLength) {
                         final IProperty property = (IProperty) node;
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
+                    } else if (node instanceof AssetCollection assetCollection) {
+                        add(parentBomRef, assetCollection.getCollection());
+                        add(parentBomRef, node.getChildren().values().stream().toList());
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     }
@@ -281,6 +287,7 @@ public class CBOMOutputFile implements IOutputFile {
                                                                         + " "))
                                         .toList();
                         c.getEvidence().setOccurrences(merge);
+                        mergeCryptoFunctions(c, component);
                         return c;
                     });
         }
@@ -354,6 +361,35 @@ public class CBOMOutputFile implements IOutputFile {
     @Nonnull
     private Function<Component, Optional<String>> getIdentifierFunction() {
         return (component -> Optional.ofNullable(component.getName()));
+    }
+
+    /**
+     * An algorithm found more than once, e.g. used for key generation in one place and for key
+     * derivation in another, has the crypto functions of each finding.
+     */
+    private static void mergeCryptoFunctions(
+            @Nonnull Component component, @Nonnull Component sameAlgorithm) {
+        final AlgorithmProperties properties = algorithmPropertiesOf(component);
+        final AlgorithmProperties otherProperties = algorithmPropertiesOf(sameAlgorithm);
+        if (properties == null
+                || otherProperties == null
+                || otherProperties.getCryptoFunctions() == null) {
+            return;
+        }
+        final List<CryptoFunction> functions =
+                Stream.concat(
+                                Optional.ofNullable(properties.getCryptoFunctions()).stream()
+                                        .flatMap(List::stream),
+                                otherProperties.getCryptoFunctions().stream())
+                        .distinct()
+                        .toList();
+        properties.setCryptoFunctions(functions.isEmpty() ? null : functions);
+    }
+
+    @Nullable private static AlgorithmProperties algorithmPropertiesOf(@Nonnull Component component) {
+        return component.getCryptoProperties() == null
+                ? null
+                : component.getCryptoProperties().getAlgorithmProperties();
     }
 
     @Nonnull
