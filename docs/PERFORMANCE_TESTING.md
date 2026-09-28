@@ -57,7 +57,7 @@ The assertions (`ratio >= 0.9`, `retainedWithTree <= 10`) fail hard if AST-detac
 ### Prerequisites
 
 - **Docker** + **Docker Compose** (for the local SonarQube + PostgreSQL).
-- **JDK 17** to build this plugin; **the JDK Keycloak requires** to build Keycloak
+- **JDK 21** to build this plugin; **the JDK Keycloak requires** to build Keycloak
   (currently **JDK 21** for `main`).
 - **Maven 3.9+**.
 - A full **JDK** (not just a JRE) on `PATH` for `jcmd` (used to sample heap — see Step 6).

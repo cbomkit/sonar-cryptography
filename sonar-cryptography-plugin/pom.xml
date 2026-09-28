@@ -165,7 +165,7 @@
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>
-                    <jreMinVersion>21</jreMinVersion>
+                    <jreMinVersion>${sonar.jreMinVersion}</jreMinVersion>
                 </configuration>
             </plugin>
             <plugin>
