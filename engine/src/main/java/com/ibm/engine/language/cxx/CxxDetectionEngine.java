@@ -43,6 +43,7 @@ import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
 import com.sonar.cxx.sslr.api.AstNode;
+import com.sonar.cxx.sslr.api.GenericTokenType;
 import com.sonar.cxx.sslr.api.Grammar;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -250,12 +251,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         List<AstNode> callArgs;
 
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            // getFunctionCallArguments() returns expressionList.getChildren() which is always
-            // [initializerList] — a single wrapper, not the individual arguments.
-            // Flatten through initializerList the same way flattenConstructorArgs() does.
-            AstNode expressionList =
-                    methodInvocation.getFirstDescendant(CxxGrammarImpl.expressionList);
-            callArgs = flattenConstructorArgs(expressionList);
+            callArgs = flattenFunctionCallArgs(methodInvocation);
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
@@ -428,10 +424,83 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     @Override
     public Optional<TraceSymbol<Symbol>> getAssignedSymbol(@Nonnull AstNode expression) {
         Symbol symbol = CxxAstNodeHelper.getAssignedSymbol(expression);
+        if (symbol == null && CxxAstNodeHelper.isFunctionCall(expression)) {
+            symbol = outputArgumentSymbol(expression);
+        }
         if (symbol != null) {
             return Optional.of(TraceSymbol.createFrom(symbol));
         }
+        if (CxxAstNodeHelper.isFunctionCall(expression)
+                && !CxxAstNodeHelper.isCallOnCallResult(expression)
+                && !CxxAstNodeHelper.isMemberAccess(expression)) {
+            // the result of a call that is not assigned is used by the call it is an argument
+            // of, if any; a returned or discarded result is used by no call of this function
+            return Optional.of(
+                    isCallArgument(expression)
+                            ? TraceSymbol.createWithStateNoSymbol(expression)
+                            : TraceSymbol.createWithStateDifferent());
+        }
         return Optional.empty();
+    }
+
+    /** Whether a call is written as an argument of another call. */
+    private static boolean isCallArgument(@Nonnull AstNode call) {
+        for (AstNode node = call.getParent(); node != null; node = node.getParent()) {
+            if (node.is(CxxGrammarImpl.expressionList)) {
+                return CxxAstNodeHelper.isFunctionCall(node.getParent());
+            }
+            if (node.is(CxxGrammarImpl.statement)
+                    || node.is(CxxGrammarImpl.expressionStatement)
+                    || node.is(CxxGrammarImpl.jumpStatement)
+                    || node.is(CxxGrammarImpl.initDeclarator)) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /** Whether one of the arguments of a call is the traced origin call. */
+    private boolean takesOrigin(
+            @Nonnull AstNode methodInvocation, @Nonnull TraceSymbol<Symbol> traceSymbol) {
+        final Object origin = traceSymbol.getOrigin().orElse(null);
+        if (!(origin instanceof AstNode originCall)
+                || !CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            return false;
+        }
+        for (AstNode argument : flattenFunctionCallArgs(methodInvocation)) {
+            if (argument.getToken() == originCall.getToken()
+                    && argument.getLastToken() == originCall.getLastToken()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A C function returns an object through an output argument, the address of a variable, e.g.
+     * {@code EVP_PKEY_keygen(ctx, &pkey)}. The variable is the result of a call that is not
+     * assigned and has exactly one such argument.
+     */
+    @Nullable private Symbol outputArgumentSymbol(@Nonnull AstNode functionCall) {
+        Symbol output = null;
+        for (AstNode argument : flattenFunctionCallArgs(functionCall)) {
+            final Symbol addressed = addressedVariable(argument);
+            if (addressed != null) {
+                if (output != null) {
+                    return null;
+                }
+                output = addressed;
+            }
+        }
+        return output;
+    }
+
+    /** The variable {@code v} of an argument {@code &v}, or null for any other argument. */
+    @Nullable private static Symbol addressedVariable(@Nonnull AstNode argument) {
+        if (!"&".equals(argument.getTokenValue()) || argument.getNumberOfChildren() != 2) {
+            return null;
+        }
+        return handleSymbol(argument.getLastChild());
     }
 
     @Nonnull
@@ -495,7 +564,41 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         if (variable == null) {
             return false;
         }
-        return CxxAstNodeHelper.isInvocationOnVariable(methodInvocation, variable, true);
+        return CxxAstNodeHelper.isInvocationOnVariable(methodInvocation, variable, true)
+                || isInvocationOnHandle(methodInvocation, variable);
+    }
+
+    /**
+     * C APIs operate on an object through a handle passed as an argument of a free function, e.g.
+     * {@code EVP_KDF_CTX_set_params(kctx, params)} operates on {@code kctx} and {@code
+     * EVP_DigestSignInit(mdctx, NULL, md, NULL, pkey)} signs with {@code pkey}. Such a call counts
+     * as an invocation on the variable when one of its arguments is exactly that variable.
+     */
+    private boolean isInvocationOnHandle(
+            @Nonnull AstNode methodInvocation, @Nonnull Symbol variable) {
+        if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
+            return false;
+        }
+        for (AstNode argument : flattenFunctionCallArgs(methodInvocation)) {
+            if (handleSymbol(argument) == variable) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The variable an argument is exactly, or null for any other expression. */
+    @Nullable private static Symbol handleSymbol(@Nonnull AstNode argument) {
+        if (argument.getToken() != argument.getLastToken()) {
+            // an expression such as `&ctx` or `ctx->field` is not the handle itself
+            return null;
+        }
+        Symbol symbol = AstNodeSymbolExtension.getSymbol(argument);
+        if (symbol == null) {
+            AstNode identifier = argument.getFirstDescendant(GenericTokenType.IDENTIFIER);
+            symbol = identifier != null ? AstNodeSymbolExtension.getSymbol(identifier) : null;
+        }
+        return symbol;
     }
 
     @Override
@@ -520,8 +623,18 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     private void analyseExpression(
             @Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull AstNode expressionNode) {
         if (detectionStore.getDetectionRule().is(MethodDetectionRule.class)) {
-            MethodDetection<AstNode> methodDetection = new MethodDetection<>(expressionNode, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
+            // like a rule's own action below, the call is a finding of a constrained re-scan only
+            // when it is connected to the traced argument
+            if (traceSymbol.is(TraceSymbol.State.SYMBOL_IGNORED)
+                    || (traceSymbol.is(TraceSymbol.State.NO_SYMBOL)
+                            && traceSymbol.getOrigin().isEmpty())
+                    || takesOrigin(expressionNode, traceSymbol)
+                    || isInvocationOnVariable(expressionNode, traceSymbol)
+                    || isInitForVariable(expressionNode, traceSymbol)) {
+                MethodDetection<AstNode> methodDetection =
+                        new MethodDetection<>(expressionNode, null);
+                detectionStore.onReceivingNewDetection(methodDetection);
+            }
             return;
         }
 
@@ -547,13 +660,16 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         // A chained/builder-pattern call (foo().goo()) has no variable to trace back to - its
         // qualifier is itself a call - so it must not be rejected by the NO_SYMBOL branch in
         // checkCurrentIndexState the way an unrelated assigned call would be.
-        boolean isBuilderPattern =
-                CxxAstNodeHelper.isFunctionCall(
-                        CxxAstNodeHelper.getMemberAccessQualifier(expressionNode));
+        boolean isBuilderPattern = CxxAstNodeHelper.isCallOnCallResult(expressionNode);
 
         boolean isInvocation =
                 isInvocationOnVariable(expressionNode, traceSymbol)
-                        || isInitForVariable(expressionNode, traceSymbol);
+                        || isInitForVariable(expressionNode, traceSymbol)
+                        || takesOrigin(expressionNode, traceSymbol);
+        // an untraceable argument re-scans the method for any call; a known origin call is only
+        // connected to the call it is an argument of
+        boolean isUnconnectedNoSymbol =
+                traceSymbol.is(TraceSymbol.State.NO_SYMBOL) && traceSymbol.getOrigin().isEmpty();
 
         // Emitting this candidate's own finding is valid on an unconstrained top-level scan
         // (traceSymbol=SYMBOL_IGNORED) or, on a constrained re-scan from a depending-parameter
@@ -562,10 +678,8 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         // untraceable argument (e.g. a bare NULL) re-scans the whole enclosing method and
         // spuriously matches every unrelated call the depending rules cover.
         boolean isConstrainedRescan = !traceSymbol.is(TraceSymbol.State.SYMBOL_IGNORED);
-        if (detectionRule.actionFactory() != null
-                && (!isConstrainedRescan
-                        || isInvocation
-                        || traceSymbol.is(TraceSymbol.State.NO_SYMBOL))) {
+        if ((detectionRule.actionFactory() != null || isPassThrough(detectionRule))
+                && (!isConstrainedRescan || isInvocation || isUnconnectedNoSymbol)) {
             MethodDetection<AstNode> methodDetection = new MethodDetection<>(expressionNode, null);
             detectionStore.onReceivingNewDetection(methodDetection);
         }
@@ -625,6 +739,17 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         }
     }
 
+    /**
+     * A rule without an action and without a detectable parameter only links its depending rules to
+     * the object it returns, e.g. {@code kctx = EVP_KDF_CTX_new(kdf)} links the calls made on
+     * {@code kctx} to the fetched {@code kdf}. Its method detection carries no value of its own.
+     */
+    private static boolean isPassThrough(@Nonnull DetectionRule<AstNode> detectionRule) {
+        return !detectionRule.nextDetectionRules().isEmpty()
+                && detectionRule.parameters().stream()
+                        .noneMatch(parameter -> parameter.is(DetectableParameter.class));
+    }
+
     private boolean checkCurrentIndexState(
             int index,
             List<AstNode> arguments,
@@ -636,14 +761,23 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
             return false;
         }
 
-        Optional<Symbol> assignedSymbol =
-                getAssignedSymbol(expressionNode).map(TraceSymbol::getSymbol);
-
-        return !(traceSymbol.is(TraceSymbol.State.DIFFERENT)
-                || (traceSymbol.is(TraceSymbol.State.SYMBOL) && !isInvocation)
-                || (traceSymbol.is(TraceSymbol.State.NO_SYMBOL)
-                        && assignedSymbol.isPresent()
-                        && !isBuilderPattern));
+        if (traceSymbol.is(TraceSymbol.State.DIFFERENT)) {
+            return false;
+        }
+        if (traceSymbol.is(TraceSymbol.State.SYMBOL)) {
+            return isInvocation;
+        }
+        if (traceSymbol.is(TraceSymbol.State.NO_SYMBOL)) {
+            if (traceSymbol.getOrigin().isPresent()) {
+                // the result of a known call, connected to the call it is an argument of
+                return isInvocation;
+            }
+            // an untraceable argument: any call that is not assigned to another variable
+            Optional<Symbol> assignedSymbol =
+                    getAssignedSymbol(expressionNode).map(TraceSymbol::getSymbol);
+            return assignedSymbol.isEmpty() || isBuilderPattern;
+        }
+        return true;
     }
 
     /**

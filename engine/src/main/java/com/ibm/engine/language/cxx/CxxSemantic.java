@@ -22,6 +22,7 @@ package com.ibm.engine.language.cxx;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.sonar.cxx.sslr.api.AstNode;
+import com.sonar.cxx.sslr.api.AstNodeType;
 import com.sonar.cxx.sslr.api.GenericTokenType;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,6 +45,24 @@ import org.sonar.cxx.utils.CxxConstantUtils;
 
 public final class CxxSemantic {
     private static final Logger LOGGER = LoggerFactory.getLogger(CxxSemantic.class);
+
+    /**
+     * Constant-style name: an uppercase prefix followed by at least one underscore-separated part,
+     * e.g. {@code TLS1_2_VERSION}, {@code NID_sha256} or {@code OSSL_KDF_NAME_HKDF}.
+     */
+    private static final Pattern MACRO_NAME = Pattern.compile("[A-Z][A-Z0-9]*(_[A-Za-z0-9]+)+");
+
+    /** Arithmetic, shift, bitwise and unary operator expressions. */
+    private static final AstNodeType[] OPERATOR_EXPRESSIONS = {
+        CxxGrammarImpl.multiplicativeExpression,
+        CxxGrammarImpl.additiveExpression,
+        CxxGrammarImpl.shiftExpression,
+        CxxGrammarImpl.andExpression,
+        CxxGrammarImpl.exclusiveOrExpression,
+        CxxGrammarImpl.inclusiveOrExpression,
+        CxxGrammarImpl.unaryExpression
+    };
+
     private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlL]+$");
     private static final Pattern FLOAT_SUFFIX_PATTERN = Pattern.compile("[fFlL]+$");
 
@@ -171,6 +190,32 @@ public final class CxxSemantic {
             }
         } else if (CxxAstNodeHelper.isFunctionCall(tree)) {
             return resolveFunctionCall(clazz, tree, returnEnclosingParam, detectionEngine, depth);
+        } else if (tree.is(CxxGrammarImpl.conditionalExpression)) {
+            return resolveConditionalExpression(
+                    clazz,
+                    tree,
+                    selections,
+                    valueFactory,
+                    returnEnclosingParam,
+                    detectionEngine,
+                    depth,
+                    resolvingVariables);
+        } else if (tree.is(CxxGrammarImpl.castExpression)) {
+            // "(type) operand": the value of the operand
+            return resolveValuesInternal(
+                    clazz,
+                    tree.getLastChild(),
+                    selections,
+                    valueFactory,
+                    returnEnclosingParam,
+                    detectionEngine,
+                    depth + 1,
+                    resolvingVariables);
+        } else if (tree.is(OPERATOR_EXPRESSIONS)) {
+            // an operator expression has a value only when it is a compile-time constant
+            return castValue(clazz, CxxConstantUtils.resolveAsConstant(tree))
+                    .map(value -> List.of(new ResolvedValue<>(value, tree)))
+                    .orElse(Collections.emptyList());
         } else {
             AstNode firstChild = tree.getFirstChild();
             if (firstChild != null) {
@@ -187,6 +232,56 @@ public final class CxxSemantic {
         }
 
         return Collections.emptyList();
+    }
+
+    /** True for the member name of a member access, e.g. {@code field} in {@code s.field}. */
+    private static boolean isMemberAccessName(@Nonnull AstNode identifier) {
+        AstNode previous = identifier.getPreviousSibling();
+        return previous != null
+                && (".".equals(previous.getTokenValue()) || "->".equals(previous.getTokenValue()));
+    }
+
+    /**
+     * Resolves {@code condition ? whenTrue : whenFalse} to the selected branch when the condition
+     * is a compile-time constant, and to the values of both branches otherwise.
+     */
+    @Nonnull
+    private static <O> List<ResolvedValue<O, AstNode>> resolveConditionalExpression(
+            @Nonnull Class<O> clazz,
+            @Nonnull AstNode tree,
+            @Nonnull LinkedList<AstNode> selections,
+            @Nullable IValueFactory<AstNode> valueFactory,
+            boolean returnEnclosingParam,
+            @Nullable CxxDetectionEngine detectionEngine,
+            int depth,
+            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+        List<AstNode> children = tree.getChildren();
+        if (children.size() != 5) {
+            return Collections.emptyList();
+        }
+        List<AstNode> branches;
+        Object condition = CxxConstantUtils.resolveAsConstant(children.get(0));
+        if (condition instanceof Boolean bool) {
+            branches = List.of(bool ? children.get(2) : children.get(4));
+        } else if (condition instanceof Number number) {
+            branches = List.of(number.longValue() != 0 ? children.get(2) : children.get(4));
+        } else {
+            branches = List.of(children.get(2), children.get(4));
+        }
+        List<ResolvedValue<O, AstNode>> result = new LinkedList<>();
+        for (AstNode branch : branches) {
+            result.addAll(
+                    resolveValuesInternal(
+                            clazz,
+                            branch,
+                            selections,
+                            valueFactory,
+                            returnEnclosingParam,
+                            detectionEngine,
+                            depth + 1,
+                            resolvingVariables));
+        }
+        return result;
     }
 
     @Nonnull
@@ -237,25 +332,28 @@ public final class CxxSemantic {
                 // Use unsigned parsing to handle values > 0x7FFFFFFF (e.g. SSL_OP_* flags)
                 result =
                         digits.length() <= 8
-                                ? Integer.parseUnsignedInt(digits, 16)
-                                : Long.parseUnsignedLong(digits, 16);
+                                ? (Object) Integer.parseUnsignedInt(digits, 16)
+                                : (Object) Long.parseUnsignedLong(digits, 16);
             } else if (value.startsWith("0b") || value.startsWith("0B")) {
                 String digits = value.substring(2);
                 result =
                         digits.length() <= 31
-                                ? Integer.parseUnsignedInt(digits, 2)
-                                : Long.parseUnsignedLong(digits, 2);
+                                ? (Object) Integer.parseUnsignedInt(digits, 2)
+                                : (Object) Long.parseUnsignedLong(digits, 2);
             } else if (value.startsWith("0") && value.length() > 1 && !value.contains(".")) {
                 String digits = value.substring(1);
                 result =
                         digits.length() <= 10
-                                ? Integer.parseUnsignedInt(digits, 8)
-                                : Long.parseUnsignedLong(digits, 8);
+                                ? (Object) Integer.parseUnsignedInt(digits, 8)
+                                : (Object) Long.parseUnsignedLong(digits, 8);
             } else if (value.contains(".") || value.contains("e") || value.contains("E")) {
                 result = Double.parseDouble(value);
             } else {
                 long v = Long.parseLong(value);
-                result = (v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE) ? (int) v : v;
+                result =
+                        v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE
+                                ? (Object) (int) v
+                                : (Object) v;
             }
         } catch (NumberFormatException e) {
             result = value;
@@ -380,9 +478,18 @@ public final class CxxSemantic {
             }
         }
 
-        // An identifier with no attached symbol at all (an undeclared name: an external constant,
-        // a macro, something declared in another translation unit) is not itself a resolved value;
-        // resolution of such names is deferred to the separate outer-scope resolution mechanism.
+        // An undeclared name written in constant style (e.g. TLS1_2_VERSION, NID_sha256) is a macro
+        // or constant defined in a header that is not part of the analyzed code; its name is its
+        // value, which library rules map to what it stands for, as for an unresolved Python name.
+        if (symbol == null && !isMemberAccessName(tree) && MACRO_NAME.matcher(name).matches()) {
+            return castValue(clazz, name)
+                    .map(value -> List.of(new ResolvedValue<>(value, tree)))
+                    .orElse(Collections.emptyList());
+        }
+
+        // Any other identifier with no attached symbol (something declared in another translation
+        // unit) is not itself a resolved value; resolution of such names is deferred to the
+        // separate outer-scope resolution mechanism.
         return Collections.emptyList();
     }
 

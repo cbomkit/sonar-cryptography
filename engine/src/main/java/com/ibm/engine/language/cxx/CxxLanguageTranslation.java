@@ -286,11 +286,14 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
      */
     @Nonnull
     private List<AstNode> extractActualArguments(@Nonnull AstNode methodInvocation) {
-        AstNode expressionList = methodInvocation.getFirstDescendant(CxxGrammarImpl.expressionList);
-        if (expressionList == null) {
-            return Collections.emptyList();
+        // the arguments of the last call in a chain such as foo(a).bar(x)
+        List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
+        if (arguments.size() == 1 && arguments.get(0).is(CxxGrammarImpl.initializerList)) {
+            return arguments.get(0).getChildren().stream()
+                    .filter(child -> !",".equals(child.getTokenValue()))
+                    .toList();
         }
-        return flattenInitializerList(expressionList);
+        return arguments;
     }
 
     @Nonnull

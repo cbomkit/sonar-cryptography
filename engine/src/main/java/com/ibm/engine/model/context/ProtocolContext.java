@@ -30,6 +30,8 @@ public class ProtocolContext extends DetectionContext {
         TLS_SIGNATURE_ALGORITHMS,
         // TLS supported-groups (key-exchange) list configuration (e.g. SSL_CTX_set1_groups_list).
         TLS_GROUPS,
+        // SRTP protection profile list configuration (e.g. SSL_CTX_set_tlsext_use_srtp).
+        SRTP,
         NONE,
     }
 
