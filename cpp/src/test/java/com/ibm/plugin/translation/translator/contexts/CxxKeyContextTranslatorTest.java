@@ -23,15 +23,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.model.algorithms.DSA;
-import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.Ed448;
 import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.MLKEM;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SM2;
 import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.model.algorithms.SecP256r1MLKEM768;
@@ -81,10 +83,10 @@ class CxxKeyContextTranslatorTest {
     }
 
     @Test
-    void rsaPssIsNotTreatedAsAnRsaBitLength() {
+    void rsaPssKeyIsNotTreatedAsAnRsaBitLength() {
         Optional<INode> node = translate("RSA-PSS");
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(RSA.class);
+        assertThat(node.get()).isInstanceOf(RSAssaPSS.class);
     }
 
     @Test
@@ -103,31 +105,32 @@ class CxxKeyContextTranslatorTest {
     }
 
     @Test
-    void bareEcIsMappedToEcdsaWithNoCurve() {
+    void bareEcIsMappedToAnEcKeyWithNoCurve() {
         Optional<INode> node = translate("EC");
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(ECDSA.class);
+        assertThat(node.get()).isInstanceOf(EllipticCurveAlgorithm.class);
+        assertThat(node.get().hasChildOfType(EllipticCurve.class)).isEmpty();
     }
 
     private static Stream<Arguments> ecCurveVariants() {
         return Stream.of(
-                Arguments.of("EC-P192", "ECDSA-secp192r1"),
-                Arguments.of("EC-P224", "ECDSA-secp224r1"),
-                Arguments.of("EC-P256", "ECDSA-secp256r1"),
-                Arguments.of("EC-P384", "ECDSA-secp384r1"),
-                Arguments.of("EC-P521", "ECDSA-secp521r1"),
-                Arguments.of("EC-SECP256K1", "ECDSA-secp256k1"),
-                Arguments.of("EC-BRAINPOOLP256R1", "ECDSA-brainpoolP256r1"),
-                Arguments.of("EC-BRAINPOOLP384R1", "ECDSA-brainpoolP384r1"),
-                Arguments.of("EC-BRAINPOOLP512R1", "ECDSA-brainpoolP512r1"));
+                Arguments.of("EC-P192", "EC-secp192r1"),
+                Arguments.of("EC-P224", "EC-secp224r1"),
+                Arguments.of("EC-P256", "EC-secp256r1"),
+                Arguments.of("EC-P384", "EC-secp384r1"),
+                Arguments.of("EC-P521", "EC-secp521r1"),
+                Arguments.of("EC-SECP256K1", "EC-secp256k1"),
+                Arguments.of("EC-BRAINPOOLP256R1", "EC-brainpoolP256r1"),
+                Arguments.of("EC-BRAINPOOLP384R1", "EC-brainpoolP384r1"),
+                Arguments.of("EC-BRAINPOOLP512R1", "EC-brainpoolP512r1"));
     }
 
     @ParameterizedTest
     @MethodSource("ecCurveVariants")
-    void ecCurveVariantsResolveToEcdsaWithTheExpectedCurve(String value, String expectedName) {
+    void ecCurveVariantsResolveToAnEcKeyOnTheExpectedCurve(String value, String expectedName) {
         Optional<INode> node = translate(value);
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(ECDSA.class);
+        assertThat(node.get()).isInstanceOf(EllipticCurveAlgorithm.class);
         assertThat(node.get().asString()).isEqualTo(expectedName);
     }
 

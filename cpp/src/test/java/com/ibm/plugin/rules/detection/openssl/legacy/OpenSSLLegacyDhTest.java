@@ -25,9 +25,11 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.plugin.CxxVerifier;
@@ -72,8 +74,12 @@ class OpenSSLLegacyDhTest extends TestBase {
 
         String v = value.asString();
         if (v.equals("DH")) {
-            if (detectionStore.getDetectionValueContext() instanceof KeyContext) {
-                assertDhPke(nodes);
+            if (detectionStore.getDetectionValueContext() instanceof PrivateKeyContext) {
+                // DH_generate_key(dh), dh holding the parameters of DH_generate_parameters_ex
+                assertDhPrivateKey(nodes);
+            } else if (detectionStore.getDetectionValueContext() instanceof KeyContext) {
+                // DH_generate_parameters_ex(dh, 2048, ...)
+                assertDhParameters(nodes);
             } else if (detectionStore.getDetectionValueContext() instanceof KeyAgreementContext) {
                 assertDhKa(nodes);
             } else {
@@ -81,25 +87,31 @@ class OpenSSLLegacyDhTest extends TestBase {
                         "Unexpected context for DH: " + detectionStore.getDetectionValueContext());
             }
         } else if (v.equals("DH-1024-160")) {
-            assertNamedGroupSkipped(detectionStore, value, nodes, "DH-1024-160");
+            assertNamedGroup(detectionStore, value, nodes, "DH-1024-160", "FFDH-1024");
         } else if (v.equals("DH-2048-224")) {
-            assertNamedGroupSkipped(detectionStore, value, nodes, "DH-2048-224");
+            assertNamedGroup(detectionStore, value, nodes, "DH-2048-224", "FFDH-2048");
         } else if (v.equals("DH-2048-256")) {
-            assertNamedGroupSkipped(detectionStore, value, nodes, "DH-2048-256");
+            assertNamedGroup(detectionStore, value, nodes, "DH-2048-256", "FFDH-2048");
         } else {
             throw new AssertionError("Unexpected value: " + v);
         }
     }
 
-    private static void assertDhPke(List<INode> nodes) {
+    private static void assertDhParameters(List<INode> nodes) {
         assertThat(nodes).hasSize(1);
         INode n = nodes.get(0);
         assertThat(n).isInstanceOf(DH.class);
         assertThat(n.getKind()).isEqualTo(PublicKeyEncryption.class);
-        assertThat(n.asString()).isEqualTo("FFDH");
+        assertThat(n.asString()).isEqualTo("FFDH-2048");
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
         assertThat(oid.asString()).isEqualTo(DH_OID);
+    }
+
+    private static void assertDhPrivateKey(List<INode> nodes) {
+        assertThat(nodes).hasSize(1);
+        assertThat(nodes.get(0)).isInstanceOf(PrivateKey.class);
+        assertDhParameters(List.of(nodes.get(0).getChildren().get(PublicKeyEncryption.class)));
     }
 
     private static void assertDhKa(List<INode> nodes) {
@@ -113,7 +125,7 @@ class OpenSSLLegacyDhTest extends TestBase {
         assertThat(oid.asString()).isEqualTo(DH_OID);
     }
 
-    private static void assertNamedGroupSkipped(
+    private static void assertNamedGroup(
             DetectionStore<
                             SquidCheck<?>,
                             AstNode,
@@ -122,10 +134,13 @@ class OpenSSLLegacyDhTest extends TestBase {
                     detectionStore,
             IValue<AstNode> value,
             List<INode> nodes,
-            String expected) {
-        // Translator has no case for "DH-1024-160" / "DH-2048-224" / "DH-2048-256" → empty nodes.
+            String expected,
+            String expectedAsset) {
+        // RFC 5114 group: finite-field DH with the group's prime size
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
         assertThat(value.asString()).isEqualTo(expected);
-        assertThat(nodes).isEmpty();
+        assertThat(nodes).hasSize(1);
+        assertThat(nodes.get(0)).isInstanceOf(DH.class);
+        assertThat(nodes.get(0).asString()).isEqualTo(expectedAsset);
     }
 }

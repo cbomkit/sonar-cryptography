@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.openssl.cipher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
@@ -33,6 +34,7 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.Aria;
@@ -46,9 +48,12 @@ import com.ibm.mapper.model.algorithms.IDEA;
 import com.ibm.mapper.model.algorithms.RC2;
 import com.ibm.mapper.model.algorithms.RC4;
 import com.ibm.mapper.model.algorithms.RC5;
+import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.SEED;
 import com.ibm.mapper.model.algorithms.SM4;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
+import com.ibm.mapper.model.functionality.Decrypt;
+import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -70,7 +75,7 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  *
  * <p>Dispatches on detection value string and verifies INode shape per family (AES, ARIA, Camellia,
  * SM4, DES/DESede, Blowfish, CAST5, RC2, RC4, RC5, IDEA, SEED, ChaCha20, ChaCha20-Poly1305, NULL,
- * plus EVP/CMS/PKCS7 init/fetch/misc operations).
+ * plus the EVP, CMS and PKCS#7 init, fetch and encryption functions).
  */
 class OpenSSLEvpCipherTest extends TestBase {
 
@@ -80,8 +85,8 @@ class OpenSSLEvpCipherTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(199);
-        assertThat(observed).hasSize(179);
+        assertThat(findingCount).isEqualTo(177);
+        assertThat(observed).hasSize(152);
     }
 
     @Override
@@ -145,8 +150,8 @@ class OpenSSLEvpCipherTest extends TestBase {
             return;
         }
         if (v.equals("DES-EDE3-WRAP")) {
-            // EVP_des_ede3_wrap()'s fetch carries no separate algorithm-name parameter to trace.
-            assertThat(nodes).isEmpty();
+            assertDesede(nodes, v, 168);
+            assertThat(nodes.get(0).getChildren().get(Mode.class).asString()).isEqualTo("WRAP");
             return;
         }
         if (v.startsWith("DESede3")) {
@@ -217,28 +222,29 @@ class OpenSSLEvpCipherTest extends TestBase {
             assertThat(n.getKind()).isEqualTo(AuthenticatedEncryption.class);
             return;
         }
-        if (v.equals("ENCRYPT")
-                || v.equals("DECRYPT")
-                || v.equals("CIPHER-INIT")
-                || v.equals("RSA-PADDING")
-                || v.equals("RSA-OAEP-LABEL")
-                || v.equals("CMS-ENCRYPT")
-                || v.equals("CMS-ENVELOPED-DATA")
-                || v.equals("CMS-AUTH-ENVELOPED-DATA")
-                || v.equals("CMS-ENCRYPTED-DATA")
-                || v.equals("CMS-ENCRYPTED-DATA-KEY")
-                || v.equals("CMS-RECIPIENT-KEY")
-                || v.equals("PKCS7-ENCRYPT")
-                || v.equals("PKCS7-CIPHER")) {
-            // None of these API calls carry an algorithm-name parameter to trace.
-            assertThat(nodes).isEmpty();
+        if (value instanceof CipherAction<AstNode> action) {
+            // EVP_EncryptInit/EVP_DecryptInit/EVP_CipherInit with a NULL cipher keep the cipher of
+            // an earlier initialization, and the CMS and PKCS#7 encryption functions are given a
+            // NULL cipher here: only the operation is known
+            assertThat(nodes).hasSize(1);
+            assertThat(nodes.get(0))
+                    .isInstanceOf(
+                            action.getAction() == CipherAction.Action.ENCRYPT
+                                    ? Encrypt.class
+                                    : Decrypt.class);
             return;
         }
-        // EVP_ASYM_CIPHER_fetch(NULL, "RSA", NULL): real algorithm name resolved via
-        // AlgorithmFactory, but CxxCipherContextTranslator has no RSA case, so it resolves to
-        // nothing. EVP_get_cipherbyname("AES-256-GCM") is handled above by the AES- branch.
+        // EVP_PKEY_CTX_set_rsa_padding(ctx, 4 /* RSA_PKCS1_OAEP_PADDING */)
+        if (v.equals("RSA-OAEP")) {
+            assertThat(nodes).hasSize(1);
+            assertThat(nodes.get(0).asString()).isEqualTo("RSA-OAEP");
+            return;
+        }
+        // EVP_ASYM_CIPHER_fetch(NULL, "RSA", NULL)
         if (v.equals("RSA")) {
-            assertThat(nodes).isEmpty();
+            assertThat(nodes).hasSize(1);
+            assertThat(nodes.get(0)).isInstanceOf(RSA.class);
+            assertThat(nodes.get(0).getKind()).isEqualTo(PublicKeyEncryption.class);
             return;
         }
         throw new AssertionError("Unexpected value: " + v);
@@ -251,13 +257,35 @@ class OpenSSLEvpCipherTest extends TestBase {
         return nodes.get(0);
     }
 
-    private static String aesOidFor(int keyLen) {
-        return switch (keyLen) {
-            case 128 -> "2.16.840.1.101.3.4.1";
-            case 192 -> "2.16.840.1.101.3.4.1.2";
-            case 256 -> "2.16.840.1.101.3.4.1.4";
-            default -> throw new AssertionError("Unknown AES key length: " + keyLen);
-        };
+    /**
+     * The NIST OID of AES with a key size and a mode (2.16.840.1.101.3.4.1.x, 1.2x or 1.4x); a mode
+     * with no OID of its own leaves the key size arc.
+     */
+    private static String aesOidFor(int keyLen, String mode) {
+        final String keySizeArc =
+                switch (keyLen) {
+                    case 128 -> "";
+                    case 192 -> "2";
+                    case 256 -> "4";
+                    default -> throw new AssertionError("Unknown AES key length: " + keyLen);
+                };
+        final String modeArc =
+                switch (mode) {
+                    case "ECB" -> "1";
+                    case "CBC" -> "2";
+                    case "OFB" -> "3";
+                    case "CFB", "CFB128" -> "4";
+                    case "WRAP" -> "5";
+                    case "GCM" -> "6";
+                    case "CCM" -> "7";
+                    case "WRAP-PAD" -> "8";
+                    default -> "";
+                };
+        final String base = "2.16.840.1.101.3.4.1";
+        if (modeArc.isEmpty()) {
+            return keySizeArc.isEmpty() ? base : base + "." + keySizeArc;
+        }
+        return base + "." + keySizeArc + modeArc;
     }
 
     private static void assertAesGeneric(List<INode> nodes, String v) {
@@ -268,7 +296,12 @@ class OpenSSLEvpCipherTest extends TestBase {
 
         INode n = head(nodes);
         assertThat(n).isInstanceOf(AES.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
+        // AES in GCM and CCM mode is authenticated encryption
+        assertThat(n.getKind())
+                .isEqualTo(
+                        mode.equals("GCM") || mode.equals("CCM")
+                                ? AuthenticatedEncryption.class
+                                : BlockCipher.class);
         assertThat(n.asString()).isEqualTo("AES-" + keyLen + "-" + mode);
 
         INode kl = n.getChildren().get(KeyLength.class);
@@ -285,7 +318,7 @@ class OpenSSLEvpCipherTest extends TestBase {
 
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
-        assertThat(oid.asString()).isEqualTo(aesOidFor(keyLen));
+        assertThat(oid.asString()).isEqualTo(aesOidFor(keyLen, mode));
     }
 
     private static void assertAesHmac(List<INode> nodes, String v) {

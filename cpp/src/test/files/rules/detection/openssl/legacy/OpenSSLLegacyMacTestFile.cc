@@ -27,8 +27,7 @@ void test_legacy_mac() {
     HMAC(md3, key, 32, data, 64, out, &outlen);
 
     CMAC_CTX_new();
-    // CMAC_Init's real cipher argument is traced back to its EVP_aes_128_cbc() constructing
-    // call, separate from the "CMAC" family finding.
+    // CMAC_Init's cipher argument is traced back to its EVP_aes_128_cbc() constructing call
     const EVP_CIPHER* cmac_cipher = EVP_aes_128_cbc();
     CMAC_Init(cctx, key, 32, cmac_cipher, NULL);
     CMAC_Update(cctx, data, 64);

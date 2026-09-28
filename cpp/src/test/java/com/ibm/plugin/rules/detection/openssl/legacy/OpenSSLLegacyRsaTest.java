@@ -24,13 +24,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.Padding;
+import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.RSAssaPSS;
+import com.ibm.mapper.model.padding.OAEP;
+import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -84,26 +91,72 @@ class OpenSSLLegacyRsaTest extends TestBase {
         String v = value.asString();
         switch (v) {
             case "RSA" -> {
+                // RSA_generate_key(_ex) / RSA_generate_multi_prime_key with 2048 bits
                 assertThat(detectionStore.getDetectionValueContext())
-                        .isInstanceOf(KeyContext.class);
-                assertRsaPke(nodes);
+                        .isInstanceOf(PrivateKeyContext.class);
+                assertThat(nodes).singleElement().isInstanceOf(PrivateKey.class);
+                final INode rsa = nodes.get(0).getChildren().get(PublicKeyEncryption.class);
+                assertThat(rsa).isInstanceOf(RSA.class);
+                assertThat(rsa.asString()).isEqualTo("RSA-2048");
+                assertThat(rsa.getChildren().get(Oid.class))
+                        .extracting(INode::asString)
+                        .isEqualTo(RSA_OID);
             }
-            case "RSA-ENCRYPT",
-                    "RSA-DECRYPT",
-                    "RSA-OAEP",
-                    "RSA-PKCS1",
-                    "RSA-X931",
-                    "RSA-NO-PAD",
-                    "RSA-NO-PADDING",
-                    "RSA-PKCS1-TYPE2" -> {
+            case "RSA-NO-PADDING" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(CipherContext.class);
-                assertThat(nodes).isEmpty();
+                assertRsaPke(nodes);
+            }
+            // RSA_public_encrypt / RSA_private_decrypt(..., 1 /* RSA_PKCS1_PADDING */)
+            case "ENCRYPT", "DECRYPT" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0)).isInstanceOf(RSA.class);
+                assertThat(nodes.get(0).getKind()).isEqualTo(PublicKeyEncryption.class);
+                assertThat(nodes.get(0).getChildren().get(Padding.class)).isInstanceOf(PKCS1.class);
+            }
+            // RSA_private_encrypt / RSA_public_decrypt(..., 1 /* RSA_PKCS1_PADDING */): the
+            // signature primitive
+            case "SIGN", "VERIFY" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(SignatureContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("RSA-PKCS1-1.5");
+            }
+            case "RSA-OAEP", "RSA-OAEP-MGF1" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("RSA-OAEP");
+                assertThat(nodes.get(0).getChildren().get(Padding.class)).isInstanceOf(OAEP.class);
+            }
+            case "RSA-PKCS1-TYPE2" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).getKind()).isEqualTo(PublicKeyEncryption.class);
+                assertThat(nodes.get(0).getChildren().get(Padding.class)).isInstanceOf(PKCS1.class);
+            }
+            case "RSA-PKCS1" -> {
+                // PKCS#1 type 1 padding is the padding of RSA signatures
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("RSA-PKCS1-1.5");
+            }
+            case "RSA-X931" -> {
+                assertThat(detectionStore.getDetectionValueContext())
+                        .isInstanceOf(CipherContext.class);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).asString()).isEqualTo("ANSI X9.31");
             }
             case "RSA-PSS" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
-                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0)).isInstanceOf(RSAssaPSS.class);
+                assertThat(nodes.get(0).asString()).isEqualTo("RSA-PSS");
             }
             case "RSA-SIGN-SHA256" -> {
                 assertThat(detectionStore.getDetectionValueContext())
@@ -119,22 +172,13 @@ class OpenSSLLegacyRsaTest extends TestBase {
                 md5SignCount++;
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
-                // CxxSignatureContextTranslator has no MD5 branch for RSA- values, so the
-                // digest is dropped: same bare RSA-PKCS1-1.5 node as the generic RSA-PSS case.
-                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
+                assertRsaSigWithMd5(nodes);
             }
             case "RSA-VERIFY-MD5" -> {
                 md5VerifyCount++;
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
-                assertRsaSig(nodes, "RSA-PKCS1-1.5", RSA_OID);
-            }
-            case "RSA-OAEP-MGF1" -> {
-                // RSA_padding_add/check_PKCS1_OAEP_mgf1: parameters carry no algorithm name to
-                // trace, so this resolves to no node.
-                assertThat(detectionStore.getDetectionValueContext())
-                        .isInstanceOf(CipherContext.class);
-                assertThat(nodes).isEmpty();
+                assertRsaSigWithMd5(nodes);
             }
             default -> throw new AssertionError("Unexpected value: " + v);
         }
@@ -161,5 +205,11 @@ class OpenSSLLegacyRsaTest extends TestBase {
         INode oid = n.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
         assertThat(oid.asString()).isEqualTo(expectedOid);
+    }
+
+    private static void assertRsaSigWithMd5(List<INode> nodes) {
+        assertThat(nodes).hasSize(1);
+        assertThat(nodes.get(0).asString()).isEqualTo("RSA-PKCS1-1.5-MD5");
+        assertThat(nodes.get(0).getChildren().get(MessageDigest.class)).isInstanceOf(MD5.class);
     }
 }

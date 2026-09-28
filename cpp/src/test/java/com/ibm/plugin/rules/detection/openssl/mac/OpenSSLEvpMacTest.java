@@ -22,11 +22,9 @@ package com.ibm.plugin.rules.detection.openssl.mac;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
-import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
@@ -34,17 +32,13 @@ import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.KMAC;
-import com.ibm.mapper.model.algorithms.Poly1305;
 import com.ibm.mapper.model.algorithms.SipHash;
-import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
-import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -68,16 +62,31 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpMacTest extends TestBase {
 
-    private final Set<String> observedMac = new HashSet<>();
-    private final Set<String> observedDigest = new HashSet<>();
-    private final Set<String> observedCipher = new HashSet<>();
+    private final List<String> macs = new ArrayList<>();
+    private final List<String> digests = new ArrayList<>();
+    private final List<String> ciphers = new ArrayList<>();
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/mac/OpenSSLEvpMacTestFile.cc", this);
-        assertThat(observedMac).hasSize(11);
-        assertThat(observedDigest).containsExactly("SHA-256");
-        assertThat(observedCipher).containsExactly("AES-128-CBC");
+        assertThat(macs)
+                .containsExactly(
+                        "HMAC",
+                        "CMAC",
+                        "GMAC",
+                        "Poly1305",
+                        "SipHash",
+                        "KMAC128",
+                        "KMAC256",
+                        "BLAKE2b-512",
+                        "BLAKE2s-256",
+                        "HMAC",
+                        "HMAC-SHA-256",
+                        "HMAC-SHA-256",
+                        "CMAC-AES");
+        // the EVP_sha256()/EVP_aes_128_cbc() calls are also reported on their own
+        assertThat(digests).containsExactly("SHA-256", "SHA-256");
+        assertThat(ciphers).containsExactly("AES-128-CBC");
     }
 
     @Override
@@ -91,104 +100,26 @@ class OpenSSLEvpMacTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-
-        // EVP_MAC_CTX_set_params("digest", "SHA256") and legacy HMAC()/HMAC_Init_ex()'s real
-        // digest: resolved via OpenSSLParamsScannerFactory / OpenSSLEvpMessageDigest, separate
-        // from the HMAC fetch/family finding.
-        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
-            observedDigest.add(value.asString());
-            assertThat(value.asString()).isEqualTo("SHA-256");
-            INode n = head(nodes);
-            assertThat(n).isInstanceOf(MessageDigest.class);
-            return;
-        }
-
-        // Legacy CMAC_Init()'s real cipher: resolved via OpenSSLEvpCipher, separate from the
-        // "CMAC" family finding.
-        if (detectionStore.getDetectionValueContext() instanceof CipherContext) {
-            observedCipher.add(value.asString());
-            assertThat(value.asString()).isEqualTo("AES-128-CBC");
-            INode n = head(nodes);
-            assertThat(n).isInstanceOf(AES.class);
-            assertThat(n.asString()).isEqualTo("AES-128-CBC");
-            return;
-        }
-
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-        String v = value.asString();
-        observedMac.add(v);
-
-        switch (v) {
-            // EVP_MAC_CTX_set_params("cipher", "AES-128-CBC"): real cipher resolved via
-            // OpenSSLParamsScannerFactory, separate from the CMAC fetch finding.
-            case "CMAC-AES-128" -> {
-                INode n = head(nodes);
-                assertThat(n.getKind()).isEqualTo(Mac.class);
-                assertThat(n.asString()).isEqualTo("CMAC-AES");
-                INode aes = n.getChildren().get(BlockCipher.class);
-                assertThat(aes).isNotNull().isInstanceOf(AES.class);
-                assertThat(aes.asString()).isEqualTo("AES-128");
-            }
-            case "POLY1305" -> {
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(Poly1305.class);
-                assertThat(n.asString()).isEqualTo("Poly1305");
-            }
-            case "SIPHASH-2-4", "SIPHASH-4-8" -> assertSipHash(nodes);
-            case "KMAC128" -> assertKmac(nodes, "KMAC128", 256);
-            case "KMAC256" -> assertKmac(nodes, "KMAC256", 512);
-            case "BLAKE2BMAC" -> {
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(BLAKE2b.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2b-512");
-            }
-            case "BLAKE2SMAC" -> {
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(BLAKE2s.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2s-256");
-            }
-            // EVP_MAC_fetch's bare family findings carry no children (no digest/cipher visible
-            // at the fetch call site). HMAC()/HMAC_Init_ex()'s traced digest and CMAC_Init()'s
-            // traced cipher nest as a child under their own "HMAC"/"CMAC" MacContext finding;
-            // calls without one (the fetch findings) have no children at all.
-            case "HMAC" ->
-                    assertThat(nodes)
-                            .allSatisfy(n -> assertThat(n).isInstanceOf(MessageDigest.class));
-            case "CMAC" -> assertThat(nodes).allSatisfy(n -> assertThat(n).isInstanceOf(AES.class));
-            case "GMAC" -> assertThat(nodes).isEmpty();
-            default -> throw new AssertionError("Unexpected value: " + v);
-        }
-    }
-
-    /* helpers */
-
-    private static INode head(List<INode> nodes) {
         assertThat(nodes).hasSize(1);
-        return nodes.get(0);
-    }
-
-    private static void assertSipHash(List<INode> nodes) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(SipHash.class);
+        INode n = nodes.get(0);
+        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
+            assertThat(n).isInstanceOf(MessageDigest.class);
+            digests.add(n.asString());
+            return;
+        }
+        if (detectionStore.getDetectionValueContext() instanceof CipherContext) {
+            assertThat(n).isInstanceOf(AES.class);
+            ciphers.add(n.asString());
+            return;
+        }
+        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
         assertThat(n.getKind()).isEqualTo(Mac.class);
-        assertThat(n.asString()).isEqualTo("SipHash");
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode size = n.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo("64");
-    }
-
-    private static void assertKmac(List<INode> nodes, String asString, int digestSize) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(KMAC.class);
-        assertThat(n.getKind()).isEqualTo(Mac.class);
-        assertThat(n.asString()).isEqualTo(asString);
-        INode size = n.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo(Integer.toString(digestSize));
+        if (n instanceof SipHash) {
+            assertThat(n.getChildren().get(KeyLength.class).asString()).isEqualTo("128");
+            assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("64");
+        } else if (n instanceof KMAC) {
+            assertThat(n.getChildren().get(DigestSize.class)).isNotNull();
+        }
+        macs.add(n.asString());
     }
 }

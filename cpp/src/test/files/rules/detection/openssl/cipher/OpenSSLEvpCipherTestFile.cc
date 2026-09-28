@@ -189,4 +189,10 @@ void test_evp_cipher() {
     PKCS7_encrypt(NULL, buf, NULL, 0);
     PKCS7_encrypt_ex(NULL, buf, NULL, 0, NULL, NULL);
     PKCS7_set_cipher(NULL, NULL);
+
+    // CFB names defined as macros for their cfb64/cfb128 functions
+    EVP_aes_128_cfb();
+    EVP_des_cfb();
+    EVP_des_ede3_cfb();
+    EVP_bf_cfb();
 }

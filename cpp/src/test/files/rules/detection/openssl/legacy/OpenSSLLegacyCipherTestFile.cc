@@ -32,6 +32,7 @@ void test_legacy_cipher_des() {
     int num = 0;
     DES_key_schedule ds;
     DES_cblock dc;
+    DES_set_key(&dc, &ds);
     DES_ecb_encrypt(&dc, &dc, &ds, 1);
     DES_ede3_cbc_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, 1);
     DES_ecb3_encrypt(&dc, &dc, &ds, &ds, &ds, 1);

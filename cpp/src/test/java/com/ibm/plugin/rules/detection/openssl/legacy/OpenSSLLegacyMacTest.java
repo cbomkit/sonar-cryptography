@@ -27,7 +27,6 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
-import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.algorithms.AES;
@@ -35,6 +34,7 @@ import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -43,26 +43,20 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 13 rule entries in {@link OpenSSLLegacyMac}.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- *
- * <p>Note: {@code CxxMacContextTranslator} only translates hash-suffixed MAC names (e.g. {@code
- * HMAC-SHA256}). The bare values {@code "HMAC"} and {@code "CMAC"} emitted by the legacy rules have
- * no translator case and yield empty translated nodes — there is no INode tree to walk. The real
- * digest, when set via {@code HMAC_Init_ex}/{@code HMAC_Init}/{@code HMAC}'s {@code EVP_MD*}
- * argument, is a separate, independently traced {@link DigestContext} finding (see {@link
- * com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest}). Likewise, {@code
- * CMAC_Init}'s real cipher, set via its {@code EVP_CIPHER*} argument, is a separate, independently
- * traced {@link CipherContext} finding (see {@link
- * com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher}).
+ * Covers the rules in {@link OpenSSLLegacyMac}. The digest passed to {@code HMAC_Init_ex}, {@code
+ * HMAC_Init} or {@code HMAC}, and the cipher passed to {@code CMAC_Init}, are traced back to the
+ * call that created them and attached to the MAC. The calls that create them are also reported on
+ * their own, as {@link DigestContext} and {@link CipherContext} findings.
  */
 class OpenSSLLegacyMacTest extends TestBase {
+
+    private final List<String> macs = new ArrayList<>();
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyMacTestFile.cc", this);
+        assertThat(macs)
+                .containsExactly("HMAC-SHA-256", "HMAC-SHA-256", "HMAC-SHA-256", "CMAC-AES");
     }
 
     @Override
@@ -97,21 +91,7 @@ class OpenSSLLegacyMacTest extends TestBase {
 
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
         assertThat(value).isInstanceOf(ValueAction.class);
-
-        switch (value.asString()) {
-            // "HMAC" itself has no translator case (see class docstring), but a call with a
-            // traced digest (HMAC_Init_ex/HMAC_Init/HMAC) carries that digest's translated
-            // MessageDigest as a nested child; calls without one (HMAC_CTX_new, HMAC_Update, ...)
-            // have no children at all.
-            case "HMAC" ->
-                    assertThat(nodes)
-                            .allSatisfy(n -> assertThat(n).isInstanceOf(MessageDigest.class));
-            // "CMAC" similarly nests CMAC_Init's traced cipher (BlockCipher) as a child; calls
-            // without one have no children at all.
-            case "CMAC" ->
-                    assertThat(nodes)
-                            .allSatisfy(n -> assertThat(n).isInstanceOf(BlockCipher.class));
-            default -> throw new AssertionError("Unexpected value: " + value.asString());
-        }
+        assertThat(nodes).hasSize(1);
+        macs.add(nodes.get(0).asString());
     }
 }

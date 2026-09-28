@@ -88,14 +88,26 @@ class CxxProtocolContextTranslatorTest {
     }
 
     @Test
-    void cipherSuiteValueUnderTlsKindIsParsedByTheCipherSuiteMapper() {
+    void cipherStringUnderTlsKindIsParsedByTheCipherSuiteMapper() {
         Optional<INode> node =
                 translate(
-                        new CipherSuite<>("TLS_AES_128_GCM_SHA256", (AstNode) null),
+                        new CipherSuite<>(
+                                "ECDHE-RSA-AES128-GCM-SHA256:TLS_AES_128_GCM_SHA256:!aNULL:HIGH",
+                                (AstNode) null),
                         ProtocolContext.Kind.TLS);
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(com.ibm.mapper.model.CipherSuite.class);
-        assertThat(node.get().asString()).isEqualTo("TLS_AES_128_GCM_SHA256");
+        assertThat(node).isPresent().get().isInstanceOf(TLS.class);
+        assertThat(((TLS) node.get()).getCipherSuits().orElseThrow().getCollection())
+                .extracting(INode::asString)
+                .containsExactly("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_AES_128_GCM_SHA256");
+    }
+
+    @Test
+    void cipherStringWithoutSuitesUnderTlsKindResolvesToEmpty() {
+        assertThat(
+                        translate(
+                                new CipherSuite<>("HIGH:!aNULL:@SECLEVEL=2", (AstNode) null),
+                                ProtocolContext.Kind.TLS))
+                .isEmpty();
     }
 
     @Test

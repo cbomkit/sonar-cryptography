@@ -24,9 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.plugin.CxxVerifier;
@@ -75,25 +78,31 @@ class OpenSSLLegacyDsaTest extends TestBase {
         findingCount++;
 
         String v = value.asString();
-        if (v.equals("DSA")) {
-            // DSA_generate_key / DSA_generate_parameters_ex: real algorithm name resolved via
-            // CxxKeyContextTranslator's DSA branch.
+        if (v.equals("DSA")
+                && detectionStore.getDetectionValueContext() instanceof PrivateKeyContext) {
+            // DSA_generate_key(dsa), dsa holding the parameters of DSA_generate_parameters_ex
+            assertThat(nodes).singleElement().isInstanceOf(PrivateKey.class);
+            assertDsaParameters(nodes.get(0).getChildren().get(Signature.class));
+        } else if (v.equals("DSA")) {
+            // DSA_generate_parameters_ex(dsa, 2048, ...)
             assertThat(nodes).hasSize(1);
-            INode n = nodes.get(0);
-            assertThat(n).isInstanceOf(DSA.class);
+            assertDsaParameters(nodes.get(0));
         } else if (v.equals("DSA-SIGN")) {
             assertThat(detectionStore.getDetectionValueContext())
                     .isInstanceOf(SignatureContext.class);
             assertDsa(nodes);
-        } else if (v.equals("DSA-VERIFY")) {
-            assertThat(detectionStore.getDetectionValueContext())
-                    .isInstanceOf(SignatureContext.class);
-            assertDsa(nodes);
-        } else if (v.equals("DSA-DH")) {
-            assertThat(nodes).isEmpty();
         } else {
             throw new AssertionError("Unexpected value: " + v);
         }
+    }
+
+    private static void assertDsaParameters(INode n) {
+        assertThat(n).isInstanceOf(DSA.class);
+        assertThat(n.asString()).isEqualTo("DSA-2048");
+        assertThat(n.getChildren().get(KeyLength.class))
+                .isNotNull()
+                .extracting(INode::asString)
+                .isEqualTo("2048");
     }
 
     private static void assertDsa(List<INode> nodes) {

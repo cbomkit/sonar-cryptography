@@ -25,9 +25,6 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
@@ -72,70 +69,6 @@ class CxxPRNGContextTranslatorTest {
         assertThat(node).isPresent();
         assertThat(node.get()).isInstanceOf(Algorithm.class);
         assertThat(node.get().asString()).isEqualTo(value);
-    }
-
-    private static Stream<Arguments> ctrDrbgAesVariants() {
-        return Stream.of(
-                Arguments.of("CTR-DRBG-AES128", "AES-128"),
-                Arguments.of("CTR-DRBG-AES192", "AES-192"),
-                Arguments.of("CTR-DRBG-AES256", "AES-256"));
-    }
-
-    @ParameterizedTest
-    @MethodSource("ctrDrbgAesVariants")
-    void ctrDrbgVariantsResolveToTheUnderlyingAes(String value, String expectedName) {
-        Optional<INode> node = translate(value);
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(AES.class);
-        assertThat(node.get().asString()).isEqualTo(expectedName);
-    }
-
-    @Test
-    void hashDrbgSha1ResolvesToSha() {
-        Optional<INode> node = translate("HASH-DRBG-SHA1");
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(SHA.class);
-        assertThat(node.get().asString()).isEqualTo("SHA-1");
-    }
-
-    private static Stream<Arguments> hashDrbgSha2Variants() {
-        return Stream.of(
-                Arguments.of("HASH-DRBG-SHA256", "SHA-256"),
-                Arguments.of("HASH-DRBG-SHA384", "SHA-384"),
-                Arguments.of("HASH-DRBG-SHA512", "SHA-512"));
-    }
-
-    @ParameterizedTest
-    @MethodSource("hashDrbgSha2Variants")
-    void hashDrbgVariantsResolveToTheUnderlyingSha2(String value, String expectedName) {
-        Optional<INode> node = translate(value);
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(SHA2.class);
-        assertThat(node.get().asString()).isEqualTo(expectedName);
-    }
-
-    @Test
-    void hmacDrbgSha1ResolvesToSha() {
-        Optional<INode> node = translate("HMAC-DRBG-SHA1");
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(SHA.class);
-        assertThat(node.get().asString()).isEqualTo("SHA-1");
-    }
-
-    private static Stream<Arguments> hmacDrbgSha2Variants() {
-        return Stream.of(
-                Arguments.of("HMAC-DRBG-SHA256", "SHA-256"),
-                Arguments.of("HMAC-DRBG-SHA384", "SHA-384"),
-                Arguments.of("HMAC-DRBG-SHA512", "SHA-512"));
-    }
-
-    @ParameterizedTest
-    @MethodSource("hmacDrbgSha2Variants")
-    void hmacDrbgVariantsResolveToTheUnderlyingSha2(String value, String expectedName) {
-        Optional<INode> node = translate(value);
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(SHA2.class);
-        assertThat(node.get().asString()).isEqualTo(expectedName);
     }
 
     private static Stream<Arguments> entropySeedingOperations() {

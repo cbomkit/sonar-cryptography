@@ -30,8 +30,11 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.StreamCipher;
+import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.Blowfish;
+import com.ibm.mapper.model.algorithms.Camellia;
 import com.ibm.mapper.model.algorithms.DES;
+import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.IDEA;
 import com.ibm.mapper.model.algorithms.RC2;
 import com.ibm.mapper.model.algorithms.RC4;
@@ -58,7 +61,7 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
  *
  * <p>Fixture calls every method name listed across the rules — including alias names inside
- * multi-method rules ({@code forMethods(a, b, c)}) — producing 56 findings, 53 of them distinct
+ * multi-method rules ({@code forMethods(a, b, c)}) — producing 57 findings, 54 of them distinct
  * values.
  */
 class OpenSSLLegacyCipherTest extends TestBase {
@@ -69,8 +72,8 @@ class OpenSSLLegacyCipherTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyCipherTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(56);
-        assertThat(observed).hasSize(53);
+        assertThat(findingCount).isEqualTo(57);
+        assertThat(observed).hasSize(54);
     }
 
     @Override
@@ -112,19 +115,38 @@ class OpenSSLLegacyCipherTest extends TestBase {
             String mode = v.substring("RC5-".length());
             assertRc5(nodes, mode);
         } else if (v.startsWith("CAMELLIA-")) {
-            // CxxCipherContextTranslator has cases only for the keysize-qualified form
-            // ("CAMELLIA-128-CBC", covered by OpenSSLEvpCipherTest via EVP_camellia_*()); the
-            // legacy API's bare "CAMELLIA-CBC" (no keysize visible at this call site) has no
-            // case and resolves to nothing.
-            assertThat(nodes).isEmpty();
+            // the legacy API gives the key size to Camellia_set_key, not to the mode function
+            INode camellia = head(nodes);
+            assertThat(camellia).isInstanceOf(Camellia.class);
+            assertThat(camellia.getChildren().get(Mode.class).asString())
+                    .isEqualTo(v.substring("CAMELLIA-".length()));
         } else if (v.startsWith("SEED-")) {
             String mode = v.substring("SEED-".length());
             assertSeed(nodes, mode);
         } else {
-            // Bare names (AES, AES-ECB, AES-CBC, ..., DES, 3DES-*, BLOWFISH, RC2, CAST5, IDEA,
-            // CAMELLIA, SEED) and AES-WRAP/IGE — translator has no case → empty nodes.
-            assertThat(nodes).isEmpty();
+            // key setup and mode functions without a mode suffix handled above
+            assertThat(nodes).as(v).hasSize(1);
+            assertThat(nodes.get(0)).isInstanceOf(expectedClass(v));
         }
+    }
+
+    private static Class<? extends INode> expectedClass(String value) {
+        if (value.startsWith("AES")) {
+            return AES.class;
+        } else if (value.startsWith("3DES")) {
+            return DESede.class;
+        }
+        return switch (value) {
+            case "DES" -> DES.class;
+            case "BLOWFISH" -> Blowfish.class;
+            case "CAST5" -> CAST128.class;
+            case "IDEA" -> IDEA.class;
+            case "RC2" -> RC2.class;
+            case "RC5" -> RC5.class;
+            case "SEED" -> SEED.class;
+            case "CAMELLIA" -> Camellia.class;
+            default -> throw new AssertionError("Unexpected value: " + value);
+        };
     }
 
     private static INode head(List<INode> nodes) {

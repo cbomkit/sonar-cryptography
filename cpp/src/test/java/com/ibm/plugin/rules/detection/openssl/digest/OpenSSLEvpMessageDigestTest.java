@@ -68,7 +68,7 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/digest/OpenSSLEvpMessageDigestTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(31);
+        assertThat(findingCount).isEqualTo(29);
     }
 
     @Override
@@ -217,20 +217,20 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                 assertThat(value.asString()).isEqualTo("SHA-256");
                 assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
-            case 26, 27, 28 -> {
-                // EVP_DigestInit(_ex/_ex2)(ctx, NULL, ...): digest argument is a literal NULL,
-                // so there is no constructing call to trace back to and the marker resolves to
-                // no node.
-                assertThat(value.asString()).isEqualTo("DIGEST");
-                assertThat(nodes).isEmpty();
+            case 26 -> {
+                // EVP_Q_digest(NULL, "SHA256", ...): one-shot digest named by its second argument.
+                // The EVP_DigestInit calls before it report nothing: their digest argument is
+                // reported where it is created.
+                assertThat(value.asString()).isEqualTo("SHA-256");
+                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
-            case 29 -> {
+            case 27 -> {
                 // EVP_MD_fetch(NULL, digest_name, NULL): digest_name is a local variable,
                 // resolved via CxxSymbolResolverVisitor from its initializer.
                 assertThat(value.asString()).isEqualTo("SHA-256");
                 assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
             }
-            case 30 -> {
+            case 28 -> {
                 // EVP_MD_fetch(NULL, "SHA2-256", NULL): OpenSSL 3.x provider fetch name
                 // resolved via OpenSSLNameCanonicalizerFactory.
                 assertThat(value.asString()).isEqualTo("SHA-256");

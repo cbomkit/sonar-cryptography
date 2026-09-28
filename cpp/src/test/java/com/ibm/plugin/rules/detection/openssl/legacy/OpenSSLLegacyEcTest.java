@@ -23,10 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
@@ -84,17 +88,18 @@ class OpenSSLLegacyEcTest extends TestBase {
             ecP256Count++;
         }
         switch (v) {
-            // EC_GROUP_new_curve_GFp/GF2m fall under this shared multi-method rule (see
-            // OpenSSLLegacyEc's EC_KEY_GENERATE_KEY), producing the bare "EC" value, not a
-            // distinct "EC-GFP"/"EC-GF2M" string.
-            case "EC" -> assertEcdsa(nodes);
-            case "EC-P256" -> assertEcdsaWithCurve(nodes);
-            case "ECDSA-SIGN" -> {
-                assertThat(detectionStore.getDetectionValueContext())
-                        .isInstanceOf(SignatureContext.class);
-                assertEcdsa(nodes);
+            case "EC" -> {
+                if (detectionStore.getDetectionValueContext() instanceof PrivateKeyContext) {
+                    // EC_KEY_generate_key(key) on a key whose curve is not known here
+                    assertThat(nodes).singleElement().isInstanceOf(PrivateKey.class);
+                    assertEcKey(List.of(nodes.get(0).getChildren().get(PublicKeyEncryption.class)));
+                } else {
+                    // a group on a curve given by its parameters (EC_GROUP_new_curve_GFp, ...)
+                    assertEcKey(nodes);
+                }
             }
-            case "ECDSA-VERIFY" -> {
+            case "EC-P256" -> assertEcKeyOnP256(nodes);
+            case "ECDSA-SIGN" -> {
                 assertThat(detectionStore.getDetectionValueContext())
                         .isInstanceOf(SignatureContext.class);
                 assertEcdsa(nodes);
@@ -112,12 +117,18 @@ class OpenSSLLegacyEcTest extends TestBase {
         assertThat(n.asString()).isEqualTo("ECDSA");
     }
 
-    private static void assertEcdsaWithCurve(List<INode> nodes) {
+    private static void assertEcKey(List<INode> nodes) {
         assertThat(nodes).hasSize(1);
         INode n = nodes.get(0);
-        assertThat(n).isInstanceOf(ECDSA.class);
-        assertThat(n.getKind()).isEqualTo(Signature.class);
-        assertThat(n.asString()).isEqualTo("ECDSA-secp256r1");
+        assertThat(n).isInstanceOf(EllipticCurveAlgorithm.class);
+        assertThat(n.asString()).isEqualTo("EC");
+    }
+
+    private static void assertEcKeyOnP256(List<INode> nodes) {
+        assertThat(nodes).hasSize(1);
+        INode n = nodes.get(0);
+        assertThat(n).isInstanceOf(EllipticCurveAlgorithm.class);
+        assertThat(n.asString()).isEqualTo("EC-secp256r1");
     }
 
     private static void assertEcdh(List<INode> nodes) {

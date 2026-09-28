@@ -105,6 +105,37 @@ public final class CxxVerifier {
     }
 
     /**
+     * Verifies a C++ test file with several checks registered in the same scan, as SonarQube runs
+     * all active rules of a quality profile together. Checks are registered in the given order.
+     *
+     * @param relativePath Path to the test file relative to {@code src/test/files/}
+     * @param checks The checks (detection rules) to apply, in registration order
+     */
+    public static void verifyWithChecks(
+            @Nonnull String relativePath, @Nonnull List<SquidAstVisitor<Grammar>> checks) {
+        String fullPath = TEST_FILES_BASE + relativePath;
+        File file = new File(fullPath);
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("Test file not found: " + file.getAbsolutePath());
+        }
+        try {
+            String content =
+                    new String(
+                            java.nio.file.Files.readAllBytes(file.toPath()),
+                            StandardCharsets.UTF_8);
+            InputFile inputFile =
+                    TestInputFileBuilder.create("", fullPath)
+                            .setCharset(StandardCharsets.UTF_8)
+                            .setProjectBaseDir(Path.of("."))
+                            .setContents(content)
+                            .build();
+            scan(List.of(inputFile), checks);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read test file: " + fullPath, e);
+        }
+    }
+
+    /**
      * Verifies multiple C++ test files in a single scan, sharing one {@link AstScanner} (and thus
      * one {@code SquidAstVisitorContext}) across all of them — the same shape as a real multi-file
      * SonarQube analysis. Files are scanned in the given order; {@code leaveFile} fires once per
@@ -193,8 +224,15 @@ public final class CxxVerifier {
     // it does not depend on the preprocessor expanding headers.
     private static void scan(
             @Nonnull List<InputFile> inputFiles, @Nonnull SquidAstVisitor<Grammar> check) {
+        scan(inputFiles, List.of(check));
+    }
+
+    @SuppressWarnings("unchecked") // generic varargs of CxxAstScanner.create
+    private static void scan(
+            @Nonnull List<InputFile> inputFiles, @Nonnull List<SquidAstVisitor<Grammar>> checks) {
         CxxSquidConfiguration squidConfig = new CxxSquidConfiguration();
-        AstScanner<Grammar> scanner = CxxAstScanner.create(squidConfig, check);
+        AstScanner<Grammar> scanner =
+                CxxAstScanner.create(squidConfig, checks.toArray(new SquidAstVisitor[0]));
         scanner.scanInputFiles(inputFiles);
     }
 }

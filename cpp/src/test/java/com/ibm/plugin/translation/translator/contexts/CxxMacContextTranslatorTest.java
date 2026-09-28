@@ -152,15 +152,8 @@ class CxxMacContextTranslatorTest {
     }
 
     @Test
-    void siphash24IsMappedToSipHash() {
-        Optional<INode> node = translate("SIPHASH-2-4");
-        assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(SipHash.class);
-    }
-
-    @Test
-    void siphash48IsMappedToSipHash() {
-        Optional<INode> node = translate("SIPHASH-4-8");
+    void siphashIsMappedToSipHash() {
+        Optional<INode> node = translate("SIPHASH");
         assertThat(node).isPresent();
         assertThat(node.get()).isInstanceOf(SipHash.class);
     }

@@ -1,9 +1,4 @@
 #include <openssl/evp.h>
-#include <openssl/ocsp.h>
-#include <openssl/pkcs7.h>
-#include <openssl/cms.h>
-#include <openssl/ts.h>
-#include <openssl/crmf.h>
 
 void test_evp_signature() {
     EVP_MD_CTX* ctx = NULL;
@@ -17,9 +12,8 @@ void test_evp_signature() {
     EVP_DigestSignInit(ctx, NULL, sign_md, NULL, NULL);
     const EVP_MD* verify_md = EVP_sha256();
     EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL);
-    // *_ex's mdname is a real digest-name string, resolved into its own DigestContext finding,
-    // separate from the SIGN/VERIFY action marker. Given as the OpenSSL 3.x provider fetch name
-    // here and the legacy alias below.
+    // *_ex's mdname is a digest name, reported as a digest. Given as the OpenSSL 3.x provider
+    // fetch name here and the legacy alias below.
     EVP_DigestSignInit_ex(ctx, NULL, "SHA2-256", NULL, NULL, NULL, NULL);
     EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
     EVP_DigestSign(ctx, NULL, NULL, 0, NULL, 0);
@@ -67,34 +61,4 @@ void test_evp_signature() {
     EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, pss_keygen_mgf1_md);
     EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(pctx, "SHA256", NULL);
     EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(pctx, 32);
-
-    // PKCS7
-    PKCS7_sign(NULL, NULL, NULL, NULL, 0);
-    PKCS7_sign_ex(NULL, NULL, NULL, NULL, 0, NULL, NULL);
-    PKCS7_sign_add_signer(NULL, NULL, NULL, NULL, 0);
-    PKCS7_add_signature(NULL, NULL, NULL, NULL);
-    PKCS7_set_digest(NULL, NULL);
-
-    // CMS
-    CMS_sign(NULL, NULL, NULL, NULL, 0);
-    CMS_sign_ex(NULL, NULL, NULL, NULL, 0, NULL, NULL);
-    CMS_sign_receipt(NULL, NULL, NULL, NULL, 0);
-    CMS_add1_signer(NULL, NULL, NULL, NULL, 0);
-    CMS_digest_create(NULL, NULL, 0);
-    CMS_digest_create_ex(NULL, NULL, 0, NULL, NULL);
-
-    // OCSP
-    OCSP_basic_sign(NULL, NULL, NULL, NULL, NULL, 0);
-    OCSP_basic_sign_ctx(NULL, NULL, NULL, NULL, NULL, 0);
-    OCSP_request_sign(NULL, NULL, NULL, NULL, NULL, 0);
-
-    // TS
-    TS_CONF_set_signer_digest(NULL, NULL);
-    TS_MSG_IMPRINT_set_algo(NULL, NULL);
-    TS_RESP_CTX_add_md(NULL, NULL);
-    TS_RESP_CTX_set_signer_digest(NULL, NULL);
-
-    // CRMF
-    OSSL_CRMF_pbm_new(NULL, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL);
-    OSSL_CRMF_MSG_create_popo(0, NULL, NULL, NULL, NULL, NULL);
 }

@@ -46,17 +46,11 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all rule entries in {@link OpenSSLEvpKdf}.
- *
- * <p>{@code EVP_KDF_fetch(lib, "PBKDF2", props)}-style calls raise one finding per KDF family (the
- * real fetched name, e.g. {@code "PBKDF2"}) rather than guessing a digest that isn't visible at the
- * fetch call site; {@link
- * com.ibm.plugin.translation.translator.contexts.CxxKeyDerivationFunctionContextTranslator} has no
- * case for a bare family name, so those resolve to no node. The real digest, when the code sets one
- * via {@code EVP_KDF_CTX_set_params(kctx, params)}, is a separate, independently traced finding:
- * {@code params} is resolved back to its {@code OSSL_PARAM params[] = {...}} declaration (see
- * {@link com.ibm.engine.language.cxx.CxxSemantic#resolveValues}), and {@link
- * OpenSSLParamsScannerFactory} scans that array for the {@code "digest"}-keyed entry.
+ * Covers the KDF names accepted by {@code EVP_KDF_fetch} and the PBKDF2 functions of {@link
+ * OpenSSLEvpKdfPkcs12}. Each fetched name is reported as its KDF; the digest set on a fetched KDF's
+ * context is covered by {@link OpenSSLEvpKdfContextTest}, the EVP_PKEY interface by {@link
+ * OpenSSLEvpPkeyKdfTest}, and the PKCS#12 and PKCS#5 password-based functions by {@link
+ * OpenSSLPkcs12Test}.
  */
 class OpenSSLEvpKdfTest extends TestBase {
 
@@ -66,8 +60,8 @@ class OpenSSLEvpKdfTest extends TestBase {
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/kdf/OpenSSLEvpKdfTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(42);
-        assertThat(observed).hasSize(28);
+        assertThat(findingCount).isEqualTo(21);
+        assertThat(observed).hasSize(21);
     }
 
     @Override
@@ -84,10 +78,7 @@ class OpenSSLEvpKdfTest extends TestBase {
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
 
-        // EVP_PKEY_CTX_set_hkdf_md/set_tls1_prf_md raise no finding on the call itself; their md
-        // argument is traced back to its constructing call (see OpenSSLEvpMessageDigest). Same for
-        // EVP_KDF_CTX_set_params's "digest" OSSL_PARAM entry (see OpenSSLParamsScannerFactory).
-        // Both surface here as their own DigestContext entry.
+        // the digest passed to PKCS5_PBKDF2_HMAC is also reported on its own
         if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
             observed.add(value.asString());
             findingCount++;
@@ -107,17 +98,22 @@ class OpenSSLEvpKdfTest extends TestBase {
             assertPbkdf2WithSha256(nodes);
         } else if (v.equals("PBKDF2-HMAC-SHA1")) {
             assertPbkdf2WithSha1(nodes);
-        } else if (v.equals("PBKDF2")
-                || v.equals("HKDF")
-                || v.equals("TLS1-PRF")
-                || v.equals("TLS13-KDF")
-                || v.equals("X963KDF")
-                || v.equals("KBKDF")
-                || v.equals("SSHKDF")) {
-            // Bare KDF family name with no digest visible at the fetch call site -
-            // CxxKeyDerivationFunctionContextTranslator has no case for it, so it resolves to
-            // nothing.
-            assertThat(nodes).isEmpty();
+        } else if (v.equals("PBKDF2")) {
+            assertSimpleAlgo(nodes, PBKDF2.class, "PBKDF2");
+        } else if (v.equals("HKDF") || v.equals("TLS13-KDF")) {
+            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.HKDF.class, "HKDF");
+        } else if (v.equals("TLS1-PRF")) {
+            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.TLSPRF.class, "TLS-PRF");
+        } else if (v.equals("X963KDF")) {
+            assertSimpleAlgo(
+                    nodes, com.ibm.mapper.model.algorithms.ANSIX963.class, "ANSI-KDF-X9.63");
+        } else if (v.equals("KBKDF")) {
+            assertSimpleAlgo(
+                    nodes,
+                    com.ibm.mapper.model.algorithms.KDFCounter.class,
+                    "SP800_108_CounterKDF");
+        } else if (v.equals("SSHKDF")) {
+            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.SSHKDF.class, "SSHKDF");
         } else if (v.equals("SCRYPT")) {
             assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.Scrypt.class, "scrypt");
         } else if (v.equals("X942KDF-ASN1")) {
@@ -145,15 +141,6 @@ class OpenSSLEvpKdfTest extends TestBase {
             assertGenericKdf(nodes, "PVKKDF", PasswordBasedKeyDerivationFunction.class);
         } else if (v.equals("HMAC-DRBG-KDF")) {
             assertGenericKdf(nodes, "HMAC-DRBG-KDF", KeyDerivationFunction.class);
-        } else if (v.equals("HKDF-MODE")
-                || v.equals("KDF-CTX")
-                || v.equals("PBE-KEYIVGEN")
-                || v.equals("PKCS12")
-                || v.equals("PKCS12-MAC")
-                || v.equals("PKCS12-PBE")
-                || v.equals("PKCS12-KDF")) {
-            // None of these API calls carry an algorithm-name parameter to trace.
-            assertThat(nodes).isEmpty();
         } else {
             throw new AssertionError("Unexpected value: " + v);
         }

@@ -1,20 +1,6 @@
 #include <openssl/prov_ssl.h>
 #include <openssl/ssl.h>
 
-// Declared locally (no include directories are configured for this fixture, see
-// CxxVerifier) so TLS1_2_VERSION/TLS1_3_VERSION are resolvable symbols rather than bare,
-// unresolved identifiers - this is what lets OpenSSLNidLookupFactory map them.
-enum {
-    TLS1_2_VERSION = 0x0303,
-    TLS1_3_VERSION = 0x0304
-};
-
-// Same reasoning as above, for the curve NID passed to EC_KEY_new_by_curve_name - lets
-// OpenSSLNidLookupFactory map it.
-enum {
-    NID_X9_62_prime256v1 = 415
-};
-
 void test_ssl() {
     SSL_CTX* ctx = NULL;
     SSL* s = NULL;
@@ -56,8 +42,7 @@ void test_ssl() {
     OSSL_QUIC_server_method();
 
     SSL_CTX_new(NULL);
-    // SSL_CTX_new's real argument is traced back to the *_method() call that constructs it,
-    // separate from the generic TLS_method()/etc. findings above and from the NULL case above.
+    // the method passed to SSL_CTX_new is reported once, by its *_method() call
     const SSL_METHOD* tls12_method = TLSv1_2_method();
     SSL_CTX_new(tls12_method);
     SSL_CTX_set_cipher_list(ctx, "HIGH");
@@ -86,8 +71,7 @@ void test_ssl() {
     SSL_CTX_set_ssl_version(ctx, NULL);
     SSL_set_ssl_method(s, NULL);
 
-    // Version via argument constant, not a versioned method name. TLS1_2_VERSION/
-    // TLS1_3_VERSION are declared locally above so they resolve as symbols.
+    // Version via argument constant, not a versioned method name
     SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
     SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
     SSL_set_min_proto_version(s, TLS1_2_VERSION);
