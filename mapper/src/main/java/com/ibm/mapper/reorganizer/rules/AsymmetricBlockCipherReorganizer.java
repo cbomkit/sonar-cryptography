@@ -22,6 +22,7 @@ package com.ibm.mapper.reorganizer.rules;
 import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
@@ -51,6 +52,25 @@ public final class AsymmetricBlockCipherReorganizer {
                     .perform(
                             UsualPerformActions.performMergeParentAndChildOfSameKind(
                                     PublicKeyEncryption.class));
+
+    /**
+     * A reorganizer rule that merges an algorithm of the given kind with a child that is the same
+     * algorithm, e.g. a DH key generated for DH parameters described in more detail by the child.
+     * The child takes the place of the parent and receives the parent's other children.
+     */
+    @Nonnull
+    public static IReorganizerRule mergeParentAndChildOfSameAlgorithm(
+            @Nonnull Class<? extends IPrimitive> kind) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule("MERGE_PARENT_AND_CHILD_OF_SAME_ALGORITHM")
+                .forNodeKind(kind)
+                .withDetectionCondition(
+                        (node, parent, roots) ->
+                                node.hasChildOfType(kind)
+                                        .map(child -> child.getClass().equals(node.getClass()))
+                                        .orElse(false))
+                .perform(UsualPerformActions.performMergeParentAndChildOfSameKind(kind));
+    }
 
     @Nonnull
     public static final IReorganizerRule INVERT_DIGEST_AND_ITS_SIZE =

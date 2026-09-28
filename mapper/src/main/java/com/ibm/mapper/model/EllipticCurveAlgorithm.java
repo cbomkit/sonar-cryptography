@@ -25,14 +25,28 @@ import javax.annotation.Nonnull;
 public class EllipticCurveAlgorithm extends Algorithm
         implements PublicKeyEncryption, Signature, KeyAgreement {
 
+    private static final String NAME = "EC";
+
+    /** The name, followed by the curve when the curve is known, e.g. {@code EC-secp256r1}. */
+    @Nonnull
+    @Override
+    public String asString() {
+        if (!this.name.equals(NAME)) {
+            return super.asString();
+        }
+        return this.hasChildOfType(EllipticCurve.class)
+                .map(curve -> NAME + "-" + curve.asString())
+                .orElse(NAME);
+    }
+
     public EllipticCurveAlgorithm(@Nonnull EllipticCurve curve) {
-        super("EC-" + curve.asString(), PublicKeyEncryption.class, curve.detectionLocation);
+        super(NAME + "-" + curve.asString(), PublicKeyEncryption.class, curve.detectionLocation);
         this.put(curve);
         this.put(new Oid("1.2.840.10045.2.1", curve.detectionLocation));
     }
 
     public EllipticCurveAlgorithm(@Nonnull DetectionLocation detectionLocation) {
-        super("EC", PublicKeyEncryption.class, detectionLocation);
+        super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new Oid("1.2.840.10045.2.1", detectionLocation));
     }
 

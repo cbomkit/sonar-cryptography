@@ -21,7 +21,9 @@ package com.ibm.mapper.reorganizer.rules;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PrivateKey;
@@ -156,6 +158,47 @@ public final class KeyReorgenizer {
                                     return roots;
                                 }
                             });
+
+    /**
+     * A reorganizer rule that turns an algorithm of the given kind whose private key is generated
+     * into a private key holding the algorithm.
+     *
+     * <p>This rule applies when the algorithm has a {@link KeyGeneration} child for a private key
+     * and is not already held by a key. The algorithm keeps its children, e.g. its key length or
+     * curve, and the private key takes its place among the roots or under its parent.
+     */
+    @Nonnull
+    public static IReorganizerRule makePrivateKeyOfGeneratedAlgorithm(
+            @Nonnull Class<? extends IPrimitive> kind) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule("MAKE_PRIVATE_KEY_OF_GENERATED_ALGORITHM")
+                .forNodeKind(kind)
+                .withDetectionCondition(
+                        (node, parent, roots) ->
+                                node instanceof IAlgorithm
+                                        && !(parent instanceof Key)
+                                        && generatesPrivateKey(node))
+                .perform(
+                        (node, parent, roots) -> {
+                            final PrivateKey privateKey =
+                                    new PrivateKey(new Key((IAlgorithm) node));
+                            if (parent == null) {
+                                final List<INode> rootsCopy = new ArrayList<>(roots);
+                                rootsCopy.replaceAll(root -> root == node ? privateKey : root);
+                                return rootsCopy;
+                            }
+                            parent.removeChildOfType(node.getKind());
+                            parent.put(privateKey);
+                            return roots;
+                        });
+    }
+
+    private static boolean generatesPrivateKey(@Nonnull INode node) {
+        return node.hasChildOfType(KeyGeneration.class)
+                .flatMap(keyGeneration -> ((KeyGeneration) keyGeneration).getSpecification())
+                .map(KeyGeneration.Specification.PRIVATE_KEY::equals)
+                .orElse(false);
+    }
 
     /**
      * A reorganizer rule for propagating KeyLength from a SecretKey node to its child BlockCipher.

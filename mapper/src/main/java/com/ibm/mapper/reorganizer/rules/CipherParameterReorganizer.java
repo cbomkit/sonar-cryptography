@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.reorganizer.rules;
 
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.TagLength;
@@ -27,7 +28,9 @@ import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public final class CipherParameterReorganizer {
@@ -78,4 +81,44 @@ public final class CipherParameterReorganizer {
                     .forNodeKind(Decrypt.class)
                     .withAnyNonNullChildren()
                     .perform(UsualPerformActions.performMovingChildrenUp);
+
+    /**
+     * An encryption or decryption operation detected before the cipher it uses (as in C, where
+     * {@code EVP_EncryptInit_ex(ctx, cipher, ...)} names the cipher) has the cipher as its child.
+     * The cipher becomes the root node and the operation its child, the same shape as when the
+     * cipher is detected first.
+     */
+    @Nonnull
+    public static final IReorganizerRule MOVE_ENCRYPT_UNDER_ITS_CIPHER =
+            moveOperationUnderItsCipher(Encrypt.class);
+
+    @Nonnull
+    public static final IReorganizerRule MOVE_DECRYPT_UNDER_ITS_CIPHER =
+            moveOperationUnderItsCipher(Decrypt.class);
+
+    @Nonnull
+    private static IReorganizerRule moveOperationUnderItsCipher(
+            @Nonnull Class<? extends INode> operationClazz) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule()
+                .forNodeKind(operationClazz)
+                .withDetectionCondition(
+                        (node, parent, roots) -> parent == null && cipherOf(node).isPresent())
+                .perform(
+                        (node, parent, roots) -> {
+                            final INode cipher = cipherOf(node).orElseThrow();
+                            node.removeChildOfType(cipher.getKind());
+                            cipher.put(node);
+                            final List<INode> newRoots = new ArrayList<>(roots);
+                            newRoots.set(newRoots.indexOf(node), cipher);
+                            return newRoots;
+                        });
+    }
+
+    @Nonnull
+    private static Optional<INode> cipherOf(@Nonnull INode operation) {
+        return operation.getChildren().values().stream()
+                .filter(IAlgorithm.class::isInstance)
+                .findFirst();
+    }
 }
