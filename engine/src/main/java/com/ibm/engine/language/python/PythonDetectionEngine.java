@@ -40,6 +40,7 @@ import org.sonar.plugins.python.api.symbols.Symbol;
 import org.sonar.plugins.python.api.tree.*;
 
 public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
+
     @Nonnull
     private final DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> detectionStore;
 
@@ -351,6 +352,26 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     @Nonnull
     private Optional<TraceSymbol<Symbol>> getTraceSymbol(
             @Nonnull Parameter<Tree> parameter, @Nonnull List<Argument> arguments) {
+        Optional<String> keywordName = parameter.getKeywordName();
+        if (keywordName.isPresent()) {
+            // Named parameter: keyword-name lookup first, then positional fallback
+            Optional<Argument> resolved =
+                    findArgumentByKeyword(keywordName.get(), parameter.getIndex(), arguments);
+            if (resolved.isEmpty()) {
+                return Optional.of(TraceSymbol.createWithStateDifferent());
+            }
+            Argument arg = resolved.get();
+            if (arg instanceof RegularArgument regularArg) {
+                Expression expressionArg = regularArg.expression();
+                if (expressionArg.is(Tree.Kind.NAME)) {
+                    Name nameArg = (Name) expressionArg;
+                    return Optional.of(TraceSymbol.createFrom(nameArg.symbol()));
+                }
+            }
+            return Optional.of(TraceSymbol.createWithStateNoSymbol());
+        }
+
+        // Positional parameter (original behaviour)
         if (parameter.getIndex() >= arguments.size()) {
             return Optional.of(TraceSymbol.createWithStateDifferent());
         }
@@ -414,10 +435,6 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         }
 
         DetectionRule<Tree> detectionRule = (DetectionRule<Tree>) detectionStore.getDetectionRule();
-        if (detectionRule.actionFactory() != null) {
-            MethodDetection<Tree> methodDetection = new MethodDetection<>(expressionTree, null);
-            detectionStore.onReceivingNewDetection(methodDetection);
-        }
 
         // Extracts the arguments for the provided expression
         List<Argument> arguments = expressionTree.arguments();
@@ -427,57 +444,208 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
         // TODO: It would be better to have a case disjunction to use either
         // isInvocationOnVariable or isInitForVariable, but it is difficult in Python
 
-        int index = 0;
-        for (Parameter<Tree> parameter : detectionRule.parameters()) {
-            if (!checkCurrentIndexState(
-                    index, arguments, isInvocation, traceSymbol, expressionTree)) {
-                index++;
-                continue;
-            }
-            // the expression tree of the parameter
-            Tree expression = arguments.get(index); // this is an Argument tree
-            if (expression instanceof RegularArgument regularArgument) {
-                expression = regularArgument.expression();
+        // When named parameters are present, reject unpacking arguments (*args, **kwargs) since
+        // we cannot statically inspect their contents, and reject calls where a required named
+        // parameter is absent. Unknown keyword arguments are silently ignored — we assume valid
+        // Python code where argument order is positional → named required → named optional.
+        boolean hasNamedParams =
+                detectionRule.parameters().stream().anyMatch(p -> p.getKeywordName().isPresent());
+        if (hasNamedParams) {
+            // Reject if any argument is a dict-unpacking (**d) or sequence-unpacking (*args).
+            boolean hasUnpackingArg =
+                    arguments.stream().anyMatch(a -> !(a instanceof RegularArgument));
+            if (hasUnpackingArg) {
+                return;
             }
 
-            /*
-             * This method resolves the detection parameter in an inner scope.
-             * If unsuccessful, it falls back to resolving values in the outer scope using the provided expression and detectableParameter.
-             */
-            if (parameter.is(DetectableParameter.class)) {
-                DetectableParameter<Tree> detectableParameter =
-                        (DetectableParameter<Tree>) parameter;
-                // try to resolve value in inner scope
-                List<ResolvedValue<Object, Tree>> resolvedValues =
-                        resolveValuesInInnerScope(
-                                Object.class, expression, detectableParameter.getiValueFactory());
-                if (resolvedValues.isEmpty()) {
-                    // goto outer scope
-                    resolveValuesInOuterScope(expression, detectableParameter);
-                } else {
-                    resolvedValues.stream()
-                            .map(
-                                    resolvedValue ->
-                                            new ValueDetection<>(
-                                                    resolvedValue,
-                                                    detectableParameter,
-                                                    expressionTree,
-                                                    expressionTree))
-                            .forEach(detectionStore::onReceivingNewDetection);
+            // Reject calls whose argument count is less than
+            //   minArgs = positional params + required named params
+            // Too few args means at least one required param cannot be satisfied.
+            int minArgs =
+                    (int)
+                            detectionRule.parameters().stream()
+                                    .filter(
+                                            p ->
+                                                    p.getKeywordName().isEmpty()
+                                                            || !p.isKeywordOptional())
+                                    .count();
+            if (arguments.size() < minArgs) {
+                return;
+            }
+
+            // Reject if any required named parameter is absent from the call site.
+            for (Parameter<Tree> p : detectionRule.parameters()) {
+                if (p.getKeywordName().isPresent() && !p.isKeywordOptional()) {
+                    Optional<Argument> present =
+                            findArgumentByKeyword(
+                                    p.getKeywordName().get(), p.getIndex(), arguments);
+                    if (present.isEmpty()) {
+                        return;
+                    }
                 }
-            } else if (!parameter.getDetectionRules().isEmpty()) {
-                /*
-                 * This case is reached when the parameter is not a DetectableParameter (the rule does not contains `.shouldBeDetectedAs`),
-                 * but has depending detection rules (the rule contain `.addDependingDetectionRules`).
-                 * This happens usually for parameters that are intermediary function, that we have to resolve but we don't want to capture their value.
-                 * In this case, we resolve the parameter with the depending detection rule with an EXPRESSION scope,
-                 * this way we ensure to only resolve the right parameter content and not similar calls in the same function scope.
-                 */
-                detectionStore.onDetectedDependingParameter(
-                        parameter, expression, DetectionStore.Scope.EXPRESSION);
             }
 
-            index++;
+            // Reject if any positional parameter's type does not match its declaration.
+            // This must run before the root MethodDetection is emitted so a type mismatch
+            // on a positional slot suppresses the entire rule, not just that parameter.
+            for (Parameter<Tree> p : detectionRule.parameters()) {
+                if (p.getKeywordName().isPresent()
+                        || p.getParameterType().equals(MethodMatcher.ANY)) {
+                    continue;
+                }
+                if (p.getIndex() >= arguments.size()) {
+                    continue;
+                }
+                Tree argTree = arguments.get(p.getIndex());
+                if (argTree instanceof RegularArgument ra) {
+                    argTree = ra.expression();
+                }
+                Optional<IType> resolvedType = PythonSemantic.resolveTreeType(argTree);
+                boolean typeMatches =
+                        resolvedType.map(t -> t.is(p.getParameterType())).orElse(true);
+                if (!typeMatches) {
+                    return;
+                }
+            }
+        }
+
+        if (detectionRule.actionFactory() != null) {
+            MethodDetection<Tree> methodDetection = new MethodDetection<>(expressionTree, null);
+            detectionStore.onReceivingNewDetection(methodDetection);
+        }
+
+        for (Parameter<Tree> parameter : detectionRule.parameters()) {
+            Optional<String> keywordName = parameter.getKeywordName();
+
+            if (keywordName.isPresent()) {
+                // --- Named parameter extraction ---
+                Optional<Argument> resolvedArg =
+                        findArgumentByKeyword(keywordName.get(), parameter.getIndex(), arguments);
+
+                if (resolvedArg.isEmpty()) {
+                    // optional parameter absent → skip silently;
+                    // required parameter absent → pre-flight already rejected the call above
+                    continue;
+                }
+
+                // extract expression from the resolved argument
+                Tree expression = resolvedArg.get();
+                if (expression instanceof RegularArgument regularArgument) {
+                    expression = regularArgument.expression();
+                }
+
+                // Type check: verify the resolved argument's type against the declared parameter
+                // type. Skipped when the declared type is ANY (wildcard). When the type cannot be
+                // statically resolved, resolveTreeType returns an accept-all IType — the same
+                // conservative behaviour used by MethodMatcher for positional parameters.
+                if (!parameter.getParameterType().equals(MethodMatcher.ANY)) {
+                    Optional<IType> resolvedType = PythonSemantic.resolveTreeType(expression);
+                    boolean typeMatches =
+                            resolvedType.map(t -> t.is(parameter.getParameterType())).orElse(true);
+                    if (!typeMatches) {
+                        // Type mismatch: skip optional, stop for required
+                        if (!parameter.isKeywordOptional()) {
+                            return;
+                        }
+                        continue;
+                    }
+                }
+
+                if (!checkSymbolTraceState(isInvocation, traceSymbol, expressionTree)) {
+                    continue;
+                }
+
+                processParameterExpression(parameter, expression, expressionTree);
+            } else {
+                // --- Positional parameter extraction (original behaviour) ---
+                if (!checkCurrentIndexState(
+                        parameter.getIndex(),
+                        arguments,
+                        isInvocation,
+                        traceSymbol,
+                        expressionTree)) {
+                    continue;
+                }
+                Tree expression = arguments.get(parameter.getIndex());
+                if (expression instanceof RegularArgument regularArgument) {
+                    expression = regularArgument.expression();
+                }
+
+                processParameterExpression(parameter, expression, expressionTree);
+            }
+        }
+    }
+
+    /**
+     * Tries to find an argument matching the given keyword name. Falls back to the positional index
+     * if no keyword-named argument is found and the argument at that index is positional (i.e. has
+     * no keyword name itself).
+     *
+     * @param keywordName the name to look for as a keyword argument
+     * @param positionalIndex the fallback positional index
+     * @param arguments the full argument list at the call site
+     * @return the matching argument, or empty if neither keyword nor positional match is available
+     */
+    @Nonnull
+    private Optional<Argument> findArgumentByKeyword(
+            @Nonnull String keywordName, int positionalIndex, @Nonnull List<Argument> arguments) {
+        // Step 1: keyword-name lookup
+        for (Argument arg : arguments) {
+            if (arg instanceof RegularArgument ra
+                    && ra.keywordArgument() != null
+                    && keywordName.equals(ra.keywordArgument().name())) {
+                return Optional.of(arg);
+            }
+        }
+        // Step 2: positional fallback — accept only if the argument at positionalIndex is itself
+        // positional (no keyword marker) to avoid misattributing a keyword arg to the wrong param.
+        if (positionalIndex < arguments.size()) {
+            Argument arg = arguments.get(positionalIndex);
+            if (arg instanceof RegularArgument ra && ra.keywordArgument() == null) {
+                return Optional.of(arg);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Shared logic for processing a resolved parameter expression (both positional and named
+     * parameters). Mirrors the inner body of the original analyseExpression loop.
+     */
+    private void processParameterExpression(
+            @Nonnull Parameter<Tree> parameter,
+            @Nonnull Tree expression,
+            @Nonnull CallExpression expressionTree) {
+        if (parameter.is(DetectableParameter.class)) {
+            DetectableParameter<Tree> detectableParameter = (DetectableParameter<Tree>) parameter;
+            // try to resolve value in inner scope
+            List<ResolvedValue<Object, Tree>> resolvedValues =
+                    resolveValuesInInnerScope(
+                            Object.class, expression, detectableParameter.getiValueFactory());
+            if (resolvedValues.isEmpty()) {
+                // goto outer scope
+                resolveValuesInOuterScope(expression, detectableParameter);
+            } else {
+                resolvedValues.stream()
+                        .map(
+                                resolvedValue ->
+                                        new ValueDetection<>(
+                                                resolvedValue,
+                                                detectableParameter,
+                                                expressionTree,
+                                                expressionTree))
+                        .forEach(detectionStore::onReceivingNewDetection);
+            }
+        } else if (!parameter.getDetectionRules().isEmpty()) {
+            /*
+             * This case is reached when the parameter is not a DetectableParameter (the rule does not contains `.shouldBeDetectedAs`),
+             * but has depending detection rules (the rule contain `.addDependingDetectionRules`).
+             * This happens usually for parameters that are intermediary function, that we have to resolve but we don't want to capture their value.
+             * In this case, we resolve the parameter with the depending detection rule with an EXPRESSION scope,
+             * this way we ensure to only resolve the right parameter content and not similar calls in the same function scope.
+             */
+            detectionStore.onDetectedDependingParameter(
+                    parameter, expression, DetectionStore.Scope.EXPRESSION);
         }
     }
 
@@ -496,6 +664,19 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             return false;
         }
 
+        return checkSymbolTraceState(isInvocation, traceSymbol, expressionTree);
+    }
+
+    /**
+     * Checks whether the call-graph symbol-trace context allows the rule to fire. This is the
+     * second half of {@link #checkCurrentIndexState} without the arity guard, and is used on the
+     * named-parameter path where the argument has already been resolved by keyword name and its
+     * physical existence is guaranteed by {@link #findArgumentByKeyword}.
+     */
+    private boolean checkSymbolTraceState(
+            boolean isInvocation,
+            @Nonnull TraceSymbol<Symbol> traceSymbol,
+            @Nonnull CallExpression expressionTree) {
         // Check if the variable symbols for the method (if applicable) are connected
         Optional<Symbol> assignedSymbol =
                 getAssignedSymbol(expressionTree).map(ts -> ts.getSymbol());

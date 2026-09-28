@@ -21,6 +21,7 @@ package com.ibm.engine.language.csharp;
 
 import com.ibm.engine.language.csharp.antlr.CSharpParser;
 import com.ibm.engine.language.csharp.antlr.CSharpParserBaseVisitor;
+import com.ibm.engine.language.csharp.tree.CSharpArgument;
 import com.ibm.engine.language.csharp.tree.CSharpBlockTree;
 import com.ibm.engine.language.csharp.tree.CSharpIdentifierTree;
 import com.ibm.engine.language.csharp.tree.CSharpLiteralTree;
@@ -212,8 +213,10 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
                 return null;
             }
             CSharpTree rhsTree = convertExpression(rhs);
-            List<CSharpTree> args =
-                    rhsTree != null ? Collections.singletonList(rhsTree) : Collections.emptyList();
+            List<CSharpArgument> args =
+                    rhsTree != null
+                            ? Collections.singletonList(new CSharpArgument(null, rhsTree))
+                            : Collections.emptyList();
 
             statements.add(
                     new CSharpMethodInvocationTree(
@@ -310,7 +313,7 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
 
             String methodName = memberAccess.identifier().getText();
             String objectTypeName = resolveObjectTypeName(start, children, memberAccessIdx);
-            List<CSharpTree> args = convertArgumentList(methodInv.argument_list());
+            List<CSharpArgument> args = convertArgumentList(methodInv.argument_list());
 
             return new CSharpMethodInvocationTree(
                     ctx.getStart().getLine(),
@@ -365,7 +368,7 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
 
             // In v7, object_creation_expression holds (OPEN_PARENS argument_list? CLOSE_PARENS)
             // directly — there is no object_creation_args wrapper
-            List<CSharpTree> args = Collections.emptyList();
+            List<CSharpArgument> args = Collections.emptyList();
             CSharpParser.Object_creation_expressionContext objExpr =
                     objCreationCtx.object_creation_expression();
             if (objExpr != null) {
@@ -386,14 +389,14 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
         // -----------------------------------------------------------------------
 
         @Nonnull
-        private List<CSharpTree> convertArgumentList(
+        private List<CSharpArgument> convertArgumentList(
                 @Nullable CSharpParser.Argument_listContext argListCtx) {
             if (argListCtx == null) {
                 return Collections.emptyList();
             }
-            List<CSharpTree> args = new ArrayList<>();
+            List<CSharpArgument> args = new ArrayList<>();
             for (CSharpParser.ArgumentContext arg : argListCtx.argument()) {
-                CSharpTree argTree = convertArgument(arg);
+                CSharpArgument argTree = convertArgument(arg);
                 if (argTree != null) {
                     args.add(argTree);
                 }
@@ -401,12 +404,22 @@ public final class CSharpTreeConverter extends CSharpParserBaseVisitor<Void> {
             return Collections.unmodifiableList(args);
         }
 
-        @Nullable private CSharpTree convertArgument(@Nonnull CSharpParser.ArgumentContext arg) {
+        @Nullable private CSharpArgument convertArgument(@Nonnull CSharpParser.ArgumentContext arg) {
             CSharpParser.ExpressionContext expr = arg.expression();
             if (expr == null) {
                 return null;
             }
-            return convertExpression(expr);
+            CSharpTree value = convertExpression(expr);
+            if (value == null) {
+                return null;
+            }
+
+            String name = null;
+            if (arg.identifier() != null && arg.COLON() != null) {
+                name = arg.identifier().getText();
+            }
+
+            return new CSharpArgument(name, value);
         }
 
         @Nullable private CSharpTree convertExpression(@Nonnull CSharpParser.ExpressionContext expr) {
