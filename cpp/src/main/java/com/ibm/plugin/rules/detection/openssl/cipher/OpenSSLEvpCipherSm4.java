@@ -66,19 +66,8 @@ public final class OpenSSLEvpCipherSm4 {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_sm4_cfb128")
+                    .forMethods("EVP_sm4_cfb128", "EVP_sm4_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_SM4_CFB128 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_sm4_cfb128")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CFB128"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -114,7 +103,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // SM4
-                EVP_SM4_ECB, EVP_SM4_CBC, EVP_SM4_CFB, EVP_SM4_CFB128, EVP_SM4_OFB, EVP_SM4_CTR);
+                EVP_SM4_ECB, EVP_SM4_CBC, EVP_SM4_CFB, EVP_SM4_OFB, EVP_SM4_CTR);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

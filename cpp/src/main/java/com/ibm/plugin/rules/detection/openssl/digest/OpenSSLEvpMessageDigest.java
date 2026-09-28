@@ -40,8 +40,10 @@ import javax.annotation.Nonnull;
  * <p>Per-family digest specifiers with multiple variants live in their own {@code
  * OpenSSLEvpMessageDigest<Family>} classes (MD, SHA-2, SHA-3/SHAKE, BLAKE2); this class holds the
  * remaining single-variant digests (SHA-1, RIPEMD, Whirlpool, SM3, combined/special digests) and
- * the generic EVP digest infrastructure (fetch, legacy lookup, init), and aggregates every family's
- * rules in {@link #rules()}.
+ * the digests selected by name ({@code EVP_MD_fetch}, {@code EVP_get_digestbyname}, {@code
+ * EVP_Q_digest}), and aggregates every family's rules in {@link #rules()}. The digest given to
+ * {@code EVP_DigestInit} and the other functions that take an {@code EVP_MD} is reported where it
+ * is created.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpMessageDigest {
@@ -142,13 +144,22 @@ public final class OpenSSLEvpMessageDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_DIGEST_INIT =
+    // EVP_Q_digest(libctx, name, propq, data, datalen, md, mdlen): one-shot digest by name
+    private static final IDetectionRule<AstNode> EVP_Q_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_DigestInit", "EVP_DigestInit_ex", "EVP_DigestInit_ex2")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DIGEST"))
-                    .withAnyParameters()
+                    .forMethods("EVP_Q_digest")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -183,11 +194,10 @@ public final class OpenSSLEvpMessageDigest {
                 // Combined and Special Digests
                 EVP_MD5_SHA1,
                 EVP_MD_NULL,
-                // MD fetch + legacy lookup + init_ex
+                // Digest selected by name: fetch, legacy lookup and one-shot digest
                 EVP_MD_FETCH,
                 EVP_GET_DIGESTBYNAME,
-                // EVP Digest init
-                EVP_DIGEST_INIT);
+                EVP_Q_DIGEST);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

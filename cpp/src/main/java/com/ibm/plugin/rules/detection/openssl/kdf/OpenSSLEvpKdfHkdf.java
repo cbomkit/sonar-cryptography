@@ -20,7 +20,6 @@
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -31,26 +30,15 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for the OpenSSL HKDF (HMAC-based Key Derivation Function, RFC 5869), covering its
- * fetch and EVP_PKEY_CTX digest/mode setters.
+ * Detection rules for the calls made on an HKDF (HMAC-based Key Derivation Function, RFC 5869)
+ * context of the {@code EVP_PKEY} interface: the digest setter. The context itself is created by
+ * the {@code EVP_PKEY_CTX_new_id} and {@code EVP_PKEY_CTX_new_from_name} rules of {@link
+ * OpenSSLEvpKdf}, which also covers HKDF fetched by name through {@code EVP_KDF_fetch}.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKdfHkdf {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> HKDF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_HKDF_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -64,17 +52,6 @@ public final class OpenSSLEvpKdfHkdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_HKDF_MODE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_hkdf_mode")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HKDF-MODE"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private OpenSSLEvpKdfHkdf() {
         // private
     }
@@ -82,11 +59,8 @@ public final class OpenSSLEvpKdfHkdf {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // HKDF - HMAC-based Key Derivation Function
-                HKDF_FETCH,
                 // HKDF setters
-                EVP_PKEY_CTX_SET_HKDF_MD,
-                EVP_PKEY_CTX_SET_HKDF_MODE);
+                EVP_PKEY_CTX_SET_HKDF_MD);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

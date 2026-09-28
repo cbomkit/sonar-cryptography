@@ -61,19 +61,8 @@ public final class OpenSSLEvpCipherCast5 {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_cast5_cfb64")
+                    .forMethods("EVP_cast5_cfb64", "EVP_cast5_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_CAST5_CFB64 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_cast5_cfb64")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CFB64"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -96,7 +85,7 @@ public final class OpenSSLEvpCipherCast5 {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(EVP_CAST5_ECB, EVP_CAST5_CBC, EVP_CAST5_CFB, EVP_CAST5_CFB64, EVP_CAST5_OFB);
+        return List.of(EVP_CAST5_ECB, EVP_CAST5_CBC, EVP_CAST5_CFB, EVP_CAST5_OFB);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

@@ -30,44 +30,14 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/** Detection rules for OpenSSL legacy (pre-EVP) HMAC APIs. */
+/**
+ * Detection rules for OpenSSL legacy (pre-EVP) HMAC APIs: the calls that select the digest of the
+ * HMAC ({@code HMAC_Init_ex}, {@code HMAC_Init} and the one-shot {@code HMAC}).
+ */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyMacHmac {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> HMAC_CTX_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("HMAC_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withoutParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_CTX_RESET =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("HMAC_CTX_reset")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_CTX_COPY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("HMAC_CTX_copy")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> HMAC_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -100,28 +70,6 @@ public final class OpenSSLLegacyMacHmac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> HMAC_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("HMAC_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("HMAC_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> HMAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -146,15 +94,7 @@ public final class OpenSSLLegacyMacHmac {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                HMAC_CTX_NEW,
-                HMAC_CTX_RESET,
-                HMAC_CTX_COPY,
-                HMAC_INIT_EX,
-                HMAC_INIT,
-                HMAC_UPDATE,
-                HMAC_FINAL,
-                HMAC);
+        return List.of(HMAC_INIT_EX, HMAC_INIT, HMAC);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

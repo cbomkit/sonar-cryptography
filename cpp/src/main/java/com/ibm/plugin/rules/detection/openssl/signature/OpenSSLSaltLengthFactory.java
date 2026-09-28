@@ -17,36 +17,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.rules.detection.openssl.keygen;
+package com.ibm.plugin.rules.detection.openssl.signature;
 
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.SaltSize;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
- * Resolves a numeric key-length argument (e.g. {@code EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits)},
- * {@code EVP_PKEY_CTX_set_dsa_paramgen_bits(ctx, bits)}) to {@code "<prefix>-<bits>"} for whatever
- * value the call actually carries, rather than a fixed set of guessed lengths. A non-numeric
- * argument resolves to nothing.
+ * Resolves the RSA-PSS salt length argument of {@code EVP_PKEY_CTX_set_rsa_pss_saltlen} and {@code
+ * EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen}, given in bytes, to a salt size in bits. The negative
+ * special values ({@code RSA_PSS_SALTLEN_DIGEST}, {@code RSA_PSS_SALTLEN_MAX}, ...) select a length
+ * derived from the digest or the key and resolve to nothing, as does an argument that is not an
+ * integer.
  */
-public final class OpenSSLKeygenBitsFactory implements IValueFactory<AstNode> {
-
-    @Nonnull private final String prefix;
-
-    public OpenSSLKeygenBitsFactory(@Nonnull String prefix) {
-        this.prefix = prefix;
-    }
+public final class OpenSSLSaltLengthFactory implements IValueFactory<AstNode> {
 
     @Override
     @Nonnull
     public Optional<IValue<AstNode>> apply(@Nonnull ResolvedValue<Object, AstNode> resolvedValue) {
-        if (!(resolvedValue.value() instanceof Number bits)) {
-            return Optional.empty();
+        if (resolvedValue.value() instanceof Number bytes && bytes.intValue() > 0) {
+            return Optional.of(
+                    new SaltSize<>(bytes.intValue() * 8, Size.UnitType.BIT, resolvedValue.tree()));
         }
-        return Optional.of(new ValueAction<>(prefix + "-" + bits.intValue(), resolvedValue.tree()));
+        return Optional.empty();
     }
 }

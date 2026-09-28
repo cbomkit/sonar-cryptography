@@ -47,6 +47,18 @@ import org.sonar.cxx.utils.CxxAstNodeHelper;
  */
 public final class OpenSSLParamsScannerFactory implements IValueFactory<AstNode> {
 
+    /** {@code OSSL_PARAM} key macros (core_names.h) → the key they stand for. */
+    private static final Map<String, String> PARAM_KEY_MACROS =
+            Map.ofEntries(
+                    Map.entry("OSSL_ALG_PARAM_DIGEST", "digest"),
+                    Map.entry("OSSL_ALG_PARAM_CIPHER", "cipher"),
+                    Map.entry("OSSL_KDF_PARAM_DIGEST", "digest"),
+                    Map.entry("OSSL_KDF_PARAM_CIPHER", "cipher"),
+                    Map.entry("OSSL_MAC_PARAM_DIGEST", "digest"),
+                    Map.entry("OSSL_MAC_PARAM_CIPHER", "cipher"),
+                    Map.entry("OSSL_DRBG_PARAM_DIGEST", "digest"),
+                    Map.entry("OSSL_DRBG_PARAM_CIPHER", "cipher"));
+
     @Nonnull private final String paramKey;
     @Nonnull private final Map<String, String> canonicalTable;
 
@@ -85,7 +97,7 @@ public final class OpenSSLParamsScannerFactory implements IValueFactory<AstNode>
                 continue;
             }
             final List<AstNode> args = flattenCallArguments(call);
-            if (args.size() < 2 || !paramKey.equals(literalStringValue(args.get(0)))) {
+            if (args.size() < 2 || !paramKey.equals(paramKeyOf(args.get(0)))) {
                 continue;
             }
             final String name = literalStringValue(args.get(1));
@@ -97,6 +109,16 @@ public final class OpenSSLParamsScannerFactory implements IValueFactory<AstNode>
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * The key of an {@code OSSL_PARAM} entry, given as a string literal ({@code "digest"}) or as
+     * the OpenSSL macro for it ({@code OSSL_KDF_PARAM_DIGEST}).
+     */
+    @Nonnull
+    private static String paramKeyOf(@Nonnull AstNode keyArgument) {
+        final String key = literalStringValue(keyArgument);
+        return PARAM_KEY_MACROS.getOrDefault(key, key);
     }
 
     /**

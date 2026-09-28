@@ -65,19 +65,8 @@ public final class OpenSSLEvpCipherSeed {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_seed_cfb128")
+                    .forMethods("EVP_seed_cfb128", "EVP_seed_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_SEED_CFB128 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_seed_cfb128")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CFB128"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -100,7 +89,7 @@ public final class OpenSSLEvpCipherSeed {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(EVP_SEED_ECB, EVP_SEED_CBC, EVP_SEED_CFB, EVP_SEED_CFB128, EVP_SEED_OFB);
+        return List.of(EVP_SEED_ECB, EVP_SEED_CBC, EVP_SEED_CFB, EVP_SEED_OFB);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

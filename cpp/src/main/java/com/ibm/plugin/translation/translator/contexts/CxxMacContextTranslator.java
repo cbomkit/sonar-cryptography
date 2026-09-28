@@ -68,6 +68,15 @@ public final class CxxMacContextTranslator implements IContextTranslation<AstNod
         if (value instanceof ValueAction<AstNode>
                 || value instanceof com.ibm.engine.model.Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
+                // Names accepted by EVP_MAC_fetch. The digest of an HMAC and the cipher of a CMAC
+                // or GMAC are set through OSSL_PARAMs of the context and attached as children.
+                case "HMAC" -> Optional.of(new HMAC(detectionLocation));
+                case "CMAC" -> Optional.of(new CMAC(detectionLocation));
+                case "GMAC" -> Optional.of(new Algorithm("GMAC", Mac.class, detectionLocation));
+                case "KMAC-128", "KMAC128" -> Optional.of(new KMAC(128, detectionLocation));
+                case "KMAC-256", "KMAC256" -> Optional.of(new KMAC(256, detectionLocation));
+                case "SIPHASH" -> Optional.of(new SipHash(detectionLocation));
+
                 // HMAC variants
                 case "HMAC-MD5" -> Optional.of(new HMAC(new MD5(detectionLocation)));
                 case "HMAC-SHA1" -> Optional.of(new HMAC(new SHA(detectionLocation)));
@@ -123,19 +132,16 @@ public final class CxxMacContextTranslator implements IContextTranslation<AstNod
                 }
 
                 // Poly1305
-                case "POLY1305" -> Optional.of(new Poly1305(detectionLocation));
-
-                // SipHash
-                case "SIPHASH-2-4" -> Optional.of(new SipHash(detectionLocation));
-                case "SIPHASH-4-8" -> Optional.of(new SipHash(detectionLocation));
-
-                // KMAC
-                case "KMAC128" -> Optional.of(new KMAC(128, detectionLocation));
-                case "KMAC256" -> Optional.of(new KMAC(256, detectionLocation));
+                case "POLY1305" ->
+                        Optional.of(new Poly1305(Mac.class, new Poly1305(detectionLocation)));
 
                 // BLAKE2 MAC
-                case "BLAKE2BMAC" -> Optional.of(new BLAKE2b(512, false, detectionLocation));
-                case "BLAKE2SMAC" -> Optional.of(new BLAKE2s(256, false, detectionLocation));
+                case "BLAKE2BMAC" ->
+                        Optional.of(
+                                new BLAKE2b(Mac.class, new BLAKE2b(512, false, detectionLocation)));
+                case "BLAKE2SMAC" ->
+                        Optional.of(
+                                new BLAKE2s(Mac.class, new BLAKE2s(256, false, detectionLocation)));
 
                 default -> Optional.empty();
             };

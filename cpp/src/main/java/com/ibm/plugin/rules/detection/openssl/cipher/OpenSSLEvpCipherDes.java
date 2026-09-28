@@ -47,13 +47,14 @@ public final class OpenSSLEvpCipherDes {
                     new Entry("EVP_des_cfb64", "DES-CFB"),
                     new Entry("EVP_des_cfb1", "DES-CFB1"),
                     new Entry("EVP_des_cfb8", "DES-CFB8"),
-                    new Entry("EVP_des_cfb64", "DES-CFB64"),
+                    new Entry("EVP_des_cfb", "DES-CFB"),
                     new Entry("EVP_des_ofb", "DES-OFB"),
                     // 3DES EDE (2-key)
                     new Entry("EVP_des_ede", "DESede"),
                     new Entry("EVP_des_ede_ecb", "DESede-ECB"),
                     new Entry("EVP_des_ede_cbc", "DESede-CBC"),
                     new Entry("EVP_des_ede_cfb64", "DESede-CFB64"),
+                    new Entry("EVP_des_ede_cfb", "DESede-CFB64"),
                     new Entry("EVP_des_ede_ofb", "DESede-OFB"),
                     // 3DES EDE3 (3-key) additional modes
                     new Entry("EVP_des_ede3", "DESede3"),
@@ -61,6 +62,7 @@ public final class OpenSSLEvpCipherDes {
                     new Entry("EVP_des_ede3_cfb1", "DESede3-CFB1"),
                     new Entry("EVP_des_ede3_cfb8", "DESede3-CFB8"),
                     new Entry("EVP_des_ede3_cfb64", "DESede3-CFB64"),
+                    new Entry("EVP_des_ede3_cfb", "DESede3-CFB64"),
                     new Entry("EVP_des_ede3_ofb", "DESede3-OFB"),
                     // DESX
                     new Entry("EVP_desx_cbc", "DESX-CBC"),

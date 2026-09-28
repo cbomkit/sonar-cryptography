@@ -20,7 +20,6 @@
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -31,39 +30,15 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for the OpenSSL TLS pseudo-random-function KDFs: the legacy TLS1-PRF (TLS
- * 1.0/1.1/1.2) and TLS13-KDF (TLS 1.3), covering fetch and the TLS1-PRF digest setter.
+ * Detection rules for the calls made on a TLS1-PRF (TLS 1.0/1.1/1.2) context of the {@code
+ * EVP_PKEY} interface: the digest setter. The context itself is created by the {@code
+ * EVP_PKEY_CTX_new_id} and {@code EVP_PKEY_CTX_new_from_name} rules of {@link OpenSSLEvpKdf}, which
+ * also covers the TLS1-PRF and TLS13-KDF fetched by name through {@code EVP_KDF_fetch}.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKdfTls {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> TLS1_PRF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS1-PRF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS1-PRF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TLS13_KDF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TLS13-KDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TLS13-KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_TLS1_PRF_MD =
             new DetectionRuleBuilder<AstNode>()
@@ -84,10 +59,6 @@ public final class OpenSSLEvpKdfTls {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // TLS1-PRF - TLS 1.0/1.1/1.2 Pseudo-Random Function
-                TLS1_PRF_FETCH,
-                // TLS13-KDF - TLS 1.3 Key Derivation Function
-                TLS13_KDF_FETCH,
                 // TLS1-PRF setters
                 EVP_PKEY_CTX_SET_TLS1_PRF_MD);
     }

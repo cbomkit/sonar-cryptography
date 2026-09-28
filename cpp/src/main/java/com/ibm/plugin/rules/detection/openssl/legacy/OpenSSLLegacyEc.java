@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -28,6 +29,7 @@ import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
@@ -93,24 +95,6 @@ public final class OpenSSLLegacyEc {
 
     // Key Generation
 
-    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods(
-                            "EC_KEY_generate_key",
-                            "EC_KEY_set_group",
-                            "EC_GROUP_new_curve_GFp",
-                            "EC_GROUP_new_curve_GF2m",
-                            "EC_GROUP_new_from_params",
-                            "EC_GROUP_new_from_ecparameters",
-                            "EC_GROUP_new_from_ecpkparameters")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -159,6 +143,58 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // A group on a curve given by its parameters, not by name
+    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CUSTOM_CURVE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods(
+                            "EC_GROUP_new_curve_GFp",
+                            "EC_GROUP_new_curve_GF2m",
+                            "EC_GROUP_new_from_params",
+                            "EC_GROUP_new_from_ecparameters",
+                            "EC_GROUP_new_from_ecpkparameters")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withAnyParameters()
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // EC_KEY_set_group(key, group): the curve of the key is the curve of the group
+    private static final IDetectionRule<AstNode> EC_KEY_SET_GROUP =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_KEY_set_group")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(
+                            List.of(
+                                    EC_GROUP_NEW_BY_CURVE_NAME,
+                                    EC_GROUP_NEW_BY_CURVE_NAME_EX,
+                                    EC_GROUP_NEW_CUSTOM_CURVE))
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // EC_KEY_generate_key(key): a key is generated on the curve of key, set when the key is
+    // created for a named curve or by EC_KEY_set_group
+    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EC_KEY_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(
+                            List.of(
+                                    EC_KEY_NEW_BY_CURVE_NAME,
+                                    EC_KEY_NEW_BY_CURVE_NAME_EX,
+                                    EC_KEY_SET_GROUP))
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     // Key Agreement functions
 
     private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
@@ -184,12 +220,13 @@ public final class OpenSSLLegacyEc {
                 ECDSA_SIGN_EX,
                 ECDSA_DO_SIGN,
                 ECDSA_DO_SIGN_EX,
-                // Key Generation
-                EC_KEY_GENERATE_KEY,
+                // Keys and groups
                 EC_KEY_NEW_BY_CURVE_NAME,
                 EC_KEY_NEW_BY_CURVE_NAME_EX,
                 EC_GROUP_NEW_BY_CURVE_NAME,
                 EC_GROUP_NEW_BY_CURVE_NAME_EX,
+                EC_GROUP_NEW_CUSTOM_CURVE,
+                EC_KEY_GENERATE_KEY,
                 // Key Agreement
                 ECDH_COMPUTE_KEY);
     }

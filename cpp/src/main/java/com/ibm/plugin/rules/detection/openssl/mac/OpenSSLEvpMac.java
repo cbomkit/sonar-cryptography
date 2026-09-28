@@ -19,94 +19,42 @@
  */
 package com.ibm.plugin.rules.detection.openssl.mac;
 
+import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
  * Detection rules for OpenSSL EVP MAC (Message Authentication Code) algorithms.
  *
- * <p>These rules detect calls to OpenSSL MAC functions using the EVP_MAC API. OpenSSL 3.x uses
- * EVP_MAC_fetch() to obtain MAC algorithms like HMAC, CMAC, GMAC, Poly1305, etc.
+ * <p>The EVP_MAC API introduced in OpenSSL 3.0 selects the MAC by name in {@code EVP_MAC_fetch}
+ * (HMAC, CMAC, GMAC, KMAC-128, POLY1305, SIPHASH, ...). The digest of an HMAC and the cipher of a
+ * CMAC or GMAC are set on the context created from the fetched MAC, through the {@code "digest"} or
+ * {@code "cipher"} entry of an {@code OSSL_PARAM} array passed to {@code EVP_MAC_CTX_set_params} or
+ * {@code EVP_MAC_init}:
  *
- * <p>Covers HMAC (with various digests), CMAC, GMAC, Poly1305, SipHash, KMAC, and BLAKE2 MAC.
+ * <pre>{@code
+ * EVP_MAC *mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+ * EVP_MAC_CTX *ctx = EVP_MAC_CTX_new(mac);
+ * EVP_MAC_init(ctx, key, keylen, params); // params contains {"digest", "SHA256"}
+ * }</pre>
+ *
+ * <p>The password-based MAC of CRMF is reported with the MAC and the one-way function given to
+ * {@code OSSL_CRMF_pbmp_new}.
  */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLEvpMac {
 
     private static final String BUNDLE = "OpenSSL";
-
-    // HMAC / CMAC / GMAC fetch — one finding per MAC family (the real fetched name); the
-    // digest (HMAC) or cipher (CMAC/GMAC) is set later via EVP_MAC_CTX_set_params and is a
-    // separate, independently traced finding (see EVP_MAC_CTX_SET_PARAMS below).
-
-    private static final IDetectionRule<AstNode> EVP_MAC_HMAC_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_CMAC_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"CMAC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_GMAC_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("GMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"GMAC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_MAC_CTX_set_params — the real digest (OSSL_MAC_PARAM_DIGEST, "digest") or cipher
-    // (OSSL_MAC_PARAM_CIPHER, "cipher") entry in the OSSL_PARAM array.
-
-    /** OpenSSL cipher name (e.g. {@code "AES-128-CBC"}) → CMAC/GMAC identifier string. */
-    private static final Map<String, String> CIPHER_NAMES =
-            Map.ofEntries(
-                    Map.entry("AES-128-CBC", "CMAC-AES-128"),
-                    Map.entry("AES-192-CBC", "CMAC-AES-192"),
-                    Map.entry("AES-256-CBC", "CMAC-AES-256"),
-                    Map.entry("DES-EDE3-CBC", "CMAC-3DES"),
-                    Map.entry("CAMELLIA-128-CBC", "CMAC-CAMELLIA-128"),
-                    Map.entry("CAMELLIA-192-CBC", "CMAC-CAMELLIA-192"),
-                    Map.entry("CAMELLIA-256-CBC", "CMAC-CAMELLIA-256"),
-                    Map.entry("ARIA-128-CBC", "CMAC-ARIA-128"),
-                    Map.entry("ARIA-192-CBC", "CMAC-ARIA-192"),
-                    Map.entry("ARIA-256-CBC", "CMAC-ARIA-256"),
-                    Map.entry("SM4-CBC", "CMAC-SM4"));
 
     private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS_DIGEST =
             new DetectionRuleBuilder<AstNode>()
@@ -129,109 +77,74 @@ public final class OpenSSLEvpMac {
                     .forMethods("EVP_MAC_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLParamsScannerFactory("cipher", CIPHER_NAMES))
-                    .buildForContext(new MacContext())
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
+                    .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Poly1305
+    private static final IDetectionRule<AstNode> EVP_MAC_INIT_DIGEST =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_MAC_init")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_MAC_POLY1305 =
+    private static final IDetectionRule<AstNode> EVP_MAC_INIT_CIPHER =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_MAC_init")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_MAC_CTX_NEW =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_MAC_CTX_new")
+                    .withMethodParameter("*")
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(
+                            List.of(
+                                    EVP_MAC_CTX_SET_PARAMS_DIGEST,
+                                    EVP_MAC_CTX_SET_PARAMS_CIPHER,
+                                    EVP_MAC_INIT_DIGEST,
+                                    EVP_MAC_INIT_CIPHER));
+
+    private static final IDetectionRule<AstNode> EVP_MAC_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("POLY1305"))
                     .withMethodParameter("*")
-                    .withMethodParameter("\"Poly1305\"")
                     .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // SipHash
-
-    private static final IDetectionRule<AstNode> EVP_MAC_SIPHASH_2_4 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIPHASH-2-4"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SipHash\"")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.MAC_NAMES))
                     .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_SIPHASH_4_8 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SIPHASH-4-8"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SipHash\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // KMAC (Keccak Message Authentication Code)
-
-    private static final IDetectionRule<AstNode> EVP_MAC_KMAC128 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KMAC128"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KMAC128\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_KMAC256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KMAC256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KMAC256\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // BLAKE2 MAC
-
-    private static final IDetectionRule<AstNode> EVP_MAC_BLAKE2BMAC =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2BMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"BLAKE2BMAC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_BLAKE2SMAC =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_MAC_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2SMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"BLAKE2SMAC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+                    .withDependingDetectionRules(List.of(EVP_MAC_CTX_NEW));
 
     private static final IDetectionRule<AstNode> EVP_Q_MAC =
             new DetectionRuleBuilder<AstNode>()
@@ -250,7 +163,48 @@ public final class OpenSSLEvpMac {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // OSSL_CRMF_pbmp_new(libctx, slen, owfnid, itercnt, macnid): the password-based MAC of
+    // CRMF (RFC 4211) derives its key with the one-way function owfnid and computes the MAC
+    // macnid
+
+    private static final IDetectionRule<AstNode> OSSL_CRMF_PBMP_NEW_MAC =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("OSSL_CRMF_pbmp_new")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.HMAC_BY_CODE,
+                                    OpenSSLNidLookupFactory.HMAC_BY_NAME))
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> OSSL_CRMF_PBMP_NEW_OWF =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("OSSL_CRMF_pbmp_new")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.DIGEST_BY_CODE,
+                                    OpenSSLNidLookupFactory.DIGEST_BY_NAME))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -260,26 +214,7 @@ public final class OpenSSLEvpMac {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                // HMAC / CMAC / GMAC fetch
-                EVP_MAC_HMAC_FETCH,
-                EVP_MAC_CMAC_FETCH,
-                EVP_MAC_GMAC_FETCH,
-                // EVP_MAC_CTX_set_params
-                EVP_MAC_CTX_SET_PARAMS_DIGEST,
-                EVP_MAC_CTX_SET_PARAMS_CIPHER,
-                // Poly1305
-                EVP_MAC_POLY1305,
-                // SipHash
-                EVP_MAC_SIPHASH_2_4,
-                EVP_MAC_SIPHASH_4_8,
-                // KMAC
-                EVP_MAC_KMAC128,
-                EVP_MAC_KMAC256,
-                // BLAKE2 MAC
-                EVP_MAC_BLAKE2BMAC,
-                EVP_MAC_BLAKE2SMAC,
-                EVP_Q_MAC);
+        return List.of(EVP_MAC_FETCH, EVP_Q_MAC, OSSL_CRMF_PBMP_NEW_MAC, OSSL_CRMF_PBMP_NEW_OWF);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

@@ -19,34 +19,51 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
-import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for the DSA settings of an OpenSSL key generation context: the size of the
- * parameters and the digest used to generate them. They apply to the calls made on a context
+ * Detection rules for the Diffie-Hellman settings of an OpenSSL key generation context: the size of
+ * the prime, given directly or through a named group. They apply to the calls made on a context
  * created by one of the rules of {@link OpenSSLEvpKeyGen}.
  */
-public final class OpenSSLEvpKeyGenDsa {
+public final class OpenSSLEvpKeyGenDh {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS =
+    /** RFC 5114 group number (1, 2 or 3) → size of its prime. */
+    private static final Map<Integer, Integer> RFC5114_PRIME_BITS =
+            Map.of(1, 1024, 2, 2048, 3, 2048);
+
+    private static final IValueFactory<AstNode> RFC5114_GROUP_SIZE =
+            resolvedValue ->
+                    resolvedValue.value() instanceof Number group
+                                    && RFC5114_PRIME_BITS.containsKey(group.intValue())
+                            ? Optional.of(
+                                    new KeySize<>(
+                                            RFC5114_PRIME_BITS.get(group.intValue()),
+                                            Size.UnitType.BIT,
+                                            resolvedValue.tree()))
+                            : Optional.empty();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
+                    .forMethods("EVP_PKEY_CTX_set_dh_paramgen_prime_len")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
@@ -54,47 +71,54 @@ public final class OpenSSLEvpKeyGenDsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_NID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
+                    .forMethods("EVP_PKEY_CTX_set_dh_nid")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.DH_GROUP_BY_CODE,
+                                    OpenSSLNidLookupFactory.DH_GROUP_BY_NAME,
+                                    code -> code,
+                                    // "DH-2048" → the size of the group's prime
+                                    (label, tree) ->
+                                            new KeySize<>(
+                                                    Integer.parseInt(label.substring(3)),
+                                                    Size.UnitType.BIT,
+                                                    tree)))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS =
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_RFC5114 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md_props")
+                    .forMethods("EVP_PKEY_CTX_set_dh_rfc5114", "EVP_PKEY_CTX_set_dhx_rfc5114")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLNameCanonicalizerFactory(
-                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
+                    .shouldBeDetectedAs(RFC5114_GROUP_SIZE)
+                    .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKeyGenDsa() {
+    private OpenSSLEvpKeyGenDh() {
         // private
     }
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                EVP_DSA_PARAMGEN_BITS,
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD,
-                EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS);
+                EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN,
+                EVP_PKEY_CTX_SET_DH_NID,
+                EVP_PKEY_CTX_SET_DH_RFC5114);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKeyGenDsa::buildRules);
+            Memoize.of(OpenSSLEvpKeyGenDh::buildRules);
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

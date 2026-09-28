@@ -47,7 +47,6 @@ import com.ibm.plugin.translation.translator.contexts.CxxKeyDerivationFunctionCo
 import com.ibm.plugin.translation.translator.contexts.CxxMacContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxPRNGContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxProtocolContextTranslator;
-import com.ibm.plugin.translation.translator.contexts.CxxSecretKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CxxSignatureContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
@@ -98,14 +97,7 @@ public final class CxxTranslator
             return cxxCipherContextTranslation.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
 
-            // secret key context
-        } else if (detectionValueContext.is(SecretKeyContext.class)) {
-            CxxSecretKeyContextTranslator cxxSecretKeyContextTranslation =
-                    new CxxSecretKeyContextTranslator();
-            return cxxSecretKeyContextTranslation.translate(
-                    bundleIdentifier, value, detectionValueContext, detectionLocation);
-
-            // private- / public- / secret- / key context
+            // key, private key, public key and secret key contexts
         } else if (detectionValueContext.is(KeyContext.class)
                 || detectionValueContext.is(PublicKeyContext.class)
                 || detectionValueContext.is(PrivateKeyContext.class)

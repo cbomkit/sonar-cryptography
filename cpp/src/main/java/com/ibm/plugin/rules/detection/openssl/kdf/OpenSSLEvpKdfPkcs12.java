@@ -20,38 +20,31 @@
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
+import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for OpenSSL PKCS#12 and PKCS#5 password-based key derivation: the EVP_KDF
- * PKCS12KDF fetch, the legacy PKCS5_PBKDF2_HMAC(_SHA1) functions, the PKCS12_create/set_mac/
- * key_gen family, and the legacy PKCS5 PBE keyivgen functions.
+ * Detection rules for the OpenSSL PKCS#12 and PKCS#5 password-based functions: PBKDF2 through
+ * PKCS5_PBKDF2_HMAC(_SHA1), the PKCS#12 key derivation function (PKCS12_key_gen_*), the PKCS#12 and
+ * PKCS#5 v1.5 password-based encryption schemes with the cipher and digest passed to
+ * PKCS12_PBE_keyivgen and PKCS5_PBE_keyivgen, the HMAC set on a PKCS#12 container by
+ * PKCS12_set_mac, and the schemes that encrypt the key and the certificates of a container created
+ * by PKCS12_create.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKdfPkcs12 {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> PKCS12KDF =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PKCS12KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC =
             new DetectionRuleBuilder<AstNode>()
@@ -83,13 +76,31 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // PKCS12_create(pass, name, pkey, cert, ca, nid_key, nid_cert, iter, mac_iter, keytype, ...):
+    // nid_key and nid_cert select how the private key and the certificates are encrypted
+
+    private static final OpenSSLNidLookupFactory PKCS12_ENCRYPTION =
+            new OpenSSLNidLookupFactory(
+                    OpenSSLNidLookupFactory.PKCS12_ENCRYPTION_BY_CODE,
+                    OpenSSLNidLookupFactory.PKCS12_ENCRYPTION_BY_NAME);
+
     private static final IDetectionRule<AstNode> PKCS12_CREATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS12_create")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -99,8 +110,20 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS12_create_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -110,22 +133,49 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS12_create_ex2")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(PKCS12_ENCRYPTION)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
+
+    // PKCS12_set_mac(p12, pass, passlen, salt, saltlen, iter, md_type): the PKCS#12 MAC is an
+    // HMAC with md_type
 
     private static final IDetectionRule<AstNode> PKCS12_SET_MAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS12_set_mac")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-MAC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
+
+    // PKCS12_PBE_keyivgen(ctx, pass, passlen, param, cipher, md_type, en_de, ...) and
+    // PKCS5_PBE_keyivgen(ctx, pass, passlen, param, cipher, md, en_de, ...)
 
     private static final IDetectionRule<AstNode> PKCS12_PBE_KEYIVGEN =
             new DetectionRuleBuilder<AstNode>()
@@ -133,7 +183,15 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .forObjectTypes("*")
                     .forMethods("PKCS12_PBE_keyivgen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-PBE"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -144,73 +202,17 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .forObjectTypes("*")
                     .forMethods("PKCS12_PBE_keyivgen_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-PBE"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_asc")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_asc_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_uni")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_uni_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_utf8")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS12_key_gen_utf8_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-KDF"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -220,8 +222,16 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS5_PBE_keyivgen")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBE-KEYIVGEN"))
-                    .withAnyParameters()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PBES1"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -231,8 +241,146 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("PKCS5_PBE_keyivgen_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBE-KEYIVGEN"))
-                    .withAnyParameters()
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PBES1"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // PKCS12_key_gen_*(pass, passlen, salt, saltlen, id, iter, n, out, md_type, ...)
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_asc")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_asc_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_uni")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_uni_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_utf8")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("PKCS12_key_gen_utf8_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -244,27 +392,26 @@ public final class OpenSSLEvpKdfPkcs12 {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // PKCS12KDF - PKCS#12 Key Derivation Function
-                PKCS12KDF,
                 // Legacy PBKDF2 functions
                 PKCS5_PBKDF2_HMAC,
                 PKCS5_PBKDF2_HMAC_SHA1,
-                // PKCS#12 KDF / MAC entry points
+                // PKCS#12 containers
                 PKCS12_CREATE,
                 PKCS12_CREATE_EX,
                 PKCS12_CREATE_EX2,
                 PKCS12_SET_MAC,
+                // PKCS#12 and PKCS#5 password-based encryption
                 PKCS12_PBE_KEYIVGEN,
                 PKCS12_PBE_KEYIVGEN_EX,
+                PKCS5_PBE_KEYIVGEN,
+                PKCS5_PBE_KEYIVGEN_EX,
+                // PKCS#12 key derivation
                 PKCS12_KEY_GEN_ASC,
                 PKCS12_KEY_GEN_ASC_EX,
                 PKCS12_KEY_GEN_UNI,
                 PKCS12_KEY_GEN_UNI_EX,
                 PKCS12_KEY_GEN_UTF8,
-                PKCS12_KEY_GEN_UTF8_EX,
-                // PKCS5 PBE keyivgen (legacy)
-                PKCS5_PBE_KEYIVGEN,
-                PKCS5_PBE_KEYIVGEN_EX);
+                PKCS12_KEY_GEN_UTF8_EX);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

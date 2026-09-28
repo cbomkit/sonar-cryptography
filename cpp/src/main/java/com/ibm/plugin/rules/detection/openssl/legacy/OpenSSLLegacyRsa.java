@@ -19,9 +19,15 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.CipherAction;
+import com.ibm.engine.model.SignatureAction;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.CipherActionFactory;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -230,8 +236,13 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -241,8 +252,13 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_generate_key_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -252,20 +268,37 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_generate_multi_prime_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Encrypt / Decrypt (raw RSA operations)
+    // Raw RSA operations: RSA_*_encrypt / RSA_*_decrypt(flen, from, to, rsa, padding). The
+    // public-key encryption and private-key decryption use an encryption scheme; the private-key
+    // "encryption" and public-key "decryption" are the signature primitive and its verification.
 
     private static final IDetectionRule<AstNode> RSA_PUBLIC_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_public_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-ENCRYPT"))
-                    .withAnyParameters()
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.RSA_ENCRYPTION_PADDING_BY_CODE,
+                                    OpenSSLNidLookupFactory.RSA_ENCRYPTION_PADDING_BY_NAME))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -275,9 +308,18 @@ public final class OpenSSLLegacyRsa {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_private_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-ENCRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.RSA_SIGNATURE_PADDING_BY_CODE,
+                                    OpenSSLNidLookupFactory.RSA_SIGNATURE_PADDING_BY_NAME))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -286,9 +328,18 @@ public final class OpenSSLLegacyRsa {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_public_decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-DECRYPT"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.RSA_SIGNATURE_PADDING_BY_CODE,
+                                    OpenSSLNidLookupFactory.RSA_SIGNATURE_PADDING_BY_NAME))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -297,8 +348,17 @@ public final class OpenSSLLegacyRsa {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_private_decrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA-DECRYPT"))
-                    .withAnyParameters()
+                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.RSA_ENCRYPTION_PADDING_BY_CODE,
+                                    OpenSSLNidLookupFactory.RSA_ENCRYPTION_PADDING_BY_NAME))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

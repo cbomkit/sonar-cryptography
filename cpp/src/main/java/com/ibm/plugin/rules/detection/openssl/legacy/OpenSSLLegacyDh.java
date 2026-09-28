@@ -19,14 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
@@ -43,7 +47,7 @@ public final class OpenSSLLegacyDh {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // Key/Parameter Generation functions
+    // Parameter generation: DH_generate_parameters_ex(dh, prime_len, generator, cb)
 
     private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -51,7 +55,12 @@ public final class OpenSSLLegacyDh {
                     .forObjectTypes("*")
                     .forMethods("DH_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -91,14 +100,23 @@ public final class OpenSSLLegacyDh {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // DH_generate_key(dh): a key is generated for the parameters of dh, a named group or generated
+    // parameters
+
     private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("DH_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(
+                            List.of(
+                                    DH_GET_1024_160,
+                                    DH_GET_2048_224,
+                                    DH_GET_2048_256,
+                                    DH_GENERATE_PARAMETERS_EX))
+                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 

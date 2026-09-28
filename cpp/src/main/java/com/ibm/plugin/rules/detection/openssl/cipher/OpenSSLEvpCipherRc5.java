@@ -61,19 +61,8 @@ public final class OpenSSLEvpCipherRc5 {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_rc5_32_12_16_cfb64")
+                    .forMethods("EVP_rc5_32_12_16_cfb64", "EVP_rc5_32_12_16_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_CFB64 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_rc5_32_12_16_cfb64")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CFB64"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -100,7 +89,6 @@ public final class OpenSSLEvpCipherRc5 {
                 EVP_RC5_32_12_16_ECB,
                 EVP_RC5_32_12_16_CBC,
                 EVP_RC5_32_12_16_CFB,
-                EVP_RC5_32_12_16_CFB64,
                 EVP_RC5_32_12_16_OFB);
     }
 

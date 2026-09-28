@@ -19,12 +19,16 @@
  */
 package com.ibm.plugin.rules.detection.openssl.rand;
 
+import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -66,195 +70,101 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // EVP_RAND API - CTR-DRBG (Counter mode DRBG)
+    // EVP_RAND API: the DRBG is fetched by name; its cipher (CTR-DRBG) or digest (HASH-DRBG,
+    // HMAC-DRBG) is set through OSSL_PARAMs of the context created from it
 
-    private static final IDetectionRule<AstNode> CTR_DRBG_AES128 =
+    private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_CIPHER =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_RAND_CTX_set_params")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_DIGEST =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_RAND_CTX_set_params")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_CIPHER =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_RAND_instantiate")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_DIGEST =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_RAND_instantiate")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RAND_CTX_NEW =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_RAND_CTX_new")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PRNGContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(
+                            List.of(
+                                    EVP_RAND_CTX_SET_PARAMS_CIPHER,
+                                    EVP_RAND_CTX_SET_PARAMS_DIGEST,
+                                    EVP_RAND_INSTANTIATE_CIPHER,
+                                    EVP_RAND_INSTANTIATE_DIGEST));
+
+    private static final IDetectionRule<AstNode> EVP_RAND_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES128"))
                     .withMethodParameter("*")
-                    .withMethodParameter("\"CTR-DRBG\"")
                     .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CTR_DRBG_AES192 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES192"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"CTR-DRBG\"")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CTR_DRBG_AES256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CTR-DRBG-AES256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"CTR-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_RAND API - HASH-DRBG (Hash-based DRBG)
-
-    private static final IDetectionRule<AstNode> HASH_DRBG_SHA1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HASH-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HASH_DRBG_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HASH-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HASH_DRBG_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HASH-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HASH_DRBG_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HASH-DRBG-SHA512"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HASH-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_RAND API - HMAC-DRBG (HMAC-based DRBG)
-
-    private static final IDetectionRule<AstNode> HMAC_DRBG_SHA1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_DRBG_SHA256 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA256"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_DRBG_SHA384 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA384"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_DRBG_SHA512 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-SHA512"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC-DRBG\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_RAND API - Entropy Sources
-
-    private static final IDetectionRule<AstNode> SEED_SRC =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-SRC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SEED-SRC\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> JITTER =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("JITTER"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"JITTER\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> TEST_RAND =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_RAND_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("TEST-RAND"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"TEST-RAND\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new PRNGContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+                    .withDependingDetectionRules(List.of(EVP_RAND_CTX_NEW));
 
     // EVP_RAND seed source
 
@@ -320,24 +230,8 @@ public final class OpenSSLRand {
                 // Legacy RAND API
                 RAND_BYTES,
                 RAND_PRIV_BYTES,
-                // CTR-DRBG
-                CTR_DRBG_AES128,
-                CTR_DRBG_AES192,
-                CTR_DRBG_AES256,
-                // HASH-DRBG
-                HASH_DRBG_SHA1,
-                HASH_DRBG_SHA256,
-                HASH_DRBG_SHA384,
-                HASH_DRBG_SHA512,
-                // HMAC-DRBG
-                HMAC_DRBG_SHA1,
-                HMAC_DRBG_SHA256,
-                HMAC_DRBG_SHA384,
-                HMAC_DRBG_SHA512,
-                // Entropy Sources
-                SEED_SRC,
-                JITTER,
-                TEST_RAND,
+                // EVP_RAND API
+                EVP_RAND_FETCH,
                 // EVP_RAND seed source
                 RAND_SET_SEED_SOURCE_TYPE,
                 // 3.0+ ex-variants + DRBG type

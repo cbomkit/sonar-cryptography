@@ -44,7 +44,7 @@ public final class OpenSSLEvpCipherCamellia {
                     new Entry("EVP_camellia_128_cfb128", "CAMELLIA-128-CFB"),
                     new Entry("EVP_camellia_128_cfb1", "CAMELLIA-128-CFB1"),
                     new Entry("EVP_camellia_128_cfb8", "CAMELLIA-128-CFB8"),
-                    new Entry("EVP_camellia_128_cfb128", "CAMELLIA-128-CFB128"),
+                    new Entry("EVP_camellia_128_cfb", "CAMELLIA-128-CFB"),
                     new Entry("EVP_camellia_128_ofb", "CAMELLIA-128-OFB"),
                     new Entry("EVP_camellia_128_ctr", "CAMELLIA-128-CTR"),
                     // Camellia-192
@@ -53,7 +53,7 @@ public final class OpenSSLEvpCipherCamellia {
                     new Entry("EVP_camellia_192_cfb128", "CAMELLIA-192-CFB"),
                     new Entry("EVP_camellia_192_cfb1", "CAMELLIA-192-CFB1"),
                     new Entry("EVP_camellia_192_cfb8", "CAMELLIA-192-CFB8"),
-                    new Entry("EVP_camellia_192_cfb128", "CAMELLIA-192-CFB128"),
+                    new Entry("EVP_camellia_192_cfb", "CAMELLIA-192-CFB"),
                     new Entry("EVP_camellia_192_ofb", "CAMELLIA-192-OFB"),
                     new Entry("EVP_camellia_192_ctr", "CAMELLIA-192-CTR"),
                     // Camellia-256
@@ -62,7 +62,7 @@ public final class OpenSSLEvpCipherCamellia {
                     new Entry("EVP_camellia_256_cfb128", "CAMELLIA-256-CFB"),
                     new Entry("EVP_camellia_256_cfb1", "CAMELLIA-256-CFB1"),
                     new Entry("EVP_camellia_256_cfb8", "CAMELLIA-256-CFB8"),
-                    new Entry("EVP_camellia_256_cfb128", "CAMELLIA-256-CFB128"),
+                    new Entry("EVP_camellia_256_cfb", "CAMELLIA-256-CFB"),
                     new Entry("EVP_camellia_256_ofb", "CAMELLIA-256-OFB"),
                     new Entry("EVP_camellia_256_ctr", "CAMELLIA-256-CTR"));
 

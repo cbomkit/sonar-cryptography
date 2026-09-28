@@ -30,22 +30,14 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
-/** Detection rules for OpenSSL legacy (pre-EVP) CMAC APIs. */
+/**
+ * Detection rules for OpenSSL legacy (pre-EVP) CMAC APIs: {@code CMAC_Init}, which selects the
+ * cipher of the CMAC.
+ */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyMacCmac {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> CMAC_CTX_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMAC_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> CMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
@@ -56,41 +48,9 @@ public final class OpenSSLLegacyMacCmac {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLEvpCipher.rules())
                     .withMethodParameter("*")
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMAC_UPDATE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMAC_Update")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMAC_FINAL =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMAC_Final")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withAnyParameters()
-                    .buildForContext(new MacContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CMAC_RESUME =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CMAC_resume")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
-                    .withAnyParameters()
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -101,7 +61,7 @@ public final class OpenSSLLegacyMacCmac {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(CMAC_CTX_NEW, CMAC_INIT, CMAC_UPDATE, CMAC_FINAL, CMAC_RESUME);
+        return List.of(CMAC_INIT);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

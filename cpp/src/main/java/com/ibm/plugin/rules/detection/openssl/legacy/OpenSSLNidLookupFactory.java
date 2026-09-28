@@ -77,12 +77,254 @@ public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
                     Map.entry("NID_brainpoolP384r1", "EC-BRAINPOOLP384R1"),
                     Map.entry("NID_brainpoolP512r1", "EC-BRAINPOOLP512R1"));
 
+    /**
+     * OpenSSL key type identifiers of the KDFs available through the EVP_PKEY interface (evp.h /
+     * obj_mac.h) → KDF names.
+     */
+    public static final Map<Integer, String> PKEY_KDF_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(1036, "HKDF"), // EVP_PKEY_HKDF
+                    Map.entry(1021, "TLS1-PRF"), // EVP_PKEY_TLS1_PRF
+                    Map.entry(973, "SCRYPT")); // EVP_PKEY_SCRYPT
+
+    /** OpenSSL KDF key type constant names → KDF names. */
+    public static final Map<String, String> PKEY_KDF_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("EVP_PKEY_HKDF", "HKDF"),
+                    Map.entry("EVP_PKEY_TLS1_PRF", "TLS1-PRF"),
+                    Map.entry("EVP_PKEY_SCRYPT", "SCRYPT"));
+
+    /**
+     * Encryption NIDs accepted by {@code PKCS12_create} for the private key and the certificates
+     * (obj_mac.h) → password-based encryption scheme identifiers. A PKCS#12 PBE NID selects that
+     * scheme; a cipher NID selects PBES2 with that cipher, and 0 selects the default, PBES2 with
+     * AES-256-CBC. -1 (no encryption) is not listed.
+     */
+    public static final Map<Integer, String> PKCS12_ENCRYPTION_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(144, "PBE-SHA1-RC4-128"),
+                    Map.entry(145, "PBE-SHA1-RC4-40"),
+                    Map.entry(146, "PBE-SHA1-3DES"),
+                    Map.entry(147, "PBE-SHA1-2DES"),
+                    Map.entry(148, "PBE-SHA1-RC2-128"),
+                    Map.entry(149, "PBE-SHA1-RC2-40"),
+                    Map.entry(419, "PBES2-AES-128-CBC"),
+                    Map.entry(423, "PBES2-AES-192-CBC"),
+                    Map.entry(427, "PBES2-AES-256-CBC"),
+                    Map.entry(44, "PBES2-DES-EDE3-CBC"),
+                    Map.entry(0, "PBES2-AES-256-CBC"));
+
+    /** Encryption NID constant names accepted by {@code PKCS12_create} → scheme identifiers. */
+    public static final Map<String, String> PKCS12_ENCRYPTION_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_pbe_WithSHA1And128BitRC4", "PBE-SHA1-RC4-128"),
+                    Map.entry("NID_pbe_WithSHA1And40BitRC4", "PBE-SHA1-RC4-40"),
+                    Map.entry("NID_pbe_WithSHA1And3_Key_TripleDES_CBC", "PBE-SHA1-3DES"),
+                    Map.entry("NID_pbe_WithSHA1And2_Key_TripleDES_CBC", "PBE-SHA1-2DES"),
+                    Map.entry("NID_pbe_WithSHA1And128BitRC2_CBC", "PBE-SHA1-RC2-128"),
+                    Map.entry("NID_pbe_WithSHA1And40BitRC2_CBC", "PBE-SHA1-RC2-40"),
+                    Map.entry("NID_aes_128_cbc", "PBES2-AES-128-CBC"),
+                    Map.entry("NID_aes_192_cbc", "PBES2-AES-192-CBC"),
+                    Map.entry("NID_aes_256_cbc", "PBES2-AES-256-CBC"),
+                    Map.entry("NID_des_ede3_cbc", "PBES2-DES-EDE3-CBC"));
+
+    /**
+     * OpenSSL ECDH KDF types (EVP_PKEY_ECDH_KDF_*, ec.h) → KDF names; {@code "NONE"} when the
+     * shared secret is used without a KDF.
+     */
+    public static final Map<Integer, String> ECDH_KDF_TYPE_BY_CODE =
+            Map.of(1, "NONE", 2, "X963KDF");
+
+    /** OpenSSL ECDH KDF type constant names → KDF names. */
+    public static final Map<String, String> ECDH_KDF_TYPE_BY_NAME =
+            Map.of(
+                    "EVP_PKEY_ECDH_KDF_NONE", "NONE",
+                    "EVP_PKEY_ECDH_KDF_X9_63", "X963KDF",
+                    "EVP_PKEY_ECDH_KDF_X9_62", "X963KDF");
+
+    /**
+     * OpenSSL DH KDF types (EVP_PKEY_DH_KDF_*, dh.h) → KDF names; {@code "NONE"} when the shared
+     * secret is used without a KDF.
+     */
+    public static final Map<Integer, String> DH_KDF_TYPE_BY_CODE =
+            Map.of(1, "NONE", 2, "X942KDF-ASN1");
+
+    /** OpenSSL DH KDF type constant names → KDF names. */
+    public static final Map<String, String> DH_KDF_TYPE_BY_NAME =
+            Map.of("EVP_PKEY_DH_KDF_NONE", "NONE", "EVP_PKEY_DH_KDF_X9_42", "X942KDF-ASN1");
+
+    /** Key wrap algorithm NIDs of a CMS KEK recipient (obj_mac.h) → cipher names. */
+    public static final Map<Integer, String> KEY_WRAP_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(788, "AES-128-WRAP"),
+                    Map.entry(789, "AES-192-WRAP"),
+                    Map.entry(790, "AES-256-WRAP"),
+                    Map.entry(897, "AES-128-WRAP-PAD"),
+                    Map.entry(900, "AES-192-WRAP-PAD"),
+                    Map.entry(903, "AES-256-WRAP-PAD"),
+                    Map.entry(246, "DES-EDE3-WRAP"));
+
+    /** Key wrap algorithm NID constant names → cipher names. */
+    public static final Map<String, String> KEY_WRAP_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_id_aes128_wrap", "AES-128-WRAP"),
+                    Map.entry("NID_id_aes192_wrap", "AES-192-WRAP"),
+                    Map.entry("NID_id_aes256_wrap", "AES-256-WRAP"),
+                    Map.entry("NID_id_aes128_wrap_pad", "AES-128-WRAP-PAD"),
+                    Map.entry("NID_id_aes192_wrap_pad", "AES-192-WRAP-PAD"),
+                    Map.entry("NID_id_aes256_wrap_pad", "AES-256-WRAP-PAD"),
+                    Map.entry("NID_id_smime_alg_CMS3DESwrap", "DES-EDE3-WRAP"));
+
+    /** Digest NIDs (obj_mac.h) → digest names. */
+    public static final Map<Integer, String> DIGEST_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(4, "MD5"),
+                    Map.entry(64, "SHA-1"),
+                    Map.entry(675, "SHA-224"),
+                    Map.entry(672, "SHA-256"),
+                    Map.entry(673, "SHA-384"),
+                    Map.entry(674, "SHA-512"));
+
+    /** Digest NID constant names → digest names. */
+    public static final Map<String, String> DIGEST_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_md5", "MD5"),
+                    Map.entry("NID_sha1", "SHA-1"),
+                    Map.entry("NID_sha224", "SHA-224"),
+                    Map.entry("NID_sha256", "SHA-256"),
+                    Map.entry("NID_sha384", "SHA-384"),
+                    Map.entry("NID_sha512", "SHA-512"));
+
+    /** HMAC NIDs (obj_mac.h) → MAC names. */
+    public static final Map<Integer, String> HMAC_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(780, "HMAC-MD5"),
+                    Map.entry(781, "HMAC-SHA1"),
+                    Map.entry(163, "HMAC-SHA1"),
+                    Map.entry(798, "HMAC-SHA224"),
+                    Map.entry(799, "HMAC-SHA256"),
+                    Map.entry(800, "HMAC-SHA384"),
+                    Map.entry(801, "HMAC-SHA512"));
+
+    /** HMAC NID constant names → MAC names. */
+    public static final Map<String, String> HMAC_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_hmac_md5", "HMAC-MD5"),
+                    Map.entry("NID_hmac_sha1", "HMAC-SHA1"),
+                    Map.entry("NID_hmacWithSHA1", "HMAC-SHA1"),
+                    Map.entry("NID_hmacWithSHA224", "HMAC-SHA224"),
+                    Map.entry("NID_hmacWithSHA256", "HMAC-SHA256"),
+                    Map.entry("NID_hmacWithSHA384", "HMAC-SHA384"),
+                    Map.entry("NID_hmacWithSHA512", "HMAC-SHA512"));
+
+    /**
+     * RSA paddings accepted by RSA_public_encrypt and RSA_private_decrypt (rsa.h) → the RSA
+     * encryption scheme they select.
+     */
+    public static final Map<Integer, String> RSA_ENCRYPTION_PADDING_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(1, "RSA-PKCS1-TYPE2"), // RSA_PKCS1_PADDING
+                    Map.entry(3, "RSA-NO-PADDING"), // RSA_NO_PADDING
+                    Map.entry(4, "RSA-OAEP"), // RSA_PKCS1_OAEP_PADDING
+                    Map.entry(7, "RSA-PKCS1-TYPE2"), // RSA_PKCS1_WITH_TLS_PADDING
+                    Map.entry(8, "RSA-PKCS1-TYPE2")); // RSA_PKCS1_NO_IMPLICIT_REJECT_PADDING
+
+    /** RSA encryption padding constant names → the RSA encryption scheme they select. */
+    public static final Map<String, String> RSA_ENCRYPTION_PADDING_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("RSA_PKCS1_PADDING", "RSA-PKCS1-TYPE2"),
+                    Map.entry("RSA_NO_PADDING", "RSA-NO-PADDING"),
+                    Map.entry("RSA_PKCS1_OAEP_PADDING", "RSA-OAEP"),
+                    Map.entry("RSA_PKCS1_WITH_TLS_PADDING", "RSA-PKCS1-TYPE2"),
+                    Map.entry("RSA_PKCS1_NO_IMPLICIT_REJECT_PADDING", "RSA-PKCS1-TYPE2"));
+
+    /**
+     * RSA paddings accepted by RSA_private_encrypt and RSA_public_decrypt (rsa.h) → the RSA
+     * signature scheme they select.
+     */
+    public static final Map<Integer, String> RSA_SIGNATURE_PADDING_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(1, "RSA-PKCS1"), // RSA_PKCS1_PADDING
+                    Map.entry(3, "RSA-NO-PADDING"), // RSA_NO_PADDING
+                    Map.entry(5, "RSA-X931")); // RSA_X931_PADDING
+
+    /** RSA signature padding constant names → the RSA signature scheme they select. */
+    public static final Map<String, String> RSA_SIGNATURE_PADDING_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("RSA_PKCS1_PADDING", "RSA-PKCS1"),
+                    Map.entry("RSA_NO_PADDING", "RSA-NO-PADDING"),
+                    Map.entry("RSA_X931_PADDING", "RSA-X931"));
+
+    /**
+     * Key types a key can be created for from raw bytes (EVP_PKEY_new_raw_private_key,
+     * EVP_PKEY_new_mac_key; evp.h / obj_mac.h) → key type names.
+     */
+    public static final Map<Integer, String> RAW_KEY_TYPE_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(855, "HMAC"), // EVP_PKEY_HMAC
+                    Map.entry(894, "CMAC"), // EVP_PKEY_CMAC
+                    Map.entry(1061, "POLY1305"), // EVP_PKEY_POLY1305
+                    Map.entry(1062, "SIPHASH"), // EVP_PKEY_SIPHASH
+                    Map.entry(1034, "X25519"), // EVP_PKEY_X25519
+                    Map.entry(1035, "X448"), // EVP_PKEY_X448
+                    Map.entry(1087, "ED25519"), // EVP_PKEY_ED25519
+                    Map.entry(1088, "ED448")); // EVP_PKEY_ED448
+
+    /** Raw key type constant names → key type names. */
+    public static final Map<String, String> RAW_KEY_TYPE_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("EVP_PKEY_HMAC", "HMAC"),
+                    Map.entry("EVP_PKEY_CMAC", "CMAC"),
+                    Map.entry("EVP_PKEY_POLY1305", "POLY1305"),
+                    Map.entry("EVP_PKEY_SIPHASH", "SIPHASH"),
+                    Map.entry("EVP_PKEY_X25519", "X25519"),
+                    Map.entry("EVP_PKEY_X448", "X448"),
+                    Map.entry("EVP_PKEY_ED25519", "ED25519"),
+                    Map.entry("EVP_PKEY_ED448", "ED448"));
+
+    /** OpenSSL key type identifiers (EVP_PKEY_*, evp.h / obj_mac.h) → key type names. */
+    public static final Map<Integer, String> PKEY_TYPE_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(6, "RSA"), // EVP_PKEY_RSA
+                    Map.entry(912, "RSA-PSS"), // EVP_PKEY_RSA_PSS
+                    Map.entry(116, "DSA"), // EVP_PKEY_DSA
+                    Map.entry(28, "DH"), // EVP_PKEY_DH
+                    Map.entry(920, "DH"), // EVP_PKEY_DHX
+                    Map.entry(408, "EC"), // EVP_PKEY_EC
+                    Map.entry(1172, "SM2"), // EVP_PKEY_SM2
+                    Map.entry(1034, "X25519"), // EVP_PKEY_X25519
+                    Map.entry(1035, "X448"), // EVP_PKEY_X448
+                    Map.entry(1087, "ED25519"), // EVP_PKEY_ED25519
+                    Map.entry(1088, "ED448")); // EVP_PKEY_ED448
+
+    /** OpenSSL key type macro names → key type names. */
+    public static final Map<String, String> PKEY_TYPE_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("EVP_PKEY_RSA", "RSA"),
+                    Map.entry("EVP_PKEY_RSA_PSS", "RSA-PSS"),
+                    Map.entry("EVP_PKEY_DSA", "DSA"),
+                    Map.entry("EVP_PKEY_DH", "DH"),
+                    Map.entry("EVP_PKEY_DHX", "DH"),
+                    Map.entry("EVP_PKEY_EC", "EC"),
+                    Map.entry("EVP_PKEY_SM2", "SM2"),
+                    Map.entry("EVP_PKEY_X25519", "X25519"),
+                    Map.entry("EVP_PKEY_X448", "X448"),
+                    Map.entry("EVP_PKEY_ED25519", "ED25519"),
+                    Map.entry("EVP_PKEY_ED448", "ED448"));
+
     /** OpenSSL named DH group NID codes (obj_mac.h) → key-length identifier strings. */
     public static final Map<Integer, String> DH_GROUP_BY_CODE =
             Map.ofEntries(
                     Map.entry(1126, "DH-2048"), // NID_ffdhe2048
                     Map.entry(1127, "DH-3072"), // NID_ffdhe3072
                     Map.entry(1128, "DH-4096")); // NID_ffdhe4096
+
+    /** OpenSSL named DH group NID constant names → key-length identifier strings. */
+    public static final Map<String, String> DH_GROUP_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_ffdhe2048", "DH-2048"),
+                    Map.entry("NID_ffdhe3072", "DH-3072"),
+                    Map.entry("NID_ffdhe4096", "DH-4096"));
 
     /** Numeric OpenSSL protocol version codes → version strings. */
     public static final Map<Integer, String> PROTO_VERSION_BY_CODE =

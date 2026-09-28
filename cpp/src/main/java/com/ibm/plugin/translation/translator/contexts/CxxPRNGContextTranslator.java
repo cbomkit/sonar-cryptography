@@ -27,9 +27,6 @@ import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -67,8 +64,8 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
                                         PseudorandomNumberGenerator.class,
                                         detectionLocation));
 
-                // DRBG family name only (RAND_set_DRBG_type's drbg argument, without a
-                // separately-captured cipher/digest suffix)
+                // DRBG names accepted by EVP_RAND_fetch and RAND_set_DRBG_type. The cipher or
+                // digest of the DRBG is attached to the node as a child.
                 case "CTR-DRBG" ->
                         Optional.of(
                                 new Algorithm(
@@ -88,68 +85,6 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
                                         PseudorandomNumberGenerator.class,
                                         detectionLocation));
 
-                // CTR-DRBG (Counter mode DRBG) - AES-based
-                case "CTR-DRBG-AES128" ->
-                        Optional.of(
-                                new AES(
-                                        PseudorandomNumberGenerator.class,
-                                        new AES(128, detectionLocation)));
-                case "CTR-DRBG-AES192" ->
-                        Optional.of(
-                                new AES(
-                                        PseudorandomNumberGenerator.class,
-                                        new AES(192, detectionLocation)));
-                case "CTR-DRBG-AES256" ->
-                        Optional.of(
-                                new AES(
-                                        PseudorandomNumberGenerator.class,
-                                        new AES(256, detectionLocation)));
-
-                // HASH-DRBG (Hash-based DRBG)
-                case "HASH-DRBG-SHA1" ->
-                        Optional.of(
-                                new SHA(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA(detectionLocation)));
-                case "HASH-DRBG-SHA256" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(256, detectionLocation)));
-                case "HASH-DRBG-SHA384" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(384, detectionLocation)));
-                case "HASH-DRBG-SHA512" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(512, detectionLocation)));
-
-                // HMAC-DRBG (HMAC-based DRBG) - use same hash-based approach
-                case "HMAC-DRBG-SHA1" ->
-                        Optional.of(
-                                new SHA(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA(detectionLocation)));
-                case "HMAC-DRBG-SHA256" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(256, detectionLocation)));
-                case "HMAC-DRBG-SHA384" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(384, detectionLocation)));
-                case "HMAC-DRBG-SHA512" ->
-                        Optional.of(
-                                new SHA2(
-                                        PseudorandomNumberGenerator.class,
-                                        new SHA2(512, detectionLocation)));
-
-                // Entropy sources (OpenSSL provider-based)
                 case "SEED-SRC" ->
                         Optional.of(
                                 new Algorithm(

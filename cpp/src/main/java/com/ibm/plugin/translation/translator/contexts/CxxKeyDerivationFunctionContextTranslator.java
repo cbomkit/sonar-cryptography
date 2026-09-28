@@ -31,20 +31,24 @@ import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.ANSIX942;
 import com.ibm.mapper.model.algorithms.ANSIX963;
-import com.ibm.mapper.model.algorithms.CMAC;
 import com.ibm.mapper.model.algorithms.ConcatenationKDF;
+import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.HKDF;
 import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.algorithms.KDFCounter;
-import com.ibm.mapper.model.algorithms.MD5;
+import com.ibm.mapper.model.algorithms.PBES1;
+import com.ibm.mapper.model.algorithms.PBES2;
 import com.ibm.mapper.model.algorithms.PBKDF1;
 import com.ibm.mapper.model.algorithms.PBKDF2;
+import com.ibm.mapper.model.algorithms.PKCS12PBE;
+import com.ibm.mapper.model.algorithms.RC2;
+import com.ibm.mapper.model.algorithms.RC4;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.SHA3;
 import com.ibm.mapper.model.algorithms.SSHKDF;
 import com.ibm.mapper.model.algorithms.Scrypt;
 import com.ibm.mapper.model.algorithms.TLSPRF;
+import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -60,89 +64,36 @@ public final class CxxKeyDerivationFunctionContextTranslator
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<AstNode>) {
+        if (value instanceof ValueAction<AstNode>
+                || value instanceof com.ibm.engine.model.Algorithm<AstNode>) {
             return switch (value.asString().toUpperCase().trim()) {
-                // PBKDF2
-                case "PBKDF2-HMAC-SHA1" -> Optional.of(new PBKDF2(new SHA(detectionLocation)));
-                case "PBKDF2-HMAC-SHA256" ->
-                        Optional.of(new PBKDF2(new SHA2(256, detectionLocation)));
-                case "PBKDF2-HMAC-SHA384" ->
-                        Optional.of(new PBKDF2(new SHA2(384, detectionLocation)));
-                case "PBKDF2-HMAC-SHA512" ->
-                        Optional.of(new PBKDF2(new SHA2(512, detectionLocation)));
-                case "PBKDF2-HMAC-SHA3-256" ->
-                        Optional.of(new PBKDF2(new SHA3(256, detectionLocation)));
-                case "PBKDF2-HMAC-SHA3-512" ->
-                        Optional.of(new PBKDF2(new SHA3(512, detectionLocation)));
-                case "PBKDF2-HMAC-SM3", "PBKDF2-HMAC-MD5" ->
+                // Names accepted by EVP_KDF_fetch. The digest of a KDF is set through the
+                // "digest" OSSL_PARAM of its context and is attached to the node as a child.
+                case "PBKDF2", "1.2.840.113549.1.5.12" ->
                         Optional.of(new PBKDF2(detectionLocation));
-
-                // HKDF
-                case "HKDF-SHA1" -> Optional.of(new HKDF(new SHA(detectionLocation)));
+                case "PBKDF1" -> Optional.of(new PBKDF1(detectionLocation));
+                case "HKDF" -> Optional.of(new HKDF(detectionLocation));
                 case "HKDF-SHA256" -> Optional.of(new HKDF(new SHA2(256, detectionLocation)));
                 case "HKDF-SHA384" -> Optional.of(new HKDF(new SHA2(384, detectionLocation)));
                 case "HKDF-SHA512" -> Optional.of(new HKDF(new SHA2(512, detectionLocation)));
-                case "HKDF-SHA3-256" -> Optional.of(new HKDF(new SHA3(256, detectionLocation)));
-
-                // Scrypt
-                case "SCRYPT" -> Optional.of(new Scrypt(detectionLocation));
-
-                // TLS PRF
-                case "TLS1-PRF-MD5-SHA1" -> Optional.of(new TLSPRF(detectionLocation));
-                case "TLS1-PRF-SHA256" -> Optional.of(new TLSPRF(new SHA2(256, detectionLocation)));
-                case "TLS1-PRF-SHA384" -> Optional.of(new TLSPRF(new SHA2(384, detectionLocation)));
-                case "TLS1-PRF-SHA512" -> Optional.of(new TLSPRF(new SHA2(512, detectionLocation)));
-
-                // TLS 1.3 KDF
-                case "TLS13-KDF-SHA256" -> Optional.of(new HKDF(new SHA2(256, detectionLocation)));
-                case "TLS13-KDF-SHA384" -> Optional.of(new HKDF(new SHA2(384, detectionLocation)));
-                case "TLS13-KDF-SHA512" -> Optional.of(new HKDF(new SHA2(512, detectionLocation)));
-
-                // X963KDF
-                case "X963KDF-SHA1" -> Optional.of(new ANSIX963(new SHA(detectionLocation)));
-                case "X963KDF-SHA224" ->
-                        Optional.of(new ANSIX963(new SHA2(224, detectionLocation)));
-                case "X963KDF-SHA256" ->
-                        Optional.of(new ANSIX963(new SHA2(256, detectionLocation)));
-                case "X963KDF-SHA384" ->
-                        Optional.of(new ANSIX963(new SHA2(384, detectionLocation)));
-                case "X963KDF-SHA512" ->
-                        Optional.of(new ANSIX963(new SHA2(512, detectionLocation)));
-
-                // KBKDF (SP 800-108 Key-Based KDF) — counter mode with HMAC or CMAC
-                case "KBKDF-HMAC-SHA1" ->
-                        Optional.of(new KDFCounter(new HMAC(new SHA(detectionLocation))));
-                case "KBKDF-HMAC-SHA256" ->
-                        Optional.of(new KDFCounter(new HMAC(new SHA2(256, detectionLocation))));
-                case "KBKDF-HMAC-SHA384" ->
-                        Optional.of(new KDFCounter(new HMAC(new SHA2(384, detectionLocation))));
-                case "KBKDF-HMAC-SHA512" ->
-                        Optional.of(new KDFCounter(new HMAC(new SHA2(512, detectionLocation))));
-                case "KBKDF-CMAC-AES128" ->
-                        Optional.of(new KDFCounter(new CMAC(new AES(128, detectionLocation))));
-                case "KBKDF-CMAC-AES256" ->
-                        Optional.of(new KDFCounter(new CMAC(new AES(256, detectionLocation))));
-
-                // X942KDF (ANSI X9.42 Key Derivation)
-                case "X942KDF-ASN1" -> Optional.of(new ANSIX942("ASN1", detectionLocation));
+                // the TLS 1.3 key schedule is built on HKDF (RFC 8446, section 7.1)
+                case "TLS13-KDF" -> Optional.of(new HKDF(detectionLocation));
+                case "TLS1-PRF" -> Optional.of(new TLSPRF(detectionLocation));
+                case "SSKDF" -> Optional.of(new ConcatenationKDF(detectionLocation));
+                case "X963KDF", "X963-KDF" -> Optional.of(new ANSIX963(detectionLocation));
+                case "X942KDF-ASN1", "X942KDF" ->
+                        Optional.of(new ANSIX942("ASN1", detectionLocation));
                 case "X942KDF-CONCAT" -> Optional.of(new ANSIX942("CONCAT", detectionLocation));
-
-                // SSKDF (Single-step KDF / ConcatenationKDF)
-                case "SSKDF", "SSKDF-SHA256", "SSKDF-SHA512" ->
-                        Optional.of(new ConcatenationKDF(detectionLocation));
-
-                // SSHKDF
-                case "SSHKDF-SHA1" -> Optional.of(new SSHKDF(new SHA(detectionLocation)));
-                case "SSHKDF-SHA256" -> Optional.of(new SSHKDF(new SHA2(256, detectionLocation)));
-                case "SSHKDF-SHA512" -> Optional.of(new SSHKDF(new SHA2(512, detectionLocation)));
-
-                // KRB5KDF (Kerberos Key Derivation Function)
+                // SP 800-108 KBKDF runs in counter mode unless the "mode" parameter selects
+                // feedback mode
+                case "KBKDF" -> Optional.of(new KDFCounter(detectionLocation));
+                case "SSHKDF" -> Optional.of(new SSHKDF(detectionLocation));
+                case "SCRYPT", "ID-SCRYPT", "1.3.6.1.4.1.11591.4.11" ->
+                        Optional.of(new Scrypt(detectionLocation));
                 case "KRB5KDF" ->
                         Optional.of(
                                 new Algorithm(
                                         "KRB5KDF", KeyDerivationFunction.class, detectionLocation));
-
-                // Argon2 (password-based KDF / memory-hard)
                 case "ARGON2D" ->
                         Optional.of(
                                 new Algorithm(
@@ -161,31 +112,18 @@ public final class CxxKeyDerivationFunctionContextTranslator
                                         "Argon2id",
                                         PasswordBasedKeyDerivationFunction.class,
                                         detectionLocation));
-
-                // PKCS12KDF (PKCS#12 password-based key derivation)
                 case "PKCS12KDF" ->
                         Optional.of(
                                 new Algorithm(
                                         "PKCS12KDF",
                                         PasswordBasedKeyDerivationFunction.class,
                                         detectionLocation));
-
-                // PVKKDF (Microsoft PVK file key derivation)
                 case "PVKKDF" ->
                         Optional.of(
                                 new Algorithm(
                                         "PVKKDF",
                                         PasswordBasedKeyDerivationFunction.class,
                                         detectionLocation));
-
-                // PBKDF1 (legacy, PKCS#5 v1.5)
-                case "PBKDF1-MD5" -> Optional.of(new PBKDF1(new MD5(detectionLocation)));
-                case "PBKDF1-SHA1" -> Optional.of(new PBKDF1(new SHA(detectionLocation)));
-
-                // PBKDF2-HMAC (bare, without explicit digest)
-                case "PBKDF2-HMAC" -> Optional.of(new PBKDF2(detectionLocation));
-
-                // HMAC-DRBG-KDF
                 case "HMAC-DRBG-KDF" ->
                         Optional.of(
                                 new Algorithm(
@@ -193,10 +131,86 @@ public final class CxxKeyDerivationFunctionContextTranslator
                                         KeyDerivationFunction.class,
                                         detectionLocation));
 
+                // PKCS12_PBE_keyivgen and PKCS5_PBE_keyivgen: the cipher and the digest come from
+                // their arguments
+                case "PKCS12-PBE" -> Optional.of(new PKCS12PBE(detectionLocation));
+                case "PBES1" -> Optional.of(new PBES1(detectionLocation));
+
+                // Encryption selected by the key and certificate NIDs of PKCS12_create
+                case "PBE-SHA1-RC4-128" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new RC4(128, detectionLocation)));
+                case "PBE-SHA1-RC4-40" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new RC4(40, detectionLocation)));
+                case "PBE-SHA1-3DES" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new DESede(
+                                                168,
+                                                new CBC(detectionLocation),
+                                                detectionLocation)));
+                case "PBE-SHA1-2DES" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new DESede(
+                                                112,
+                                                new CBC(detectionLocation),
+                                                detectionLocation)));
+                case "PBE-SHA1-RC2-128" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new RC2(
+                                                128,
+                                                new CBC(detectionLocation),
+                                                detectionLocation)));
+                case "PBE-SHA1-RC2-40" ->
+                        Optional.of(
+                                new PKCS12PBE(
+                                        new SHA(detectionLocation),
+                                        new RC2(
+                                                40,
+                                                new CBC(detectionLocation),
+                                                detectionLocation)));
+                // PBES2 with PBKDF2 and HMAC-SHA256, the default of PKCS12_create
+                case "PBES2-AES-128-CBC" -> Optional.of(pbes2WithAesCbc(128, detectionLocation));
+                case "PBES2-AES-192-CBC" -> Optional.of(pbes2WithAesCbc(192, detectionLocation));
+                case "PBES2-AES-256-CBC" -> Optional.of(pbes2WithAesCbc(256, detectionLocation));
+                case "PBES2-DES-EDE3-CBC" ->
+                        Optional.of(
+                                new PBES2(
+                                        new HMAC(new SHA2(256, detectionLocation)),
+                                        new DESede(
+                                                168,
+                                                new CBC(detectionLocation),
+                                                detectionLocation)));
+
+                // an ECDH or DH derivation whose KDF type is set to none uses no KDF
+                case "NONE" -> Optional.empty();
+
+                // PKCS5_PBKDF2_HMAC: the digest comes from its md argument
+                case "PBKDF2-HMAC" -> Optional.of(new PBKDF2(detectionLocation));
+                case "PBKDF2-HMAC-SHA1" -> Optional.of(new PBKDF2(new SHA(detectionLocation)));
+
                 default -> Optional.empty();
             };
         }
 
         return Optional.empty();
+    }
+
+    @Nonnull
+    private static PBES2 pbes2WithAesCbc(
+            int keyLength, @Nonnull DetectionLocation detectionLocation) {
+        return new PBES2(
+                new HMAC(new SHA2(256, detectionLocation)),
+                new AES(keyLength, new CBC(detectionLocation), detectionLocation));
     }
 }

@@ -97,14 +97,20 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
         this.cxxTranslationProcess = new CxxTranslationProcess(reorganizerRules);
     }
 
+    @Override
+    public void init() {
+        CxxSymbolExtensionRelease.register(getContext(), this);
+    }
+
     /**
-     * Called when a file finishes analysis. Traverses the AST to find detection targets, then
-     * releases this file's symbol/type extension entries.
+     * Called when a file finishes analysis. Traverses the AST to find detection targets.
      *
      * <p>{@code leaveFile} runs after sonar-cxx's shared node-by-node walk of the file, over every
      * registered visitor - including {@code CxxSymbolResolverVisitor}, which populates {@link
      * AstNodeSymbolExtension}/{@link AstNodeTypeExtension} during that walk - so symbol resolution
-     * for the whole file is already complete by the time this runs.
+     * for the whole file is already complete by the time this runs. The file's symbol and type
+     * entries are removed by {@link CxxSymbolExtensionRelease} once every rule of the scan has left
+     * the file.
      *
      * @param astNode the root AST node of the file that finished analysis, or {@code null} on a
      *     parse error
@@ -113,39 +119,9 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
     public void leaveFile(@Nullable AstNode astNode) {
         if (astNode != null) {
             AstNodeTraversal.traverse(astNode, DETECTION_NODE_TYPES, this::processNode);
-            releaseSymbolExtensions(astNode);
+            CxxSymbolExtensionRelease.leaveFile(getContext(), this, astNode);
         }
         CxxAggregator.getLanguageSupport().notifyLeaveFile(getContext().getInputFile());
-    }
-
-    /**
-     * Removes every {@code AstNodeSymbolExtension}/{@code AstNodeTypeExtension} entry keyed on a
-     * node of this file's AST.
-     *
-     * <p>Both maps are process-wide {@code WeakHashMap}s ({@code AstNode} key); their values
-     * ({@code Symbol}/{@code Type}) hold their own key node behind a {@code WeakReference} rather
-     * than strongly ({@code SourceCodeSymbol#declarationNode} et al.), so entries do become
-     * eligible for {@code WeakHashMap} eviction once nothing else holds the node. That eviction is
-     * still lazy and GC-timed, though — it only runs on the map's own next access, and only after a
-     * collection has actually happened — so this explicit per-node removal is what frees this
-     * file's entries deterministically, right when its AST stops being needed, instead of leaving
-     * that to chance. {@code CxxSymbolResolverVisitor} is the only code that populates these maps
-     * for our own detection.
-     *
-     * <p>This runs as its own traversal, strictly after every node's detection has already
-     * completed above: a detection rule for one node can look back at a symbol/type registered on
-     * an earlier node in file order (e.g. resolving a variable's declaring node), so a symbol must
-     * stay live for the whole file's detection pass, not just for its own node's visit.
-     *
-     * @param astNode the root AST node of the file that finished analysis
-     */
-    private void releaseSymbolExtensions(@Nonnull AstNode astNode) {
-        AstNodeTraversal.traverse(
-                astNode,
-                node -> {
-                    AstNodeSymbolExtension.removeSymbol(node);
-                    AstNodeTypeExtension.removeType(node);
-                });
     }
 
     /**

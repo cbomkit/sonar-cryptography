@@ -61,19 +61,8 @@ public final class OpenSSLEvpCipherIdea {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_idea_cfb64")
+                    .forMethods("EVP_idea_cfb64", "EVP_idea_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_IDEA_CFB64 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_idea_cfb64")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-CFB64"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -96,7 +85,7 @@ public final class OpenSSLEvpCipherIdea {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(EVP_IDEA_ECB, EVP_IDEA_CBC, EVP_IDEA_CFB, EVP_IDEA_CFB64, EVP_IDEA_OFB);
+        return List.of(EVP_IDEA_ECB, EVP_IDEA_CBC, EVP_IDEA_CFB, EVP_IDEA_OFB);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

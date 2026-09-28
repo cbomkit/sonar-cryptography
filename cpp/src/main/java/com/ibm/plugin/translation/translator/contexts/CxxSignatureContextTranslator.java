@@ -21,15 +21,19 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.SaltSize;
+import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.EdDSA;
+import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.algorithms.MLDSA;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
@@ -38,6 +42,8 @@ import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.model.algorithms.SHA3;
 import com.ibm.mapper.model.algorithms.SM2;
 import com.ibm.mapper.model.algorithms.SPHINCSPlus;
+import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -58,11 +64,25 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
+        if (value instanceof SignatureAction<AstNode> signatureAction) {
+            return switch (signatureAction.getAction()) {
+                case SIGN -> Optional.of(new Sign(detectionLocation));
+                case VERIFY -> Optional.of(new Verify(detectionLocation));
+            };
+        }
+
+        if (value instanceof SaltSize<AstNode> saltSize) {
+            // a negative salt length selects a length derived from the digest or the key
+            return saltSize.getValue() > 0
+                    ? Optional.of(new SaltLength(saltSize.getValue(), detectionLocation))
+                    : Optional.empty();
+        }
+
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
             String algorithmName = value.asString().toUpperCase().trim();
 
             // RSA-PSS Signatures (PKCS#1 v2.1 / RSASSA-PSS) — must check before generic RSA-
-            if (algorithmName.startsWith("RSA-PSS-")) {
+            if (algorithmName.equals("RSA-PSS") || algorithmName.startsWith("RSA-PSS-")) {
                 RSAssaPSS rsapss = new RSAssaPSS(detectionLocation);
                 if (algorithmName.contains("SHA256")) {
                     rsapss.put(new SHA2(256, detectionLocation));
@@ -77,9 +97,40 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
             }
 
             // RSA Signatures (PKCS#1 v1.5)
+            // Names accepted by EVP_SIGNATURE_fetch; the digest is chosen when the operation is
+            // initialized. The RSA-PKCS1, RSA-X931 and RSA-NO-PADDING schemes are selected by the
+            // padding of the RSA signature primitive (RSA_private_encrypt).
+            switch (algorithmName) {
+                case "RSA-PKCS1" -> {
+                    return Optional.of(CxxRsaSignatureSchemes.pkcs1v15(detectionLocation));
+                }
+                case "RSA-X931" -> {
+                    return Optional.of(CxxRsaSignatureSchemes.x931(detectionLocation));
+                }
+                case "RSA-NO-PADDING" -> {
+                    return Optional.of(CxxRsaSignatureSchemes.withoutPadding(detectionLocation));
+                }
+                case "RSA" -> {
+                    return Optional.of(new RSA(Signature.class, detectionLocation));
+                }
+                case "DSA" -> {
+                    return Optional.of(new DSA(detectionLocation));
+                }
+                case "ECDSA" -> {
+                    return Optional.of(new ECDSA(detectionLocation));
+                }
+                default -> {
+                    // a name with a digest or a parameter set, handled below
+                }
+            }
+
             if (algorithmName.startsWith("RSA-")) {
                 RSA rsa = new RSA(Signature.class, detectionLocation);
-                if (algorithmName.contains("SHA1")) {
+                // MD5-SHA1 (TLS 1.0/1.1 handshake signatures) is represented by its MD5 part, as
+                // for the digest itself
+                if (algorithmName.contains("MD5")) {
+                    rsa.put(new MD5(detectionLocation));
+                } else if (algorithmName.contains("SHA1")) {
                     rsa.put(new SHA(detectionLocation));
                 } else if (algorithmName.contains("SHA224")) {
                     rsa.put(new SHA2(224, detectionLocation));

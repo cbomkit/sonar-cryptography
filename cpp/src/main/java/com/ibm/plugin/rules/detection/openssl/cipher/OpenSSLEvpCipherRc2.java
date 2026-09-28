@@ -61,19 +61,8 @@ public final class OpenSSLEvpCipherRc2 {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_rc2_cfb64")
+                    .forMethods("EVP_rc2_cfb64", "EVP_rc2_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RC2_CFB64 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_rc2_cfb64")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CFB64"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -119,13 +108,7 @@ public final class OpenSSLEvpCipherRc2 {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                EVP_RC2_ECB,
-                EVP_RC2_CBC,
-                EVP_RC2_CFB,
-                EVP_RC2_CFB64,
-                EVP_RC2_OFB,
-                EVP_RC2_40_CBC,
-                EVP_RC2_64_CBC);
+                EVP_RC2_ECB, EVP_RC2_CBC, EVP_RC2_CFB, EVP_RC2_OFB, EVP_RC2_40_CBC, EVP_RC2_64_CBC);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

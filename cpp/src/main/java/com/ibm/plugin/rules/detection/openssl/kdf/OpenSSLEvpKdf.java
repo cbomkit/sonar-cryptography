@@ -21,11 +21,11 @@ package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -35,172 +35,34 @@ import javax.annotation.Nonnull;
 /**
  * Detection rules for OpenSSL Key Derivation Functions (KDFs).
  *
- * <p>These rules detect KDF usage through the EVP_KDF API introduced in OpenSSL 3.0. Covers PBKDF2,
- * HKDF, Scrypt, TLS PRF, X963KDF, KBKDF, Argon2, and other KDFs.
+ * <p>The EVP_KDF API introduced in OpenSSL 3.0 selects the KDF by name in {@code EVP_KDF_fetch}
+ * (PBKDF2, HKDF, SCRYPT, TLS1-PRF, ARGON2ID, ...). The digest used by the KDF is set on the context
+ * created from the fetched KDF, through the {@code "digest"} entry of an {@code OSSL_PARAM} array
+ * passed to {@code EVP_KDF_CTX_set_params} or {@code EVP_KDF_derive}:
  *
- * <p>Argon2, HKDF, the TLS PRFs, and the PKCS#12/PKCS#5 family live in their own {@code
- * OpenSSLEvpKdf<Family>} classes; this class holds the remaining single-variant KDFs (PBKDF2,
- * Scrypt, X963KDF, KBKDF, SSHKDF, KRB5KDF, X942KDF, SSKDF, HMAC-DRBG-KDF, PVKKDF) and the generic
- * EVP_KDF CTX/derive infrastructure, and aggregates every family's rules in {@link #rules()}.
+ * <pre>{@code
+ * EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+ * EVP_KDF_CTX *kctx = EVP_KDF_CTX_new(kdf);
+ * EVP_KDF_CTX_set_params(kctx, params); // params contains {"digest", "SHA256"}
+ * }</pre>
+ *
+ * <p>HKDF, TLS1-PRF and scrypt can also be selected through the EVP_PKEY interface, by the key type
+ * passed to {@code EVP_PKEY_CTX_new_id} or {@code EVP_PKEY_CTX_new_from_name}. The digest is then
+ * set on that context by a KDF specific setter, found in {@link OpenSSLEvpKdfHkdf} and {@link
+ * OpenSSLEvpKdfTls}:
+ *
+ * <pre>{@code
+ * EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+ * EVP_PKEY_derive_init(pctx);
+ * EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256());
+ * }</pre>
+ *
+ * <p>The PKCS#12 and PKCS#5 password-based functions are in {@link OpenSSLEvpKdfPkcs12}; {@link
+ * #rules()} includes them.
  */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKdf {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> PBKDF2_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PBKDF2\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SCRYPT"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SCRYPT\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X963KDF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X963KDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X963KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KBKDF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KBKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KBKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSHKDF_FETCH =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SSHKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SSHKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> KRB5KDF =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KRB5KDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"KRB5KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X942KDF_ASN1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X942KDF-ASN1"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X942KDF-ASN1\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> X942KDF_CONCAT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("X942KDF-CONCAT"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"X942KDF-CONCAT\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SSKDF =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SSKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"SSKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> HMAC_DRBG_KDF =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC-DRBG-KDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"HMAC-DRBG-KDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PVKKDF =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_fetch")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PVKKDF"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("\"PVKKDF\"")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_KDF_CTX_NEW =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_KDF_CTX_new")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("KDF-CTX"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> EVP_KDF_CTX_SET_PARAMS =
             new DetectionRuleBuilder<AstNode>()
@@ -216,6 +78,85 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    private static final IDetectionRule<AstNode> EVP_KDF_DERIVE =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KDF_derive")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLParamsScannerFactory(
+                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_KDF_CTX_NEW =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KDF_CTX_new")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(List.of(EVP_KDF_CTX_SET_PARAMS, EVP_KDF_DERIVE));
+
+    private static final IDetectionRule<AstNode> EVP_KDF_FETCH =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KDF_fetch")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.KDF_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(List.of(EVP_KDF_CTX_NEW));
+
+    // HKDF, TLS1-PRF and scrypt through the EVP_PKEY interface: the KDF is selected when the
+    // context is created, and its digest is set on that context
+
+    private static final List<IDetectionRule<AstNode>> EVP_PKEY_KDF_CONTEXT_RULES =
+            Stream.of(OpenSSLEvpKdfHkdf.rules().stream(), OpenSSLEvpKdfTls.rules().stream())
+                    .flatMap(i -> i)
+                    .toList();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_ID =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_new_id")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.PKEY_KDF_BY_CODE,
+                                    OpenSSLNidLookupFactory.PKEY_KDF_BY_NAME))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(EVP_PKEY_KDF_CONTEXT_RULES);
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_FROM_NAME =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_PKEY_CTX_new_from_name")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.PKEY_KDF_NAMES, true))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(EVP_PKEY_KDF_CONTEXT_RULES);
+
     private OpenSSLEvpKdf() {
         // private
     }
@@ -223,42 +164,10 @@ public final class OpenSSLEvpKdf {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLEvpKdfArgon2.rules().stream(),
-                        OpenSSLEvpKdfHkdf.rules().stream(),
-                        OpenSSLEvpKdfTls.rules().stream(),
                         OpenSSLEvpKdfPkcs12.rules().stream(),
-                        directRules().stream())
+                        Stream.of(EVP_KDF_FETCH, EVP_PKEY_CTX_NEW_ID, EVP_PKEY_CTX_NEW_FROM_NAME))
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<AstNode>> directRules() {
-        return List.of(
-                // PBKDF2 - Password-Based Key Derivation Function 2
-                PBKDF2_FETCH,
-                // Scrypt
-                SCRYPT,
-                // X963KDF - ANSI X9.63 Key Derivation Function
-                X963KDF_FETCH,
-                // KBKDF - Key-Based Key Derivation Function (NIST SP 800-108)
-                KBKDF_FETCH,
-                // SSHKDF - SSH Key Derivation Function
-                SSHKDF_FETCH,
-                // KRB5KDF - Kerberos 5 Key Derivation Function
-                KRB5KDF,
-                // X942KDF - X9.42 Key Derivation Function
-                X942KDF_ASN1,
-                X942KDF_CONCAT,
-                // SSKDF - Single Step Key Derivation Function (NIST SP 800-56C)
-                SSKDF,
-                // HMAC-DRBG-KDF - HMAC-based DRBG as KDF (NIST SP 800-90A)
-                HMAC_DRBG_KDF,
-                // PVKKDF - Microsoft PVK Key Derivation Function (Legacy)
-                PVKKDF,
-                // EVP_KDF CTX/derive
-                EVP_KDF_CTX_NEW,
-                EVP_KDF_CTX_SET_PARAMS);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

@@ -61,19 +61,8 @@ public final class OpenSSLEvpCipherBlowfish {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
-                    .forMethods("EVP_bf_cfb64")
+                    .forMethods("EVP_bf_cfb64", "EVP_bf_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB"))
-                    .withoutParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_BF_CFB64 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_bf_cfb64")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB64"))
                     .withoutParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
@@ -96,7 +85,7 @@ public final class OpenSSLEvpCipherBlowfish {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(EVP_BF_ECB, EVP_BF_CBC, EVP_BF_CFB, EVP_BF_CFB64, EVP_BF_OFB);
+        return List.of(EVP_BF_ECB, EVP_BF_CBC, EVP_BF_CFB, EVP_BF_OFB);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

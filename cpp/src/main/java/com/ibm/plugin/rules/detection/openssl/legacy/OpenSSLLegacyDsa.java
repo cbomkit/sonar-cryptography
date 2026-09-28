@@ -19,14 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
@@ -67,18 +71,8 @@ public final class OpenSSLLegacyDsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("DSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // Parameter generation: DSA_generate_parameters_ex(dsa, bits, seed, seed_len, counter_ret,
+    // h_ret, cb)
 
     private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
             new DetectionRuleBuilder<AstNode>()
@@ -86,8 +80,30 @@ public final class OpenSSLLegacyDsa {
                     .forObjectTypes("*")
                     .forMethods("DSA_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // DSA_generate_key(dsa): a key is generated for the parameters of dsa
+
+    private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("DSA_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(List.of(DSA_GENERATE_PARAMETERS_EX))
+                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
