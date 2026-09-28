@@ -28,6 +28,9 @@ import org.sonar.api.SonarRuntime;
 import org.sonar.api.internal.PluginContextImpl;
 import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
+import org.sonar.plugins.cxx.CxxLanguage;
+import org.sonar.plugins.cxx.CxxPlugin;
+import org.sonar.plugins.cxx.CxxSquidSensor;
 
 class PluginTest {
 
@@ -39,8 +42,17 @@ class PluginTest {
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
         CryptographyPlugin plugin = new CryptographyPlugin();
         plugin.define(context);
-        // 12 of our own extensions plus everything sonar-cxx's own Plugin.define() registers
-        // (language, sensor, built-in rules, one sensor/rule-repository/property set per tool).
-        Assertions.assertEquals(96, context.getExtensions().size());
+        // no separate sonar-cxx here: the bundled one provides the C/C++ language and sensor
+        Assertions.assertTrue(context.getExtensions().contains(CxxLanguage.class));
+        Assertions.assertTrue(context.getExtensions().contains(CxxSquidSensor.class));
+        Assertions.assertTrue(context.getExtensions().contains(CxxScannerRuleDefinition.class));
+        Assertions.assertTrue(context.getExtensions().contains(CxxCheckRegistrar.class));
+        Assertions.assertEquals(12 + cxxPluginExtensions(runtime), context.getExtensions().size());
+    }
+
+    private static int cxxPluginExtensions(SonarRuntime runtime) {
+        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
+        new CxxPlugin().define(context);
+        return context.getExtensions().size();
     }
 }

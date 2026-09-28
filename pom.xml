@@ -161,10 +161,10 @@
             <version>${sonar.go.version}</version>
         </dependency>
         <!-- sonar-cxx (community plugin for C/C++ support) -->
-        <!-- provided: cxx-squid-bridge/cxx-squid are compile-time APIs only, already on the
-             classpath at runtime via the sonar-cxx-plugin dependency bundled into the uber-JAR
-             (see sonar-cryptography-plugin/pom.xml). Declaring them compile here would duplicate
-             those classes in the shaded JAR. -->
+        <!-- provided: cxx-squid-bridge/cxx-squid are compile-time APIs only. At runtime their
+             classes come from the sonar-cxx plugin, bundled with this plugin or installed
+             separately, which shares them under org.sonar.plugins.cxx.api
+             (see sonar-cryptography-plugin/pom.xml). -->
         <dependency>
             <groupId>${sonar.cxx.groupId}</groupId>
             <artifactId>cxx-squid-bridge</artifactId>

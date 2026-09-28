@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.sonar.api.Plugin;
 import org.sonar.api.SonarProduct;
 import org.sonar.api.SonarRuntime;
+import org.sonar.plugins.cxx.CxxPlugin;
 
 public class CryptographyPlugin implements Plugin {
 
@@ -36,11 +37,6 @@ public class CryptographyPlugin implements Plugin {
         SonarProduct product = runtime.getProduct();
 
         LOGGER.info("Sonar Cryptography initialized in context (" + product + ")");
-
-        // sonar-cxx is not shipped as a core SonarQube analyzer like sonar-java/python/go, so its
-        // own extensions (language, sensor, built-in rules) are registered by delegating to its
-        // real Plugin.define() alongside ours.
-        new org.sonar.plugins.cxx.CxxPlugin().define(context);
 
         context.addExtensions(Configuration.getPropertyDefinitions()); // add configuration
         context.addExtensions(
@@ -56,10 +52,17 @@ public class CryptographyPlugin implements Plugin {
                 // csharp
                 CSharpScannerRuleDefinition.class, // Define C# rules
                 CryptoCSharpSensor.class, // Custom sensor (sonar-csharp has no CheckRegistrar API)
-                // cxx
-                CxxScannerRuleDefinition.class, // Define C++ rules
-                CxxCheckRegistrar.class, // Register C++ rules by sonar-cxx sensor
                 // general
                 OutputFileJob.class);
+        // cxx: the language and its sensor come from sonar-cxx, bundled with this plugin, or from a
+        // separately installed sonar-cxx when there is one
+        if (SonarCxx.isInstalled()) {
+            LOGGER.info("C/C++ analysis uses the installed sonar-cxx plugin");
+        } else {
+            new CxxPlugin().define(context);
+        }
+        context.addExtensions(
+                CxxScannerRuleDefinition.class, // Define C++ rules
+                CxxCheckRegistrar.class); // Register C++ rules by sonar-cxx sensor
     }
 }
