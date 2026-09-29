@@ -94,12 +94,12 @@ In the tree of detected values, the values detected by these dependent detection
 
 At this point, you should have repeated all the steps starting from the `withMethodParameter` to here as many times as there are parameters in the function that you want to capture.
 
-### Named method parameters (Python only)
+### Named method parameters
 
-For Python rules, `withNamedMethodParameter(String name, String type)` declares a required
+For Python and C# rules, `withNamedMethodParameter(String name, String type)` declares a required
 parameter, and `withOptionalNamedMethodParameter(String name, String type)` declares one that
-may be omitted. Both methods are part of the shared rule builder, but **only Python currently
-supports matching them**. Using either declaration with an unsupported language fails when
+may be omitted. Both methods are part of the shared rule builder, but **only Python and C# currently
+support matching them**. Using either declaration with an unsupported language fails when
 the detection store is created; it does not silently fall back to positional-only matching.
 
 Declare any `withMethodParameter` calls first, then required named parameters, then optional
@@ -129,6 +129,13 @@ wrong-type optional parameter is skipped while the rest of the rule can still fi
 (`*args` or `**kwargs`) cannot be resolved statically and is rejected for named-parameter
 rules. Extra unknown keyword arguments are ignored. Positional-only rules continue using
 their existing matcher.
+
+The C# binder (`CSharpNamedArgumentBinder`) follows the same keyword-first, positional-fallback
+resolution, using C# named arguments (`Foo.F(a: x, b: y)`). It rejects the call if it has fewer
+arguments than mandatory parameters or if a required named parameter cannot be resolved. Unlike
+the Python binder, it does not check parameter types, since C# detection has no semantic type
+resolution, and a `withMethodParameter` declaration in a mixed rule is matched by index whether
+or not the argument at that index is named.
 
 Then, `buildForContext(IDetectionContext detectionValueContext)` defines the detection context ([`IDetectionContext`](../engine/src/main/java/com/ibm/engine/model/context/IDetectionContext.java)) for all the detected values of your rule (but detections from dependent rules have their own context).
 A detection context is therefore linked to each detected value, and is designed to categorize your findings and to help you carry additional information that is not present in the detected value.

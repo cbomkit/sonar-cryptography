@@ -102,14 +102,14 @@ This higher level syntax is defined by the interface [`IDetectionRule`](../engin
 
 The shared rule builder also declares `withNamedMethodParameter(name, type)` and
 `withOptionalNamedMethodParameter(name, type)` for keyword-aware calls. **Named method
-parameters are currently supported only for Python.** A language support must provide an
+parameters are currently supported only for Python and C#.** A language support must provide an
 argument binder for these declarations; trying to run a named-parameter rule with Java, Go,
 or another language without a binder fails with an explicit error rather than silently
 misinterpreting the call. Python's binder matches by keyword first, then by an unmarked
 positional argument at the declared index. It checks required parameters before recording a
 finding and ignores an absent or wrong-type optional parameter. A `withMethodParameter`
 declaration in a mixed rule still requires an unmarked positional argument. See
-[*Named method parameters*](./DETECTION_RULE_STRUCTURE.md#named-method-parameters-python-only)
+[*Named method parameters*](./DETECTION_RULE_STRUCTURE.md#named-method-parameters)
 for a rule example and the declaration-order constraints.
 
 > [!TIP]  
