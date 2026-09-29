@@ -27,6 +27,7 @@ import com.ibm.engine.detection.IDetectionEngine;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.executive.DetectionExecutive;
+import com.ibm.engine.language.IArgumentBinder;
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.language.IScanContext;
@@ -81,6 +82,12 @@ public final class CSharpLanguageSupport
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore) {
         return new CSharpDetectionEngine(detectionStore, this.handler);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<IArgumentBinder<CSharpTree>> namedArgumentBinder() {
+        return Optional.of(new CSharpNamedArgumentBinder());
     }
 
     @Nonnull

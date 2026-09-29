@@ -28,7 +28,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Language-independent rule declaration. Named method parameter declarations currently require
- * Python language support; other languages reject them when creating the detection store.
+ * Python or C# language support; other languages reject them when creating the detection store.
  */
 public interface IDetectionRule<T> {
     boolean is(@Nonnull Class<? extends IDetectionRule> kind);
@@ -85,12 +85,16 @@ public interface IDetectionRule<T> {
         @Nonnull
         ParametersFactoryBuilder<T> withMethodParameterMatchExactType(@Nonnull String type);
 
-        /** Declares a required keyword-aware parameter; currently supported only for Python. */
+        /**
+         * Declares a required keyword-aware parameter; currently supported only for Python and C#.
+         */
         @Nonnull
         ParametersFactoryBuilder<T> withNamedMethodParameter(
                 @Nonnull String name, @Nonnull String type);
 
-        /** Declares an optional keyword-aware parameter; currently supported only for Python. */
+        /**
+         * Declares an optional keyword-aware parameter; currently supported only for Python and C#.
+         */
         @Nonnull
         ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
                 @Nonnull String name, @Nonnull String type);
