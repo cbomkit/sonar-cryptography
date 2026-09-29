@@ -216,7 +216,6 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void processParameter(
             @Nonnull Parameter<CSharpTree> parameter,
             @Nonnull CSharpTree expression,
@@ -267,7 +266,6 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     }
 
     @Nonnull
-    @SuppressWarnings({"unchecked"})
     private <O> List<ResolvedValue<O, CSharpTree>> resolveValues(
             @Nonnull Class<O> clazz,
             @Nonnull CSharpTree tree,
@@ -289,10 +287,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             selections.addFirst(memberAccess);
             String memberName = memberAccess.getMemberName();
             Optional<O> resolved = resolveConstant(clazz, memberName);
-            if (resolved.isPresent()) {
-                return List.of(new ResolvedValue<>(resolved.get(), tree));
-            }
-            return Collections.emptyList();
+            return resolved.map(o -> List.of(new ResolvedValue<>(o, tree))).orElse(Collections.emptyList());
         }
 
         // Identifier: resolve to its name as a string
