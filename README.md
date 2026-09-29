@@ -47,7 +47,7 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
 [^4]: C# support uses an [ANTLR v7 grammar](https://github.com/antlr/grammars-v4/tree/master/csharp) to parse source files directly. The current csharp support only covers the language support and does not contain detection rules other than the rules used for verifying the detection engine. **This is not yet meant for active usage!** **Known limitations of the detection engine:** no cross-method variable tracking (only single-method scope), only works for c# v7, string-based matching (no type resolution)
 
-[^5]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Requires the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin.
+[^5]: Covers OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key generation, signatures), legacy API, SSL/TLS functions, and PRNG. Uses the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin, which is bundled (see [Installation](#installation)).
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
@@ -71,16 +71,22 @@ to `$SONARQUBE_HOME/extensions/plugins` and restart
 SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-plugin/)).
 
 > [!IMPORTANT]
-> C/C++ support is provided by bundling [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx)
-> inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. Do not
-> also install a standalone sonar-cxx plugin on the same SonarQube instance: both would
-> register the same sonar-cxx configuration properties and SonarQube will fail to start.
+> C/C++ support comes from [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx), which is
+> bundled inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. You do
+> not need to install sonar-cxx separately.
+>
+> If sonar-cxx is already installed on your SonarQube instance:
+>
+> - If that sonar-cxx build shares its API with other plugins, it is used for C/C++ analysis
+>   instead of the bundled one.
+> - Otherwise, remove it. Both plugins would register the same sonar-cxx configuration
+>   properties, and SonarQube will fail to start.
 
 ## Using
 
 The plugin provides new rules regarding the use of cryptography for the supported languages.
 They are grouped in the **Sonar Cryptography** rule repositories, one per language
-(`sonar-java-crypto`, `sonar-python-crypto` and `sonar-go-crypto`).
+(`sonar-java-crypto`, `sonar-python-crypto`, `sonar-go-crypto` and `sonar-cpp-crypto`).
 If you enable the *Cryptographic Inventory (CBOM)* rule, a source code scan creates a cryptographic
 inventory by creating a [CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic
 assets and writing a `cbom.json` to the scan directory.
