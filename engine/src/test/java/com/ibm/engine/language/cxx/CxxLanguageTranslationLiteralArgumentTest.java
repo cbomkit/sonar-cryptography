@@ -30,6 +30,7 @@ import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.parser.CxxGrammarImpl;
+import org.sonar.cxx.parser.CxxPunctuator;
 import org.sonar.cxx.parser.CxxTokenType;
 
 /**
@@ -82,10 +83,10 @@ class CxxLanguageTranslationLiteralArgumentTest {
     private static AstNode buildFunctionCall(AstNode argument) {
         AstNode postfixExpression =
                 new AstNode(CxxGrammarImpl.postfixExpression, "postfixExpression", null);
-        AstNode openParen = new AstNode(fakeToken(new PlainAstNodeType(), "("));
+        AstNode openParen = new AstNode(fakeToken(CxxPunctuator.BR_LEFT, "("));
         AstNode expressionList = new AstNode(CxxGrammarImpl.expressionList, "expressionList", null);
         expressionList.addChild(argument);
-        AstNode closeParen = new AstNode(fakeToken(new PlainAstNodeType(), ")"));
+        AstNode closeParen = new AstNode(fakeToken(CxxPunctuator.BR_RIGHT, ")"));
 
         postfixExpression.addChild(openParen);
         postfixExpression.addChild(expressionList);

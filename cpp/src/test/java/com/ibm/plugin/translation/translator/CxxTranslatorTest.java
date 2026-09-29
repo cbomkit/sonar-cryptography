@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.parser.CxxGrammarImpl;
+import org.sonar.cxx.parser.CxxPunctuator;
 
 class CxxTranslatorTest {
 
@@ -98,8 +99,8 @@ class CxxTranslatorTest {
                 new AstNode(fakeToken(GenericTokenType.IDENTIFIER, "EVP_MD_fetch", 1, 0));
         idExpression.addChild(identifier);
 
-        AstNode openParen = new AstNode(fakeToken(new PlainAstNodeType(), "(", 1, 12));
-        AstNode closeParen = new AstNode(fakeToken(new PlainAstNodeType(), ")", 1, 13));
+        AstNode openParen = new AstNode(fakeToken(CxxPunctuator.BR_LEFT, "(", 1, 12));
+        AstNode closeParen = new AstNode(fakeToken(CxxPunctuator.BR_RIGHT, ")", 1, 13));
 
         // a real parser-built postfixExpression node carries its first token itself, in addition
         // to that same token being reachable through its idExpression child
