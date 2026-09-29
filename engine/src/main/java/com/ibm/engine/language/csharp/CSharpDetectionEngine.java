@@ -287,7 +287,8 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             selections.addFirst(memberAccess);
             String memberName = memberAccess.getMemberName();
             Optional<O> resolved = resolveConstant(clazz, memberName);
-            return resolved.map(o -> List.of(new ResolvedValue<>(o, tree))).orElse(Collections.emptyList());
+            return resolved.map(o -> List.of(new ResolvedValue<>(o, tree)))
+                    .orElse(Collections.emptyList());
         }
 
         // Identifier: resolve to its name as a string
