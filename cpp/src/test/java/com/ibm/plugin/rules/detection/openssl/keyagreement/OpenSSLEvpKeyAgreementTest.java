@@ -19,23 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keyagreement;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.KeyAgreementContext;
-import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyAgreement;
-import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -50,15 +45,33 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpKeyAgreementTest extends TestBase {
 
-    private int findingCount = 0;
-    private final Set<String> observed = new HashSet<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 25: EVP_KEYEXCH_fetch(NULL, "ECDH", NULL);
+                    finding(
+                            "KeyAgreementContext{Algorithm:ECDH}",
+                            "KeyAgreement:ECDH[Oid:1.3.132.1.12]"),
+                    // 26: EVP_KEM_fetch(NULL, "RSA", NULL);
+                    finding(
+                            "KeyAgreementContext{Algorithm:RSA}",
+                            "KeyEncapsulationMechanism:RSASVE"),
+                    // 39: OSSL_HPKE_str2suite("X25519,HKDF-SHA256,AES-128-GCM", NULL);
+                    finding(
+                            "KeyAgreementContext{ValueAction:X25519,HKDF-SHA256,AES-128-GCM}",
+                            "PublicKeyEncryption:HPKE[AuthenticatedEncryption:AES-128-GCM[BlockSize:128, "
+                                    + "KeyLength:128, Mode:GCM, Oid:2.16.840.1.101.3.4.1.6], "
+                                    + "KeyDerivationFunction:HKDF-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]], "
+                                    + "KeyEncapsulationMechanism:DHKEM[KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110]]]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/keyagreement/OpenSSLEvpKeyAgreementTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(7);
-        assertThat(observed).hasSize(4);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -72,45 +85,7 @@ class OpenSSLEvpKeyAgreementTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-
-        // the digests assigned to variables are reported on their own
-        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
-            findingCount++;
-            assertThat(value.asString()).isEqualTo("SHA-256");
-            assertThat(nodes).hasSize(1);
-            return;
-        }
-
-        String v = value.asString();
-        observed.add(v);
-        findingCount++;
-
-        // EVP_PKEY_CTX_set_dh_kdf_type / set_ecdh_kdf_type(ctx, 1): no KDF is applied
-        if (detectionStore.getDetectionValueContext() instanceof KeyDerivationFunctionContext) {
-            assertThat(v).isEqualTo("NONE");
-            assertThat(nodes).isEmpty();
-            return;
-        }
-
-        assertThat(detectionStore.getDetectionValueContext())
-                .isInstanceOf(KeyAgreementContext.class);
-
-        switch (v) {
-            case "ECDH" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0).getKind()).isEqualTo(KeyAgreement.class);
-            }
-            case "RSA" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0).getKind()).isEqualTo(KeyEncapsulationMechanism.class);
-            }
-            case "X25519,HKDF-SHA256,AES-128-GCM" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0).asString()).isEqualTo("HPKE");
-            }
-            default -> throw new AssertionError("Unexpected value: " + v);
-        }
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

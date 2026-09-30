@@ -19,16 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.mac;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -38,17 +39,48 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
  * A MAC fetched by name gets the digest or cipher that is set on the context created from it,
- * whether it is passed to {@code EVP_MAC_init} or to {@code EVP_MAC_CTX_set_params}.
+ * whether it is passed to {@code EVP_MAC_init} or to {@code EVP_MAC_CTX_set_params}. A GMAC becomes
+ * its cipher as a MAC in GMAC mode.
  */
 class OpenSSLEvpMacContextTest extends TestBase {
 
-    private final List<String> macs = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_MAC *mac = EVP_MAC_fetch(NULL, "hmac", NULL);
+                    finding(
+                            "MacContext{Algorithm:hmac}[MacContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 15: EVP_MAC *mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
+                    finding(
+                            "MacContext{Algorithm:CMAC}[MacContext{}[CipherContext{Algorithm:aes-256-cbc}]]",
+                            "Mac:CMAC-AES[BlockCipher:AES-256-CBC[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC, Oid:2.16.840.1.101.3.4.1.42], Tag:TAG]"),
+                    // 25: EVP_MAC_fetch(NULL, "Poly1305", NULL);
+                    finding("MacContext{Algorithm:Poly1305}", "Mac:Poly1305[Tag:TAG]"),
+                    // 26: EVP_MAC_fetch(NULL, "SipHash", NULL);
+                    finding(
+                            "MacContext{Algorithm:SipHash}",
+                            "Mac:SipHash[DigestSize:64, KeyLength:128, Tag:TAG]"),
+                    // 27: EVP_MAC_fetch(NULL, "KMAC-256", NULL);
+                    finding(
+                            "MacContext{Algorithm:KMAC-256}",
+                            "Mac:KMAC256[DigestSize:512, "
+                                    + "ExtendableOutputFunction:cSHAKE256[Digest:DIGEST, "
+                                    + "ParameterSetIdentifier:256], ParameterSetIdentifier:256, Tag:TAG]"),
+                    // 31: EVP_MAC *mac = EVP_MAC_fetch(NULL, "GMAC", NULL);
+                    finding(
+                            "MacContext{Algorithm:GMAC}[MacContext{}[CipherContext{Algorithm:aes-128-gcm}]]",
+                            "Mac:AES-128-GMAC[BlockSize:128, KeyLength:128, Mode:GMAC,"
+                                    + " Oid:2.16.840.1.101.3.4.1.9, Tag:TAG]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/mac/OpenSSLEvpMacContextTestFile.cc", this);
-        assertThat(macs)
-                .containsExactly("HMAC-SHA-256", "CMAC-AES", "Poly1305", "SipHash", "KMAC256");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -62,8 +94,7 @@ class OpenSSLEvpMacContextTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-        assertThat(nodes).hasSize(1);
-        macs.add(nodes.get(0).asString());
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

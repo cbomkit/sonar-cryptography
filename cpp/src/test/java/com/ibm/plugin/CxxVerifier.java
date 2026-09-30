@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import javax.annotation.Nonnull;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
@@ -34,12 +35,20 @@ import org.sonar.cxx.CxxAstScanner;
 import org.sonar.cxx.config.CxxSquidConfiguration;
 import org.sonar.cxx.squidbridge.AstScanner;
 import org.sonar.cxx.squidbridge.SquidAstVisitor;
+import org.sonar.cxx.squidbridge.api.CheckMessage;
+import org.sonar.cxx.squidbridge.api.SourceFile;
+import org.sonarsource.analyzer.commons.checks.verifier.SingleFileVerifier;
 
 /**
  * Test verifier for C++ detection rules.
  *
  * <p>Scans a C++ test file using {@link CxxAstScanner} and invokes the provided check (typically a
  * {@link TestBase} instance) which intercepts detection findings and calls {@code asserts()}.
+ *
+ * <p>{@link #verify} also checks the issues reported on the file against its {@code // Noncompliant
+ * {{message}}} comments, as {@code GoVerifier} does for Go. The scans of several files or with
+ * several checks ({@link #verifyFiles}, {@link #verifyWithChecks}) only run the checks, as the
+ * issues then depend on the combination scanned.
  *
  * <p>No include directories are configured. Detection matches the literal OpenSSL API calls, so it
  * does not depend on the preprocessor expanding headers. The preprocessor may log "cannot find
@@ -54,7 +63,8 @@ public final class CxxVerifier {
     }
 
     /**
-     * Verifies a C++ test file by scanning it with the given check.
+     * Verifies a C++ test file by scanning it with the given check and checking the reported issues
+     * against the file's {@code // Noncompliant {{message}}} comments (see {@link #assertIssues}).
      *
      * @param relativePath Path to the test file relative to {@code src/test/files/}
      * @param check The check (detection rule) to apply
@@ -98,7 +108,9 @@ public final class CxxVerifier {
             // may log "cannot find include file" at DEBUG for the fixtures' #include lines; that is
             // harmless and does not affect detection.
             CxxSquidConfiguration squidConfig = new CxxSquidConfiguration();
-            CxxAstScanner.scanSingleInputFileConfig(inputFile, squidConfig, check);
+            SourceFile sourceFile =
+                    CxxAstScanner.scanSingleInputFileConfig(inputFile, squidConfig, check);
+            assertIssues(file.toPath(), charset, content, sourceFile);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read test file: " + fullPath, e);
         }
@@ -234,5 +246,66 @@ public final class CxxVerifier {
         AstScanner<Grammar> scanner =
                 CxxAstScanner.create(squidConfig, checks.toArray(new SquidAstVisitor[0]));
         scanner.scanInputFiles(inputFiles);
+    }
+
+    /**
+     * Checks the issues reported on a file against its {@code // Noncompliant} comments, as {@code
+     * GoVerifier} does: each reported issue needs a comment on its line, or one pointing to it with
+     * {@code @+n} / {@code @-n}, giving its message in {@code {{...}}}, and each such comment needs
+     * a reported issue.
+     */
+    private static void assertIssues(
+            @Nonnull Path path,
+            @Nonnull Charset charset,
+            @Nonnull String content,
+            @Nonnull SourceFile sourceFile) {
+        SingleFileVerifier verifier = SingleFileVerifier.create(path, charset);
+        for (LineComment comment : lineComments(content)) {
+            verifier.addComment(comment.line(), comment.column(), comment.text(), 2, 0);
+        }
+        for (CheckMessage message : sourceFile.getCheckMessages()) {
+            verifier.reportIssue(message.getText(Locale.ENGLISH)).onLine(message.getLine());
+        }
+        verifier.assertOneOrMoreIssues();
+    }
+
+    /** A {@code //} comment: its 1-based line and column, and its text including {@code //}. */
+    record LineComment(int line, int column, @Nonnull String text) {}
+
+    /** The {@code //} comments of C/C++ source, outside string and character literals. */
+    @Nonnull
+    static List<LineComment> lineComments(@Nonnull String content) {
+        List<LineComment> comments = new ArrayList<>();
+        String[] lines = content.split("\\R", -1);
+        boolean inBlockComment = false;
+        for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            String line = lines[lineIndex];
+            char quote = 0;
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                char next = i + 1 < line.length() ? line.charAt(i + 1) : 0;
+                if (inBlockComment) {
+                    if (c == '*' && next == '/') {
+                        inBlockComment = false;
+                        i++;
+                    }
+                } else if (quote != 0) {
+                    if (c == '\\') {
+                        i++;
+                    } else if (c == quote) {
+                        quote = 0;
+                    }
+                } else if (c == '"' || c == '\'') {
+                    quote = c;
+                } else if (c == '/' && next == '*') {
+                    inBlockComment = true;
+                    i++;
+                } else if (c == '/' && next == '/') {
+                    comments.add(new LineComment(lineIndex + 1, i + 1, line.substring(i)));
+                    break;
+                }
+            }
+        }
+        return comments;
     }
 }

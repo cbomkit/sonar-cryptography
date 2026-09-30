@@ -19,25 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.mac;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.MacContext;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Mac;
-import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.KMAC;
-import com.ibm.mapper.model.algorithms.SipHash;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -56,37 +48,70 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  * com.ibm.engine.language.cxx.CxxSemantic#resolveValues}), and {@link
  * com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory} scans that array for the
  * {@code "digest"}/{@code "cipher"}-keyed entry.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
  */
 class OpenSSLEvpMacTest extends TestBase {
 
-    private final List<String> macs = new ArrayList<>();
-    private final List<String> digests = new ArrayList<>();
-    private final List<String> ciphers = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 8: EVP_MAC_fetch(lib, "HMAC", props);
+                    finding("MacContext{Algorithm:HMAC}", "Mac:HMAC[Tag:TAG]"),
+                    // 9: EVP_MAC_fetch(lib, "CMAC", props);
+                    finding("MacContext{Algorithm:CMAC}", "Mac:CMAC[Tag:TAG]"),
+                    // 10: EVP_MAC_fetch(lib, "GMAC", props);
+                    finding("MacContext{Algorithm:GMAC}", "Mac:GMAC[Tag:TAG]"),
+                    // 11: EVP_MAC_fetch(lib, "Poly1305", props);
+                    finding("MacContext{Algorithm:Poly1305}", "Mac:Poly1305[Tag:TAG]"),
+                    // 12: EVP_MAC_fetch(lib, "SipHash", props);
+                    finding(
+                            "MacContext{Algorithm:SipHash}",
+                            "Mac:SipHash[DigestSize:64, KeyLength:128, Tag:TAG]"),
+                    // 13: EVP_MAC_fetch(lib, "KMAC128", props);
+                    finding(
+                            "MacContext{Algorithm:KMAC128}",
+                            "Mac:KMAC128[DigestSize:256, "
+                                    + "ExtendableOutputFunction:cSHAKE128[Digest:DIGEST, "
+                                    + "ParameterSetIdentifier:128], ParameterSetIdentifier:128, Tag:TAG]"),
+                    // 14: EVP_MAC_fetch(lib, "KMAC256", props);
+                    finding(
+                            "MacContext{Algorithm:KMAC256}",
+                            "Mac:KMAC256[DigestSize:512, "
+                                    + "ExtendableOutputFunction:cSHAKE256[Digest:DIGEST, "
+                                    + "ParameterSetIdentifier:256], ParameterSetIdentifier:256, Tag:TAG]"),
+                    // 15: EVP_MAC_fetch(lib, "BLAKE2BMAC", props);
+                    finding(
+                            "MacContext{Algorithm:BLAKE2BMAC}",
+                            "Mac:BLAKE2b-512[DigestSize:512, SaltLength:128, Tag:TAG]"),
+                    // 16: EVP_MAC_fetch(lib, "BLAKE2SMAC", props);
+                    finding(
+                            "MacContext{Algorithm:BLAKE2SMAC}",
+                            "Mac:BLAKE2s-256[DigestSize:256, SaltLength:64, Tag:TAG]"),
+                    // 18: EVP_Q_mac(lib, "HMAC", props, "SHA256", NULL, NULL, 0, NULL, 0, NULL, 0,
+                    // NULL);
+                    finding("MacContext{Algorithm:HMAC}", "Mac:HMAC[Tag:TAG]"),
+                    // 23: HMAC(legacy_hmac_md, NULL, 0, NULL, 0, NULL, NULL);
+                    finding(
+                            "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 25: HMAC_Init_ex(NULL, NULL, 0, legacy_hmac_init_md, NULL);
+                    finding(
+                            "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 27: CMAC_Init(NULL, NULL, 0, legacy_cmac_cipher, NULL);
+                    finding(
+                            "MacContext{ValueAction:CMAC}[CipherContext{ValueAction:AES-128-CBC}]",
+                            "Mac:CMAC-AES[BlockCipher:AES-128-CBC[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC, Oid:2.16.840.1.101.3.4.1.2], Tag:TAG]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/mac/OpenSSLEvpMacTestFile.cc", this);
-        assertThat(macs)
-                .containsExactly(
-                        "HMAC",
-                        "CMAC",
-                        "GMAC",
-                        "Poly1305",
-                        "SipHash",
-                        "KMAC128",
-                        "KMAC256",
-                        "BLAKE2b-512",
-                        "BLAKE2s-256",
-                        "HMAC",
-                        "HMAC-SHA-256",
-                        "HMAC-SHA-256",
-                        "CMAC-AES");
-        // the EVP_sha256()/EVP_aes_128_cbc() calls are also reported on their own
-        assertThat(digests).containsExactly("SHA-256", "SHA-256");
-        assertThat(ciphers).containsExactly("AES-128-CBC");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -100,26 +125,7 @@ class OpenSSLEvpMacTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        INode n = nodes.get(0);
-        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
-            assertThat(n).isInstanceOf(MessageDigest.class);
-            digests.add(n.asString());
-            return;
-        }
-        if (detectionStore.getDetectionValueContext() instanceof CipherContext) {
-            assertThat(n).isInstanceOf(AES.class);
-            ciphers.add(n.asString());
-            return;
-        }
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-        assertThat(n.getKind()).isEqualTo(Mac.class);
-        if (n instanceof SipHash) {
-            assertThat(n.getChildren().get(KeyLength.class).asString()).isEqualTo("128");
-            assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("64");
-        } else if (n instanceof KMAC) {
-            assertThat(n.getChildren().get(DigestSize.class)).isNotNull();
-        }
-        macs.add(n.asString());
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

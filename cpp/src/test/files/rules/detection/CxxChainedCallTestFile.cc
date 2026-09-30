@@ -9,5 +9,5 @@ struct Library {
 };
 
 void digest_through_chained_call(Library &library) {
-    library.digests("default").EVP_get_digestbyname("SHA512");
+    library.digests("default").EVP_get_digestbyname("SHA512"); // Noncompliant {{(MessageDigest) SHA-512}}
 }

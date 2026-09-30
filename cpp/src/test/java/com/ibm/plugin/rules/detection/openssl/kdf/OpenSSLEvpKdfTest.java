@@ -19,26 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.KeyDerivationFunctionContext;
-import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyDerivationFunction;
-import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
-import com.ibm.mapper.model.algorithms.PBKDF2;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -54,14 +46,107 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpKdfTest extends TestBase {
 
-    private int findingCount = 0;
-    private final Set<String> observed = new HashSet<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 11: EVP_KDF_fetch(lib, "PBKDF2", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:PBKDF2}",
+                            "PasswordBasedKeyDerivationFunction:PBKDF2[KeyDerivation:KEYDERIVATION]"),
+                    // 12: EVP_KDF_fetch(lib, "HKDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}",
+                            "KeyDerivationFunction:HKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 13: EVP_KDF_fetch(lib, "SCRYPT", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:SCRYPT}",
+                            "PasswordBasedKeyDerivationFunction:scrypt[KeyDerivation:KEYDERIVATION]"),
+                    // 14: EVP_KDF_fetch(lib, "TLS1-PRF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:TLS1-PRF}",
+                            "KeyDerivationFunction:TLS-PRF[KeyDerivation:KEYDERIVATION]"),
+                    // 15: EVP_KDF_fetch(lib, "TLS13-KDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:TLS13-KDF}",
+                            "KeyDerivationFunction:HKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 16: EVP_KDF_fetch(lib, "X963KDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:X963KDF}",
+                            "KeyDerivationFunction:ANSI-KDF-X9.63[KeyDerivation:KEYDERIVATION]"),
+                    // 17: EVP_KDF_fetch(lib, "KBKDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:KBKDF}",
+                            "KeyDerivationFunction:SP800_108_CounterKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 18: EVP_KDF_fetch(lib, "X942KDF-ASN1", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:X942KDF-ASN1}",
+                            "KeyDerivationFunction:ANSI-KDF-X9.42-ASN1[KeyDerivation:KEYDERIVATION, "
+                                    + "ParameterSetIdentifier:ASN1]"),
+                    // 19: EVP_KDF_fetch(lib, "X942KDF-CONCAT", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:X942KDF-CONCAT}",
+                            "KeyDerivationFunction:ANSI-KDF-X9.42-CONCAT[KeyDerivation:KEYDERIVATION, "
+                                    + "ParameterSetIdentifier:CONCAT]"),
+                    // 20: EVP_KDF_fetch(lib, "SSKDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:SSKDF}",
+                            "KeyDerivationFunction:ConcatenationKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 21: EVP_KDF_fetch(lib, "SSHKDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:SSHKDF}",
+                            "KeyDerivationFunction:SSHKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 22: EVP_KDF_fetch(lib, "KRB5KDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:KRB5KDF}",
+                            "KeyDerivationFunction:KRB5KDF[KeyDerivation:KEYDERIVATION]"),
+                    // 23: EVP_KDF_fetch(lib, "ARGON2D", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:ARGON2D}",
+                            "PasswordBasedKeyDerivationFunction:Argon2d[KeyDerivation:KEYDERIVATION]"),
+                    // 24: EVP_KDF_fetch(lib, "ARGON2I", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:ARGON2I}",
+                            "PasswordBasedKeyDerivationFunction:Argon2i[KeyDerivation:KEYDERIVATION]"),
+                    // 25: EVP_KDF_fetch(lib, "ARGON2ID", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:ARGON2ID}",
+                            "PasswordBasedKeyDerivationFunction:Argon2id[KeyDerivation:KEYDERIVATION]"),
+                    // 26: EVP_KDF_fetch(lib, "PKCS12KDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:PKCS12KDF}",
+                            "PasswordBasedKeyDerivationFunction:PKCS12KDF[KeyDerivation:KEYDERIVATION]"),
+                    // 27: EVP_KDF_fetch(lib, "PVKKDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:PVKKDF}",
+                            "PasswordBasedKeyDerivationFunction:PVKKDF[KeyDerivation:KEYDERIVATION]"),
+                    // 28: EVP_KDF_fetch(lib, "HMAC-DRBG-KDF", props);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HMAC-DRBG-KDF}",
+                            "KeyDerivationFunction:HMAC-DRBG-KDF[KeyDerivation:KEYDERIVATION]"),
+                    // 33: PKCS5_PBKDF2_HMAC((char*)buf, 8, buf, 16, 1000, pbkdf2_md, 32, buf);
+                    finding(
+                            "KeyDerivationFunctionContext{ValueAction:PBKDF2-HMAC}[KeyDerivationFunctionContext{SaltSize:128}, "
+                                    + "KeyDerivationFunctionContext{IterationCount:1000}, "
+                                    + "KeyDerivationFunctionContext{KeySize:256}, "
+                                    + "DigestContext{ValueAction:SHA-256}]",
+                            "PasswordBasedKeyDerivationFunction:PBKDF2-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "KeyLength:256, MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], NumberOfIterations:1000, "
+                                    + "SaltLength:128]"),
+                    // 34: PKCS5_PBKDF2_HMAC_SHA1((char*)buf, 8, buf, 16, 1000, 32, buf);
+                    finding(
+                            "KeyDerivationFunctionContext{ValueAction:PBKDF2-HMAC-SHA1}[KeyDerivationFunctionContext{SaltSize:128}, "
+                                    + "KeyDerivationFunctionContext{IterationCount:1000}, "
+                                    + "KeyDerivationFunctionContext{KeySize:256}]",
+                            "PasswordBasedKeyDerivationFunction:PBKDF2-SHA-1[KeyDerivation:KEYDERIVATION, "
+                                    + "KeyLength:256, MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:160, Oid:1.3.14.3.2.26], NumberOfIterations:1000, SaltLength:128]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/kdf/OpenSSLEvpKdfTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(21);
-        assertThat(observed).hasSize(21);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -75,113 +160,7 @@ class OpenSSLEvpKdfTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-
-        // the digest passed to PKCS5_PBKDF2_HMAC is also reported on its own
-        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
-            observed.add(value.asString());
-            findingCount++;
-            assertThat(value.asString()).isEqualTo("SHA-256");
-            assertThat(nodes).hasSize(1);
-            return;
-        }
-
-        assertThat(detectionStore.getDetectionValueContext())
-                .isInstanceOf(KeyDerivationFunctionContext.class);
-
-        String v = value.asString();
-        observed.add(v);
-        findingCount++;
-
-        if (v.equals("PBKDF2-HMAC")) {
-            assertPbkdf2WithSha256(nodes);
-        } else if (v.equals("PBKDF2-HMAC-SHA1")) {
-            assertPbkdf2WithSha1(nodes);
-        } else if (v.equals("PBKDF2")) {
-            assertSimpleAlgo(nodes, PBKDF2.class, "PBKDF2");
-        } else if (v.equals("HKDF") || v.equals("TLS13-KDF")) {
-            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.HKDF.class, "HKDF");
-        } else if (v.equals("TLS1-PRF")) {
-            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.TLSPRF.class, "TLS-PRF");
-        } else if (v.equals("X963KDF")) {
-            assertSimpleAlgo(
-                    nodes, com.ibm.mapper.model.algorithms.ANSIX963.class, "ANSI-KDF-X9.63");
-        } else if (v.equals("KBKDF")) {
-            assertSimpleAlgo(
-                    nodes,
-                    com.ibm.mapper.model.algorithms.KDFCounter.class,
-                    "SP800_108_CounterKDF");
-        } else if (v.equals("SSHKDF")) {
-            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.SSHKDF.class, "SSHKDF");
-        } else if (v.equals("SCRYPT")) {
-            assertSimpleAlgo(nodes, com.ibm.mapper.model.algorithms.Scrypt.class, "scrypt");
-        } else if (v.equals("X942KDF-ASN1")) {
-            assertSimpleAlgo(
-                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42-ASN1");
-        } else if (v.equals("X942KDF-CONCAT")) {
-            assertSimpleAlgo(
-                    nodes, com.ibm.mapper.model.algorithms.ANSIX942.class, "ANSI-KDF-X9.42-CONCAT");
-        } else if (v.equals("SSKDF")) {
-            assertSimpleAlgo(
-                    nodes,
-                    com.ibm.mapper.model.algorithms.ConcatenationKDF.class,
-                    "ConcatenationKDF");
-        } else if (v.equals("KRB5KDF")) {
-            assertGenericKdf(nodes, "KRB5KDF", KeyDerivationFunction.class);
-        } else if (v.equals("ARGON2D")) {
-            assertGenericKdf(nodes, "Argon2d", PasswordBasedKeyDerivationFunction.class);
-        } else if (v.equals("ARGON2I")) {
-            assertGenericKdf(nodes, "Argon2i", PasswordBasedKeyDerivationFunction.class);
-        } else if (v.equals("ARGON2ID")) {
-            assertGenericKdf(nodes, "Argon2id", PasswordBasedKeyDerivationFunction.class);
-        } else if (v.equals("PKCS12KDF")) {
-            assertGenericKdf(nodes, "PKCS12KDF", PasswordBasedKeyDerivationFunction.class);
-        } else if (v.equals("PVKKDF")) {
-            assertGenericKdf(nodes, "PVKKDF", PasswordBasedKeyDerivationFunction.class);
-        } else if (v.equals("HMAC-DRBG-KDF")) {
-            assertGenericKdf(nodes, "HMAC-DRBG-KDF", KeyDerivationFunction.class);
-        } else {
-            throw new AssertionError("Unexpected value: " + v);
-        }
-    }
-
-    /* helpers */
-
-    private static INode head(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        return nodes.get(0);
-    }
-
-    private static void assertSimpleAlgo(
-            List<INode> nodes, Class<? extends INode> klass, String asString) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(klass);
-        assertThat(n.asString()).isEqualTo(asString);
-    }
-
-    private static void assertGenericKdf(List<INode> nodes, String asString, Class<?> kindClass) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(Algorithm.class);
-        assertThat(n.getKind()).isEqualTo(kindClass);
-        assertThat(n.asString()).isEqualTo(asString);
-    }
-
-    private static void assertPbkdf2WithSha1(List<INode> nodes) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(PBKDF2.class);
-        assertThat(n.asString()).isEqualTo("PBKDF2-SHA-1");
-        INode digest = n.getChildren().get(com.ibm.mapper.model.MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(SHA.class);
-        assertThat(digest.asString()).isEqualTo("SHA-1");
-    }
-
-    private static void assertPbkdf2WithSha256(List<INode> nodes) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(PBKDF2.class);
-        assertThat(n.asString()).isEqualTo("PBKDF2-SHA-256");
-        INode digest = n.getChildren().get(com.ibm.mapper.model.MessageDigest.class);
-        assertThat(digest).isNotNull().isInstanceOf(SHA2.class);
-        assertThat(digest.asString()).isEqualTo("SHA-256");
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

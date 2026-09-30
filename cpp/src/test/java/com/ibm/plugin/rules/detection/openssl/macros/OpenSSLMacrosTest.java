@@ -19,15 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.macros;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -41,13 +43,35 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLMacrosTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 6: EVP_KDF *kdf = EVP_KDF_fetch(NULL, OSSL_KDF_NAME_HKDF, NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 16: EVP_MAC_fetch(NULL, OSSL_MAC_NAME_POLY1305, NULL);
+                    finding("MacContext{Algorithm:POLY1305}", "Mac:Poly1305[Tag:TAG]"),
+                    // 20: EVP_get_digestbyname(SN_sha384);
+                    finding(
+                            "DigestContext{Algorithm:SHA-384}",
+                            "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]"),
+                    // 24: SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
+                    finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 28: EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+                    finding(
+                            "KeyContext{ValueAction:EC-P256}",
+                            "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "Oid:1.2.840.10045.2.1]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/macros/OpenSSLMacrosTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly("HKDF-SHA-256", "Poly1305", "SHA-384", "TLSv1.2", "EC-secp256r1");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -61,7 +85,7 @@ class OpenSSLMacrosTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        assets.add(nodes.get(0).asString());
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

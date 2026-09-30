@@ -22,8 +22,8 @@ void test_evp_key_agreement() {
     EVP_PKEY_CTX_set_ecdh_kdf_md(ctx, ecdh_kdf_md);
 
     // fetch
-    EVP_KEYEXCH_fetch(NULL, "ECDH", NULL);
-    EVP_KEM_fetch(NULL, "RSA", NULL);
+    EVP_KEYEXCH_fetch(NULL, "ECDH", NULL); // Noncompliant {{(KeyAgreement) ECDH}}
+    EVP_KEM_fetch(NULL, "RSA", NULL); // Noncompliant {{(KeyEncapsulationMechanism) RSASVE}}
 
     // encapsulate / decapsulate
     EVP_PKEY_encapsulate_init(ctx, NULL);
@@ -36,5 +36,5 @@ void test_evp_key_agreement() {
     // HPKE
     OSSL_HPKE_CTX_new(0, 0, 0, NULL, NULL);
     OSSL_HPKE_keygen(0, NULL, NULL, NULL, NULL, 0, NULL, NULL);
-    OSSL_HPKE_str2suite("X25519,HKDF-SHA256,AES-128-GCM", NULL);
+    OSSL_HPKE_str2suite("X25519,HKDF-SHA256,AES-128-GCM", NULL); // Noncompliant {{(PublicKeyEncryption) HPKE}}
 }

@@ -19,17 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.PrivateKey;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -40,25 +40,63 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 /** Covers the rules of {@link OpenSSLEvpKeyGen} and its per-algorithm context rules. */
 class OpenSSLEvpKeyGenTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}, "
+                                    + "KeyContext{}[DigestContext{ValueAction:SHA-256}]]",
+                            "Signature:DSA-2048-SHA-256[KeyLength:2048, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1], Oid:2.16.840.1.101.3.4.3.2]"),
+                    // 14: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_from_name(NULL, "DSA", NULL);
+                    finding(
+                            "KeyContext{Algorithm:DSA}[DigestContext{Algorithm:SHA-256}]",
+                            "Signature:DSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:2.16.840.1.101.3.4.3.2]"),
+                    // 19: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-P256}]",
+                            "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 25: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-P256}]",
+                            "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 30: EVP_PKEY_CTX *p192 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    finding(
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P192}]",
+                            "PublicKeyEncryption:EC-secp192r1[EllipticCurve:secp192r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 32: EVP_PKEY_CTX *p224 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    finding(
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P224}]",
+                            "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 39: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:2048}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
+                    // 46: EVP_PKEY_Q_keygen(NULL, NULL, "RSA", 2048);
+                    finding(
+                            "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:2048}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
+                    // 47: EVP_KEYMGMT_fetch(NULL, "ML-KEM-768", NULL);
+                    finding(
+                            "KeyContext{Algorithm:ML-KEM-768}",
+                            "KeyEncapsulationMechanism:ML-KEM-768[Oid:2.16.840.1.101.3.4.4.2, "
+                                    + "ParameterSetIdentifier:768]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLEvpKeyGenTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly(
-                        // DSA parameters with their digest, generated
-                        "DSA-2048-SHA-256[2.16.840.1.101.3.4.3.2, 2048, SHA-256]",
-                        // the EVP_sha256() call is also reported on its own
-                        "SHA-256[2.16.840.1.101.3.4.2.1, 256, 512, DIGEST]",
-                        "DSA-SHA-256[2.16.840.1.101.3.4.3.2, SHA-256]",
-                        "EC-secp256r1[1.2.840.10045.2.1, secp256r1]",
-                        "EC-secp256r1[1.2.840.10045.2.1, secp256r1]",
-                        "EC-secp192r1[1.2.840.10045.2.1, secp192r1]",
-                        "EC-secp224r1[1.2.840.10045.2.1, secp224r1]",
-                        "private key RSA-2048[1.2.840.113549.1.1.1, 2048, KEYGENERATION]",
-                        "private key RSA-2048[1.2.840.113549.1.1.1, 2048, KEYGENERATION]",
-                        "ML-KEM-768[2.16.840.1.101.3.4.4.2, 768]");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -72,25 +110,7 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        for (INode node : nodes) {
-            // a generated key is described by its algorithm
-            final boolean privateKey = node instanceof PrivateKey;
-            final INode described = privateKey ? algorithmOf(node) : node;
-            assets.add(
-                    (privateKey ? "private key " : "")
-                            + described.asString()
-                            + described.getChildren().values().stream()
-                                    .map(INode::asString)
-                                    .sorted()
-                                    .toList());
-        }
-    }
-
-    @Nonnull
-    private static INode algorithmOf(@Nonnull INode key) {
-        return key.getChildren().values().stream()
-                .filter(IAlgorithm.class::isInstance)
-                .findFirst()
-                .orElseThrow();
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

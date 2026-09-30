@@ -19,22 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -45,18 +40,42 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 /**
  * Covers the rules in {@link OpenSSLLegacyMac}. The digest passed to {@code HMAC_Init_ex}, {@code
  * HMAC_Init} or {@code HMAC}, and the cipher passed to {@code CMAC_Init}, are traced back to the
- * call that created them and attached to the MAC. The calls that create them are also reported on
- * their own, as {@link DigestContext} and {@link CipherContext} findings.
+ * call that created them and attached to the MAC, which reports them.
  */
 class OpenSSLLegacyMacTest extends TestBase {
 
-    private final List<String> macs = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 21: HMAC_Init_ex(hctx, key, 32, md1, NULL);
+                    finding(
+                            "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 23: HMAC_Init(hctx, key, 32, md2);
+                    finding(
+                            "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 27: HMAC(md3, key, 32, data, 64, out, &outlen);
+                    finding(
+                            "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
+                                    + "Tag:TAG]"),
+                    // 32: CMAC_Init(cctx, key, 32, cmac_cipher, NULL);
+                    finding(
+                            "MacContext{ValueAction:CMAC}[CipherContext{ValueAction:AES-128-CBC}]",
+                            "Mac:CMAC-AES[BlockCipher:AES-128-CBC[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC, Oid:2.16.840.1.101.3.4.1.2], Tag:TAG]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyMacTestFile.cc", this);
-        assertThat(macs)
-                .containsExactly("HMAC-SHA-256", "HMAC-SHA-256", "HMAC-SHA-256", "CMAC-AES");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -70,28 +89,7 @@ class OpenSSLLegacyMacTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-
-        if (detectionStore.getDetectionValueContext() instanceof DigestContext) {
-            assertThat(value.asString()).isEqualTo("SHA-256");
-            assertThat(nodes).hasSize(1);
-            assertThat(nodes.get(0)).isInstanceOf(MessageDigest.class);
-            assertThat(nodes.get(0).asString()).isEqualTo("SHA-256");
-            return;
-        }
-
-        if (detectionStore.getDetectionValueContext() instanceof CipherContext) {
-            assertThat(value.asString()).isEqualTo("AES-128-CBC");
-            assertThat(nodes).hasSize(1);
-            assertThat(nodes.get(0)).isInstanceOf(AES.class);
-            assertThat(nodes.get(0).asString()).isEqualTo("AES-128-CBC");
-            return;
-        }
-
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-        assertThat(value).isInstanceOf(ValueAction.class);
-        assertThat(nodes).hasSize(1);
-        macs.add(nodes.get(0).asString());
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

@@ -28,6 +28,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.ANSIX942;
 import com.ibm.mapper.model.algorithms.ANSIX963;
+import com.ibm.mapper.model.algorithms.Argon2;
 import com.ibm.mapper.model.algorithms.ConcatenationKDF;
 import com.ibm.mapper.model.algorithms.HKDF;
 import com.ibm.mapper.model.algorithms.KDFCounter;
@@ -85,9 +86,9 @@ class CxxKeyDerivationFunctionContextTranslatorTest {
                 Arguments.of("SCRYPT", Scrypt.class, "scrypt"),
                 Arguments.of("id-scrypt", Scrypt.class, "scrypt"),
                 Arguments.of("KRB5KDF", Algorithm.class, "KRB5KDF"),
-                Arguments.of("ARGON2D", Algorithm.class, "Argon2d"),
-                Arguments.of("ARGON2I", Algorithm.class, "Argon2i"),
-                Arguments.of("ARGON2ID", Algorithm.class, "Argon2id"),
+                Arguments.of("ARGON2D", Argon2.class, "Argon2d"),
+                Arguments.of("ARGON2I", Argon2.class, "Argon2i"),
+                Arguments.of("ARGON2ID", Argon2.class, "Argon2id"),
                 Arguments.of("PKCS12KDF", Algorithm.class, "PKCS12KDF"),
                 Arguments.of("PVKKDF", Algorithm.class, "PVKKDF"),
                 Arguments.of("HMAC-DRBG-KDF", Algorithm.class, "HMAC-DRBG-KDF"));

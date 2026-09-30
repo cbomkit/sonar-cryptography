@@ -19,22 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.mapper.model.EllipticCurve;
-import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Key;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -48,31 +44,72 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLLegacyKeyTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 8: RSA_generate_key_ex(rsa, 3072, e, NULL);
+                    finding(
+                            "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:3072}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
+                    // 9: RSA *old = RSA_generate_key(1024, 65537, NULL, NULL);
+                    finding(
+                            "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:1024}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-1024[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:1024, Oid:1.2.840.113549.1.1.1]]"),
+                    // 11: RSA_generate_multi_prime_key(multi, 4096, 3, e, NULL);
+                    finding(
+                            "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:4096}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
+                    // 16: DH_generate_key(dh);
+                    finding(
+                            "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH-2048-256}]",
+                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.3.1]]"),
+                    // 20: DH *unrelated = DH_get_1024_160();
+                    finding(
+                            "KeyContext{ValueAction:DH-1024-160}",
+                            "PublicKeyEncryption:FFDH-1024[KeyLength:1024, Oid:1.2.840.113549.1.3.1]"),
+                    // 23: DH_get_2048_224();
+                    finding(
+                            "KeyContext{ValueAction:DH-2048-224}",
+                            "PublicKeyEncryption:FFDH-2048[KeyLength:2048, Oid:1.2.840.113549.1.3.1]"),
+                    // 24: DH_generate_key(dh);
+                    finding(
+                            "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH}[KeyContext{KeySize:3072}]]",
+                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-3072[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:3072, Oid:1.2.840.113549.1.3.1]]"),
+                    // 30: DH_generate_key(dh);
+                    finding(
+                            "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}]]",
+                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.3.1]]"),
+                    // 36: DSA_generate_key(dsa);
+                    finding(
+                            "PrivateKeyContext{ValueAction:DSA}[KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}]]",
+                            "PrivateKey:DSA[Signature:DSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.10040.4.1]]"),
+                    // 41: EC_KEY_generate_key(key);
+                    finding(
+                            "PrivateKeyContext{ValueAction:EC}[KeyContext{ValueAction:EC-P256}]",
+                            "PrivateKey:EC[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
+                    // 48: EC_KEY_generate_key(key);
+                    finding(
+                            "PrivateKeyContext{ValueAction:EC}[KeyContext{}[KeyContext{ValueAction:EC-P384}]]",
+                            "PrivateKey:EC[PublicKeyEncryption:EC-secp384r1[EllipticCurve:secp384r1, "
+                                    + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
+                    // 52: EC_GROUP *group = EC_GROUP_new_curve_GFp(p, a, b, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}",
+                            "PublicKeyEncryption:EC[Oid:1.2.840.10045.2.1]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyKeyTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly(
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-3072 [KeyGeneration:KEYGENERATION, KeyLength:3072]]",
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-1024 [KeyGeneration:KEYGENERATION, KeyLength:1024]]",
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-4096 [KeyGeneration:KEYGENERATION, KeyLength:4096]]",
-                        "PublicKeyEncryption:FFDH-2048 [KeyLength:2048]",
-                        "PrivateKey:FFDH [PublicKeyEncryption:FFDH-2048 [KeyGeneration:KEYGENERATION, KeyLength:2048]]",
-                        "PublicKeyEncryption:FFDH-1024 [KeyLength:1024]",
-                        "PublicKeyEncryption:FFDH-3072 [KeyLength:3072]",
-                        "PublicKeyEncryption:FFDH-2048 [KeyLength:2048]",
-                        "PrivateKey:FFDH [PublicKeyEncryption:FFDH-3072 [KeyGeneration:KEYGENERATION, KeyLength:3072]]",
-                        "PublicKeyEncryption:FFDH-2048 [KeyLength:2048]",
-                        "PrivateKey:FFDH [PublicKeyEncryption:FFDH-2048 [KeyGeneration:KEYGENERATION, KeyLength:2048]]",
-                        "Signature:DSA-2048 [KeyLength:2048]",
-                        "PrivateKey:DSA [Signature:DSA-2048 [KeyGeneration:KEYGENERATION, KeyLength:2048]]",
-                        "PublicKeyEncryption:EC-secp256r1 [EllipticCurve:secp256r1]",
-                        "PrivateKey:EC [PublicKeyEncryption:EC-secp256r1 [EllipticCurve:secp256r1, KeyGeneration:KEYGENERATION]]",
-                        "PublicKeyEncryption:EC-secp384r1 [EllipticCurve:secp384r1]",
-                        "PrivateKey:EC [PublicKeyEncryption:EC-secp384r1 [EllipticCurve:secp384r1, KeyGeneration:KEYGENERATION]]",
-                        "PublicKeyEncryption:EC");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -86,28 +123,7 @@ class OpenSSLLegacyKeyTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        nodes.forEach(node -> assets.add(describe(node)));
-    }
-
-    /**
-     * The kind and name of the node, followed by the description of each key, algorithm, curve, key
-     * length and operation child.
-     */
-    @Nonnull
-    private static String describe(@Nonnull INode node) {
-        final String children =
-                node.getChildren().values().stream()
-                        .filter(
-                                child ->
-                                        child instanceof Key
-                                                || child instanceof IAlgorithm
-                                                || child instanceof EllipticCurve
-                                                || child instanceof KeyLength
-                                                || child instanceof Functionality)
-                        .map(OpenSSLLegacyKeyTest::describe)
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-        final String self = node.getKind().getSimpleName() + ":" + node.asString();
-        return children.isEmpty() ? self : self + " [" + children + "]";
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

@@ -19,27 +19,21 @@
  */
 package com.ibm.plugin.rules.detection.openssl.ssl;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.KeyContext;
-import com.ibm.engine.model.context.ProtocolContext;
-import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.CipherSuite;
-import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Protocol;
-import com.ibm.mapper.model.Unknown;
 import com.ibm.mapper.model.Version;
-import com.ibm.mapper.model.collections.AssetCollection;
-import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -63,51 +57,163 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLLibsslTest extends TestBase {
 
-    private final List<String> observed = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 8: TLS_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"),
+                    // 9: TLS_client_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"),
+                    // 10: TLS_server_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"),
+                    // 12: TLSv1_2_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 13: TLSv1_2_client_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 14: TLSv1_2_server_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 16: TLSv1_1_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.1}", "TLS:TLSv1.1[Version:1.1]"),
+                    // 17: TLSv1_1_client_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.1}", "TLS:TLSv1.1[Version:1.1]"),
+                    // 18: TLSv1_1_server_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.1}", "TLS:TLSv1.1[Version:1.1]"),
+                    // 20: TLSv1_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.0}", "TLS:TLSv1.0[Version:1.0]"),
+                    // 21: TLSv1_client_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.0}", "TLS:TLSv1.0[Version:1.0]"),
+                    // 22: TLSv1_server_method();
+                    finding("ProtocolContext{ValueAction:TLSv1.0}", "TLS:TLSv1.0[Version:1.0]"),
+                    // 24: SSLv3_method();
+                    finding("ProtocolContext{ValueAction:SSLv3.0}", "TLS:SSLv3.0[Version:3.0]"),
+                    // 25: SSLv3_client_method();
+                    finding("ProtocolContext{ValueAction:SSLv3.0}", "TLS:SSLv3.0[Version:3.0]"),
+                    // 26: SSLv3_server_method();
+                    finding("ProtocolContext{ValueAction:SSLv3.0}", "TLS:SSLv3.0[Version:3.0]"),
+                    // 28: DTLS_method();
+                    finding("ProtocolContext{ValueAction:DTLS}", "Protocol:DTLS"),
+                    // 29: DTLS_client_method();
+                    finding("ProtocolContext{ValueAction:DTLS}", "Protocol:DTLS"),
+                    // 30: DTLS_server_method();
+                    finding("ProtocolContext{ValueAction:DTLS}", "Protocol:DTLS"),
+                    // 32: DTLSv1_2_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.2}", "TLS:DTLSv1.2[Version:1.2]"),
+                    // 33: DTLSv1_2_client_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.2}", "TLS:DTLSv1.2[Version:1.2]"),
+                    // 34: DTLSv1_2_server_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.2}", "TLS:DTLSv1.2[Version:1.2]"),
+                    // 36: DTLSv1_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.0}", "TLS:DTLSv1.0[Version:1.0]"),
+                    // 37: DTLSv1_client_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.0}", "TLS:DTLSv1.0[Version:1.0]"),
+                    // 38: DTLSv1_server_method();
+                    finding("ProtocolContext{ValueAction:DTLSv1.0}", "TLS:DTLSv1.0[Version:1.0]"),
+                    // 40: OSSL_QUIC_client_method();
+                    finding("ProtocolContext{ValueAction:QUIC}", "Protocol:QUIC"),
+                    // 41: OSSL_QUIC_client_thread_method();
+                    finding("ProtocolContext{ValueAction:QUIC}", "Protocol:QUIC"),
+                    // 42: OSSL_QUIC_server_method();
+                    finding("ProtocolContext{ValueAction:QUIC}", "Protocol:QUIC"),
+                    // 47: SSL_CTX_new(tls12_method);
+                    finding(
+                            "ProtocolContext{}[ProtocolContext{ValueAction:TLSv1.2}]",
+                            "TLS:TLSv1.2[Version:1.2]"),
+                    // 50: SSL_CTX_set_ciphersuites(ctx, "TLS_AES_128_GCM_SHA256");
+                    finding(
+                            "ProtocolContext{CipherSuite:TLS_AES_128_GCM_SHA256}",
+                            "TLS:TLS[CipherSuiteCollection:[CipherSuite:TLS_AES_128_GCM_SHA256[AssetCollection:[AuthenticatedEncryption:AES-128-GCM[BlockSize:128, "
+                                    + "KeyLength:128, Mode:GCM, Oid:2.16.840.1.101.3.4.1.6], "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]], IdentifierCollection:[Identifier:0x13, "
+                                    + "Identifier:0x01]]]]"),
+                    // 51: SSL_set_ciphersuites(s, "TLS_AES_128_GCM_SHA256");
+                    finding(
+                            "ProtocolContext{CipherSuite:TLS_AES_128_GCM_SHA256}",
+                            "TLS:TLS[CipherSuiteCollection:[CipherSuite:TLS_AES_128_GCM_SHA256[AssetCollection:[AuthenticatedEncryption:AES-128-GCM[BlockSize:128, "
+                                    + "KeyLength:128, Mode:GCM, Oid:2.16.840.1.101.3.4.1.6], "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]], IdentifierCollection:[Identifier:0x13, "
+                                    + "Identifier:0x01]]]]"),
+                    // 53: DH* dh1 = DH_get_2048_256();
+                    finding(
+                            "KeyContext{ValueAction:DH-2048-256}",
+                            "PublicKeyEncryption:FFDH-2048[KeyLength:2048, Oid:1.2.840.113549.1.3.1]"),
+                    // 55: DH* dh2 = DH_get_2048_256();
+                    finding(
+                            "KeyContext{ValueAction:DH-2048-256}",
+                            "PublicKeyEncryption:FFDH-2048[KeyLength:2048, Oid:1.2.840.113549.1.3.1]"),
+                    // 57: EC_KEY* ecdh1 = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+                    finding(
+                            "KeyContext{ValueAction:EC-P256}",
+                            "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 59: EC_KEY* ecdh2 = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+                    finding(
+                            "KeyContext{ValueAction:EC-P256}",
+                            "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 66: SSL_CTX_set_tlsext_use_srtp(ctx, "SRTP_AES128_CM_SHA1_80");
+                    finding(
+                            "ProtocolContext{Algorithm:SRTP_AES128_CM_SHA1_80}",
+                            "Protocol:SRTP[CipherSuiteCollection:[CipherSuite:SRTP_AES128_CM_SHA1_80[AssetCollection:[BlockCipher:AES-128-CTR[BlockSize:128, "
+                                    + "KeyLength:128, Mode:CTR, Oid:2.16.840.1.101.3.4.1], "
+                                    + "Mac:HMAC-SHA-1[MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:160, Oid:1.3.14.3.2.26], Oid:1.2.840.113549.2.7, Tag:TAG, "
+                                    + "TagLength:80]], IdentifierCollection:[Identifier:0x00, Identifier:0x01]]]]"),
+                    // 67: SSL_set_tlsext_use_srtp(s, "SRTP_AES128_CM_SHA1_80");
+                    finding(
+                            "ProtocolContext{Algorithm:SRTP_AES128_CM_SHA1_80}",
+                            "Protocol:SRTP[CipherSuiteCollection:[CipherSuite:SRTP_AES128_CM_SHA1_80[AssetCollection:[BlockCipher:AES-128-CTR[BlockSize:128, "
+                                    + "KeyLength:128, Mode:CTR, Oid:2.16.840.1.101.3.4.1], "
+                                    + "Mac:HMAC-SHA-1[MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:160, Oid:1.3.14.3.2.26], Oid:1.2.840.113549.2.7, Tag:TAG, "
+                                    + "TagLength:80]], IdentifierCollection:[Identifier:0x00, Identifier:0x01]]]]"),
+                    // 75: SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
+                    finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 76: SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
+                    finding("ProtocolContext{Protocol:TLSv1.3}", "TLS:TLSv1.3[Version:1.3]"),
+                    // 77: SSL_set_min_proto_version(s, TLS1_2_VERSION);
+                    finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    // 78: SSL_set_max_proto_version(s, TLS1_3_VERSION);
+                    finding("ProtocolContext{Protocol:TLSv1.3}", "TLS:TLSv1.3[Version:1.3]"),
+                    // 81: SSL_CTX_set1_sigalgs_list(ctx,
+                    // "SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256");
+                    finding(
+                            "ProtocolContext{Algorithm:SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256}",
+                            "MergeableCollection:[Signature:SLH-DSA, Signature:ECDSA, "
+                                    + "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]]"),
+                    // 82: SSL_CTX_set1_groups_list(ctx, "MLKEM768:X25519:secp256r1");
+                    finding(
+                            "ProtocolContext{Algorithm:MLKEM768:X25519:secp256r1}",
+                            "MergeableCollection:[KeyEncapsulationMechanism:ML-KEM-768[Oid:2.16.840.1.101.3.4.4.2, "
+                                    + "ParameterSetIdentifier:768], KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110], KeyAgreement:ECDH[EllipticCurve:secp256r1, "
+                                    + "Oid:1.3.132.1.12]]"),
+                    // 84: SSL_CTX_set1_client_sigalgs_list(ctx, "ECDSA+SHA256");
+                    finding(
+                            "ProtocolContext{Algorithm:ECDSA+SHA256}",
+                            "MergeableCollection:[Signature:ECDSA]"),
+                    // 85: SSL_set1_groups_list(s, "X25519");
+                    finding(
+                            "ProtocolContext{Algorithm:X25519}",
+                            "MergeableCollection:[KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110]]"),
+                    // 86: SSL_set1_sigalgs_list(s, "ECDSA+SHA384");
+                    finding(
+                            "ProtocolContext{Algorithm:ECDSA+SHA384}",
+                            "MergeableCollection:[Signature:ECDSA]"),
+                    // 90: SSL_CTX_set1_groups_list(ctx, "X25519:FRODOKEM976AES:secp256r1");
+                    finding(
+                            "ProtocolContext{Algorithm:X25519:FRODOKEM976AES:secp256r1}",
+                            "MergeableCollection:[KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110], Unknown:FRODOKEM976AES, "
+                                    + "KeyAgreement:ECDH[EllipticCurve:secp256r1, Oid:1.3.132.1.12]]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/ssl/OpenSSLLibsslTestFile.cc", this);
-
-        // one per *_method() call; SSL_CTX_new/SSL_CTX_set_ssl_version/SSL_set_ssl_method do not
-        // report the method again
-        assertObservedCount("TLS", 3);
-        assertObservedCount("SSLv3.0", 3);
-        assertObservedCount("DTLS", 3);
-        assertObservedCount("DTLSv1.2", 3);
-        assertObservedCount("DTLSv1.0", 3);
-        assertObservedCount("QUIC", 3);
-        assertObservedCount("HIGH", 2);
-        assertObservedCount("TLS_AES_128_GCM_SHA256", 2);
-        assertObservedCount("SRTP_AES128_CM_SHA1_80", 2);
-
-        // TLS1_2_VERSION/TLS1_3_VERSION are declared as a local enum in the fixture (no real
-        // headers expanded) so OpenSSLNidLookupFactory can resolve them.
-        assertObservedCount("TLSv1.0", 3);
-        assertObservedCount("TLSv1.1", 3);
-        // TLSv1_2_method x3, SSL_CTX_set_min_proto_version, SSL_set_min_proto_version, and the
-        // tls12_method = TLSv1_2_method() call passed to SSL_CTX_new.
-        assertObservedCount("TLSv1.2", 6);
-        // SSL_CTX_set_max_proto_version, SSL_set_max_proto_version. SSL_CONF_cmd's "Protocol"
-        // command enables and disables versions and is not reported.
-        assertObservedCount("TLSv1.3", 2);
-
-        assertObservedCount("SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256", 1);
-        assertObservedCount("MLKEM768:X25519:secp256r1", 1);
-        assertObservedCount("ECDSA+SHA256", 1);
-        assertObservedCount("X25519", 1);
-        // "FRODOKEM976AES" is an unrecognized group name mixed into a known list (see
-        // assertAlgorithmCollection).
-        assertObservedCount("X25519:FRODOKEM976AES:secp256r1", 1);
-
-        assertThat(observed).hasSize(43);
-    }
-
-    private void assertObservedCount(String value, int expected) {
-        long count = observed.stream().filter(v -> v.equals(value)).count();
-        assertThat(count)
-                .as("Expected %d occurrences of '%s' but found %d", expected, value, count)
-                .isEqualTo(expected);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -121,120 +227,7 @@ class OpenSSLLibsslTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        String v = value.asString();
-
-        // the DH and EC keys passed to SSL_(CTX_)set_tmp_dh/ecdh, reported where they are created
-        // (see OpenSSLLegacyDh/OpenSSLLegacyEc)
-        if (detectionStore.getDetectionValueContext() instanceof KeyContext) {
-            switch (v) {
-                // RFC 5114 group from DH_get_2048_256()
-                case "DH-2048-256" -> {
-                    assertThat(nodes).hasSize(1);
-                    assertThat(nodes.get(0).asString()).isEqualTo("FFDH-2048");
-                }
-                case "EC-P256" -> assertEcKey(nodes);
-                default -> throw new AssertionError("Unexpected key finding: " + v);
-            }
-            return;
-        }
-
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
-        observed.add(v);
-
-        switch (v) {
-            case "TLS" -> {
-                assertThat(nodes).singleElement().isInstanceOf(TLS.class);
-                assertThat(nodes.get(0).hasChildOfType(Version.class)).isEmpty();
-            }
-            case "TLSv1.3" -> assertTlsWithVersion(nodes, "TLSv1.3", "1.3");
-            case "TLSv1.2" -> assertTlsWithVersion(nodes, "TLSv1.2", "1.2");
-            case "TLSv1.1" -> assertTlsWithVersion(nodes, "TLSv1.1", "1.1");
-            case "TLSv1.0" -> assertTlsWithVersion(nodes, "TLSv1.0", "1.0");
-            case "SSLv3.0" -> assertTlsWithVersion(nodes, "SSLv3.0", "3.0");
-            case "DTLS" -> assertGenericProtocol(nodes, "DTLS");
-            case "DTLSv1.2" -> assertTlsWithVersion(nodes, "DTLSv1.2", "1.2");
-            case "DTLSv1.0" -> assertTlsWithVersion(nodes, "DTLSv1.0", "1.0");
-            case "QUIC" -> assertGenericProtocol(nodes, "QUIC");
-            // a cipher string holding only a keyword names no single cipher suite
-            case "HIGH" -> assertThat(nodes).isEmpty();
-            case "TLS_AES_128_GCM_SHA256" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(((TLS) nodes.get(0)).getCipherSuits().orElseThrow().getCollection())
-                        .singleElement()
-                        .isInstanceOf(CipherSuite.class)
-                        .extracting(INode::asString)
-                        .isEqualTo("TLS_AES_128_GCM_SHA256");
-            }
-            case "SRTP_AES128_CM_SHA1_80" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0).asString()).isEqualTo("SRTP");
-                assertThat(nodes.get(0).hasChildOfType(CipherSuiteCollection.class))
-                        .get()
-                        .extracting(INode::asString)
-                        .isEqualTo("[SRTP_AES128_CM_SHA1_80]");
-            }
-            // Signature-algorithm / group lists: captured as an AssetCollection whose children
-            // are the individual algorithms, mapped per name by OpenSslSignatureMapper /
-            // OpenSslGroupMapper.
-            case "SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256" ->
-                    assertAlgorithmCollection(nodes, "SLH-DSA", "ECDSA", "RSA");
-            case "MLKEM768:X25519:secp256r1" ->
-                    assertAlgorithmCollection(nodes, "ML-KEM-768", "x25519", "ECDH");
-            case "ECDSA+SHA256" -> assertAlgorithmCollection(nodes, "ECDSA");
-            case "X25519" -> assertAlgorithmCollection(nodes, "x25519");
-            // an unknown group name ("FRODOKEM976AES") in an otherwise known list is an algorithm
-            // whose kind (key agreement or key encapsulation) is not known
-            case "X25519:FRODOKEM976AES:secp256r1" -> {
-                assertAlgorithmCollection(nodes, "x25519", "FRODOKEM976AES", "ECDH");
-                assertThat(((AssetCollection) nodes.get(0)).getCollection().get(1))
-                        .isInstanceOf(Algorithm.class)
-                        .extracting(INode::getKind)
-                        .isEqualTo(Unknown.class);
-            }
-            default -> throw new AssertionError("Unexpected value: " + v);
-        }
-    }
-
-    private static void assertEcKey(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(EllipticCurveAlgorithm.class);
-        assertThat(node.asString()).isEqualTo("EC-secp256r1");
-    }
-
-    private static void assertGenericProtocol(List<INode> nodes, String expected) {
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(Protocol.class);
-        assertThat(node).isNotInstanceOf(TLS.class);
-        assertThat(node.asString()).isEqualTo(expected);
-        assertThat(node.hasChildren()).isFalse();
-    }
-
-    private static void assertTlsWithVersion(
-            List<INode> nodes, String expectedAsString, String expectedVersion) {
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(TLS.class);
-        assertThat(node.asString()).isEqualTo(expectedAsString);
-        INode version = node.getChildren().get(Version.class);
-        assertThat(version).isNotNull();
-        assertThat(version.asString()).isEqualTo(expectedVersion);
-    }
-
-    /**
-     * A colon-separated sigalg/group list is translated to a single {@link AssetCollection} with
-     * one child per name: recognized names resolve to their mapped algorithm node, unrecognized
-     * names surface as a raw {@link Protocol} node.
-     */
-    private static void assertAlgorithmCollection(
-            List<INode> nodes, String... expectedAlgorithmNames) {
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(AssetCollection.class);
-        List<String> memberNames =
-                ((AssetCollection) node).getCollection().stream().map(INode::asString).toList();
-        assertThat(memberNames).containsExactly(expectedAlgorithmNames);
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

@@ -71,20 +71,26 @@ public abstract class TestBase extends CxxInventoryRule {
     }
 
     @Override
-    public void update(
+    protected void onFinding(
             @Nonnull
                     Finding<
                                     SquidCheck<?>,
                                     AstNode,
                                     Symbol,
                                     SquidAstVisitorContext<? extends Grammar>>
-                            finding) {
+                            finding,
+            @Nonnull List<INode> nodes) {
         final DetectionStore<
                         SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
                 detectionStore = finding.detectionStore();
         detectionStoreLogger.print(detectionStore);
 
-        final List<INode> nodes = cxxTranslationProcess.initiate(detectionStore);
+        ExpectedFinding.printIfRequested(
+                getClass().getSimpleName(),
+                findingId,
+                finding.getMarkerTree().getTokenLine(),
+                detectionStore,
+                nodes);
         asserts(findingId, detectionStore, nodes);
         findingId++;
         // report

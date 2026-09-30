@@ -19,22 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.mapper.model.EllipticCurve;
-import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Key;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -47,17 +43,35 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLGeneratedKeyTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 6: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
+                    // 14: return EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
+                    finding(
+                            "PrivateKeyContext{Algorithm:EC}[PrivateKeyContext{Curve:EC-P256}]",
+                            "PrivateKey:EC[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
+                    // 19: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
+                    finding(
+                            "KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}]",
+                            "PublicKeyEncryption:FFDH-2048[KeyLength:2048, Oid:1.2.840.113549.1.3.1]"),
+                    // 28: RSA_generate_key_ex(rsa, 2048, e, NULL);
+                    finding(
+                            "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLGeneratedKeyTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly(
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-3072 [KeyGeneration:KEYGENERATION, KeyLength:3072]]",
-                        "PrivateKey:EC [PublicKeyEncryption:EC-secp256r1 [EllipticCurve:secp256r1, KeyGeneration:KEYGENERATION]]",
-                        "PublicKeyEncryption:FFDH-2048 [KeyLength:2048]",
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-2048 [KeyGeneration:KEYGENERATION, KeyLength:2048]]");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -71,28 +85,7 @@ class OpenSSLGeneratedKeyTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        nodes.forEach(node -> assets.add(describe(node)));
-    }
-
-    /**
-     * The kind and name of the node, followed by the description of each key, algorithm, curve, key
-     * length and operation child.
-     */
-    @Nonnull
-    private static String describe(@Nonnull INode node) {
-        final String children =
-                node.getChildren().values().stream()
-                        .filter(
-                                child ->
-                                        child instanceof Key
-                                                || child instanceof IAlgorithm
-                                                || child instanceof EllipticCurve
-                                                || child instanceof KeyLength
-                                                || child instanceof Functionality)
-                        .map(OpenSSLGeneratedKeyTest::describe)
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-        final String self = node.getKind().getSimpleName() + ":" + node.asString();
-        return children.isEmpty() ? self : self + " [" + children + "]";
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

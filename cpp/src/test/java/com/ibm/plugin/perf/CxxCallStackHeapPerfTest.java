@@ -45,10 +45,9 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  * Manual heap/perf harness for the cxx call-stack AST-detach mechanism - the cpp analogue of {@code
  * com.ibm.plugin.perf.CallStackHeapPerfTest} in the java module. Generates a synthetic corpus of
  * OpenSSL {@code EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), ...)}-shaped call sites (scale via
- * {@code -Dperf.corpus.files}, default 200) - the nested-call-argument shape that used to make
- * {@code CxxLanguageTranslation#createTypeFromCxxType} close over a live sonar-cxx {@code Type}
- * (and, through its {@code TypeSymbol}'s {@code declaration()}, the whole file's AST), silently
- * defeating the AST-detach mechanism - scans it in-process via {@link
+ * {@code -Dperf.corpus.files}, default 200), where a nested call is passed as an argument and
+ * {@code CxxLanguageTranslation#createTypeFromCxxType} builds a type from a sonar-cxx {@code Type}
+ * whose {@code TypeSymbol} can reach the whole file's AST - scans it in-process via {@link
  * CxxVerifier#verifyAbsoluteFiles} (the corpus lives in a JUnit {@code @TempDir}, outside {@code
  * src/test/files/}, so the relative-path {@link CxxVerifier#verifyFiles} does not apply), then
  * asserts the recorded calls stayed detached (ASTs released) at {@code leaveFile}. Heap delta and
@@ -63,6 +62,8 @@ class CxxCallStackHeapPerfTest extends TestBase {
 
     private static final int FILES = Integer.getInteger("perf.corpus.files", 200);
 
+    private int translatedNodes = 0;
+
     @Override
     public void asserts(
             int findingId,
@@ -74,7 +75,8 @@ class CxxCallStackHeapPerfTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        // no per-finding assertions; the harness asserts on aggregate CallContextStats below
+        // no per-finding assertions; the harness asserts on the aggregate counts below
+        translatedNodes += nodes.size();
     }
 
     @Test
@@ -94,12 +96,12 @@ class CxxCallStackHeapPerfTest extends TestBase {
 
         // REPORT (never asserted)
         System.out.printf(
-                "%n[cxx-callstack-perf] files=%d time=%dms heapDeltaMB=%d detectedNodes=%d "
+                "%n[cxx-callstack-perf] files=%d time=%dms heapDeltaMB=%d translatedNodes=%d "
                         + "retainedWithTree=%d detached=%d total=%d buckets=%d ratio=%.3f%n",
                 sources.size(),
                 elapsedMs,
                 (heapAfter - heapBefore) / (1024L * 1024L),
-                CxxAggregator.getDetectedNodes().size(),
+                translatedNodes,
                 stats.retainedWithTree(),
                 stats.detached(),
                 stats.total(),
@@ -107,17 +109,20 @@ class CxxCallStackHeapPerfTest extends TestBase {
                 stats.detachedRatio());
 
         // ASSERT (deterministic gate - object-variant counts, no heap/time dependence)
+        assertThat(translatedNodes)
+                .as("each unit's cipher initialization is translated to one cipher")
+                .isEqualTo(sources.size());
         assertThat(stats.total())
-                .as("detections must fire (compiled classpath) or the harness proves nothing")
+                .as("detections must fire, or the harness proves nothing")
                 .isPositive();
         assertThat(stats.detachedRatio())
                 .as("most recorded calls must be detached (ASTs released at leaveFile)")
                 .isGreaterThanOrEqualTo(0.9d);
         assertThat(stats.retainedWithTree())
                 .as(
-                        "tree-pinning calls must stay bounded, not grow ~1:1 with detached - "
-                                + "regresses if createTypeFromCxxType (or any IType factory) ever "
-                                + "captures a live cxx Type/AstNode again")
+                        "tree-pinning calls must stay bounded, not grow ~1:1 with detached: "
+                                + "no IType factory, such as createTypeFromCxxType, may capture a "
+                                + "live cxx Type/AstNode")
                 .isLessThanOrEqualTo(10);
     }
 

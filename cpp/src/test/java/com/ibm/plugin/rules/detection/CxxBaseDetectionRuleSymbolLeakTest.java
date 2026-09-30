@@ -38,8 +38,8 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
  * {@code AstNodeSymbolExtension}/{@code AstNodeTypeExtension} are process-wide {@code WeakHashMap}s
- * keyed on {@code AstNode}; their values ({@code Symbol}/{@code Type}) no longer hold their own key
- * node strongly, but {@code WeakHashMap} eviction is still lazy and GC-timed, so {@link
+ * keyed on {@code AstNode}; their values ({@code Symbol}/{@code Type}) do not hold their own key
+ * node strongly, but {@code WeakHashMap} eviction is lazy and GC-timed, so {@link
  * CxxBaseDetectionRule#leaveFile} removes every entry for a file's own nodes deterministically, as
  * soon as that file's AST is no longer needed, rather than leaving it to the next GC cycle. This
  * test scans two files in a single shared scan (mirroring a real multi-file analysis, {@code

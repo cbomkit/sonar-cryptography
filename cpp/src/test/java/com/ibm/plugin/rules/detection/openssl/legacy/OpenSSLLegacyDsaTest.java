@@ -19,20 +19,14 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.PrivateKeyContext;
-import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Oid;
-import com.ibm.mapper.model.PrivateKey;
-import com.ibm.mapper.model.Signature;
-import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
@@ -43,22 +37,31 @@ import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-/**
- * Covers all 12 rule entries in {@link OpenSSLLegacyDsa}.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- */
+/** Covers all rule entries in {@link OpenSSLLegacyDsa}. */
 class OpenSSLLegacyDsaTest extends TestBase {
 
-    private static final String DSA_OID = "1.2.840.10040.4.1";
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 9: DSA_generate_key(dsa);
+                    finding(
+                            "PrivateKeyContext{ValueAction:DSA}[KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}]]",
+                            "PrivateKey:DSA[Signature:DSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.10040.4.1]]"),
+                    // 10: DSA_sign(0, buf, 32, buf, &siglen, dsa);
+                    finding(
+                            "SignatureContext{ValueAction:DSA-SIGN}",
+                            "Signature:DSA[Oid:1.2.840.10040.4.1]"),
+                    // 11: DSA_do_sign(buf, 32, dsa);
+                    finding(
+                            "SignatureContext{ValueAction:DSA-SIGN}",
+                            "Signature:DSA[Oid:1.2.840.10040.4.1]"));
 
-    private int findingCount = 0;
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyDsaTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(4);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -72,47 +75,7 @@ class OpenSSLLegacyDsaTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        assertThat(value).isInstanceOf(ValueAction.class);
-        findingCount++;
-
-        String v = value.asString();
-        if (v.equals("DSA")
-                && detectionStore.getDetectionValueContext() instanceof PrivateKeyContext) {
-            // DSA_generate_key(dsa), dsa holding the parameters of DSA_generate_parameters_ex
-            assertThat(nodes).singleElement().isInstanceOf(PrivateKey.class);
-            assertDsaParameters(nodes.get(0).getChildren().get(Signature.class));
-        } else if (v.equals("DSA")) {
-            // DSA_generate_parameters_ex(dsa, 2048, ...)
-            assertThat(nodes).hasSize(1);
-            assertDsaParameters(nodes.get(0));
-        } else if (v.equals("DSA-SIGN")) {
-            assertThat(detectionStore.getDetectionValueContext())
-                    .isInstanceOf(SignatureContext.class);
-            assertDsa(nodes);
-        } else {
-            throw new AssertionError("Unexpected value: " + v);
-        }
-    }
-
-    private static void assertDsaParameters(INode n) {
-        assertThat(n).isInstanceOf(DSA.class);
-        assertThat(n.asString()).isEqualTo("DSA-2048");
-        assertThat(n.getChildren().get(KeyLength.class))
-                .isNotNull()
-                .extracting(INode::asString)
-                .isEqualTo("2048");
-    }
-
-    private static void assertDsa(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        INode n = nodes.get(0);
-        assertThat(n).isInstanceOf(DSA.class);
-        assertThat(n.getKind()).isEqualTo(Signature.class);
-        assertThat(n.asString()).isEqualTo("DSA");
-        INode oid = n.getChildren().get(Oid.class);
-        assertThat(oid).isNotNull();
-        assertThat(oid.asString()).isEqualTo(DSA_OID);
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

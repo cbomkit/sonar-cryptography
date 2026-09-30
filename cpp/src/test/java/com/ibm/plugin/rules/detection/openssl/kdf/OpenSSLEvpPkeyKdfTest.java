@@ -19,18 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -40,18 +40,31 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 /** A KDF selected through the EVP_PKEY interface gets the digest that is set on its context. */
 class OpenSSLEvpPkeyKdfTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{ValueAction:HKDF}[KeyDerivationFunctionContext{}[DigestContext{ValueAction:SHA-256}]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 13: EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_TLS1_PRF, NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{ValueAction:TLS1-PRF}[KeyDerivationFunctionContext{}[DigestContext{ValueAction:SHA-384}]]",
+                            "KeyDerivationFunction:TLS-PRF-SHA-384[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]]"),
+                    // 20: EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "scrypt", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:SCRYPT}",
+                            "PasswordBasedKeyDerivationFunction:scrypt[KeyDerivation:KEYDERIVATION]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/kdf/OpenSSLEvpPkeyKdfTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly(
-                        "KeyDerivationFunction:HKDF-SHA-256 [MessageDigest:SHA-256]",
-                        "MessageDigest:SHA-256",
-                        "KeyDerivationFunction:TLS-PRF-SHA-384 [MessageDigest:SHA-384]",
-                        "MessageDigest:SHA-384",
-                        "PasswordBasedKeyDerivationFunction:scrypt");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -65,19 +78,7 @@ class OpenSSLEvpPkeyKdfTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        nodes.forEach(node -> assets.add(describe(node)));
-    }
-
-    /** The kind and name of the node, followed by the kinds and names of its algorithm children. */
-    @Nonnull
-    private static String describe(@Nonnull INode node) {
-        final String children =
-                node.getChildren().values().stream()
-                        .filter(IAlgorithm.class::isInstance)
-                        .map(child -> child.getKind().getSimpleName() + ":" + child.asString())
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-        final String self = node.getKind().getSimpleName() + ":" + node.asString();
-        return children.isEmpty() ? self : self + " [" + children + "]";
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

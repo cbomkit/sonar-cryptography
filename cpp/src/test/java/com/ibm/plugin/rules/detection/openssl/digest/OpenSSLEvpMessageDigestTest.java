@@ -19,31 +19,14 @@
  */
 package com.ibm.plugin.rules.detection.openssl.digest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.BlockSize;
-import com.ibm.mapper.model.DigestSize;
-import com.ibm.mapper.model.ExtendableOutputFunction;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.ParameterSetIdentifier;
-import com.ibm.mapper.model.algorithms.MD2;
-import com.ibm.mapper.model.algorithms.MD4;
-import com.ibm.mapper.model.algorithms.MD5;
-import com.ibm.mapper.model.algorithms.RIPEMD;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.SHA3;
-import com.ibm.mapper.model.algorithms.SM3;
-import com.ibm.mapper.model.algorithms.Whirlpool;
-import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
-import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
-import com.ibm.mapper.model.algorithms.shake.SHAKE;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
@@ -54,21 +37,150 @@ import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-/**
- * Covers all rule entries in {@link OpenSSLEvpMessageDigest}.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- */
+/** Covers all rule entries in {@link OpenSSLEvpMessageDigest}. */
 class OpenSSLEvpMessageDigestTest extends TestBase {
 
-    private int findingCount = 0;
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 4: EVP_md2();
+                    finding(
+                            "DigestContext{ValueAction:MD2}",
+                            "MessageDigest:MD2[BlockSize:128, Digest:DIGEST, DigestSize:128]"),
+                    // 5: EVP_md4();
+                    finding(
+                            "DigestContext{ValueAction:MD4}",
+                            "MessageDigest:MD4[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 6: EVP_md5();
+                    finding(
+                            "DigestContext{ValueAction:MD5}",
+                            "MessageDigest:MD5[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 7: EVP_mdc2();
+                    finding(
+                            "DigestContext{ValueAction:MDC2}",
+                            "MessageDigest:MDC2[BlockSize:64, Digest:DIGEST, DigestSize:128]"),
+                    // 8: EVP_sha1();
+                    finding(
+                            "DigestContext{ValueAction:SHA-1}",
+                            "MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, DigestSize:160, "
+                                    + "Oid:1.3.14.3.2.26]"),
+                    // 9: EVP_sha224();
+                    finding(
+                            "DigestContext{ValueAction:SHA-224}",
+                            "MessageDigest:SHA-224[BlockSize:512, Digest:DIGEST, DigestSize:224, "
+                                    + "Oid:2.16.840.1.101.3.4.2.4]"),
+                    // 10: EVP_sha256();
+                    finding(
+                            "DigestContext{ValueAction:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 11: EVP_sha384();
+                    finding(
+                            "DigestContext{ValueAction:SHA-384}",
+                            "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]"),
+                    // 12: EVP_sha512();
+                    finding(
+                            "DigestContext{ValueAction:SHA-512}",
+                            "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]"),
+                    // 13: EVP_sha512_224();
+                    finding(
+                            "DigestContext{ValueAction:SHA-512/224}",
+                            "MessageDigest:SHA-512/224[BlockSize:1024, Digest:DIGEST, DigestSize:224, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3], Oid:2.16.840.1.101.3.4.2.5]"),
+                    // 14: EVP_sha512_256();
+                    finding(
+                            "DigestContext{ValueAction:SHA-512/256}",
+                            "MessageDigest:SHA-512/256[BlockSize:1024, Digest:DIGEST, DigestSize:256, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3], Oid:2.16.840.1.101.3.4.2.6]"),
+                    // 15: EVP_sha3_224();
+                    finding(
+                            "DigestContext{ValueAction:SHA3-224}",
+                            "MessageDigest:SHA3-224[BlockSize:1152, Digest:DIGEST, DigestSize:224, "
+                                    + "Oid:2.16.840.1.101.3.4.2.7]"),
+                    // 16: EVP_sha3_256();
+                    finding(
+                            "DigestContext{ValueAction:SHA3-256}",
+                            "MessageDigest:SHA3-256[BlockSize:1088, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.8]"),
+                    // 17: EVP_sha3_384();
+                    finding(
+                            "DigestContext{ValueAction:SHA3-384}",
+                            "MessageDigest:SHA3-384[BlockSize:832, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.9]"),
+                    // 18: EVP_sha3_512();
+                    finding(
+                            "DigestContext{ValueAction:SHA3-512}",
+                            "MessageDigest:SHA3-512[BlockSize:576, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.10]"),
+                    // 19: EVP_shake128();
+                    finding(
+                            "DigestContext{ValueAction:SHAKE128}",
+                            "ExtendableOutputFunction:SHAKE128[Digest:DIGEST, ParameterSetIdentifier:128]"),
+                    // 20: EVP_shake256();
+                    finding(
+                            "DigestContext{ValueAction:SHAKE256}",
+                            "ExtendableOutputFunction:SHAKE256[Digest:DIGEST, ParameterSetIdentifier:256]"),
+                    // 21: EVP_ripemd160();
+                    finding(
+                            "DigestContext{ValueAction:RIPEMD160}",
+                            "MessageDigest:RIPEMD-160[Digest:DIGEST, DigestSize:160]"),
+                    // 22: EVP_whirlpool();
+                    finding(
+                            "DigestContext{ValueAction:WHIRLPOOL}",
+                            "MessageDigest:Whirlpool[BlockSize:512, Digest:DIGEST, DigestSize:512, "
+                                    + "NumberOfIterations:10]"),
+                    // 23: EVP_blake2b512();
+                    finding(
+                            "DigestContext{ValueAction:BLAKE2B-512}",
+                            "MessageDigest:BLAKE2b-512[Digest:DIGEST, DigestSize:512, SaltLength:128]"),
+                    // 24: EVP_blake2s256();
+                    finding(
+                            "DigestContext{ValueAction:BLAKE2S-256}",
+                            "MessageDigest:BLAKE2s-256[Digest:DIGEST, DigestSize:256, SaltLength:64]"),
+                    // 25: EVP_sm3();
+                    finding(
+                            "DigestContext{ValueAction:SM3}",
+                            "MessageDigest:SM3[Digest:DIGEST, DigestSize:256]"),
+                    // 26: EVP_md5_sha1();
+                    finding(
+                            "DigestContext{ValueAction:MD5-SHA1}",
+                            "MessageDigest:MD5-SHA1[Digest:DIGEST, DigestSize:288]"),
+                    // 28: EVP_MD_fetch(NULL, "SHA256", NULL);
+                    finding(
+                            "DigestContext{Algorithm:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 29: EVP_get_digestbyname("SHA256");
+                    finding(
+                            "DigestContext{Algorithm:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 33: EVP_Q_digest(NULL, "SHA256", NULL, NULL, 0, NULL, NULL);
+                    finding(
+                            "DigestContext{Algorithm:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 37: EVP_MD_fetch(NULL, digest_name, NULL);
+                    finding(
+                            "DigestContext{Algorithm:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 40: EVP_MD_fetch(NULL, "SHA2-256", NULL);
+                    finding(
+                            "DigestContext{Algorithm:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/digest/OpenSSLEvpMessageDigestTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(29);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -82,210 +194,7 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        findingCount++;
-
-        switch (findingId) {
-            case 0 -> {
-                assertThat(value.asString()).isEqualTo("MD2");
-                assertDigest(nodes, MD2.class, "MD2", 128, 128);
-            }
-            case 1 -> {
-                assertThat(value.asString()).isEqualTo("MD4");
-                assertDigest(nodes, MD4.class, "MD4", 128, 512);
-            }
-            case 2 -> {
-                assertThat(value.asString()).isEqualTo("MD5");
-                assertDigest(nodes, MD5.class, "MD5", 128, 512);
-            }
-            case 3 -> {
-                assertThat(value.asString()).isEqualTo("MDC2");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(Algorithm.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("MDC2");
-            }
-            case 4 -> {
-                assertThat(value.asString()).isEqualTo("SHA-1");
-                assertDigest(nodes, SHA.class, "SHA-1", 160, 512);
-            }
-            case 5 -> {
-                assertThat(value.asString()).isEqualTo("SHA-224");
-                assertDigest(nodes, SHA2.class, "SHA-224", 224, 512);
-            }
-            case 6 -> {
-                assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
-            }
-            case 7 -> {
-                assertThat(value.asString()).isEqualTo("SHA-384");
-                assertDigest(nodes, SHA2.class, "SHA-384", 384, 1024);
-            }
-            case 8 -> {
-                assertThat(value.asString()).isEqualTo("SHA-512");
-                assertDigest(nodes, SHA2.class, "SHA-512", 512, 1024);
-            }
-            case 9 -> {
-                assertThat(value.asString()).isEqualTo("SHA-512/224");
-                assertSha512t(nodes, 224);
-            }
-            case 10 -> {
-                assertThat(value.asString()).isEqualTo("SHA-512/256");
-                assertSha512t(nodes, 256);
-            }
-            case 11 -> {
-                assertThat(value.asString()).isEqualTo("SHA3-224");
-                assertDigest(nodes, SHA3.class, "SHA3-224", 224, 1152);
-            }
-            case 12 -> {
-                assertThat(value.asString()).isEqualTo("SHA3-256");
-                assertDigest(nodes, SHA3.class, "SHA3-256", 256, 1088);
-            }
-            case 13 -> {
-                assertThat(value.asString()).isEqualTo("SHA3-384");
-                assertDigest(nodes, SHA3.class, "SHA3-384", 384, 832);
-            }
-            case 14 -> {
-                assertThat(value.asString()).isEqualTo("SHA3-512");
-                assertDigest(nodes, SHA3.class, "SHA3-512", 512, 576);
-            }
-            case 15 -> {
-                assertThat(value.asString()).isEqualTo("SHAKE128");
-                assertShake(nodes, "SHAKE128", 128);
-            }
-            case 16 -> {
-                assertThat(value.asString()).isEqualTo("SHAKE256");
-                assertShake(nodes, "SHAKE256", 256);
-            }
-            case 17 -> {
-                assertThat(value.asString()).isEqualTo("RIPEMD160");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(RIPEMD.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("RIPEMD-160");
-                INode size = n.getChildren().get(DigestSize.class);
-                assertThat(size).isNotNull();
-                assertThat(size.asString()).isEqualTo("160");
-            }
-            case 18 -> {
-                assertThat(value.asString()).isEqualTo("WHIRLPOOL");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(Whirlpool.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("Whirlpool");
-                assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("512");
-                assertThat(n.getChildren().get(BlockSize.class).asString()).isEqualTo("512");
-            }
-            case 19 -> {
-                assertThat(value.asString()).isEqualTo("BLAKE2B-512");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(BLAKE2b.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2b-512");
-                assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("512");
-            }
-            case 20 -> {
-                assertThat(value.asString()).isEqualTo("BLAKE2S-256");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(BLAKE2s.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("BLAKE2s-256");
-                assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("256");
-            }
-            case 21 -> {
-                assertThat(value.asString()).isEqualTo("SM3");
-                INode n = head(nodes);
-                assertThat(n).isInstanceOf(SM3.class);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("SM3");
-                assertThat(n.getChildren().get(DigestSize.class).asString()).isEqualTo("256");
-            }
-            case 22 -> {
-                // EVP_md5_sha1 → translator yields MD5 node
-                assertThat(value.asString()).isEqualTo("MD5-SHA1");
-                assertDigest(nodes, MD5.class, "MD5", 128, 512);
-            }
-            case 23 -> {
-                assertThat(value.asString()).isEqualTo("NULL");
-                assertThat(nodes).isEmpty();
-            }
-            case 24, 25 -> {
-                // EVP_MD_fetch(NULL, "SHA256", NULL) / EVP_get_digestbyname("SHA256"): real
-                // algorithm name resolved via OpenSSLNameCanonicalizerFactory.
-                assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
-            }
-            case 26 -> {
-                // EVP_Q_digest(NULL, "SHA256", ...): one-shot digest named by its second argument.
-                // The EVP_DigestInit calls before it report nothing: their digest argument is
-                // reported where it is created.
-                assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
-            }
-            case 27 -> {
-                // EVP_MD_fetch(NULL, digest_name, NULL): digest_name is a local variable,
-                // resolved via CxxSymbolResolverVisitor from its initializer.
-                assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
-            }
-            case 28 -> {
-                // EVP_MD_fetch(NULL, "SHA2-256", NULL): OpenSSL 3.x provider fetch name
-                // resolved via OpenSSLNameCanonicalizerFactory.
-                assertThat(value.asString()).isEqualTo("SHA-256");
-                assertDigest(nodes, SHA2.class, "SHA-256", 256, 512);
-            }
-            default -> throw new AssertionError("Unexpected findingId: " + findingId);
-        }
-    }
-
-    /* helpers */
-
-    private static INode head(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        return nodes.get(0);
-    }
-
-    private static void assertDigest(
-            List<INode> nodes,
-            Class<? extends INode> klass,
-            String asString,
-            int digestSize,
-            int blockSize) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(klass);
-        assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(n.asString()).isEqualTo(asString);
-        INode ds = n.getChildren().get(DigestSize.class);
-        assertThat(ds).isNotNull();
-        assertThat(ds.asString()).isEqualTo(Integer.toString(digestSize));
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo(Integer.toString(blockSize));
-    }
-
-    private static void assertSha512t(List<INode> nodes, int truncLen) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(SHA2.class);
-        assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(n.asString()).isEqualTo("SHA-512/" + truncLen);
-        INode ds = n.getChildren().get(DigestSize.class);
-        assertThat(ds).isNotNull();
-        assertThat(ds.asString()).isEqualTo(Integer.toString(truncLen));
-        // Inner SHA512 wrapped as a MessageDigest child
-        INode inner = n.getChildren().get(MessageDigest.class);
-        assertThat(inner).isNotNull().isInstanceOf(SHA2.class);
-        assertThat(inner.asString()).isEqualTo("SHA-512");
-    }
-
-    private static void assertShake(List<INode> nodes, String asString, int pset) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(SHAKE.class);
-        assertThat(n.getKind()).isEqualTo(ExtendableOutputFunction.class);
-        assertThat(n.asString()).isEqualTo(asString);
-        INode psetNode = n.getChildren().get(ParameterSetIdentifier.class);
-        assertThat(psetNode).isNotNull();
-        assertThat(psetNode.asString()).isEqualTo(Integer.toString(pset));
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

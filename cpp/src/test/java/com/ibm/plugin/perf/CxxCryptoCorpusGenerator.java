@@ -30,10 +30,10 @@ import javax.annotation.Nonnull;
  * Generates a synthetic corpus of OpenSSL EVP cipher-init call sites for the cxx call-stack heap
  * harness. Each unit is its own {@code .cc} file with a distinct function name so recorded calls
  * grow with corpus size. Every unit's {@code EVP_EncryptInit_ex} call passes a nested function-call
- * argument (e.g. {@code EVP_aes_256_gcm()}), the exact shape that made {@code
- * CxxLanguageTranslation#getMethodParameterTypes} fall through to {@code
- * AstNodeTypeExtension.getType} and {@code createTypeFromCxxType} on a real cxx {@code Type} - the
- * code path that used to leak the whole file's AST into the closure stored on the recorded call.
+ * argument (e.g. {@code EVP_aes_256_gcm()}), for which {@code
+ * CxxLanguageTranslation#getMethodParameterTypes} reads the argument's type through {@code
+ * AstNodeTypeExtension.getType} and {@code createTypeFromCxxType}, a type that must not keep the
+ * file's AST reachable from the recorded call.
  */
 final class CxxCryptoCorpusGenerator {
 

@@ -19,18 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.ssl;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.context.ProtocolContext;
-import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -44,15 +43,39 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLLibsslCipherListTest extends TestBase {
 
-    private final List<List<String>> cipherLists = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 4: SSL_CTX_set_cipher_list(ctx,
+                    // "ECDHE-RSA-AES256-GCM-SHA384:HIGH:!aNULL:!MD5");
+                    finding(
+                            "ProtocolContext{CipherSuite:ECDHE-RSA-AES256-GCM-SHA384:HIGH:!aNULL:!MD5}",
+                            "TLS:TLS[CipherSuiteCollection:[CipherSuite:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384[AssetCollection:[KeyAgreement:ECDH[Oid:1.3.132.1.12], "
+                                    + "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, Mode:GCM, "
+                                    + "Oid:2.16.840.1.101.3.4.1.46], "
+                                    + "PublicKeyEncryption:RSA[MessageDigest:SHA-384[BlockSize:1024, "
+                                    + "Digest:DIGEST, DigestSize:384, Oid:2.16.840.1.101.3.4.2.2], "
+                                    + "Oid:1.2.840.113549.1.1.1]], IdentifierCollection:[Identifier:0xC0, "
+                                    + "Identifier:0x30]]]]"),
+                    // 5: SSL_CTX_set_ciphersuites(ctx,
+                    // "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256");
+                    finding(
+                            "ProtocolContext{CipherSuite:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256}",
+                            "TLS:TLS[CipherSuiteCollection:[CipherSuite:TLS_AES_256_GCM_SHA384[AssetCollection:[AuthenticatedEncryption:AES-256-GCM[BlockSize:128, "
+                                    + "KeyLength:256, Mode:GCM, Oid:2.16.840.1.101.3.4.1.46], "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]], IdentifierCollection:[Identifier:0x13, "
+                                    + "Identifier:0x02]], "
+                                    + "CipherSuite:TLS_CHACHA20_POLY1305_SHA256[AssetCollection:[AuthenticatedEncryption:ChaCha20-Poly1305[MessageDigest:Poly1305[Digest:DIGEST]], "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]], IdentifierCollection:[Identifier:0x13, "
+                                    + "Identifier:0x03]]]]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/ssl/OpenSSLLibsslCipherListTestFile.cc", this);
-        assertThat(cipherLists)
-                .containsExactly(
-                        List.of("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"),
-                        List.of("TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"));
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -66,18 +89,7 @@ class OpenSSLLibsslCipherListTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(ProtocolContext.class);
-        if (nodes.isEmpty()) {
-            // a cipher string of keywords and exclusions only
-            return;
-        }
-        assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0)).isInstanceOf(TLS.class);
-        List<String> suites = new ArrayList<>();
-        for (INode suite : ((TLS) nodes.get(0)).getCipherSuits().orElseThrow().getCollection()) {
-            assertThat(suite).isInstanceOf(CipherSuite.class);
-            suites.add(suite.asString());
-        }
-        cipherLists.add(suites);
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

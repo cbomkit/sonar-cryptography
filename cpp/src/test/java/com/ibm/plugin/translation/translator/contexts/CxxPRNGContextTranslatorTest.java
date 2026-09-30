@@ -25,6 +25,10 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.PseudorandomNumberGenerator;
+import com.ibm.mapper.model.algorithms.CTRDRBG;
+import com.ibm.mapper.model.algorithms.HMACDRBG;
+import com.ibm.mapper.model.algorithms.HashDRBG;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
@@ -54,9 +58,6 @@ class CxxPRNGContextTranslatorTest {
         return Stream.of(
                 Arguments.of("RAND"),
                 Arguments.of("RAND-PSEUDO"),
-                Arguments.of("CTR-DRBG"),
-                Arguments.of("HASH-DRBG"),
-                Arguments.of("HMAC-DRBG"),
                 Arguments.of("SEED-SRC"),
                 Arguments.of("JITTER"),
                 Arguments.of("TEST-RAND"));
@@ -69,6 +70,24 @@ class CxxPRNGContextTranslatorTest {
         assertThat(node).isPresent();
         assertThat(node.get()).isInstanceOf(Algorithm.class);
         assertThat(node.get().asString()).isEqualTo(value);
+    }
+
+    private static Stream<Arguments> drbgs() {
+        return Stream.of(
+                Arguments.of("CTR-DRBG", CTRDRBG.class, "CTR_DRBG"),
+                Arguments.of("HASH-DRBG", HashDRBG.class, "Hash_DRBG"),
+                Arguments.of("HMAC-DRBG", HMACDRBG.class, "HMAC_DRBG"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("drbgs")
+    void drbgsResolveToTheirSp80090aModel(
+            String value, Class<? extends INode> expectedClass, String expectedName) {
+        Optional<INode> node = translate(value);
+        assertThat(node).isPresent();
+        assertThat(node.get()).isInstanceOf(expectedClass);
+        assertThat(node.get().getKind()).isEqualTo(PseudorandomNumberGenerator.class);
+        assertThat(node.get().asString()).isEqualTo(expectedName);
     }
 
     private static Stream<Arguments> entropySeedingOperations() {

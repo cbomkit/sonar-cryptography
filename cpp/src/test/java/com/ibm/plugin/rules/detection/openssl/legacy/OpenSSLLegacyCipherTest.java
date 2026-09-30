@@ -19,35 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.mapper.model.BlockCipher;
-import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Mode;
-import com.ibm.mapper.model.StreamCipher;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.Blowfish;
-import com.ibm.mapper.model.algorithms.Camellia;
-import com.ibm.mapper.model.algorithms.DES;
-import com.ibm.mapper.model.algorithms.DESede;
-import com.ibm.mapper.model.algorithms.IDEA;
-import com.ibm.mapper.model.algorithms.RC2;
-import com.ibm.mapper.model.algorithms.RC4;
-import com.ibm.mapper.model.algorithms.RC5;
-import com.ibm.mapper.model.algorithms.SEED;
-import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -55,25 +38,276 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 61 rule entries in {@link OpenSSLLegacyCipher}.
+ * Covers all rule entries of the legacy cipher classes ({@link OpenSSLLegacyCipherAes}, {@link
+ * OpenSSLLegacyCipherDes}, ...). The key setup functions report the key size given as their
+ * argument. An encryption function reports the key size its key was set up with, and the key setup
+ * is then reported with it; a key set up but not used is reported on its own, and a key given to
+ * the function has no key size.
  *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- *
- * <p>Fixture calls every method name listed across the rules — including alias names inside
- * multi-method rules ({@code forMethods(a, b, c)}) — producing 57 findings, 54 of them distinct
- * values.
+ * <p>The fixture calls every function named by the rules, including the aliases of a rule matching
+ * several functions ({@code forMethods(a, b, c)}).
  */
 class OpenSSLLegacyCipherTest extends TestBase {
 
-    private int findingCount = 0;
-    private final Set<String> observed = new HashSet<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 20: AES_ecb_encrypt(buf, buf, &ak, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-ECB}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-ECB[BlockSize:128, KeyLength:256, Mode:ECB, Oid:2.16.840.1.101.3.4.1.41]"),
+                    // 21: AES_cbc_encrypt(buf, buf, 64, &ak, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-CBC}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-CBC[BlockSize:128, KeyLength:256, Mode:CBC, Oid:2.16.840.1.101.3.4.1.42]"),
+                    // 22: AES_cfb128_encrypt(buf, buf, 64, &ak, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-CFB128}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-CFB128[BlockSize:128, KeyLength:256, Mode:CFB128, Oid:2.16.840.1.101.3.4.1.44]"),
+                    // 23: AES_ofb128_encrypt(buf, buf, 64, &ak, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:AES-OFB}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-OFB[BlockSize:128, KeyLength:256, Mode:OFB, Oid:2.16.840.1.101.3.4.1.43]"),
+                    // 24: AES_ige_encrypt(buf, buf, 64, &ak, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-IGE}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-IGE[BlockSize:128, KeyLength:256, Mode:IGE, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 25: AES_cfb1_encrypt(buf, buf, 64, &ak, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-CFB1}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-CFB1[BlockSize:128, KeyLength:256, Mode:CFB1, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 26: AES_cfb8_encrypt(buf, buf, 64, &ak, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-CFB8}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-CFB8[BlockSize:128, KeyLength:256, Mode:CFB8, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 27: AES_bi_ige_encrypt(buf, buf, 64, &ak, &ak, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-BI-IGE}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-BI-IGE[BlockSize:128, KeyLength:256, Mode:BI-IGE, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 29: AES_wrap_key(&ak, NULL, buf, buf, 32);
+                    finding(
+                            "CipherContext{ValueAction:AES-WRAP}[CipherContext{ValueAction:AES}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-256-WRAP[BlockSize:128, KeyLength:256, Mode:WRAP, Oid:2.16.840.1.101.3.4.1.45]"),
+                    // 30: AES_unwrap_key(&dk, NULL, buf, buf, 40);
+                    finding(
+                            "CipherContext{ValueAction:AES-WRAP}[CipherContext{ValueAction:AES}[CipherContext{KeySize:192}]]",
+                            "BlockCipher:AES-192-WRAP[BlockSize:128, KeyLength:192, Mode:WRAP, Oid:2.16.840.1.101.3.4.1.25]"),
+                    // 40: AES_ecb_encrypt(buf, buf, &k, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-ECB}[CipherContext{ValueAction:AES}[CipherContext{KeySize:128}, CipherContext{KeySize:256}]]",
+                            "BlockCipher:AES-128-ECB[BlockSize:128, KeyLength:128, Mode:ECB, Oid:2.16.840.1.101.3.4.1.1]",
+                            "BlockCipher:AES-256-ECB[BlockSize:128, KeyLength:256, Mode:ECB,"
+                                    + " Oid:2.16.840.1.101.3.4.1.41]"),
+                    // 46: AES_set_encrypt_key(buf, 128, &unused);
+                    finding(
+                            "CipherContext{ValueAction:AES}[CipherContext{KeySize:128}]",
+                            "BlockCipher:AES-128[BlockSize:128, KeyLength:128, Oid:2.16.840.1.101.3.4.1]"),
+                    // 50: AES_ecb_encrypt(buf, buf, key, 1);
+                    finding(
+                            "CipherContext{ValueAction:AES-ECB}",
+                            "BlockCipher:AES-ECB[BlockSize:128, Mode:ECB, Oid:2.16.840.1.101.3.4.1]"),
+                    // 59: DES_set_key(&dc, &ds);
+                    finding(
+                            "CipherContext{ValueAction:DES}",
+                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
+                    // 60: DES_ecb_encrypt(&dc, &dc, &ds, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-ECB}",
+                            "BlockCipher:DES-56-ECB[BlockSize:64, KeyLength:56, Mode:ECB]"),
+                    // 61: DES_ede3_cbc_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:3DES-CBC}",
+                            "BlockCipher:DESede168-CBC[BlockSize:64, KeyLength:168, Mode:CBC]"),
+                    // 62: DES_ecb3_encrypt(&dc, &dc, &ds, &ds, &ds, 1);
+                    finding(
+                            "CipherContext{ValueAction:3DES-ECB}",
+                            "BlockCipher:DESede168-ECB[BlockSize:64, KeyLength:168, Mode:ECB]"),
+                    // 63: DES_ede3_cfb64_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:3DES-CFB}",
+                            "BlockCipher:DESede168-CFB[BlockSize:64, KeyLength:168, Mode:CFB]"),
+                    // 64: DES_ofb64_encrypt(buf, buf, 64, &ds, &dc, &num);
+                    finding(
+                            "CipherContext{ValueAction:DES-OFB}",
+                            "BlockCipher:DES-56-OFB[BlockSize:64, KeyLength:56, Mode:OFB]"),
+                    // 65: DES_set_key_checked(&dc, &ds);
+                    finding(
+                            "CipherContext{ValueAction:DES}",
+                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
+                    // 66: DES_set_key_unchecked(&dc, &ds);
+                    finding(
+                            "CipherContext{ValueAction:DES}",
+                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
+                    // 67: DES_ncbc_encrypt(buf, buf, 64, &ds, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-CBC}",
+                            "BlockCipher:DES-56-CBC[BlockSize:64, KeyLength:56, Mode:CBC]"),
+                    // 68: DES_cbc_encrypt(buf, buf, 64, &ds, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-CBC}",
+                            "BlockCipher:DES-56-CBC[BlockSize:64, KeyLength:56, Mode:CBC]"),
+                    // 69: DES_cfb64_encrypt(buf, buf, 64, &ds, &dc, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-CFB}",
+                            "BlockCipher:DES-56-CFB[BlockSize:64, KeyLength:56, Mode:CFB]"),
+                    // 70: DES_cfb_encrypt(buf, buf, 8, 64, &ds, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-CFB}",
+                            "BlockCipher:DES-56-CFB[BlockSize:64, KeyLength:56, Mode:CFB]"),
+                    // 71: DES_ede3_cfb_encrypt(buf, buf, 8, 64, &ds, &ds, &ds, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:3DES-CFB}",
+                            "BlockCipher:DESede168-CFB[BlockSize:64, KeyLength:168, Mode:CFB]"),
+                    // 72: DES_ede3_ofb64_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, &num);
+                    finding(
+                            "CipherContext{ValueAction:3DES-OFB}",
+                            "BlockCipher:DESede168-OFB[BlockSize:64, KeyLength:168, Mode:OFB]"),
+                    // 73: DES_xcbc_encrypt(buf, buf, 64, &ds, &dc, &dc, &dc, 1);
+                    finding(
+                            "CipherContext{ValueAction:DES-XCBC}",
+                            "BlockCipher:DESX-184-CBC[BlockSize:64, KeyLength:184, Mode:CBC]"),
+                    // 82: BF_ecb_encrypt(buf, buf, &bk, 1);
+                    finding(
+                            "CipherContext{ValueAction:BLOWFISH-ECB}[CipherContext{ValueAction:BLOWFISH}[CipherContext{KeySize:160}]]",
+                            "BlockCipher:Blowfish-160-ECB[KeyLength:160, Mode:ECB]"),
+                    // 83: BF_cbc_encrypt(buf, buf, 64, &bk, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:BLOWFISH-CBC}[CipherContext{ValueAction:BLOWFISH}[CipherContext{KeySize:160}]]",
+                            "BlockCipher:Blowfish-160-CBC[KeyLength:160, Mode:CBC]"),
+                    // 84: BF_cfb64_encrypt(buf, buf, 64, &bk, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:BLOWFISH-CFB}[CipherContext{ValueAction:BLOWFISH}[CipherContext{KeySize:160}]]",
+                            "BlockCipher:Blowfish-160-CFB[KeyLength:160, Mode:CFB]"),
+                    // 85: BF_ofb64_encrypt(buf, buf, 64, &bk, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:BLOWFISH-OFB}[CipherContext{ValueAction:BLOWFISH}[CipherContext{KeySize:160}]]",
+                            "BlockCipher:Blowfish-160-OFB[KeyLength:160, Mode:OFB]"),
+                    // 96: RC4(&r4, 64, buf, buf);
+                    finding(
+                            "CipherContext{ValueAction:RC4}[CipherContext{ValueAction:RC4}[CipherContext{KeySize:128}]]",
+                            "StreamCipher:RC4-128[KeyLength:128]"),
+                    // 98: RC2_ecb_encrypt(buf, buf, &r2, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC2-ECB}[CipherContext{ValueAction:RC2}[CipherContext{KeySize:64}]]",
+                            "BlockCipher:RC2-64-ECB[KeyLength:64, Mode:ECB]"),
+                    // 99: RC2_cbc_encrypt(buf, buf, 64, &r2, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC2-CBC}[CipherContext{ValueAction:RC2}[CipherContext{KeySize:64}]]",
+                            "BlockCipher:RC2-64-CBC[KeyLength:64, Mode:CBC]"),
+                    // 100: RC2_cfb64_encrypt(buf, buf, 64, &r2, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC2-CFB}[CipherContext{ValueAction:RC2}[CipherContext{KeySize:64}]]",
+                            "BlockCipher:RC2-64-CFB[KeyLength:64, Mode:CFB]"),
+                    // 101: RC2_ofb64_encrypt(buf, buf, 64, &r2, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:RC2-OFB}[CipherContext{ValueAction:RC2}[CipherContext{KeySize:64}]]",
+                            "BlockCipher:RC2-64-OFB[KeyLength:64, Mode:OFB]"),
+                    // 103: RC5_32_ecb_encrypt(buf, buf, &r5, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC5-ECB}[CipherContext{ValueAction:RC5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:RC5-80-ECB[KeyLength:80, Mode:ECB]"),
+                    // 104: RC5_32_cbc_encrypt(buf, buf, 64, &r5, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC5-CBC}[CipherContext{ValueAction:RC5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:RC5-80-CBC[KeyLength:80, Mode:CBC]"),
+                    // 105: RC5_32_cfb64_encrypt(buf, buf, 64, &r5, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:RC5-CFB}[CipherContext{ValueAction:RC5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:RC5-80-CFB[KeyLength:80, Mode:CFB]"),
+                    // 106: RC5_32_ofb64_encrypt(buf, buf, 64, &r5, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:RC5-OFB}[CipherContext{ValueAction:RC5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:RC5-80-OFB[KeyLength:80, Mode:OFB]"),
+                    // 115: CAST_ecb_encrypt(buf, buf, &ck, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAST5-ECB}[CipherContext{ValueAction:CAST5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:CAST5-80-ECB[BlockSize:64, KeyLength:80, Mode:ECB]"),
+                    // 116: CAST_cbc_encrypt(buf, buf, 64, &ck, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAST5-CBC}[CipherContext{ValueAction:CAST5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:CAST5-80-CBC[BlockSize:64, KeyLength:80, Mode:CBC]"),
+                    // 117: CAST_cfb64_encrypt(buf, buf, 64, &ck, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAST5-CFB}[CipherContext{ValueAction:CAST5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:CAST5-80-CFB[BlockSize:64, KeyLength:80, Mode:CFB]"),
+                    // 118: CAST_ofb64_encrypt(buf, buf, 64, &ck, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:CAST5-OFB}[CipherContext{ValueAction:CAST5}[CipherContext{KeySize:80}]]",
+                            "BlockCipher:CAST5-80-OFB[BlockSize:64, KeyLength:80, Mode:OFB]"),
+                    // 126: IDEA_set_encrypt_key(buf, &ik);
+                    finding("CipherContext{ValueAction:IDEA}", "BlockCipher:IDEA"),
+                    // 127: IDEA_set_decrypt_key(&ik, &ik);
+                    finding("CipherContext{ValueAction:IDEA}", "BlockCipher:IDEA"),
+                    // 128: IDEA_ecb_encrypt(buf, buf, &ik);
+                    finding(
+                            "CipherContext{ValueAction:IDEA-ECB}",
+                            "BlockCipher:IDEA-ECB[Mode:ECB]"),
+                    // 129: IDEA_cbc_encrypt(buf, buf, 64, &ik, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:IDEA-CBC}",
+                            "BlockCipher:IDEA-CBC[Mode:CBC]"),
+                    // 130: IDEA_cfb64_encrypt(buf, buf, 64, &ik, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:IDEA-CFB}",
+                            "BlockCipher:IDEA-CFB[Mode:CFB]"),
+                    // 131: IDEA_ofb64_encrypt(buf, buf, 64, &ik, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:IDEA-OFB}",
+                            "BlockCipher:IDEA-OFB[Mode:OFB]"),
+                    // 141: Camellia_ecb_encrypt(buf, buf, &cam, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-ECB}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-ECB[KeyLength:256, Mode:ECB]"),
+                    // 142: Camellia_cbc_encrypt(buf, buf, 64, &cam, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-CBC}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-CBC[KeyLength:256, Mode:CBC]"),
+                    // 143: Camellia_cfb128_encrypt(buf, buf, 64, &cam, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-CFB128}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-CFB128[KeyLength:256, Mode:CFB128]"),
+                    // 144: Camellia_cfb1_encrypt(buf, buf, 64, &cam, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-CFB1}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-CFB1[KeyLength:256, Mode:CFB1]"),
+                    // 145: Camellia_cfb8_encrypt(buf, buf, 64, &cam, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-CFB8}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-CFB8[KeyLength:256, Mode:CFB8]"),
+                    // 146: Camellia_ofb128_encrypt(buf, buf, 64, &cam, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-OFB}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-OFB[KeyLength:256, Mode:OFB]"),
+                    // 147: Camellia_ctr128_encrypt(buf, buf, 64, &cam, iv, buf, &unum);
+                    finding(
+                            "CipherContext{ValueAction:CAMELLIA-CTR}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
+                            "BlockCipher:CAMELLIA-256-CTR[KeyLength:256, Mode:CTR]"),
+                    // 155: SEED_set_key(buf, &sk);
+                    finding(
+                            "CipherContext{ValueAction:SEED}",
+                            "BlockCipher:SEED-128[BlockSize:128, KeyLength:128]"),
+                    // 156: SEED_ecb_encrypt(buf, buf, &sk, 1);
+                    finding(
+                            "CipherContext{ValueAction:SEED-ECB}",
+                            "BlockCipher:SEED-128-ECB[BlockSize:128, KeyLength:128, Mode:ECB]"),
+                    // 157: SEED_cbc_encrypt(buf, buf, 64, &sk, iv, 1);
+                    finding(
+                            "CipherContext{ValueAction:SEED-CBC}",
+                            "BlockCipher:SEED-128-CBC[BlockSize:128, KeyLength:128, Mode:CBC]"),
+                    // 158: SEED_cfb128_encrypt(buf, buf, 64, &sk, iv, &num, 1);
+                    finding(
+                            "CipherContext{ValueAction:SEED-CFB}",
+                            "BlockCipher:SEED-128-CFB[BlockSize:128, KeyLength:128, Mode:CFB]"),
+                    // 159: SEED_ofb128_encrypt(buf, buf, 64, &sk, iv, &num);
+                    finding(
+                            "CipherContext{ValueAction:SEED-OFB}",
+                            "BlockCipher:SEED-128-OFB[BlockSize:128, KeyLength:128, Mode:OFB]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyCipherTestFile.cc", this);
-        assertThat(findingCount).isEqualTo(57);
-        assertThat(observed).hasSize(54);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -87,172 +321,7 @@ class OpenSSLLegacyCipherTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-        observed.add(value.asString());
-        findingCount++;
-
-        String v = value.asString();
-        if (v.startsWith("DES-")) {
-            String mode = v.substring(4);
-            assertDes(nodes, mode);
-        } else if (v.startsWith("BLOWFISH-")) {
-            String mode = v.substring("BLOWFISH-".length());
-            assertBlowfish(nodes, mode);
-        } else if (v.equals("RC4")) {
-            assertRc4(nodes);
-        } else if (v.startsWith("RC2-")) {
-            String mode = v.substring(4);
-            assertRc2(nodes, mode);
-        } else if (v.startsWith("CAST5-")) {
-            String mode = v.substring("CAST5-".length());
-            assertCast128(nodes, mode);
-        } else if (v.startsWith("IDEA-")) {
-            String mode = v.substring("IDEA-".length());
-            assertIdea(nodes, mode);
-        } else if (v.startsWith("RC5-")) {
-            String mode = v.substring("RC5-".length());
-            assertRc5(nodes, mode);
-        } else if (v.startsWith("CAMELLIA-")) {
-            // the legacy API gives the key size to Camellia_set_key, not to the mode function
-            INode camellia = head(nodes);
-            assertThat(camellia).isInstanceOf(Camellia.class);
-            assertThat(camellia.getChildren().get(Mode.class).asString())
-                    .isEqualTo(v.substring("CAMELLIA-".length()));
-        } else if (v.startsWith("SEED-")) {
-            String mode = v.substring("SEED-".length());
-            assertSeed(nodes, mode);
-        } else {
-            // key setup and mode functions without a mode suffix handled above
-            assertThat(nodes).as(v).hasSize(1);
-            assertThat(nodes.get(0)).isInstanceOf(expectedClass(v));
-        }
-    }
-
-    private static Class<? extends INode> expectedClass(String value) {
-        if (value.startsWith("AES")) {
-            return AES.class;
-        } else if (value.startsWith("3DES")) {
-            return DESede.class;
-        }
-        return switch (value) {
-            case "DES" -> DES.class;
-            case "BLOWFISH" -> Blowfish.class;
-            case "CAST5" -> CAST128.class;
-            case "IDEA" -> IDEA.class;
-            case "RC2" -> RC2.class;
-            case "RC5" -> RC5.class;
-            case "SEED" -> SEED.class;
-            case "CAMELLIA" -> Camellia.class;
-            default -> throw new AssertionError("Unexpected value: " + value);
-        };
-    }
-
-    private static INode head(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        return nodes.get(0);
-    }
-
-    private static void assertDes(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(DES.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("DES-56-" + mode);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("56");
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo("64");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertBlowfish(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(Blowfish.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("Blowfish-128-" + mode);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertRc4(List<INode> nodes) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(RC4.class);
-        assertThat(n.getKind()).isEqualTo(StreamCipher.class);
-        assertThat(n.asString()).isEqualTo("RC4");
-    }
-
-    private static void assertRc2(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(RC2.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("RC2-128-" + mode);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertCast128(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(CAST128.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("CAST5-128-" + mode);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo("64");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertIdea(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(IDEA.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("IDEA-" + mode);
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertRc5(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(RC5.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-    }
-
-    private static void assertSeed(List<INode> nodes, String mode) {
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(SEED.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo("128");
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo("128");
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

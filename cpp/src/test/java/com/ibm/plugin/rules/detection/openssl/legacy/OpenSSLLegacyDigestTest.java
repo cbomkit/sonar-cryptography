@@ -19,23 +19,14 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.DigestContext;
-import com.ibm.mapper.model.BlockSize;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.MessageDigest;
-import com.ibm.mapper.model.algorithms.MD2;
-import com.ibm.mapper.model.algorithms.MD4;
-import com.ibm.mapper.model.algorithms.MD5;
-import com.ibm.mapper.model.algorithms.RIPEMD;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.Whirlpool;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
@@ -46,17 +37,118 @@ import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
-/**
- * Covers all 47 rule entries in {@link OpenSSLLegacyDigest}.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
- */
+/** Covers all rule entries in {@link OpenSSLLegacyDigest}. */
 class OpenSSLLegacyDigestTest extends TestBase {
+
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 13: MD5_Init(&mc);
+                    finding(
+                            "DigestContext{ValueAction:MD5}",
+                            "MessageDigest:MD5[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 14: MD5(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:MD5}",
+                            "MessageDigest:MD5[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 16: SHA1_Init(&s1);
+                    finding(
+                            "DigestContext{ValueAction:SHA-1}",
+                            "MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, DigestSize:160, "
+                                    + "Oid:1.3.14.3.2.26]"),
+                    // 17: SHA1(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:SHA-1}",
+                            "MessageDigest:SHA-1[BlockSize:512, Digest:DIGEST, DigestSize:160, "
+                                    + "Oid:1.3.14.3.2.26]"),
+                    // 19: SHA224_Init(&s2);
+                    finding(
+                            "DigestContext{ValueAction:SHA-224}",
+                            "MessageDigest:SHA-224[BlockSize:512, Digest:DIGEST, DigestSize:224, "
+                                    + "Oid:2.16.840.1.101.3.4.2.4]"),
+                    // 20: SHA224(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:SHA-224}",
+                            "MessageDigest:SHA-224[BlockSize:512, Digest:DIGEST, DigestSize:224, "
+                                    + "Oid:2.16.840.1.101.3.4.2.4]"),
+                    // 22: SHA256_Init(&s2);
+                    finding(
+                            "DigestContext{ValueAction:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 23: SHA256(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 25: SHA384_Init(&s5);
+                    finding(
+                            "DigestContext{ValueAction:SHA-384}",
+                            "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]"),
+                    // 26: SHA384(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:SHA-384}",
+                            "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]"),
+                    // 28: SHA512_Init(&s5);
+                    finding(
+                            "DigestContext{ValueAction:SHA-512}",
+                            "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]"),
+                    // 29: SHA512(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:SHA-512}",
+                            "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]"),
+                    // 31: RIPEMD160_Init(&r);
+                    finding(
+                            "DigestContext{ValueAction:RIPEMD160}",
+                            "MessageDigest:RIPEMD-160[Digest:DIGEST, DigestSize:160]"),
+                    // 32: RIPEMD160(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:RIPEMD160}",
+                            "MessageDigest:RIPEMD-160[Digest:DIGEST, DigestSize:160]"),
+                    // 34: WHIRLPOOL(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:WHIRLPOOL}",
+                            "MessageDigest:Whirlpool[BlockSize:512, Digest:DIGEST, DigestSize:512, "
+                                    + "NumberOfIterations:10]"),
+                    // 35: WHIRLPOOL_Init(NULL);
+                    finding(
+                            "DigestContext{ValueAction:WHIRLPOOL}",
+                            "MessageDigest:Whirlpool[BlockSize:512, Digest:DIGEST, DigestSize:512, "
+                                    + "NumberOfIterations:10]"),
+                    // 37: MD2(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:MD2}",
+                            "MessageDigest:MD2[BlockSize:128, Digest:DIGEST, DigestSize:128]"),
+                    // 38: MD2_Init(NULL);
+                    finding(
+                            "DigestContext{ValueAction:MD2}",
+                            "MessageDigest:MD2[BlockSize:128, Digest:DIGEST, DigestSize:128]"),
+                    // 40: MD4(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:MD4}",
+                            "MessageDigest:MD4[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 41: MD4_Init(NULL);
+                    finding(
+                            "DigestContext{ValueAction:MD4}",
+                            "MessageDigest:MD4[BlockSize:512, Digest:DIGEST, DigestSize:128]"),
+                    // 43: MDC2(buf, 64, buf);
+                    finding(
+                            "DigestContext{ValueAction:MDC2}",
+                            "MessageDigest:MDC2[BlockSize:64, Digest:DIGEST, DigestSize:128]"),
+                    // 44: MDC2_Init(NULL);
+                    finding(
+                            "DigestContext{ValueAction:MDC2}",
+                            "MessageDigest:MDC2[BlockSize:64, Digest:DIGEST, DigestSize:128]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/legacy/OpenSSLLegacyDigestTestFile.cc", this);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -70,85 +162,7 @@ class OpenSSLLegacyDigestTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(DigestContext.class);
-        IValue<AstNode> value = detectionStore.getDetectionValues().get(0);
-
-        switch (value.asString()) {
-            case "MD5" -> assertMd5(nodes);
-            case "RIPEMD160" -> assertRipemd160(nodes);
-            case "SHA-1" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(SHA.class);
-                assertThat(nodes.get(0).getKind()).isEqualTo(MessageDigest.class);
-            }
-            case "SHA-224" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA-224");
-            }
-            case "SHA-256" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA-256");
-            }
-            case "SHA-384" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA-384");
-            }
-            case "SHA-512" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(SHA2.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("SHA-512");
-            }
-            case "WHIRLPOOL" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(Whirlpool.class);
-                assertThat(nodes.get(0).getKind()).isEqualTo(MessageDigest.class);
-            }
-            case "MD2" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(MD2.class);
-                assertThat(nodes.get(0).getKind()).isEqualTo(MessageDigest.class);
-            }
-            case "MD4" -> {
-                assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0)).isInstanceOf(MD4.class);
-                assertThat(nodes.get(0).getKind()).isEqualTo(MessageDigest.class);
-            }
-            case "MDC2" -> {
-                assertThat(nodes).hasSize(1);
-                INode n = nodes.get(0);
-                assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-                assertThat(n.asString()).isEqualTo("MDC2");
-            }
-            default -> throw new AssertionError("Unexpected value: " + value.asString());
-        }
-    }
-
-    private static void assertMd5(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        INode n = nodes.get(0);
-        assertThat(n).isInstanceOf(MD5.class);
-        assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(n.asString()).isEqualTo("MD5");
-        INode size = n.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo("128");
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo("512");
-    }
-
-    private static void assertRipemd160(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        INode n = nodes.get(0);
-        assertThat(n).isInstanceOf(RIPEMD.class);
-        assertThat(n.getKind()).isEqualTo(MessageDigest.class);
-        assertThat(n.asString()).isEqualTo("RIPEMD-160");
-        INode size = n.getChildren().get(DigestSize.class);
-        assertThat(size).isNotNull();
-        assertThat(size.asString()).isEqualTo("160");
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

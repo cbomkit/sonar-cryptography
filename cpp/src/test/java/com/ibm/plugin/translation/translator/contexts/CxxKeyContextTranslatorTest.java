@@ -26,6 +26,7 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
@@ -90,11 +91,12 @@ class CxxKeyContextTranslatorTest {
     }
 
     @Test
-    void arbitraryDsaBitLengthResolvesToBareDsa() {
+    void dsaBitLengthIsTheKeyLength() {
         Optional<INode> node = translate("DSA-2048");
         assertThat(node).isPresent();
         assertThat(node.get()).isInstanceOf(DSA.class);
-        assertThat(node.get().asString()).isEqualTo("DSA");
+        assertThat(node.get().getChildren().get(KeyLength.class).asString()).isEqualTo("2048");
+        assertThat(node.get().asString()).isEqualTo("DSA-2048");
     }
 
     @Test

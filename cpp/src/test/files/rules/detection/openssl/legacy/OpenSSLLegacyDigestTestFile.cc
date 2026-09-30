@@ -10,36 +10,36 @@ void test_legacy_digest() {
     RIPEMD160_CTX r;
     unsigned char buf[64];
 
-    MD5_Init(&mc);
-    MD5(buf, 64, buf);
+    MD5_Init(&mc); // Noncompliant {{(MessageDigest) MD5}}
+    MD5(buf, 64, buf); // Noncompliant {{(MessageDigest) MD5}}
 
-    SHA1_Init(&s1);
-    SHA1(buf, 64, buf);
+    SHA1_Init(&s1); // Noncompliant {{(MessageDigest) SHA-1}}
+    SHA1(buf, 64, buf); // Noncompliant {{(MessageDigest) SHA-1}}
 
-    SHA224_Init(&s2);
-    SHA224(buf, 64, buf);
+    SHA224_Init(&s2); // Noncompliant {{(MessageDigest) SHA-224}}
+    SHA224(buf, 64, buf); // Noncompliant {{(MessageDigest) SHA-224}}
 
-    SHA256_Init(&s2);
-    SHA256(buf, 64, buf);
+    SHA256_Init(&s2); // Noncompliant {{(MessageDigest) SHA-256}}
+    SHA256(buf, 64, buf); // Noncompliant {{(MessageDigest) SHA-256}}
 
-    SHA384_Init(&s5);
-    SHA384(buf, 64, buf);
+    SHA384_Init(&s5); // Noncompliant {{(MessageDigest) SHA-384}}
+    SHA384(buf, 64, buf); // Noncompliant {{(MessageDigest) SHA-384}}
 
-    SHA512_Init(&s5);
-    SHA512(buf, 64, buf);
+    SHA512_Init(&s5); // Noncompliant {{(MessageDigest) SHA-512}}
+    SHA512(buf, 64, buf); // Noncompliant {{(MessageDigest) SHA-512}}
 
-    RIPEMD160_Init(&r);
-    RIPEMD160(buf, 64, buf);
+    RIPEMD160_Init(&r); // Noncompliant {{(MessageDigest) RIPEMD-160}}
+    RIPEMD160(buf, 64, buf); // Noncompliant {{(MessageDigest) RIPEMD-160}}
 
-    WHIRLPOOL(buf, 64, buf);
-    WHIRLPOOL_Init(NULL);
+    WHIRLPOOL(buf, 64, buf); // Noncompliant {{(MessageDigest) Whirlpool}}
+    WHIRLPOOL_Init(NULL); // Noncompliant {{(MessageDigest) Whirlpool}}
 
-    MD2(buf, 64, buf);
-    MD2_Init(NULL);
+    MD2(buf, 64, buf); // Noncompliant {{(MessageDigest) MD2}}
+    MD2_Init(NULL); // Noncompliant {{(MessageDigest) MD2}}
 
-    MD4(buf, 64, buf);
-    MD4_Init(NULL);
+    MD4(buf, 64, buf); // Noncompliant {{(MessageDigest) MD4}}
+    MD4_Init(NULL); // Noncompliant {{(MessageDigest) MD4}}
 
-    MDC2(buf, 64, buf);
-    MDC2_Init(NULL);
+    MDC2(buf, 64, buf); // Noncompliant {{(MessageDigest) MDC2}}
+    MDC2_Init(NULL); // Noncompliant {{(MessageDigest) MDC2}}
 }

@@ -19,16 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -39,24 +40,60 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
 /**
  * A KDF fetched by name gets the digest that is set on the context created from it, whether the
  * digest is passed to {@code EVP_KDF_CTX_set_params} or to {@code EVP_KDF_derive}, and whether the
- * fetched KDF is held in a variable or passed directly to {@code EVP_KDF_CTX_new}.
+ * fetched KDF is held in a variable or passed directly to {@code EVP_KDF_CTX_new}. The length given
+ * to {@code EVP_KDF_derive} is the length of the derived key.
  */
 class OpenSSLEvpKdfContextTest extends TestBase {
 
-    private final List<String> kdfs = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "hkdf", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:hkdf}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 17: EVP_KDF *kdf = EVP_KDF_fetch(NULL, name, NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:PBKDF2}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]",
+                            "PasswordBasedKeyDerivationFunction:PBKDF2-SHA-512[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]]"),
+                    // 27: EVP_KDF *hkdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 35: EVP_KDF *sshkdf = EVP_KDF_fetch(NULL, "SSHKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:SSHKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]",
+                            "KeyDerivationFunction:SSHKDF-SHA-512[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]]"),
+                    // 45: EVP_KDF_CTX *hkdf_ctx = EVP_KDF_CTX_new(EVP_KDF_fetch(NULL, "HKDF",
+                    // NULL));
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-384}]]",
+                            "KeyDerivationFunction:HKDF-SHA-384[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]]"),
+                    // 46: EVP_KDF_CTX *pbkdf2_ctx = EVP_KDF_CTX_new(EVP_KDF_fetch(NULL, "PBKDF2",
+                    // NULL));
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:PBKDF2}",
+                            "PasswordBasedKeyDerivationFunction:PBKDF2[KeyDerivation:KEYDERIVATION]"),
+                    // 55: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{KeySize:256}]]",
+                            "KeyDerivationFunction:HKDF[KeyDerivation:KEYDERIVATION, KeyLength:256]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/kdf/OpenSSLEvpKdfContextTestFile.cc", this);
-        assertThat(kdfs)
-                .containsExactly(
-                        "HKDF-SHA-256",
-                        "PBKDF2-SHA-512",
-                        "HKDF-SHA-256",
-                        "SSHKDF-SHA-512",
-                        // fetched inline: each KDF gets only the digest set on its own context
-                        "HKDF-SHA-384",
-                        "PBKDF2");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -70,8 +107,7 @@ class OpenSSLEvpKdfContextTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValueContext())
-                .isInstanceOf(KeyDerivationFunctionContext.class);
-        nodes.forEach(kdf -> kdfs.add(kdf.asString()));
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

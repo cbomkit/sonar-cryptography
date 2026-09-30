@@ -24,6 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.Mac;
+import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.CMAC;
 import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.algorithms.KMAC;
@@ -31,6 +35,7 @@ import com.ibm.mapper.model.algorithms.Poly1305;
 import com.ibm.mapper.model.algorithms.SipHash;
 import com.ibm.mapper.model.algorithms.blake.BLAKE2b;
 import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
+import com.ibm.mapper.model.mode.GMAC;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
@@ -123,24 +128,32 @@ class CxxMacContextTranslatorTest {
         assertThat(node.get().asString()).isEqualTo(expectedName);
     }
 
-    @Test
-    void gmacAes128WrapsAesInsideAGmacAlgorithm() {
-        Optional<INode> node = translate("GMAC-AES-128");
+    @ParameterizedTest
+    @MethodSource("gmacCases")
+    void gmacIsItsCipherAsAMacInGmacMode(String value, int keyLength, String expectedName) {
+        Optional<INode> node = translate(value);
         assertThat(node).isPresent();
-        assertThat(node.get().asString()).isEqualTo("GMAC");
+        assertThat(node.get()).isInstanceOf(AES.class);
+        assertThat(node.get().getKind()).isEqualTo(Mac.class);
+        assertThat(node.get().getChildren().get(Mode.class)).isInstanceOf(GMAC.class);
+        assertThat(node.get().getChildren().get(KeyLength.class).asString())
+                .isEqualTo(String.valueOf(keyLength));
+        assertThat(node.get().asString()).isEqualTo(expectedName);
+    }
+
+    static Stream<Arguments> gmacCases() {
+        return Stream.of(
+                Arguments.of("GMAC-AES-128", 128, "AES-128-GMAC"),
+                Arguments.of("GMAC-AES-192", 192, "AES-192-GMAC"),
+                Arguments.of("GMAC-AES-256", 256, "AES-256-GMAC"));
     }
 
     @Test
-    void gmacAes192WrapsAesInsideAGmacAlgorithm() {
-        Optional<INode> node = translate("GMAC-AES-192");
+    void gmacWithoutCipherIsAGmac() {
+        Optional<INode> node = translate("GMAC");
         assertThat(node).isPresent();
-        assertThat(node.get().asString()).isEqualTo("GMAC");
-    }
-
-    @Test
-    void gmacAes256WrapsAesInsideAGmacAlgorithm() {
-        Optional<INode> node = translate("GMAC-AES-256");
-        assertThat(node).isPresent();
+        assertThat(node.get()).isInstanceOf(com.ibm.mapper.model.algorithms.GMAC.class);
+        assertThat(node.get().getKind()).isEqualTo(Mac.class);
         assertThat(node.get().asString()).isEqualTo("GMAC");
     }
 

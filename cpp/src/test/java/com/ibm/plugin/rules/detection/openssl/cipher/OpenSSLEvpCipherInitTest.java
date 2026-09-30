@@ -19,17 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.functionality.Decrypt;
-import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -43,16 +43,30 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpCipherInitTest extends TestBase {
 
-    private final List<String> operations = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, key, iv);
+                    finding(
+                            "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:AES-256-GCM}]",
+                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, Encrypt:ENCRYPT, "
+                                    + "KeyLength:256, Mode:GCM, Oid:2.16.840.1.101.3.4.1.46]"),
+                    // 11: EVP_DecryptInit_ex2(ctx, cipher, key, iv, NULL);
+                    finding(
+                            "CipherContext{CipherAction:DECRYPT}[CipherContext{Algorithm:ChaCha20-Poly1305}]",
+                            "AuthenticatedEncryption:ChaCha20-Poly1305[Decrypt:DECRYPT, "
+                                    + "MessageDigest:Poly1305[Digest:DIGEST]]"),
+                    // 17: EVP_CipherInit_ex(ctx, cipher, NULL, key, iv, 1);
+                    finding(
+                            "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:DESede3-CBC}]",
+                            "BlockCipher:DESede168-CBC[BlockSize:64, Encrypt:ENCRYPT, KeyLength:168, "
+                                    + "Mode:CBC]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherInitTestFile.cc", this);
-        assertThat(operations)
-                .containsExactlyInAnyOrder(
-                        "AES-256-GCM encrypt",
-                        "ChaCha20-Poly1305 decrypt",
-                        "DESede168-CBC encrypt");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -66,12 +80,7 @@ class OpenSSLEvpCipherInitTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        for (INode node : nodes) {
-            if (node.hasChildOfType(Encrypt.class).isPresent()) {
-                operations.add(node.asString() + " encrypt");
-            } else if (node.hasChildOfType(Decrypt.class).isPresent()) {
-                operations.add(node.asString() + " decrypt");
-            }
-        }
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

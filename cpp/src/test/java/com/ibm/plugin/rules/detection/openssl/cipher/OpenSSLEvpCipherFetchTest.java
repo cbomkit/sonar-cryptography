@@ -19,26 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.mapper.model.BlockCipher;
-import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Mode;
-import com.ibm.mapper.model.Oid;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.Camellia;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -46,25 +38,194 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers all 33 algorithm values detected via {@code EVP_CIPHER_fetch}, both as string literals and
+ * Covers the algorithm values detected via {@code EVP_CIPHER_fetch}, both as string literals and
  * via a local variable holding one of those same values.
- *
- * <p>Follows the deep-assert pattern documented in {@link
- * com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRandTest}.
  */
 class OpenSSLEvpCipherFetchTest extends TestBase {
 
-    private final Set<String> observed = new HashSet<>();
-    private int findingCount = 0;
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 9: EVP_CIPHER_fetch(lib, "AES-128-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-SIV}",
+                            "BlockCipher:AES-128-SIV[BlockSize:128, KeyLength:128, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1]"),
+                    // 10: EVP_CIPHER_fetch(lib, "AES-192-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-SIV}",
+                            "BlockCipher:AES-192-SIV[BlockSize:128, KeyLength:192, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 11: EVP_CIPHER_fetch(lib, "AES-256-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-SIV}",
+                            "BlockCipher:AES-256-SIV[BlockSize:128, KeyLength:256, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 14: EVP_CIPHER_fetch(lib, "AES-128-GCM-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-GCM-SIV}",
+                            "BlockCipher:AES-128-GCM-SIV[BlockSize:128, KeyLength:128, Mode:GCM-SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1]"),
+                    // 15: EVP_CIPHER_fetch(lib, "AES-192-GCM-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-GCM-SIV}",
+                            "BlockCipher:AES-192-GCM-SIV[BlockSize:128, KeyLength:192, Mode:GCM-SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 16: EVP_CIPHER_fetch(lib, "AES-256-GCM-SIV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-GCM-SIV}",
+                            "BlockCipher:AES-256-GCM-SIV[BlockSize:128, KeyLength:256, Mode:GCM-SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 19: EVP_CIPHER_fetch(lib, "AES-128-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-CTS}",
+                            "BlockCipher:AES-128-CBC-CTS[BlockSize:128, KeyLength:128, Mode:CBC-CTS, "
+                                    + "Oid:2.16.840.1.101.3.4.1]"),
+                    // 20: EVP_CIPHER_fetch(lib, "AES-192-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-CTS}",
+                            "BlockCipher:AES-192-CBC-CTS[BlockSize:128, KeyLength:192, Mode:CBC-CTS, "
+                                    + "Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 21: EVP_CIPHER_fetch(lib, "AES-256-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-CTS}",
+                            "BlockCipher:AES-256-CBC-CTS[BlockSize:128, KeyLength:256, Mode:CBC-CTS, "
+                                    + "Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 24: EVP_CIPHER_fetch(lib, "AES-128-WRAP-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-WRAP-INV}",
+                            "BlockCipher:AES-128-WRAP-INV[BlockSize:128, KeyLength:128, Mode:WRAP-INV, "
+                                    + "Oid:2.16.840.1.101.3.4.1]"),
+                    // 25: EVP_CIPHER_fetch(lib, "AES-192-WRAP-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-WRAP-INV}",
+                            "BlockCipher:AES-192-WRAP-INV[BlockSize:128, KeyLength:192, Mode:WRAP-INV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 26: EVP_CIPHER_fetch(lib, "AES-256-WRAP-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-WRAP-INV}",
+                            "BlockCipher:AES-256-WRAP-INV[BlockSize:128, KeyLength:256, Mode:WRAP-INV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 29: EVP_CIPHER_fetch(lib, "AES-128-WRAP-PAD-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-WRAP-PAD-INV}",
+                            "BlockCipher:AES-128-WRAP-PAD-INV[BlockSize:128, KeyLength:128, "
+                                    + "Mode:WRAP-PAD-INV, Oid:2.16.840.1.101.3.4.1]"),
+                    // 30: EVP_CIPHER_fetch(lib, "AES-192-WRAP-PAD-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-WRAP-PAD-INV}",
+                            "BlockCipher:AES-192-WRAP-PAD-INV[BlockSize:128, KeyLength:192, "
+                                    + "Mode:WRAP-PAD-INV, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 31: EVP_CIPHER_fetch(lib, "AES-256-WRAP-PAD-INV", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-WRAP-PAD-INV}",
+                            "BlockCipher:AES-256-WRAP-PAD-INV[BlockSize:128, KeyLength:256, "
+                                    + "Mode:WRAP-PAD-INV, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 34: EVP_CIPHER_fetch(lib, "AES-128-CBC-HMAC-SHA1", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-HMAC-SHA1}",
+                            "BlockCipher:AES-128-CBC-HMAC-SHA1[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC-HMAC-SHA1, Oid:2.16.840.1.101.3.4.1]"),
+                    // 35: EVP_CIPHER_fetch(lib, "AES-128-CBC-HMAC-SHA256", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-HMAC-SHA256}",
+                            "BlockCipher:AES-128-CBC-HMAC-SHA256[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC-HMAC-SHA256, Oid:2.16.840.1.101.3.4.1]"),
+                    // 36: EVP_CIPHER_fetch(lib, "AES-192-CBC-HMAC-SHA1", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-HMAC-SHA1}",
+                            "BlockCipher:AES-192-CBC-HMAC-SHA1[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CBC-HMAC-SHA1, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 37: EVP_CIPHER_fetch(lib, "AES-192-CBC-HMAC-SHA256", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-HMAC-SHA256}",
+                            "BlockCipher:AES-192-CBC-HMAC-SHA256[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CBC-HMAC-SHA256, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 38: EVP_CIPHER_fetch(lib, "AES-256-CBC-HMAC-SHA1", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-HMAC-SHA1}",
+                            "BlockCipher:AES-256-CBC-HMAC-SHA1[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC-HMAC-SHA1, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 39: EVP_CIPHER_fetch(lib, "AES-256-CBC-HMAC-SHA256", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-HMAC-SHA256}",
+                            "BlockCipher:AES-256-CBC-HMAC-SHA256[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC-HMAC-SHA256, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 42: EVP_CIPHER_fetch(lib, "AES-128-CBC-HMAC-SHA1-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-HMAC-SHA1-ETM}",
+                            "BlockCipher:AES-128-CBC-HMAC-SHA1-ETM[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC-HMAC-SHA1-ETM, Oid:2.16.840.1.101.3.4.1]"),
+                    // 43: EVP_CIPHER_fetch(lib, "AES-192-CBC-HMAC-SHA1-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-HMAC-SHA1-ETM}",
+                            "BlockCipher:AES-192-CBC-HMAC-SHA1-ETM[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CBC-HMAC-SHA1-ETM, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 44: EVP_CIPHER_fetch(lib, "AES-256-CBC-HMAC-SHA1-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-HMAC-SHA1-ETM}",
+                            "BlockCipher:AES-256-CBC-HMAC-SHA1-ETM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC-HMAC-SHA1-ETM, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 45: EVP_CIPHER_fetch(lib, "AES-128-CBC-HMAC-SHA256-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-HMAC-SHA256-ETM}",
+                            "BlockCipher:AES-128-CBC-HMAC-SHA256-ETM[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC-HMAC-SHA256-ETM, Oid:2.16.840.1.101.3.4.1]"),
+                    // 46: EVP_CIPHER_fetch(lib, "AES-192-CBC-HMAC-SHA256-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-HMAC-SHA256-ETM}",
+                            "BlockCipher:AES-192-CBC-HMAC-SHA256-ETM[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CBC-HMAC-SHA256-ETM, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 47: EVP_CIPHER_fetch(lib, "AES-256-CBC-HMAC-SHA256-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-HMAC-SHA256-ETM}",
+                            "BlockCipher:AES-256-CBC-HMAC-SHA256-ETM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC-HMAC-SHA256-ETM, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 48: EVP_CIPHER_fetch(lib, "AES-128-CBC-HMAC-SHA512-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-CBC-HMAC-SHA512-ETM}",
+                            "BlockCipher:AES-128-CBC-HMAC-SHA512-ETM[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC-HMAC-SHA512-ETM, Oid:2.16.840.1.101.3.4.1]"),
+                    // 49: EVP_CIPHER_fetch(lib, "AES-192-CBC-HMAC-SHA512-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-CBC-HMAC-SHA512-ETM}",
+                            "BlockCipher:AES-192-CBC-HMAC-SHA512-ETM[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CBC-HMAC-SHA512-ETM, Oid:2.16.840.1.101.3.4.1.2]"),
+                    // 50: EVP_CIPHER_fetch(lib, "AES-256-CBC-HMAC-SHA512-ETM", props);
+                    finding(
+                            "CipherContext{Algorithm:AES-256-CBC-HMAC-SHA512-ETM}",
+                            "BlockCipher:AES-256-CBC-HMAC-SHA512-ETM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CBC-HMAC-SHA512-ETM, Oid:2.16.840.1.101.3.4.1.4]"),
+                    // 53: EVP_CIPHER_fetch(lib, "CAMELLIA-128-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:CAMELLIA-128-CBC-CTS}",
+                            "BlockCipher:CAMELLIA-128-CBC-CTS[KeyLength:128, Mode:CBC-CTS]"),
+                    // 54: EVP_CIPHER_fetch(lib, "CAMELLIA-192-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:CAMELLIA-192-CBC-CTS}",
+                            "BlockCipher:CAMELLIA-192-CBC-CTS[KeyLength:192, Mode:CBC-CTS]"),
+                    // 55: EVP_CIPHER_fetch(lib, "CAMELLIA-256-CBC-CTS", props);
+                    finding(
+                            "CipherContext{Algorithm:CAMELLIA-256-CBC-CTS}",
+                            "BlockCipher:CAMELLIA-256-CBC-CTS[KeyLength:256, Mode:CBC-CTS]"),
+                    // 59: EVP_CIPHER_fetch(lib, alg, props);
+                    finding(
+                            "CipherContext{Algorithm:AES-128-SIV}",
+                            "BlockCipher:AES-128-SIV[BlockSize:128, KeyLength:128, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1]"),
+                    // 63: EVP_CIPHER_fetch(lib, alg2, props);
+                    finding(
+                            "CipherContext{Algorithm:AES-192-SIV, Algorithm:AES-256-SIV}",
+                            "BlockCipher:AES-192-SIV[BlockSize:128, KeyLength:192, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.2]",
+                            "BlockCipher:AES-256-SIV[BlockSize:128, KeyLength:256, Mode:SIV, "
+                                    + "Oid:2.16.840.1.101.3.4.1.4]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/cipher/OpenSSLEvpCipherFetchTestFile.cc", this);
-        // alg2's initializer and its reassignment both resolve (CxxSemantic#chaseVariableValues
-        // walks every WRITE usage, not just the latest), to values already produced by literal
-        // calls above, so observed's distinct-value count is unchanged; only findingCount grows.
-        assertThat(observed).hasSize(33);
-        assertThat(findingCount).isEqualTo(36);
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -78,99 +239,7 @@ class OpenSSLEvpCipherFetchTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(CipherContext.class);
-        List<IValue<AstNode>> values = detectionStore.getDetectionValues();
-
-        if (values.size() == 2) {
-            // Reassigned-variable case: alg2's initializer and reassignment both resolved.
-            assertThat(values.stream().map(IValue::asString).toList())
-                    .containsExactly("AES-192-SIV", "AES-256-SIV");
-            assertThat(nodes).hasSize(2);
-            for (int i = 0; i < values.size(); i++) {
-                observed.add(values.get(i).asString());
-                findingCount++;
-                assertAesNode(nodes.get(i), values.get(i).asString());
-            }
-            return;
-        }
-
-        assertThat(values).hasSize(1);
-        IValue<AstNode> value = values.get(0);
-        observed.add(value.asString());
-        findingCount++;
-
-        String v = value.asString();
-        if (v.startsWith("AES-")) {
-            assertAes(nodes, v);
-        } else if (v.startsWith("CAMELLIA-")) {
-            assertCamellia(nodes, v);
-        } else {
-            throw new AssertionError("Unexpected value: " + v);
-        }
-    }
-
-    /* helpers */
-
-    private static INode head(List<INode> nodes) {
-        assertThat(nodes).hasSize(1);
-        return nodes.get(0);
-    }
-
-    private static void assertAes(List<INode> nodes, String v) {
-        assertAesNode(head(nodes), v);
-    }
-
-    private static void assertAesNode(INode n, String v) {
-        // v: AES-<keysize>-<modeparts...>
-        String[] parts = v.split("-", 3);
-        int keyLen = Integer.parseInt(parts[1]);
-        String mode = parts[2];
-
-        assertThat(n).isInstanceOf(AES.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo("AES-" + keyLen + "-" + mode);
-
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo(Integer.toString(keyLen));
-
-        INode bs = n.getChildren().get(BlockSize.class);
-        assertThat(bs).isNotNull();
-        assertThat(bs.asString()).isEqualTo("128");
-
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
-
-        INode oid = n.getChildren().get(Oid.class);
-        assertThat(oid).isNotNull();
-        // OID base 2.16.840.1.101.3.4.1 with optional .keysize-suffix
-        String expectedOid =
-                switch (keyLen) {
-                    case 128 -> "2.16.840.1.101.3.4.1";
-                    case 192 -> "2.16.840.1.101.3.4.1.2";
-                    case 256 -> "2.16.840.1.101.3.4.1.4";
-                    default -> throw new AssertionError("Unknown AES key length: " + keyLen);
-                };
-        assertThat(oid.asString()).isEqualTo(expectedOid);
-    }
-
-    private static void assertCamellia(List<INode> nodes, String v) {
-        String[] parts = v.split("-", 3);
-        int keyLen = Integer.parseInt(parts[1]);
-        String mode = parts[2];
-
-        INode n = head(nodes);
-        assertThat(n).isInstanceOf(Camellia.class);
-        assertThat(n.getKind()).isEqualTo(BlockCipher.class);
-        assertThat(n.asString()).isEqualTo(v);
-
-        INode kl = n.getChildren().get(KeyLength.class);
-        assertThat(kl).isNotNull();
-        assertThat(kl.asString()).isEqualTo(Integer.toString(keyLen));
-
-        INode m = n.getChildren().get(Mode.class);
-        assertThat(m).isNotNull();
-        assertThat(m.asString()).isEqualTo(mode);
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

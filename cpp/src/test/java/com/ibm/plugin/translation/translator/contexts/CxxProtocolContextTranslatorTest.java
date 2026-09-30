@@ -28,7 +28,8 @@ import com.ibm.engine.model.Protocol;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.collections.AssetCollection;
+import com.ibm.mapper.model.collections.CipherSuiteCollection;
+import com.ibm.mapper.model.collections.MergeableCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -95,8 +96,9 @@ class CxxProtocolContextTranslatorTest {
                                 "ECDHE-RSA-AES128-GCM-SHA256:TLS_AES_128_GCM_SHA256:!aNULL:HIGH",
                                 (AstNode) null),
                         ProtocolContext.Kind.TLS);
-        assertThat(node).isPresent().get().isInstanceOf(TLS.class);
-        assertThat(((TLS) node.get()).getCipherSuits().orElseThrow().getCollection())
+        // the suites of the TLS protocol they are configured on (see CipherSuiteReorganizer)
+        assertThat(node).isPresent().get().isInstanceOf(CipherSuiteCollection.class);
+        assertThat(((CipherSuiteCollection) node.get()).getCollection())
                 .extracting(INode::asString)
                 .containsExactly("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_AES_128_GCM_SHA256");
     }
@@ -126,7 +128,7 @@ class CxxProtocolContextTranslatorTest {
                         new Algorithm<>("ECDSA+SHA256", (AstNode) null),
                         ProtocolContext.Kind.TLS_SIGNATURE_ALGORITHMS);
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(AssetCollection.class);
+        assertThat(node.get()).isInstanceOf(MergeableCollection.class);
     }
 
     @Test
@@ -136,7 +138,7 @@ class CxxProtocolContextTranslatorTest {
                         new Algorithm<>("X25519:P-256", (AstNode) null),
                         ProtocolContext.Kind.TLS_GROUPS);
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(AssetCollection.class);
+        assertThat(node.get()).isInstanceOf(MergeableCollection.class);
     }
 
     @Test

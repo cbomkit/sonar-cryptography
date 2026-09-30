@@ -19,15 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -41,15 +43,37 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLEvpKeyGenBitsExpressionTest extends TestBase {
 
-    private final List<String> sizes = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:4096}]",
+                            "PublicKeyEncryption:RSA-4096[KeyLength:4096, Oid:1.2.840.113549.1.1.1]"),
+                    // 10: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:2048}]",
+                            "PublicKeyEncryption:RSA-2048[KeyLength:2048, Oid:1.2.840.113549.1.1.1]"),
+                    // 15: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}]",
+                            "PublicKeyEncryption:RSA-3072[KeyLength:3072, Oid:1.2.840.113549.1.1.1]"),
+                    // 20: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:4096, KeySize:2048}]",
+                            "PublicKeyEncryption:RSA-4096[KeyLength:4096, Oid:1.2.840.113549.1.1.1]",
+                            "PublicKeyEncryption:RSA-2048[KeyLength:2048, Oid:1.2.840.113549.1.1.1]"),
+                    // 25: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}",
+                            "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify(
                 "rules/detection/openssl/keygen/OpenSSLEvpKeyGenBitsExpressionTestFile.cc", this);
-        // the conditional contributes both sizes; the unknown operand leaves the key size unknown
-        assertThat(sizes)
-                .containsExactly("RSA-4096", "RSA-2048", "RSA-3072", "RSA-4096", "RSA-2048", "RSA");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -63,6 +87,7 @@ class OpenSSLEvpKeyGenBitsExpressionTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        nodes.forEach(node -> sizes.add(node.asString()));
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

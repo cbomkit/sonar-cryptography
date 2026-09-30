@@ -19,21 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.rand;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.PRNGContext;
-import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.PseudorandomNumberGenerator;
-import com.ibm.mapper.model.algorithms.AES;
-import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -42,50 +38,62 @@ import org.sonar.cxx.squidbridge.api.Symbol;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Covers the rules in {@link com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRand}.
+ * Covers the rules in {@link com.ibm.plugin.rules.detection.openssl.rand.OpenSSLRand}: the random
+ * bytes functions and the DRBGs fetched by name.
  *
- * <p><b>This test is the deep-assert reference for the C/C++ module.</b> Every other cpp detection
- * test class in this module references this Javadoc and follows the same pattern:
- *
- * <ol>
- *   <li>Verify detection-store structure: {@code getDetectionValues().hasSize(1)}, context class
- *       ({@link PRNGContext}, {@link com.ibm.engine.model.context.CipherContext}, {@link
- *       com.ibm.engine.model.context.MacContext} etc.), value type ({@link ValueAction} or
- *       library-specific {@code IAction}), and {@code asString()}.
- *   <li>Verify the translated {@link INode} tree returned by {@link
- *       com.ibm.plugin.translation.CxxTranslationProcess#initiate}: top-level node class (e.g.
- *       {@link AES}, {@link SHA2}), {@link INode#getKind()}, {@link INode#asString()}, and when the
- *       translator/enricher produces composite nodes, walk children with {@code
- *       node.getChildren().get(<ClassToken>.class)} (e.g. {@link com.ibm.mapper.model.Mode}, {@link
- *       com.ibm.mapper.model.KeyLength}, {@link com.ibm.mapper.model.BlockSize}, {@link
- *       com.ibm.mapper.model.Oid}, {@link com.ibm.mapper.model.MessageDigest}).
- * </ol>
- *
- * <p>Findings whose translator returns {@code Optional.empty()} (no model coverage yet) assert
- * {@code nodes.isEmpty()} — see e.g. {@code OpenSSLLegacyDigestTest} for the SHA1/SHA224/...
- * branches.
+ * <p>As the other detection rule tests of the module, it asserts each finding, by its id, against
+ * the expected detection store and translation ({@link ExpectedFinding}), as the detection rule
+ * tests of the Java module do.
  */
 class OpenSSLRandTest extends TestBase {
 
-    private final List<String> generators = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 7: RAND_bytes(buf, 32);
+                    finding("PRNGContext{ValueAction:RAND}", "PseudorandomNumberGenerator:RAND"),
+                    // 8: RAND_priv_bytes(buf, 32);
+                    finding("PRNGContext{ValueAction:RAND}", "PseudorandomNumberGenerator:RAND"),
+                    // 9: RAND_bytes_ex(NULL, buf, 32, 0);
+                    finding("PRNGContext{ValueAction:RAND}", "PseudorandomNumberGenerator:RAND"),
+                    // 10: RAND_priv_bytes_ex(NULL, buf, 32, 0);
+                    finding("PRNGContext{ValueAction:RAND}", "PseudorandomNumberGenerator:RAND"),
+                    // 12: EVP_RAND_fetch(NULL, "CTR-DRBG", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:CTR-DRBG}",
+                            "PseudorandomNumberGenerator:CTR_DRBG"),
+                    // 13: EVP_RAND_fetch(NULL, "HASH-DRBG", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:HASH-DRBG}",
+                            "PseudorandomNumberGenerator:Hash_DRBG"),
+                    // 14: EVP_RAND_fetch(NULL, "HMAC-DRBG", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:HMAC-DRBG}",
+                            "PseudorandomNumberGenerator:HMAC_DRBG"),
+                    // 15: EVP_RAND_fetch(NULL, "SEED-SRC", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:SEED-SRC}",
+                            "PseudorandomNumberGenerator:SEED-SRC"),
+                    // 16: EVP_RAND_fetch(NULL, "JITTER", NULL);
+                    finding("PRNGContext{Algorithm:JITTER}", "PseudorandomNumberGenerator:JITTER"),
+                    // 17: EVP_RAND_fetch(NULL, "TEST-RAND", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:TEST-RAND}",
+                            "PseudorandomNumberGenerator:TEST-RAND"),
+                    // 19: RAND_set_DRBG_type(NULL, "CTR-DRBG", NULL, NULL, NULL);
+                    finding(
+                            "PRNGContext{Algorithm:CTR-DRBG}",
+                            "PseudorandomNumberGenerator:CTR_DRBG"),
+                    // 20: RAND_set_seed_source_type(NULL, "SEED-SRC", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:SEED-SRC}",
+                            "PseudorandomNumberGenerator:SEED-SRC"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/rand/OpenSSLRandTestFile.cc", this);
-        assertThat(generators)
-                .containsExactly(
-                        "RAND",
-                        "RAND",
-                        "RAND",
-                        "RAND",
-                        "CTR-DRBG",
-                        "HASH-DRBG",
-                        "HMAC-DRBG",
-                        "SEED-SRC",
-                        "JITTER",
-                        "TEST-RAND",
-                        "CTR-DRBG",
-                        "SEED-SRC");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -99,12 +107,7 @@ class OpenSSLRandTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(PRNGContext.class);
-        assertThat(nodes).hasSize(1);
-        INode node = nodes.get(0);
-        assertThat(node).isInstanceOf(Algorithm.class);
-        assertThat(node.getKind()).isEqualTo(PseudorandomNumberGenerator.class);
-        generators.add(node.asString());
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

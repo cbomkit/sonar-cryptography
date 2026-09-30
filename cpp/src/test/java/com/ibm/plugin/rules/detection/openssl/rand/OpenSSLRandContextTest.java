@@ -19,18 +19,17 @@
  */
 package com.ibm.plugin.rules.detection.openssl.rand;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.engine.model.context.PRNGContext;
-import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.MessageDigest;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -44,12 +43,29 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLRandContextTest extends TestBase {
 
-    private final List<String> drbgs = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_RAND *rand = EVP_RAND_fetch(NULL, "CTR-DRBG", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:CTR-DRBG}[PRNGContext{}[CipherContext{Algorithm:AES-256-CTR}]]",
+                            "PseudorandomNumberGenerator:CTR_DRBG-AES-256[BlockCipher:AES-256-CTR[BlockSize:128, "
+                                    + "KeyLength:256, Mode:CTR, Oid:2.16.840.1.101.3.4.1.4]]"),
+                    // 15: EVP_RAND *rand = EVP_RAND_fetch(NULL, "hmac-drbg", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:hmac-drbg}[PRNGContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "PseudorandomNumberGenerator:HMAC_DRBG-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 25: EVP_RAND_fetch(NULL, "SEED-SRC", NULL);
+                    finding(
+                            "PRNGContext{Algorithm:SEED-SRC}",
+                            "PseudorandomNumberGenerator:SEED-SRC"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/rand/OpenSSLRandContextTestFile.cc", this);
-        assertThat(drbgs).containsExactly("CTR-DRBG AES-256-CTR", "HMAC-DRBG SHA-256", "SEED-SRC");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -63,13 +79,7 @@ class OpenSSLRandContextTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(PRNGContext.class);
-        assertThat(nodes).hasSize(1);
-        INode drbg = nodes.get(0);
-        INode primitive = drbg.getChildren().get(BlockCipher.class);
-        if (primitive == null) {
-            primitive = drbg.getChildren().get(MessageDigest.class);
-        }
-        drbgs.add(drbg.asString() + (primitive == null ? "" : " " + primitive.asString()));
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }

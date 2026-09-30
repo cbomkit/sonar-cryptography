@@ -19,23 +19,18 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.ibm.plugin.ExpectedFinding.assertAllReported;
+import static com.ibm.plugin.ExpectedFinding.assertFinding;
+import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
-import com.ibm.mapper.model.EllipticCurve;
-import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.Key;
-import com.ibm.mapper.model.KeyLength;
-import com.ibm.mapper.model.Padding;
-import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.plugin.CxxVerifier;
+import com.ibm.plugin.ExpectedFinding;
 import com.ibm.plugin.TestBase;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.Grammar;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
@@ -49,29 +44,91 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  */
 class OpenSSLKeyUsageTest extends TestBase {
 
-    private final List<String> assets = new ArrayList<>();
+    private static final List<ExpectedFinding> FINDINGS =
+            List.of(
+                    // 5: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
+                    finding(
+                            "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-256}], "
+                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                            "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
+                                    + "Signature:ECDSA-secp256r1-SHA-256[EllipticCurve:secp256r1, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.10045.4.3.2, Sign:SIGN]]"),
+                    // 13: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[SignatureContext{SignatureAction:VERIFY}[CipherContext{ValueAction:RSA-PSS}, "
+                                    + "DigestContext{ValueAction:SHA-384}]]]",
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                                    + "ProbabilisticSignatureScheme:RSA-PSS[KeyLength:3072, "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2], Oid:1.2.840.113549.1.1.10, Verify:VERIFY]]"),
+                    // 25: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
+                    finding(
+                            "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:KDF}]]",
+                            "PrivateKey:x25519[KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "KeyDerivation:KEYDERIVATION, KeyGeneration:KEYGENERATION, Oid:1.3.101.110]]"),
+                    // 33: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
+                    finding(
+                            "PrivateKeyContext{Algorithm:EC}[KeyContext{}[KeyContext{KeyAction:KDF}], "
+                                    + "PrivateKeyContext{Curve:EC-P384}]",
+                            "PrivateKey:EC[KeyAgreement:ECDH[EllipticCurve:secp384r1, "
+                                    + "KeyDerivation:KEYDERIVATION, Oid:1.3.132.1.12], KeyGeneration:KEYGENERATION]"),
+                    // 41: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048);
+                    finding(
+                            "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[CipherContext{CipherAction:ENCRYPT}, "
+                                    + "CipherContext{ValueAction:RSA-OAEP}], PrivateKeyContext{KeySize:2048}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, "
+                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, Oid:1.2.840.113549.1.1.7, "
+                                    + "Padding:OAEP]]"),
+                    // 49: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ML-KEM-768");
+                    finding(
+                            "PrivateKeyContext{Algorithm:ML-KEM-768}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",
+                            "PrivateKey:ML-KEM[KeyEncapsulationMechanism:ML-KEM-768[Encapsulate:ENCAPSULATE, "
+                                    + "KeyGeneration:KEYGENERATION, Oid:2.16.840.1.101.3.4.4.2, "
+                                    + "ParameterSetIdentifier:768]]"),
+                    // 56: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ED25519");
+                    finding(
+                            "PrivateKeyContext{Algorithm:ED25519}[SignatureContext{SignatureAction:SIGN}]",
+                            "PrivateKey:Ed25519[Signature:Ed25519[EllipticCurve:Edwards25519, "
+                                    + "KeyGeneration:KEYGENERATION, MessageDigest:SHA-512[BlockSize:1024, "
+                                    + "Digest:DIGEST, DigestSize:512, Oid:2.16.840.1.101.3.4.2.3], "
+                                    + "Oid:1.3.101.112, Sign:SIGN]]"),
+                    // 63: EVP_DigestSignInit(mdctx, NULL, EVP_sha512(), NULL, other);
+                    finding(
+                            "DigestContext{ValueAction:SHA-512}",
+                            "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]"),
+                    // 64: return EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096);
+                    finding(
+                            "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:4096}]",
+                            "PrivateKey:RSA[PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
+                    // 69: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
+                    finding(
+                            "KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[KeyContext{}[KeyContext{KeyAction:KDF}]]]",
+                            "PrivateKey:FFDH[KeyAgreement:FFDH[KeyDerivation:KEYDERIVATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.3.1], KeyGeneration:KEYGENERATION]"),
+                    // 79: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072);
+                    finding(
+                            "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}], "
+                                    + "PrivateKeyContext{KeySize:3072}]",
+                            "PrivateKey:RSA[KeyEncapsulationMechanism:RSASVE[Encapsulate:ENCAPSULATE, "
+                                    + "KeyLength:3072], KeyGeneration:KEYGENERATION]"),
+                    // 86: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
+                    finding(
+                            "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",
+                            "PrivateKey:x25519[KeyEncapsulationMechanism:DHKEM[Encapsulate:ENCAPSULATE, "
+                                    + "KeyAgreement:x25519[EllipticCurve:Curve25519, Oid:1.3.101.110]], "
+                                    + "KeyGeneration:KEYGENERATION]"));
+
+    private int findings = 0;
 
     @Test
     void test() {
         CxxVerifier.verify("rules/detection/openssl/keygen/OpenSSLKeyUsageTestFile.cc", this);
-        assertThat(assets)
-                .containsExactly(
-                        "PrivateKey:EC [KeyGeneration:KEYGENERATION, Signature:ECDSA-secp256r1-SHA-256 [EllipticCurve:secp256r1, MessageDigest:SHA-256 [Digest:DIGEST], Sign:SIGN]]",
-                        "MessageDigest:SHA-256 [Digest:DIGEST]",
-                        "PrivateKey:RSA [KeyGeneration:KEYGENERATION, ProbabilisticSignatureScheme:RSA-PSS [KeyLength:3072, MessageDigest:SHA-384 [Digest:DIGEST], Verify:VERIFY]]",
-                        "MessageDigest:SHA-384 [Digest:DIGEST]",
-                        "ProbabilisticSignatureScheme:RSA-PSS",
-                        "PrivateKey:x25519 [KeyAgreement:x25519 [EllipticCurve:Curve25519, KeyDerivation:KEYDERIVATION, KeyGeneration:KEYGENERATION]]",
-                        "PrivateKey:EC [KeyAgreement:ECDH [EllipticCurve:secp384r1, KeyDerivation:KEYDERIVATION], KeyGeneration:KEYGENERATION]",
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-OAEP [Encrypt:ENCRYPT, KeyGeneration:KEYGENERATION, KeyLength:2048, Padding:OAEP]]",
-                        "PublicKeyEncryption:RSA-OAEP [Padding:OAEP]",
-                        "PrivateKey:ML-KEM [KeyEncapsulationMechanism:ML-KEM-768 [Encapsulate:ENCAPSULATE, KeyGeneration:KEYGENERATION]]",
-                        "PrivateKey:Ed25519 [Signature:Ed25519 [EllipticCurve:Edwards25519, KeyGeneration:KEYGENERATION, MessageDigest:SHA-512 [Digest:DIGEST], Sign:SIGN]]",
-                        "MessageDigest:SHA-512 [Digest:DIGEST]",
-                        "PrivateKey:RSA [PublicKeyEncryption:RSA-4096 [KeyGeneration:KEYGENERATION, KeyLength:4096]]",
-                        "PrivateKey:FFDH [KeyAgreement:FFDH [KeyDerivation:KEYDERIVATION, KeyLength:2048], KeyGeneration:KEYGENERATION]",
-                        "PrivateKey:RSA [KeyEncapsulationMechanism:RSA [Encapsulate:ENCAPSULATE, KeyLength:3072], KeyGeneration:KEYGENERATION]",
-                        "PrivateKey:x25519 [KeyEncapsulationMechanism:DHKEM [Encapsulate:ENCAPSULATE, KeyAgreement:x25519 [EllipticCurve:Curve25519]], KeyGeneration:KEYGENERATION]");
+        assertAllReported(FINDINGS, findings);
     }
 
     @Override
@@ -85,29 +142,7 @@ class OpenSSLKeyUsageTest extends TestBase {
                                     SquidAstVisitorContext<? extends Grammar>>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-        nodes.forEach(node -> assets.add(describe(node)));
-    }
-
-    /**
-     * The kind and name of the node, followed by the description of each key, algorithm, curve, key
-     * length and operation child.
-     */
-    @Nonnull
-    private static String describe(@Nonnull INode node) {
-        final String children =
-                node.getChildren().values().stream()
-                        .filter(
-                                child ->
-                                        child instanceof Key
-                                                || child instanceof IAlgorithm
-                                                || child instanceof EllipticCurve
-                                                || child instanceof KeyLength
-                                                || child instanceof Functionality
-                                                || child instanceof Padding)
-                        .map(OpenSSLKeyUsageTest::describe)
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-        final String self = node.getKind().getSimpleName() + ":" + node.asString();
-        return children.isEmpty() ? self : self + " [" + children + "]";
+        findings++;
+        assertFinding(FINDINGS, findingId, detectionStore, nodes);
     }
 }
