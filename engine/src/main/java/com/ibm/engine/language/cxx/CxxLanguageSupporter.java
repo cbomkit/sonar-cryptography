@@ -27,9 +27,12 @@ import org.sonar.cxx.squidbridge.SquidAstVisitorContext;
 import org.sonar.cxx.squidbridge.checks.SquidCheck;
 
 /**
- * Holder for the C++ {@link ILanguageSupport} factory method, separate from {@link
- * com.ibm.engine.language.LanguageSupporter}, which holds the equivalent factory methods for Java,
- * Python and Go.
+ * Holder for the C/C++ {@link ILanguageSupport} factory method. The equivalent factory methods for
+ * Java, Python, Go and C# are in {@link com.ibm.engine.language.LanguageSupporter}.
+ *
+ * <p>The sonar-cxx API is a {@code provided} dependency of the engine, so it is not on the
+ * classpath of the other language modules. Keeping this factory out of {@code LanguageSupporter}
+ * keeps the sonar-cxx types out of a class those modules load.
  */
 public final class CxxLanguageSupporter {
 

@@ -171,7 +171,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 translation.getMethodParameterTypes(matchContext, invocation);
 
         final List<ArgSnapshot<AstNode>> arguments = new ArrayList<>();
-        final List<AstNode> actualArguments = flattenFunctionCallArgs(invocation);
+        final List<AstNode> actualArguments = CxxAstNodeHelper.getFunctionCallArguments(invocation);
         for (int i = 0; i < actualArguments.size(); i++) {
             final List<ResolvedValue<Object, AstNode>> resolved =
                     resolveValuesInInnerScope(Object.class, actualArguments.get(i), null);
@@ -251,7 +251,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         List<AstNode> callArgs;
 
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            callArgs = flattenFunctionCallArgs(methodInvocation);
+            callArgs = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
@@ -467,7 +467,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 || !CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
             return false;
         }
-        for (AstNode argument : flattenFunctionCallArgs(methodInvocation)) {
+        for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(methodInvocation)) {
             if (argument.getToken() == originCall.getToken()
                     && argument.getLastToken() == originCall.getLastToken()) {
                 return true;
@@ -483,7 +483,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
      */
     @Nullable private Symbol outputArgumentSymbol(@Nonnull AstNode functionCall) {
         Symbol output = null;
-        for (AstNode argument : flattenFunctionCallArgs(functionCall)) {
+        for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(functionCall)) {
             final Symbol addressed = addressedVariable(argument);
             if (addressed != null) {
                 if (output != null) {
@@ -508,7 +508,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     public Optional<TraceSymbol<Symbol>> getMethodInvocationParameterSymbol(
             @Nonnull AstNode methodInvocation, @Nonnull Parameter<AstNode> parameter) {
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            List<AstNode> arguments = flattenFunctionCallArgs(methodInvocation);
+            List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
             return getTraceSymbol(parameter, arguments);
         }
         return Optional.empty();
@@ -539,6 +539,12 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         Symbol symbol = AstNodeSymbolExtension.getSymbol(arg);
         if (symbol != null && !symbol.isUnknown()) {
             return Optional.of(TraceSymbol.createFrom(symbol));
+        }
+        // `&v` passes the object v, e.g. the key of AES_cbc_encrypt(in, out, len, &key, iv, enc),
+        // so the argument is followed to v, as the call that sets up v assigns it
+        final Symbol addressed = addressedVariable(arg);
+        if (addressed != null && !addressed.isUnknown()) {
+            return Optional.of(TraceSymbol.createFrom(addressed));
         }
         // NO_SYMBOL means "the argument is itself an inline constructing call with no variable to
         // trace" (e.g. foo(new Test())), which triggers a re-scan of the enclosing method for a
@@ -572,15 +578,18 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
      * C APIs operate on an object through a handle passed as an argument of a free function, e.g.
      * {@code EVP_KDF_CTX_set_params(kctx, params)} operates on {@code kctx} and {@code
      * EVP_DigestSignInit(mdctx, NULL, md, NULL, pkey)} signs with {@code pkey}. Such a call counts
-     * as an invocation on the variable when one of its arguments is exactly that variable.
+     * as an invocation on the variable when one of its arguments is exactly that variable, or its
+     * address: {@code EVP_SealInit(ctx, type, &ek, &ekl, iv, &pkey, 1)} encrypts with {@code pkey},
+     * passed as an array of one key. The calls are those a depending rule names, which operate on
+     * the object they are given.
      */
     private boolean isInvocationOnHandle(
             @Nonnull AstNode methodInvocation, @Nonnull Symbol variable) {
         if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
             return false;
         }
-        for (AstNode argument : flattenFunctionCallArgs(methodInvocation)) {
-            if (handleSymbol(argument) == variable) {
+        for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(methodInvocation)) {
+            if (handleSymbol(argument) == variable || addressedVariable(argument) == variable) {
                 return true;
             }
         }
@@ -643,7 +652,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
 
         List<AstNode> arguments;
         if (CxxAstNodeHelper.isFunctionCall(expressionNode)) {
-            arguments = flattenFunctionCallArgs(expressionNode);
+            arguments = CxxAstNodeHelper.getFunctionCallArguments(expressionNode);
         } else if (CxxAstNodeHelper.isConstructorCall(expressionNode)) {
             AstNode newInitializer = expressionNode.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
@@ -795,32 +804,6 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         if (initList == null) {
             return expressionList.getChildren();
         }
-        List<AstNode> out = new LinkedList<>();
-        for (AstNode child : initList.getChildren()) {
-            if (!",".equals(child.getTokenValue())) {
-                out.add(child);
-            }
-        }
-        return out;
-    }
-
-    /**
-     * Flattens the arguments of a function call to one node per actual argument.
-     *
-     * <p>{@link CxxAstNodeHelper#getFunctionCallArguments} returns {@code
-     * expressionList.getChildren()}, which for sonar-cxx is a single {@code initializerList}
-     * wrapper node holding the comma-separated arguments. This descends into that wrapper and drops
-     * the {@code COMMA} tokens so callers see the individual arguments (matching {@link
-     * #flattenConstructorArgs}). If the raw form is not the single-wrapper shape, it is returned
-     * unchanged so existing behaviour is preserved.
-     */
-    @Nonnull
-    private List<AstNode> flattenFunctionCallArgs(@Nonnull AstNode expressionNode) {
-        List<AstNode> rawArgs = CxxAstNodeHelper.getFunctionCallArguments(expressionNode);
-        if (rawArgs.size() != 1 || !rawArgs.get(0).is(CxxGrammarImpl.initializerList)) {
-            return rawArgs;
-        }
-        AstNode initList = rawArgs.get(0);
         List<AstNode> out = new LinkedList<>();
         for (AstNode child : initList.getChildren()) {
             if (!",".equals(child.getTokenValue())) {

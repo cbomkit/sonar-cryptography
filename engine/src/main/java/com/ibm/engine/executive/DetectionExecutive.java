@@ -83,6 +83,14 @@ public class DetectionExecutive<R, T, S, P>
         this.expectedRuleVisits += number;
     }
 
+    /**
+     * The stores to report as findings. A store with a value is one finding. A store without a
+     * value whose rule follows the object it detects (it has depending rules, e.g. the creation of
+     * a context by a C function, whose arguments and the calls made on it describe the context) is
+     * one finding as well, reporting the values below it together - unless its own value was found
+     * elsewhere (a child store of the same rule, e.g. resolved through a called function): then, as
+     * otherwise, the stores with a value below it are reported separately.
+     */
     @Nonnull
     private List<DetectionStore<R, T, S, P>> getRootStoresWithValue(
             @Nonnull DetectionStore<R, T, S, P> detectionStore) {
@@ -90,10 +98,21 @@ public class DetectionExecutive<R, T, S, P>
                 || detectionStore.getActionValue().isPresent()) {
             return List.of(detectionStore);
         }
-        return detectionStore.getChildren().stream()
-                .map(this::getRootStoresWithValue)
-                .flatMap(Collection::stream)
-                .toList();
+        final List<DetectionStore<R, T, S, P>> storesWithValue =
+                detectionStore.getChildren().stream()
+                        .map(this::getRootStoresWithValue)
+                        .flatMap(Collection::stream)
+                        .toList();
+        if (!storesWithValue.isEmpty()
+                && !detectionStore.getDetectionRule().nextDetectionRules().isEmpty()
+                && detectionStore.getChildren().stream()
+                        .noneMatch(
+                                child ->
+                                        child.getDetectionRule()
+                                                == detectionStore.getDetectionRule())) {
+            return List.of(detectionStore);
+        }
+        return storesWithValue;
     }
 
     @Override

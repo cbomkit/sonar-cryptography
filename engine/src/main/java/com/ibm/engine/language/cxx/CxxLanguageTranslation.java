@@ -146,7 +146,7 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         List<AstNode> arguments;
 
         if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            arguments = extractActualArguments(methodInvocation);
+            arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
             if (newInitializer != null) {
@@ -271,29 +271,6 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Extracts actual argument nodes from a function call postfixExpression.
-     *
-     * <p>Works around sonar-cxx's {@code CxxAstNodeHelper.getFunctionCallArguments()}, which
-     * returns the children of {@code expressionList}. In sonar-cxx grammar, {@code expressionList =
-     * initializerList}, and {@code initializerList = initializerClause (',' initializerClause)*}.
-     * Walking only to {@code expressionList.getChildren()} yields a single {@code initializerList}
-     * wrapper node, not the individual argument expressions. This method descends into the {@code
-     * initializerList} and returns the actual {@code initializerClause} children (skipping comma
-     * tokens).
-     */
-    @Nonnull
-    private List<AstNode> extractActualArguments(@Nonnull AstNode methodInvocation) {
-        // the arguments of the last call in a chain such as foo(a).bar(x)
-        List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
-        if (arguments.size() == 1 && arguments.get(0).is(CxxGrammarImpl.initializerList)) {
-            return arguments.get(0).getChildren().stream()
-                    .filter(child -> !",".equals(child.getTokenValue()))
-                    .toList();
-        }
-        return arguments;
     }
 
     @Nonnull
