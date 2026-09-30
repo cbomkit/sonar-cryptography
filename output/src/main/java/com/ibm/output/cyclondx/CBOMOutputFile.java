@@ -41,6 +41,7 @@ import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.collections.AssetCollection;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
+import com.ibm.mapper.model.collections.MergeableCollection;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Digest;
@@ -132,6 +133,9 @@ public class CBOMOutputFile implements IOutputFile {
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
                     } else if (node instanceof AssetCollection assetCollection) {
                         add(parentBomRef, assetCollection.getCollection());
+                        add(parentBomRef, node.getChildren().values().stream().toList());
+                    } else if (node instanceof MergeableCollection mergeableCollection) {
+                        add(parentBomRef, mergeableCollection.getCollection());
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
