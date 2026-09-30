@@ -29,10 +29,11 @@ import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 
 /**
- * The single way to read a {@link DetectionRuleSet}. Every set is built lazily and, once installed,
- * is shared by reference, so all callers see the same list instance — which is what keeps the rule
- * graph small (issue #476). Under a race, two threads may both build the same set; one result wins
- * and is installed, and the other is discarded.
+ * Registry for {@link DetectionRuleSet} lists. Every set is built lazily and, once installed, is
+ * shared by reference, so all callers see the same list instance — which is what keeps the rule
+ * graph small (issue #476). Use {@link RuleSet#of(Class)} for context overrides. Under a race, two
+ * threads may both build the same set; one result wins and is installed, and the other is
+ * discarded.
  */
 public final class RuleSets {
 
@@ -62,14 +63,13 @@ public final class RuleSets {
 
     @Nonnull
     @SuppressWarnings("unchecked")
-    public static <T> List<IDetectionRule<T>> rulesOf(
+    static <T> List<IDetectionRule<T>> rulesOf(
             @Nonnull Class<? extends ContextualDetectionRuleSet<T>> type,
             @Nonnull IDetectionContext... contexts) {
         // Trailing nulls carry no information: contextAt(contexts, i) already returns null for
         // any index at or past the end of the list, so a trailing null is indistinguishable from
-        // the position simply not being present. Trimming them means rulesOf(X), rulesOf(X, null)
-        // and rulesOf(X, a, null) all resolve to the same cache entry as their untrimmed
-        // equivalents, instead of silently building the same rules twice under different keys.
+        // the position simply not being present. Trimming them means a single null override and
+        // a trailing null override resolve to the same entries as their default equivalents.
         // Interior nulls are kept: they still mark "use the default for that position" and are
         // positionally significant.
         int end = contexts.length;

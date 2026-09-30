@@ -24,6 +24,7 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleInfoMap;
@@ -95,14 +96,16 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("SPHINCS256Signer"))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcDigests.class,
-                                        new DigestContext(Map.of("kind", "ASSET_COLLECTION"))))
+                                RuleSet.of(BcDigests.class)
+                                        .withOverriddenContext(
+                                                new DigestContext(
+                                                        Map.of("kind", "ASSET_COLLECTION"))))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcDigests.class,
-                                        new DigestContext(Map.of("kind", "ASSET_COLLECTION"))))
+                                RuleSet.of(BcDigests.class)
+                                        .withOverriddenContext(
+                                                new DigestContext(
+                                                        Map.of("kind", "ASSET_COLLECTION"))))
                         .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))
                         .inBundle(() -> "Bc")
                         .withDependingDetectionRules(RuleSets.rulesOf(BcMessageSignerInit.class)));

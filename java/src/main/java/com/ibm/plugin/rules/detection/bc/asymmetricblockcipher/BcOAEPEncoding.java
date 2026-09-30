@@ -27,6 +27,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
@@ -56,8 +57,8 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("OAEPEncoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
                         .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
@@ -70,8 +71,8 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("OAEPEncoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(context)
@@ -86,8 +87,8 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("OAEPEncoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
@@ -103,14 +104,15 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("OAEPEncoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest") // hash
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .withMethodParameter("org.bouncycastle.crypto.Digest") // mgf1Hash
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
+                                RuleSet.of(BcDigests.class)
+                                        .withOverriddenContext(
+                                                new DigestContext(Map.of("kind", "MGF1"))))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")

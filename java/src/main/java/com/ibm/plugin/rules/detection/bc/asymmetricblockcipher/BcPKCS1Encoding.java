@@ -26,6 +26,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.LinkedList;
@@ -55,8 +56,8 @@ public final class BcPKCS1Encoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
                         .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
@@ -69,8 +70,8 @@ public final class BcPKCS1Encoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
@@ -84,8 +85,8 @@ public final class BcPKCS1Encoding extends ContextualDetectionRuleSet<Tree> {
                         .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .withMethodParameter("int")
                         .buildForContext(context)
                         .inBundle(() -> "Bc")

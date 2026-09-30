@@ -24,6 +24,7 @@ import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.LinkedList;
@@ -51,8 +52,8 @@ public final class BcISO9796d1Encoding extends ContextualDetectionRuleSet<Tree> 
                         .shouldBeDetectedAs(new ValueActionFactory<>("ISO9796d1Encoding"))
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
-                                RuleSets.rulesOf(
-                                        BcAsymCipherEngine.class, engineDetectionValueContext))
+                                RuleSet.of(BcAsymCipherEngine.class)
+                                        .withOverriddenContext(engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
                         .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));

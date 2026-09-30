@@ -25,31 +25,32 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * A rule set whose rules depend on one or more detection contexts. Callers override them through
- * {@link RuleSet#of(Class)}; {@link RuleSets} caches the resulting rules per class <em>and</em>
- * context.
- *
- * <p>The context list is positional and may contain {@code null} elements, which mean "use the
- * default for that position". Use {@link #contextAt(List, int)} to read it.
+ * An explicit entry point for overriding a contextual rule set's detection contexts. Use {@link
+ * RuleSets#rulesOf(Class)} when no override is needed. A {@code null} override uses the default
+ * context for that position.
  */
-public abstract class ContextualDetectionRuleSet<T> extends DetectionRuleSet<T> {
+public final class RuleSet<T> {
 
-    protected ContextualDetectionRuleSet() {
-        // only subclasses
+    private final Class<? extends ContextualDetectionRuleSet<T>> type;
+
+    private RuleSet(Class<? extends ContextualDetectionRuleSet<T>> type) {
+        this.type = type;
     }
 
     @Nonnull
-    protected abstract List<IDetectionRule<T>> buildRules(
-            @Nonnull List<IDetectionContext> contexts);
-
-    @Nonnull
-    @Override
-    protected final List<IDetectionRule<T>> buildRules() {
-        return buildRules(List.of());
+    public static <T> RuleSet<T> of(@Nonnull Class<? extends ContextualDetectionRuleSet<T>> type) {
+        return new RuleSet<>(type);
     }
 
-    @Nullable protected static IDetectionContext contextAt(
-            @Nonnull List<IDetectionContext> contexts, int index) {
-        return index < contexts.size() ? contexts.get(index) : null;
+    @Nonnull
+    public List<IDetectionRule<T>> withOverriddenContext(@Nullable IDetectionContext context) {
+        return RuleSets.rulesOf(type, context);
+    }
+
+    /** Overrides the first and second context positions, in that order. */
+    @Nonnull
+    public List<IDetectionRule<T>> withOverriddenContexts(
+            @Nullable IDetectionContext first, @Nullable IDetectionContext second) {
+        return RuleSets.rulesOf(type, first, second);
     }
 }
