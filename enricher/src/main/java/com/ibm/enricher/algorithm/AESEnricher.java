@@ -24,6 +24,7 @@ import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.algorithms.AES;
@@ -32,6 +33,7 @@ import com.ibm.mapper.model.mode.CCM;
 import com.ibm.mapper.model.mode.CFB;
 import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.model.mode.GCM;
+import com.ibm.mapper.model.mode.GMAC;
 import com.ibm.mapper.model.mode.KW;
 import com.ibm.mapper.model.mode.KWP;
 import com.ibm.mapper.model.mode.OFB;
@@ -53,7 +55,9 @@ public class AESEnricher implements IEnricher, IEnrichWithDefaultKeySize {
                     KW.class, 5,
                     GCM.class, 6,
                     CCM.class, 7,
-                    KWP.class, 8);
+                    KWP.class, 8,
+                    // RFC 9044
+                    GMAC.class, 9);
 
     private static final Map<Integer, Integer> KEYSIZE_OID_MAP =
             Map.of(
@@ -74,6 +78,10 @@ public class AESEnricher implements IEnricher, IEnrichWithDefaultKeySize {
         @Nullable KeyLength keyLength = aes.getKeyLength().orElse(null);
         @Nullable final Mode mode = aes.getMode().orElse(null);
         this.applyDefaultKeySizeForJca(aes, 128);
+        if (aes.is(Mac.class)) {
+            aes.put(new Oid(buildMacOid(keyLength, mode), aes.getDetectionContext()));
+            return aes;
+        }
         // add oid
         final Oid oid = new Oid(buildOid(keyLength, mode), aes.getDetectionContext());
         aes.put(oid);
@@ -83,6 +91,18 @@ public class AESEnricher implements IEnricher, IEnrichWithDefaultKeySize {
             return new AES(AuthenticatedEncryption.class, aes);
         }
         return aes;
+    }
+
+    /**
+     * The OID of AES as a MAC: of the GMAC with its key length (RFC 9044), otherwise of AES. The
+     * OIDs of the other modes are those of AES encryption in that mode.
+     */
+    @Nonnull
+    private String buildMacOid(@Nullable KeyLength keyLength, @Nullable Mode mode) {
+        if (mode instanceof GMAC && keyLength != null) {
+            return buildOid(keyLength, mode);
+        }
+        return BASE_OID;
     }
 
     @Nonnull

@@ -30,6 +30,7 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.model.functionality.Tag;
 import com.ibm.plugin.TestBase;
@@ -101,8 +102,14 @@ class BcBlockCipherMacTest extends TestBase {
         // Mac
         INode macNode = nodes.get(0);
         assertThat(macNode.getKind()).isEqualTo(Mac.class);
-        assertThat(macNode.getChildren()).hasSize(4);
+        assertThat(macNode.getChildren()).hasSize(5);
         assertThat(macNode.asString()).isEqualTo("AES");
+
+        // Oid under Mac
+        INode oidNode = macNode.getChildren().get(Oid.class);
+        assertThat(oidNode).isNotNull();
+        assertThat(oidNode.getChildren()).isEmpty();
+        assertThat(oidNode.asString()).isEqualTo("2.16.840.1.101.3.4.1");
 
         // Tag under Mac
         INode tagNode = macNode.getChildren().get(Tag.class);

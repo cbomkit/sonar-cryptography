@@ -26,12 +26,14 @@ import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.model.mode.CFB;
 import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.model.mode.GCM;
+import com.ibm.mapper.model.mode.GMAC;
 import com.ibm.mapper.model.mode.OFB;
 import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -162,6 +164,44 @@ class AESEnricherTest extends TestBase {
         final CFB cfbWithBlockSize = new CFB(location);
         cfbWithBlockSize.put(new BlockSize(8, location));
         assertThat(oidOf(aesEnricher.enrich(new AES(128, cfbWithBlockSize, location))))
+                .isEqualTo("2.16.840.1.101.3.4.1");
+    }
+
+    @Test
+    void gmacOids() {
+        DetectionLocation location =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+        final AESEnricher aesEnricher = new AESEnricher();
+
+        // RFC 9044: aes128-GMAC, aes192-GMAC and aes256-GMAC
+        for (int[] keyLengthAndOid : new int[][] {{128, 9}, {192, 29}, {256, 49}}) {
+            final INode enriched =
+                    aesEnricher.enrich(
+                            new AES(keyLengthAndOid[0], new GMAC(location), location)
+                                    .asKind(Mac.class));
+            assertThat(enriched.getKind()).isEqualTo(Mac.class);
+            assertThat(oidOf(enriched)).isEqualTo("2.16.840.1.101.3.4.1." + keyLengthAndOid[1]);
+        }
+    }
+
+    @Test
+    void aMacOtherThanGmacHasTheOidOfAes() {
+        DetectionLocation location =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+        final AESEnricher aesEnricher = new AESEnricher();
+
+        // the OIDs of a mode are those of AES encryption in that mode, not of a MAC
+        assertThat(
+                        oidOf(
+                                aesEnricher.enrich(
+                                        new AES(128, new CBC(location), location)
+                                                .asKind(Mac.class))))
+                .isEqualTo("2.16.840.1.101.3.4.1");
+        // the OID of a GMAC depends on the key length
+        assertThat(
+                        oidOf(
+                                aesEnricher.enrich(
+                                        new AES(new GMAC(location), location).asKind(Mac.class))))
                 .isEqualTo("2.16.840.1.101.3.4.1");
     }
 
