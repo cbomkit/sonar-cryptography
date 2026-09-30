@@ -110,7 +110,7 @@ public final class CipherParameterReorganizer {
                             node.removeChildOfType(cipher.getKind());
                             cipher.put(node);
                             final List<INode> newRoots = new ArrayList<>(roots);
-                            newRoots.set(newRoots.indexOf(node), cipher);
+                            newRoots.replaceAll(root -> root == node ? cipher : root);
                             return newRoots;
                         });
     }

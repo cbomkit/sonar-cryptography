@@ -19,14 +19,12 @@
  */
 package com.ibm.mapper.reorganizer.rules;
 
-import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyAgreement;
-import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.PrivateKey;
@@ -34,9 +32,11 @@ import com.ibm.mapper.model.ProbabilisticSignatureScheme;
 import com.ibm.mapper.model.SecretKey;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.DH;
+import com.ibm.mapper.model.algorithms.DHKEM;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.RSASVE;
 import com.ibm.mapper.model.algorithms.X25519;
 import com.ibm.mapper.model.algorithms.X448;
 import com.ibm.mapper.model.functionality.Decapsulate;
@@ -68,7 +68,7 @@ public final class KeyUsageReorganizer {
      * A reorganizer rule that reports each operation performed with a private key as the algorithm
      * of that operation, held by the key: a signature or its verification with an EC key is ECDSA,
      * with an RSA key an RSA signature (RSA-PSS when that padding is selected); key agreement with
-     * an EC key is ECDH and with a DH key DH; key encapsulation with an RSA key is RSA-KEM and with
+     * an EC key is ECDH and with a DH key DH; key encapsulation with an RSA key is RSASVE and with
      * an EC, X25519 or X448 key DHKEM. The operation algorithm gets the key's curve or key length
      * and the digest the operation uses.
      *
@@ -294,14 +294,13 @@ public final class KeyUsageReorganizer {
             }
         } else if (operation instanceof Encapsulate || operation instanceof Decapsulate) {
             if (algorithm instanceof RSA) {
-                return withKeyLengthOf(
-                        algorithm, new RSA(KeyEncapsulationMechanism.class, location));
+                return withKeyLengthOf(algorithm, new RSASVE(location));
             }
             if (algorithm instanceof EllipticCurveAlgorithm) {
-                return dhkem(withCurveOf(algorithm, new ECDH(location)), location);
+                return new DHKEM(withCurveOf(algorithm, new ECDH(location)), location);
             }
             if (algorithm instanceof X25519 || algorithm instanceof X448) {
-                return dhkem(withoutOperations(algorithm.deepCopy()), location);
+                return new DHKEM(withoutOperations(algorithm.deepCopy()), location);
             }
         }
         throw new IllegalArgumentException(
@@ -317,14 +316,6 @@ public final class KeyUsageReorganizer {
                 .toList()
                 .forEach(algorithm::removeChildOfType);
         return algorithm;
-    }
-
-    /** DHKEM (RFC 9180) over the given Diffie-Hellman algorithm. */
-    @Nonnull
-    private static INode dhkem(@Nonnull INode diffieHellman, @Nonnull DetectionLocation location) {
-        final Algorithm dhkem = new Algorithm("DHKEM", KeyEncapsulationMechanism.class, location);
-        dhkem.put(diffieHellman);
-        return dhkem;
     }
 
     @Nonnull

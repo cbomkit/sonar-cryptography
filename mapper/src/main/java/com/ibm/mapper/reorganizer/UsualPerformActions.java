@@ -91,7 +91,7 @@ public final class UsualPerformActions {
                 // Create a copy of the roots list
                 List<INode> rootsCopy = new ArrayList<>(roots);
                 for (int i = 0; i < rootsCopy.size(); i++) {
-                    if (rootsCopy.get(i).equals(node)) {
+                    if (rootsCopy.get(i) == node) {
                         rootsCopy.set(i, newKindNode);
                         break;
                     }
@@ -138,7 +138,7 @@ public final class UsualPerformActions {
             // Create a copy of the root nodes
             List<INode> rootsCopy = new ArrayList<>(roots);
             for (int i = 0; i < rootsCopy.size(); i++) {
-                if (rootsCopy.get(i).equals(originalNode)) {
+                if (rootsCopy.get(i) == originalNode) {
                     rootsCopy.set(i, newNode);
                     break;
                 }

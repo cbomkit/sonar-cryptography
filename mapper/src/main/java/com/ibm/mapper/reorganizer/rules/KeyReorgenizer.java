@@ -146,7 +146,7 @@ public final class KeyReorgenizer {
                                     // Create a copy of the root nodes
                                     List<INode> rootsCopy = new ArrayList<>(roots);
                                     for (int i = 0; i < rootsCopy.size(); i++) {
-                                        if (rootsCopy.get(i).equals(node)) {
+                                        if (rootsCopy.get(i) == node) {
                                             rootsCopy.set(i, newNode);
                                             break;
                                         }

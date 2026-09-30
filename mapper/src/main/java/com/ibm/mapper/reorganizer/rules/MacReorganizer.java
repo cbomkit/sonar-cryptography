@@ -21,20 +21,25 @@ package com.ibm.mapper.reorganizer.rules;
 
 import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.TagLength;
+import com.ibm.mapper.model.algorithms.GMAC;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
+import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +67,7 @@ public final class MacReorganizer {
                             (node, parent, roots) -> {
                                 Algorithm blockCipher =
                                         (Algorithm) node.getChildren().get(BlockCipher.class);
-                                /* TODO: doing this is not ideal because we "lose" the original class (i.e. AES) of the node, which prevents class-specific enrichment */
-                                INode newMac = new Algorithm(blockCipher, Mac.class);
+                                INode newMac = blockCipher.asKind(Mac.class);
 
                                 for (Map.Entry<Class<? extends INode>, INode> childKeyValue :
                                         node.getChildren().entrySet()) {
@@ -77,7 +81,7 @@ public final class MacReorganizer {
                                     // Create a copy of the roots list
                                     List<INode> rootsCopy = new ArrayList<>(roots);
                                     for (int i = 0; i < rootsCopy.size(); i++) {
-                                        if (rootsCopy.get(i).equals(node)) {
+                                        if (rootsCopy.get(i) == node) {
                                             rootsCopy.set(i, newMac);
                                             break;
                                         }
@@ -89,6 +93,43 @@ public final class MacReorganizer {
                                     return roots;
                                 }
                             });
+
+    /**
+     * A GMAC whose cipher is given separately as a cipher in GCM mode (e.g. OpenSSL's {@code
+     * EVP_MAC_fetch(..., "GMAC", ...)} with the {@code "cipher"} parameter {@code "AES-128-GCM"})
+     * becomes that cipher as a {@code Mac} in GMAC mode ({@code AES-128-GMAC}), the same shape as a
+     * GMAC built on a block cipher. The cipher is a {@code BlockCipher} or, once enriched, an
+     * {@code AuthenticatedEncryption}; its GCM mode and OID do not apply to the MAC and are
+     * dropped.
+     */
+    @Nonnull
+    public static final IReorganizerRule MERGE_GMAC_PARENT_AND_GCM_CIPHER_CHILD =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(Mac.class)
+                    .forNodeValue(GMAC.NAME)
+                    .withAnyNonNullChildren()
+                    .withDetectionCondition((node, parent, roots) -> gmacCipher(node).isPresent())
+                    .perform(
+                            UsualPerformActions.performReplacingNode(
+                                    (node, parent, roots) -> {
+                                        INode cipher = gmacCipher(node).orElseThrow();
+                                        node.removeChildOfType(cipher.getKind());
+                                        Algorithm mac = ((Algorithm) cipher).asKind(Mac.class);
+                                        mac.removeChildOfType(Mode.class);
+                                        mac.removeChildOfType(Oid.class);
+                                        mac.put(
+                                                new com.ibm.mapper.model.mode.GMAC(
+                                                        mac.getDetectionContext()));
+                                        return mac;
+                                    }));
+
+    /** The cipher of a GMAC: a child block cipher or authenticated encryption. */
+    @Nonnull
+    private static Optional<INode> gmacCipher(@Nonnull INode gmac) {
+        return gmac.hasChildOfType(BlockCipher.class)
+                .or(() -> gmac.hasChildOfType(AuthenticatedEncryption.class));
+    }
 
     /**
      * A reorganizer rule for moving cipher configuration nodes (e.g., Mode, Padding, BlockSize)

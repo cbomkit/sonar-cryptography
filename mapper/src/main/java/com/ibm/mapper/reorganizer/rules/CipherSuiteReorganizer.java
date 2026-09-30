@@ -21,6 +21,7 @@ package com.ibm.mapper.reorganizer.rules;
 
 import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
@@ -52,6 +53,36 @@ public final class CipherSuiteReorganizer {
                                 return roots;
                             });
 
+    /**
+     * Cipher suites configured without the protocol they are used with, e.g. a cipher list set on a
+     * TLS context created elsewhere, are the cipher suites of a TLS protocol.
+     */
+    @Nonnull
+    public static final IReorganizerRule ADD_TLS_PROTOCOL_AS_PARENT_OF_CIPHER_SUITES =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(CipherSuiteCollection.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) ->
+                                    parent == null
+                                            && node instanceof CipherSuiteCollection cipherSuites
+                                            && !cipherSuites.getCollection().isEmpty())
+                    .perform(
+                            (node, parent, roots) -> {
+                                final CipherSuiteCollection cipherSuites =
+                                        (CipherSuiteCollection) node;
+                                final TLS tls =
+                                        new TLS(
+                                                cipherSuites
+                                                        .getCollection()
+                                                        .get(0)
+                                                        .getDetectionContext());
+                                tls.put(cipherSuites);
+                                final List<INode> rootsCopy = new ArrayList<>(roots);
+                                rootsCopy.replaceAll(root -> root == node ? tls : root);
+                                return rootsCopy;
+                            });
+
     @Nonnull
     public static final IReorganizerRule REPLACE_TLS_WITH_VERSIONED_CHILD =
             new ReorganizerRuleBuilder()
@@ -71,7 +102,8 @@ public final class CipherSuiteReorganizer {
                                 if (parent == null) {
                                     List<INode> rootsCopy = new ArrayList<>(roots);
                                     for (int i = 0; i < rootsCopy.size(); i++) {
-                                        if (rootsCopy.get(i).equals(node)) {
+                                        // the matched root, not an equal copy of it
+                                        if (rootsCopy.get(i) == node) {
                                             rootsCopy.set(i, childTls);
                                             break;
                                         }

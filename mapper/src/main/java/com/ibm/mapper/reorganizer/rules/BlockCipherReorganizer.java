@@ -55,7 +55,8 @@ public final class BlockCipherReorganizer {
                 @Override
                 public boolean match(
                         @Nonnull INode node, @Nonnull INode parent, @Nonnull List<INode> roots) {
-                    if (!roots.contains(node) || !(node instanceof Algorithm algA)) {
+                    if (roots.stream().noneMatch(root -> root == node)
+                            || !(node instanceof Algorithm algA)) {
                         return false;
                     }
 
@@ -124,7 +125,8 @@ public final class BlockCipherReorganizer {
                                     toKeep.put(child);
                                 }
                             }
-                            newRoots.remove(toRemove);
+                            final INode removed = toRemove;
+                            newRoots.removeIf(root -> root == removed);
                             currentBase = toKeep;
                             merged = true;
                         }

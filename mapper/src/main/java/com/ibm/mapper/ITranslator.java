@@ -26,6 +26,7 @@ import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.model.collections.AbstractAssetCollection;
+import com.ibm.mapper.model.collections.IAssetCollection;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,7 +115,7 @@ public abstract class ITranslator<R, T, S, P> {
      */
     static class Traverser<R, T, S, P> {
         @Nonnull final DetectionStore<R, T, S, P> rootDetectionStore;
-        @Nonnull final List<INode> newRoots = new ArrayList<>();
+        @Nonnull final List<Alternative> alternatives = new ArrayList<>();
         @Nonnull final Function<DetectionStore<R, T, S, P>, Map<Integer, List<INode>>> translator;
 
         public Traverser(
@@ -129,10 +130,17 @@ public abstract class ITranslator<R, T, S, P> {
         @Nonnull
         public List<INode> translate() {
             final Map<Integer, List<INode>> rootNodes = translator.apply(rootDetectionStore);
-            travers(rootDetectionStore, rootNodes);
+            if (rootNodes.isEmpty()) {
+                // a root without a node of its own, e.g. the creation of a context by a C function:
+                // the arguments of the call that created the object describe it, the calls made on
+                // it add to that description
+                traversParametersFirst(rootDetectionStore, rootNodes);
+            } else {
+                travers(rootDetectionStore, rootNodes);
+            }
             final List<INode> translatedRootNodes =
                     new ArrayList<>(rootNodes.values().stream().flatMap(List::stream).toList());
-            translatedRootNodes.addAll(newRoots);
+            translatedRootNodes.addAll(alternativeRoots(translatedRootNodes));
             return translatedRootNodes;
         }
 
@@ -147,6 +155,19 @@ public abstract class ITranslator<R, T, S, P> {
                             translateAndAppend(id, child, parentNodes);
                         }
                     });
+        }
+
+        private void traversParametersFirst(
+                @Nonnull DetectionStore<R, T, S, P> store,
+                @Nonnull Map<Integer, List<INode>> parentNodes) {
+            store.childrenForEachParameter(
+                    (id, children) -> {
+                        for (DetectionStore<R, T, S, P> child : children) {
+                            translateAndAppend(id, child, parentNodes);
+                        }
+                    });
+            store.getChildrenForMethod()
+                    .forEach(child -> translateAndAppend(-1, child, parentNodes));
         }
 
         private void translateAndAppend(
@@ -253,16 +274,120 @@ public abstract class ITranslator<R, T, S, P> {
                                         // Keep existing DETECTED value, ignore default/enriched
                                         // child
                                     } else {
-                                        // Both are DETECTED with different values: create new roots
-                                        final INode newParent = parentNode.deepCopy();
-                                        newParent.put(childNode);
-                                        newRoots.add(newParent);
+                                        // Both are DETECTED with different values: another tree
+                                        // with this value, built once the tree is complete
+                                        alternatives.add(new Alternative(parentNode, childNode));
                                     }
                                 }
                             } else {
                                 parentNode.put(childNode);
                             }
                         });
+            }
+        }
+
+        /**
+         * A tree for each other value found for a node that already has a value of that kind, e.g.
+         * the second key length of a key set up twice: a copy of the complete tree of the node, in
+         * which the other value takes the place of the value of the node. The trees are built once
+         * the traversal is complete, so that they hold everything found in the tree and below the
+         * value, and they share no node with it. A node that is in no tree gets a copy of itself
+         * with the other value.
+         */
+        @Nonnull
+        private List<INode> alternativeRoots(@Nonnull List<INode> roots) {
+            final List<INode> searched = new ArrayList<>(roots);
+            final List<INode> alternativeRoots = new ArrayList<>();
+            for (Alternative alternative : alternatives) {
+                final INode alternativeRoot =
+                        searched.stream()
+                                .map(
+                                        root ->
+                                                pathTo(root, alternative.node())
+                                                        .map(
+                                                                path ->
+                                                                        copyWith(
+                                                                                root,
+                                                                                path,
+                                                                                alternative
+                                                                                        .value())))
+                                .flatMap(Optional::stream)
+                                .findFirst()
+                                .orElseGet(
+                                        () ->
+                                                copyWith(
+                                                        alternative.node(),
+                                                        List.of(),
+                                                        alternative.value()));
+                alternativeRoots.add(alternativeRoot);
+                searched.add(alternativeRoot);
+            }
+            return alternativeRoots;
+        }
+
+        /** A copy of the root with a copy of the value put in the node at the end of the path. */
+        @Nonnull
+        private static INode copyWith(
+                @Nonnull INode root, @Nonnull List<Step> path, @Nonnull INode value) {
+            final INode copy = root.deepCopy();
+            INode node = copy;
+            for (Step step : path) {
+                node = step.from(node);
+            }
+            node.put(value.deepCopy());
+            return copy;
+        }
+
+        /** The steps from the node to the target, when the target is the node or below it. */
+        @Nonnull
+        private static Optional<List<Step>> pathTo(@Nonnull INode node, @Nonnull INode target) {
+            if (node == target) {
+                return Optional.of(new ArrayList<>());
+            }
+            for (Map.Entry<Class<? extends INode>, INode> child : node.getChildren().entrySet()) {
+                final Optional<List<Step>> below = pathTo(child.getValue(), target);
+                if (below.isPresent()) {
+                    below.get().add(0, Step.child(child.getKey()));
+                    return below;
+                }
+            }
+            if (node instanceof IAssetCollection<?> collection) {
+                final List<? extends INode> items = collection.getCollection();
+                for (int i = 0; i < items.size(); i++) {
+                    final Optional<List<Step>> below = pathTo(items.get(i), target);
+                    if (below.isPresent()) {
+                        below.get().add(0, Step.item(i));
+                        return below;
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        /** Another value of the kind of a value the node already has. */
+        private record Alternative(@Nonnull INode node, @Nonnull INode value) {}
+
+        /**
+         * A step from a node to its child of a kind, or to the item at an index of its collection.
+         */
+        private record Step(@Nullable Class<? extends INode> kind, int item) {
+
+            @Nonnull
+            static Step child(@Nonnull Class<? extends INode> kind) {
+                return new Step(kind, -1);
+            }
+
+            @Nonnull
+            static Step item(int item) {
+                return new Step(null, item);
+            }
+
+            @Nonnull
+            INode from(@Nonnull INode node) {
+                if (kind != null) {
+                    return node.getChildren().get(kind);
+                }
+                return ((IAssetCollection<?>) node).getCollection().get(item);
             }
         }
     }

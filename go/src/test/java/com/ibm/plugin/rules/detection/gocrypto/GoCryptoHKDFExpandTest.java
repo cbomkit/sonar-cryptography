@@ -151,7 +151,7 @@ class GoCryptoHKDFExpandTest extends TestBase {
             INode keyDerivationFunctionNode1 = nodes.get(1);
             assertThat(keyDerivationFunctionNode1).isInstanceOf(HKDF.class);
             assertThat(keyDerivationFunctionNode1.getKind()).isEqualTo(KeyDerivationFunction.class);
-            assertThat(keyDerivationFunctionNode1.getChildren()).hasSize(2);
+            assertThat(keyDerivationFunctionNode1.getChildren()).hasSize(3);
             assertThat(keyDerivationFunctionNode1.asString()).isEqualTo("HKDF-SHA-256");
 
             // KeyLength under KeyDerivationFunction
@@ -190,6 +190,12 @@ class GoCryptoHKDFExpandTest extends TestBase {
             assertThat(blockSizeNode1).isNotNull();
             assertThat(blockSizeNode1.getChildren()).isEmpty();
             assertThat(blockSizeNode1.asString()).isEqualTo("512");
+
+            // SaltLength under KeyDerivationFunction
+            INode saltLengthNode1 = keyDerivationFunctionNode1.getChildren().get(SaltLength.class);
+            assertThat(saltLengthNode1).isNotNull();
+            assertThat(saltLengthNode1.getChildren()).isEmpty();
+            assertThat(saltLengthNode1.asString()).isEqualTo("48");
         }
     }
 }
