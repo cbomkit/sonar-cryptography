@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin.translation.translator.contexts;
+package com.ibm.mapper.mapper.openssl;
 
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ANSIX931;
@@ -28,12 +28,12 @@ import javax.annotation.Nonnull;
 
 /**
  * The RSA signature schemes selected by an OpenSSL RSA padding, shared by the cipher and signature
- * translators: the padding of RSA_private_encrypt or EVP_PKEY_CTX_set_rsa_padding names a signature
+ * mappers: the padding of RSA_private_encrypt or EVP_PKEY_CTX_set_rsa_padding names a signature
  * scheme when it is PKCS#1 v1.5 type 1 or ANSI X9.31.
  */
-final class CxxRsaSignatureSchemes {
+final class OpenSslRsaSignatureSchemes {
 
-    private CxxRsaSignatureSchemes() {
+    private OpenSslRsaSignatureSchemes() {
         // private
     }
 
