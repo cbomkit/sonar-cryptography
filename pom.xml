@@ -61,9 +61,9 @@
         <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
-        <!-- sonar-cxx (community plugin) version, built via JitPack from
-             chmodshubham/sonar-cxx@symbol-resol for testing only, will replace 
-             it official version after new changes are merged -->
+        <!-- sonar-cxx (community plugin), built via JitPack from
+             chmodshubham/sonar-cxx@symbol-resol for testing only. Replace it with the official
+             version once the changes are merged upstream. -->
         <sonar.cxx.groupId>com.github.chmodshubham.sonar-cxx</sonar.cxx.groupId>
         <sonar.cxx.version>symbol-resol-SNAPSHOT</sonar.cxx.version>
 
