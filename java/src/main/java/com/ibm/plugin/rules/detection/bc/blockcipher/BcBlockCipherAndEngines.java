@@ -22,7 +22,7 @@ package com.ibm.plugin.rules.detection.bc.blockcipher;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
+import com.ibm.engine.rule.RuleSet;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -40,8 +40,10 @@ public final class BcBlockCipherAndEngines extends ContextualDetectionRuleSet<Tr
     protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
         IDetectionContext context = contextAt(contexts, 0);
         return Stream.of(
-                        RuleSets.rulesOf(BcBlockCipher.class, context).stream(),
-                        RuleSets.rulesOf(BcBlockCipherEngine.class, context).stream())
+                        RuleSet.of(BcBlockCipher.class).withOverriddenContext(context).stream(),
+                        RuleSet.of(BcBlockCipherEngine.class)
+                                .withOverriddenContext(context)
+                                .stream())
                 .flatMap(i -> i)
                 .toList();
     }

@@ -23,6 +23,7 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherAndEngines;
@@ -43,10 +44,12 @@ public final class BcKGCMBlockCipher extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(MODE))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcBlockCipherAndEngines.class,
-                                    new CipherContext(
-                                            Map.of("kind", "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
+                            RuleSet.of(BcBlockCipherAndEngines.class)
+                                    .withOverriddenContext(
+                                            new CipherContext(
+                                                    Map.of(
+                                                            "kind",
+                                                            "BLOCK_CIPHER_ENGINE_FOR_AEAD"))))
                     .buildForContext(new CipherContext(Map.of("kind", "AEAD_BLOCK_CIPHER")))
                     .inBundle(() -> "Bc")
                     .withDependingDetectionRules(RuleSets.rulesOf(BcAEADCipherInit.class));

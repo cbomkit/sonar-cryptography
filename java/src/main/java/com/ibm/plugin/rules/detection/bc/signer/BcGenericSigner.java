@@ -24,6 +24,7 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.asymmetricblockcipher.BcAsymmetricBlockCipher;
@@ -45,11 +46,13 @@ public final class BcGenericSigner extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcAsymmetricBlockCipher.class,
-                                    new CipherContext(Map.of("kind", "ENCODING_SIGNATURE")),
-                                    new CipherContext(
-                                            Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE_SIGNATURE"))))
+                            RuleSet.of(BcAsymmetricBlockCipher.class)
+                                    .withOverriddenContexts(
+                                            new CipherContext(Map.of("kind", "ENCODING_SIGNATURE")),
+                                            new CipherContext(
+                                                    Map.of(
+                                                            "kind",
+                                                            "ASYMMETRIC_CIPHER_ENGINE_SIGNATURE"))))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())

@@ -106,7 +106,7 @@ class RuleSetsContextualTest {
         @Override
         protected List<IDetectionRule<Object>> buildRules(
                 @Nonnull List<IDetectionContext> contexts) {
-            return RuleSets.rulesOf(ContextualLeaf.class, contextAt(contexts, 0));
+            return RuleSet.of(ContextualLeaf.class).withOverriddenContext(contextAt(contexts, 0));
         }
     }
 
@@ -116,8 +116,8 @@ class RuleSetsContextualTest {
 
     @Test
     void equalContextsShareOneList() {
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, mgf1()))
-                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1()));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
     }
 
     @Test
@@ -127,8 +127,8 @@ class RuleSetsContextualTest {
         DigestContext a = new DigestContext(Map.of("kind", "DIFF_A"));
         DigestContext b = new DigestContext(Map.of("kind", "DIFF_B"));
         int before = LEAF_BUILDS.get();
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, a))
-                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, b));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(a))
+                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(b));
         assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
     }
 
@@ -140,14 +140,14 @@ class RuleSetsContextualTest {
 
     @Test
     void aTrailingNullResolvesToTheDefaultPath() {
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, (IDetectionContext) null))
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(null))
                 .isSameAs(RuleSets.rulesOf(ContextualLeaf.class));
     }
 
     @Test
     void aTrailingNullAfterARealContextResolvesToTheSameKeyAsWithoutIt() {
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, mgf1(), null))
-                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1()));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(mgf1(), null))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
     }
 
     @Test
@@ -157,14 +157,14 @@ class RuleSetsContextualTest {
         // count.
         DigestContext c = new DigestContext(Map.of("kind", "POSITION"));
         int before = LEAF_BUILDS.get();
-        assertThat(RuleSets.rulesOf(ContextualLeaf.class, null, c))
-                .isNotSameAs(RuleSets.rulesOf(ContextualLeaf.class, c, null));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(null, c))
+                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(c, null));
         assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
     }
 
     @Test
     void aSetMayBuildByAskingForAnotherContextualSet() {
-        assertThat(RuleSets.rulesOf(ContextualParent.class, mgf1()))
-                .isSameAs(RuleSets.rulesOf(ContextualLeaf.class, mgf1()));
+        assertThat(RuleSet.of(ContextualParent.class).withOverriddenContext(mgf1()))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
     }
 }

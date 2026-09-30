@@ -22,7 +22,7 @@ package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.RuleSets;
+import com.ibm.engine.rule.RuleSet;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -42,22 +42,20 @@ public final class BcAsymmetricBlockCipher extends ContextualDetectionRuleSet<Tr
             @Nullable IDetectionContext encodingDetectionValueContext,
             @Nullable IDetectionContext engineDetectionValueContext) {
         return Stream.of(
-                        RuleSets.rulesOf(
-                                BcPKCS1Encoding.class,
-                                encodingDetectionValueContext,
-                                engineDetectionValueContext)
+                        RuleSet.of(BcPKCS1Encoding.class)
+                                .withOverriddenContexts(
+                                        encodingDetectionValueContext, engineDetectionValueContext)
                                 .stream(),
-                        RuleSets.rulesOf(
-                                BcOAEPEncoding.class,
-                                encodingDetectionValueContext,
-                                engineDetectionValueContext)
+                        RuleSet.of(BcOAEPEncoding.class)
+                                .withOverriddenContexts(
+                                        encodingDetectionValueContext, engineDetectionValueContext)
                                 .stream(),
-                        RuleSets.rulesOf(
-                                BcISO9796d1Encoding.class,
-                                encodingDetectionValueContext,
-                                engineDetectionValueContext)
+                        RuleSet.of(BcISO9796d1Encoding.class)
+                                .withOverriddenContexts(
+                                        encodingDetectionValueContext, engineDetectionValueContext)
                                 .stream(),
-                        RuleSets.rulesOf(BcAsymCipherEngine.class, engineDetectionValueContext)
+                        RuleSet.of(BcAsymCipherEngine.class)
+                                .withOverriddenContext(engineDetectionValueContext)
                                 .stream())
                 .flatMap(i -> i)
                 .toList();

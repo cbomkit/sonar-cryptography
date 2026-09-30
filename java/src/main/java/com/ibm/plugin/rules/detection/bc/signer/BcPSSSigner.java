@@ -28,6 +28,7 @@ import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSet;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.bc.asymmetricblockcipher.BcAsymmetricBlockCipher;
@@ -68,8 +69,9 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSet.of(BcDigests.class)
+                                    .withOverriddenContext(
+                                            new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
@@ -87,8 +89,9 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSet.of(BcDigests.class)
+                                    .withOverriddenContext(
+                                            new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("byte")
                     .buildForContext(new SignatureContext())
@@ -107,8 +110,9 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSet.of(BcDigests.class)
+                                    .withOverriddenContext(
+                                            new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
@@ -128,8 +132,9 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
-                            RuleSets.rulesOf(
-                                    BcDigests.class, new DigestContext(Map.of("kind", "MGF1"))))
+                            RuleSet.of(BcDigests.class)
+                                    .withOverriddenContext(
+                                            new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
