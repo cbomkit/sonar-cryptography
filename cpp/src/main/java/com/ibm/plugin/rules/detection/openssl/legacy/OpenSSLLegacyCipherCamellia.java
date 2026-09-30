@@ -19,109 +19,33 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) Camellia cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherCamellia {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> CAMELLIA_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_CFB128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_cfb128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB128"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_CFB1_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_cfb1_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB1"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_CFB8_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_cfb8_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CFB8"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_OFB128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_ofb128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAMELLIA_CTR128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("Camellia_ctr128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAMELLIA-CTR"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("Camellia_set_key", "CAMELLIA", 3, 1, Size.UnitType.BIT),
+                    new LegacyEntry("Camellia_ecb_encrypt", "CAMELLIA-ECB", 4).keyAt(2),
+                    new LegacyEntry("Camellia_cbc_encrypt", "CAMELLIA-CBC", 6).keyAt(3),
+                    new LegacyEntry("Camellia_cfb128_encrypt", "CAMELLIA-CFB128", 7).keyAt(3),
+                    new LegacyEntry("Camellia_cfb1_encrypt", "CAMELLIA-CFB1", 7).keyAt(3),
+                    new LegacyEntry("Camellia_cfb8_encrypt", "CAMELLIA-CFB8", 7).keyAt(3),
+                    new LegacyEntry("Camellia_ofb128_encrypt", "CAMELLIA-OFB", 6).keyAt(3),
+                    new LegacyEntry("Camellia_ctr128_encrypt", "CAMELLIA-CTR", 7).keyAt(3));
 
     private OpenSSLLegacyCipherCamellia() {
         // private
@@ -129,15 +53,7 @@ public final class OpenSSLLegacyCipherCamellia {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                CAMELLIA_SET_KEY,
-                CAMELLIA_ECB_ENCRYPT,
-                CAMELLIA_CBC_ENCRYPT,
-                CAMELLIA_CFB128_ENCRYPT,
-                CAMELLIA_CFB1_ENCRYPT,
-                CAMELLIA_CFB8_ENCRYPT,
-                CAMELLIA_OFB128_ENCRYPT,
-                CAMELLIA_CTR128_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

@@ -45,7 +45,7 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA224_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-224"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -56,7 +56,9 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-224"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -67,7 +69,7 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA256_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-256"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -78,7 +80,9 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-256"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -89,7 +93,7 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA384_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-384"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -100,7 +104,9 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA384")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-384"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -111,7 +117,7 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA512_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -122,7 +128,9 @@ public final class OpenSSLLegacyDigestSha2 {
                     .forObjectTypes("*")
                     .forMethods("SHA512")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

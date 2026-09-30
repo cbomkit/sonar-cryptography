@@ -51,11 +51,15 @@ public class CxxScannerRuleDefinition implements RulesDefinition {
                 new RuleMetadataLoader(RESOURCE_BASE_PATH, this.sonarRuntime);
         ruleMetadataLoader.addRulesByAnnotatedClass(repository, CxxRuleList.getChecks());
 
+        setTemplates(repository);
+
+        repository.done();
+    }
+
+    private static void setTemplates(NewRepository repository) {
         RULE_TEMPLATES_KEY.stream()
                 .map(repository::rule)
                 .filter(Objects::nonNull)
                 .forEach(rule -> rule.setTemplate(true));
-
-        repository.done();
     }
 }

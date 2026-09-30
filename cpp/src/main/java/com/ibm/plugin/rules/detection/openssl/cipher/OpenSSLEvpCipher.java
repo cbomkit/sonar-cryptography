@@ -46,9 +46,10 @@ import javax.annotation.Nonnull;
  *
  * <p>Per-family cipher specifiers live in their own {@code OpenSSLEvpCipher<Family>} classes (AES,
  * Camellia, ARIA, SM4, DES/3DES, Blowfish, CAST5, RC2, RC4, RC5, IDEA, SEED, ChaCha20); this class
- * holds the generic EVP cipher infrastructure (init, fetch, RSA padding and OAEP setters, and the
- * CMS and PKCS#7 functions that take a content encryption cipher or a key wrap algorithm) and
- * aggregates every family's rules in {@link #rules()}.
+ * holds the generic EVP cipher infrastructure (fetch, RSA padding and OAEP setters, and the CMS and
+ * PKCS#7 functions that take a content encryption cipher or a key wrap algorithm) and aggregates
+ * every family's rules in {@link #rules()}. A cipher context and the operations on it are in {@link
+ * OpenSSLEvpCipherContext}.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpCipher {
@@ -81,8 +82,8 @@ public final class OpenSSLEvpCipher {
 
     /**
      * The calls that select a cipher: the EVP_* cipher functions, EVP_CIPHER_fetch and
-     * EVP_get_cipherbyname. The cipher argument of the init functions below is traced back to one
-     * of them.
+     * EVP_get_cipherbyname. The cipher argument of the init functions ({@link
+     * OpenSSLEvpCipherInit}) is traced back to one of them.
      */
     private static final List<IDetectionRule<AstNode>> CIPHER_SELECTION =
             Stream.of(
@@ -91,122 +92,6 @@ public final class OpenSSLEvpCipher {
                             Stream.of(EVP_ENC_NULL, EVP_GET_CIPHERBYNAME))
                     .flatMap(i -> i)
                     .toList();
-
-    // Cipher initialization: (ctx, cipher, ...) for encryption or decryption
-
-    private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_EncryptInit")
-                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_EncryptInit_ex", "EVP_EncryptInit_ex2")
-                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DecryptInit")
-                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_DecryptInit_ex", "EVP_DecryptInit_ex2")
-                    .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_CipherInit: the operation is given by the enc argument (1 encrypts, 0 decrypts)
-
-    private static final IDetectionRule<AstNode> EVP_CIPHER_INIT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLCipherOperationFactory())
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit_ex")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLCipherOperationFactory())
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX2 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("EVP_CipherInit_ex2")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(CIPHER_SELECTION)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLCipherOperationFactory())
-                    .withMethodParameter("*")
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     private static final IDetectionRule<AstNode> EVP_ASYM_CIPHER_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -482,7 +367,15 @@ public final class OpenSSLEvpCipher {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return Stream.of(cipherFamilyRules().stream(), directRules().stream())
+        return Stream.of(
+                        cipherFamilyRules().stream(),
+                        directRules().stream(),
+                        // the operations on a context, detected with the creation of the context
+                        // when it is created in the scanned code and on their own otherwise
+                        OpenSSLEvpCipherContext.rules().stream(),
+                        OpenSSLEvpCipherInit.rules().stream(),
+                        // private keys written encrypted
+                        OpenSSLPrivateKeyEncryption.rules().stream())
                 .flatMap(i -> i)
                 .toList();
     }
@@ -514,14 +407,6 @@ public final class OpenSSLEvpCipher {
                 EVP_ENC_NULL,
                 // Legacy lookup
                 EVP_GET_CIPHERBYNAME,
-                // EVP cipher init
-                EVP_ENCRYPT_INIT,
-                EVP_ENCRYPT_INIT_EX,
-                EVP_DECRYPT_INIT,
-                EVP_DECRYPT_INIT_EX,
-                EVP_CIPHER_INIT,
-                EVP_CIPHER_INIT_EX,
-                EVP_CIPHER_INIT_EX2,
                 // EVP_ASYM_CIPHER_fetch - Asymmetric cipher algorithm fetch
                 EVP_ASYM_CIPHER_FETCH,
                 // RSA OAEP context setters

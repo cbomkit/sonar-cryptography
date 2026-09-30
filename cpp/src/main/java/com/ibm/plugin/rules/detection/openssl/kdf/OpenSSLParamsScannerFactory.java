@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.sonar.cxx.parser.CxxGrammarImpl;
-import org.sonar.cxx.parser.CxxPunctuator;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
 
 /**
@@ -96,7 +95,7 @@ public final class OpenSSLParamsScannerFactory implements IValueFactory<AstNode>
             if (functionName == null || !functionName.startsWith("OSSL_PARAM_construct_")) {
                 continue;
             }
-            final List<AstNode> args = flattenCallArguments(call);
+            final List<AstNode> args = CxxAstNodeHelper.getFunctionCallArguments(call);
             if (args.size() < 2 || !paramKey.equals(paramKeyOf(args.get(0)))) {
                 continue;
             }
@@ -119,23 +118,6 @@ public final class OpenSSLParamsScannerFactory implements IValueFactory<AstNode>
     private static String paramKeyOf(@Nonnull AstNode keyArgument) {
         final String key = literalStringValue(keyArgument);
         return PARAM_KEY_MACROS.getOrDefault(key, key);
-    }
-
-    /**
-     * {@link CxxAstNodeHelper#getFunctionCallArguments} returns {@code
-     * expressionList.getChildren()}, which for a multi-argument call is always a single-element
-     * list wrapping an {@code initializerList} node, not the individual arguments - so it must be
-     * unwrapped the same way the outer {@code OSSL_PARAM} array literal is above.
-     */
-    @Nonnull
-    private static List<AstNode> flattenCallArguments(@Nonnull AstNode call) {
-        final List<AstNode> raw = CxxAstNodeHelper.getFunctionCallArguments(call);
-        if (raw.size() == 1 && raw.get(0).is(CxxGrammarImpl.initializerList)) {
-            return raw.get(0).getChildren().stream()
-                    .filter(child -> !child.is(CxxPunctuator.COMMA))
-                    .toList();
-        }
-        return raw;
     }
 
     @Nonnull

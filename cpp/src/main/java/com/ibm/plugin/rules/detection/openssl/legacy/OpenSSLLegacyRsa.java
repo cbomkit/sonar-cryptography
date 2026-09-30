@@ -32,11 +32,12 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLSaltLengthFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 /**
@@ -55,58 +56,40 @@ public final class OpenSSLLegacyRsa {
     // Signatures
 
     /**
-     * int RSA_sign/RSA_verify(int type, ...) - {@code type} is a real NID (obj_mac.h) identifying
-     * the digest the signature was computed/verified over, not a placeholder; resolved via {@link
-     * OpenSSLNidLookupFactory} the same way curve/DH-group/protocol-version NIDs are elsewhere. The
-     * SIGN and VERIFY lookup tables share the same NID-to-digest-name entries, differing only in
-     * the {@code RSA-SIGN-}/{@code RSA-VERIFY-} label prefix, so both are derived from one map.
+     * int RSA_sign/RSA_verify(int type, ...): {@code type} is the NID (obj_mac.h) of the digest the
+     * signature is computed or verified over, resolved via {@link OpenSSLNidLookupFactory} to the
+     * name of the signature scheme with that digest (e.g. {@code RSA-SHA256}).
      */
     private static final Map<Integer, String> RSA_DIGEST_BY_CODE =
             Map.ofEntries(
-                    Map.entry(64, "SHA1"), // NID_sha1
-                    Map.entry(675, "SHA224"), // NID_sha224
-                    Map.entry(672, "SHA256"), // NID_sha256
-                    Map.entry(673, "SHA384"), // NID_sha384
-                    Map.entry(674, "SHA512"), // NID_sha512
-                    Map.entry(4, "MD5"), // NID_md5
-                    Map.entry(114, "MD5-SHA1")); // NID_md5_sha1
+                    Map.entry(64, "RSA-SHA1"), // NID_sha1
+                    Map.entry(675, "RSA-SHA224"), // NID_sha224
+                    Map.entry(672, "RSA-SHA256"), // NID_sha256
+                    Map.entry(673, "RSA-SHA384"), // NID_sha384
+                    Map.entry(674, "RSA-SHA512"), // NID_sha512
+                    Map.entry(4, "RSA-MD5"), // NID_md5
+                    Map.entry(114, "RSA-MD5-SHA1")); // NID_md5_sha1
 
     private static final Map<String, String> RSA_DIGEST_BY_NAME =
             Map.ofEntries(
-                    Map.entry("NID_sha1", "SHA1"),
-                    Map.entry("NID_sha224", "SHA224"),
-                    Map.entry("NID_sha256", "SHA256"),
-                    Map.entry("NID_sha384", "SHA384"),
-                    Map.entry("NID_sha512", "SHA512"),
-                    Map.entry("NID_md5", "MD5"),
-                    Map.entry("NID_md5_sha1", "MD5-SHA1"));
-
-    private static final Map<Integer, String> RSA_SIGN_DIGEST_BY_CODE =
-            withPrefix(RSA_DIGEST_BY_CODE, "RSA-SIGN-");
-    private static final Map<String, String> RSA_SIGN_DIGEST_BY_NAME =
-            withPrefix(RSA_DIGEST_BY_NAME, "RSA-SIGN-");
-    private static final Map<Integer, String> RSA_VERIFY_DIGEST_BY_CODE =
-            withPrefix(RSA_DIGEST_BY_CODE, "RSA-VERIFY-");
-    private static final Map<String, String> RSA_VERIFY_DIGEST_BY_NAME =
-            withPrefix(RSA_DIGEST_BY_NAME, "RSA-VERIFY-");
-
-    /** Prefixes every value in {@code map} with {@code prefix}, keeping the same keys. */
-    @Nonnull
-    private static <K> Map<K, String> withPrefix(
-            @Nonnull Map<K, String> map, @Nonnull String prefix) {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> prefix + e.getValue()));
-    }
+                    Map.entry("NID_sha1", "RSA-SHA1"),
+                    Map.entry("NID_sha224", "RSA-SHA224"),
+                    Map.entry("NID_sha256", "RSA-SHA256"),
+                    Map.entry("NID_sha384", "RSA-SHA384"),
+                    Map.entry("NID_sha512", "RSA-SHA512"),
+                    Map.entry("NID_md5", "RSA-MD5"),
+                    Map.entry("NID_md5_sha1", "RSA-MD5-SHA1"));
 
     private static final IDetectionRule<AstNode> RSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_sign")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
-                            new OpenSSLNidLookupFactory(
-                                    RSA_SIGN_DIGEST_BY_CODE, RSA_SIGN_DIGEST_BY_NAME))
+                            new OpenSSLNidLookupFactory(RSA_DIGEST_BY_CODE, RSA_DIGEST_BY_NAME))
+                    .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -121,10 +104,11 @@ public final class OpenSSLLegacyRsa {
                     .createDetectionRule()
                     .forObjectTypes("*")
                     .forMethods("RSA_verify")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
-                            new OpenSSLNidLookupFactory(
-                                    RSA_VERIFY_DIGEST_BY_CODE, RSA_VERIFY_DIGEST_BY_NAME))
+                            new OpenSSLNidLookupFactory(RSA_DIGEST_BY_CODE, RSA_DIGEST_BY_NAME))
+                    .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -142,7 +126,14 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -153,7 +144,15 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -164,7 +163,14 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_verify_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -175,7 +181,15 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_verify_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -188,7 +202,10 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_type_1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -199,7 +216,11 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_PKCS1_type_1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -212,7 +233,10 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_X931")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-X931"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -223,7 +247,11 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_X931")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-X931"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -371,7 +399,10 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_type_2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1-TYPE2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -382,7 +413,11 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_PKCS1_type_2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1-TYPE2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -395,7 +430,10 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_none")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-NO-PADDING"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -406,7 +444,11 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_none")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-NO-PADDING"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -419,7 +461,12 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_OAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -430,7 +477,13 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_PKCS1_OAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -441,7 +494,15 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_add_PKCS1_OAEP_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MGF1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -452,7 +513,16 @@ public final class OpenSSLLegacyRsa {
                     .forObjectTypes("*")
                     .forMethods("RSA_padding_check_PKCS1_OAEP_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MGF1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .withMethodParameter("*")
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

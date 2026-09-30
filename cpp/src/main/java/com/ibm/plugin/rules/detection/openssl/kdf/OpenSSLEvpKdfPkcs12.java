@@ -34,47 +34,16 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * Detection rules for the OpenSSL PKCS#12 and PKCS#5 password-based functions: PBKDF2 through
- * PKCS5_PBKDF2_HMAC(_SHA1), the PKCS#12 key derivation function (PKCS12_key_gen_*), the PKCS#12 and
- * PKCS#5 v1.5 password-based encryption schemes with the cipher and digest passed to
- * PKCS12_PBE_keyivgen and PKCS5_PBE_keyivgen, the HMAC set on a PKCS#12 container by
- * PKCS12_set_mac, and the schemes that encrypt the key and the certificates of a container created
- * by PKCS12_create.
+ * Detection rules for the OpenSSL PKCS#12 and PKCS#5 password-based functions: the PKCS#12 key
+ * derivation function (PKCS12_key_gen_*), the PKCS#12 and PKCS#5 v1.5 password-based encryption
+ * schemes with the cipher and digest passed to PKCS12_PBE_keyivgen and PKCS5_PBE_keyivgen, the HMAC
+ * set on a PKCS#12 container by PKCS12_set_mac, and the schemes that encrypt the key and the
+ * certificates of a container created by PKCS12_create.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpKdfPkcs12 {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS5_PBKDF2_HMAC")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC_SHA1 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("PKCS5_PBKDF2_HMAC_SHA1")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA1"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyDerivationFunctionContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     // PKCS12_create(pass, name, pkey, cert, ca, nid_key, nid_cert, iter, mac_iter, keytype, ...):
     // nid_key and nid_cert select how the private key and the certificates are encrypted
@@ -392,9 +361,6 @@ public final class OpenSSLEvpKdfPkcs12 {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // Legacy PBKDF2 functions
-                PKCS5_PBKDF2_HMAC,
-                PKCS5_PBKDF2_HMAC_SHA1,
                 // PKCS#12 containers
                 PKCS12_CREATE,
                 PKCS12_CREATE_EX,

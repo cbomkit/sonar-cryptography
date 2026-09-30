@@ -19,43 +19,27 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) RC4 stream cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherRc4 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> RC4_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC4_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC4"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC4 =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC4")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC4"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("RC4_set_key", "RC4", 3, 1, Size.UnitType.BYTE),
+                    new LegacyEntry("RC4", "RC4", 4).keyAt(0));
 
     private OpenSSLLegacyCipherRc4() {
         // private
@@ -63,7 +47,7 @@ public final class OpenSSLLegacyCipherRc4 {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(RC4_SET_KEY, RC4);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

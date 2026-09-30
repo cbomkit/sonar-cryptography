@@ -19,87 +19,29 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) IDEA cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherIdea {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> IDEA_SET_ENCRYPT_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_set_encrypt_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> IDEA_SET_DECRYPT_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_set_decrypt_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> IDEA_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> IDEA_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> IDEA_CFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_cfb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> IDEA_OFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("IDEA_ofb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("IDEA-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit]
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("IDEA_set_encrypt_key", "IDEA", 2),
+                    new LegacyEntry("IDEA_set_decrypt_key", "IDEA", 2),
+                    new LegacyEntry("IDEA_ecb_encrypt", "IDEA-ECB", 3),
+                    new LegacyEntry("IDEA_cbc_encrypt", "IDEA-CBC", 6),
+                    new LegacyEntry("IDEA_cfb64_encrypt", "IDEA-CFB", 7),
+                    new LegacyEntry("IDEA_ofb64_encrypt", "IDEA-OFB", 6));
 
     private OpenSSLLegacyCipherIdea() {
         // private
@@ -107,13 +49,7 @@ public final class OpenSSLLegacyCipherIdea {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                IDEA_SET_ENCRYPT_KEY,
-                IDEA_SET_DECRYPT_KEY,
-                IDEA_ECB_ENCRYPT,
-                IDEA_CBC_ENCRYPT,
-                IDEA_CFB64_ENCRYPT,
-                IDEA_OFB64_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

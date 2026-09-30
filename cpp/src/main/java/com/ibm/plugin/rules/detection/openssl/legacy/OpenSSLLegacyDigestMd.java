@@ -41,7 +41,9 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -52,7 +54,7 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD2_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -63,7 +65,9 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD4")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -74,7 +78,7 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD4_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -85,7 +89,7 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD5_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -96,7 +100,9 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MD5")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -107,7 +113,9 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MDC2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -118,7 +126,7 @@ public final class OpenSSLLegacyDigestMd {
                     .forObjectTypes("*")
                     .forMethods("MDC2_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

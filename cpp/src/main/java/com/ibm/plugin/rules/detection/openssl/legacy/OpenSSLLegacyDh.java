@@ -73,7 +73,7 @@ public final class OpenSSLLegacyDh {
                     .forObjectTypes("*")
                     .forMethods("DH_get_1024_160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -84,7 +84,7 @@ public final class OpenSSLLegacyDh {
                     .forObjectTypes("*")
                     .forMethods("DH_get_2048_224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -95,7 +95,7 @@ public final class OpenSSLLegacyDh {
                     .forObjectTypes("*")
                     .forMethods("DH_get_2048_256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -128,7 +128,9 @@ public final class OpenSSLLegacyDh {
                     .forObjectTypes("*")
                     .forMethods("DH_compute_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

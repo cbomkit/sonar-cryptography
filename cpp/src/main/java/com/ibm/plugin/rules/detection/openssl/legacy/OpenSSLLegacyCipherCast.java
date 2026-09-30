@@ -19,76 +19,30 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) CAST5 cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherCast {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> CAST_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CAST_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAST_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CAST_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAST_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CAST_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAST_CFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CAST_cfb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> CAST_OFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("CAST_ofb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("CAST5-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("CAST_set_key", "CAST5", 3, 1, Size.UnitType.BYTE),
+                    new LegacyEntry("CAST_ecb_encrypt", "CAST5-ECB", 4).keyAt(2),
+                    new LegacyEntry("CAST_cbc_encrypt", "CAST5-CBC", 6).keyAt(3),
+                    new LegacyEntry("CAST_cfb64_encrypt", "CAST5-CFB", 7).keyAt(3),
+                    new LegacyEntry("CAST_ofb64_encrypt", "CAST5-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherCast() {
         // private
@@ -96,12 +50,7 @@ public final class OpenSSLLegacyCipherCast {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                CAST_SET_KEY,
-                CAST_ECB_ENCRYPT,
-                CAST_CBC_ENCRYPT,
-                CAST_CFB64_ENCRYPT,
-                CAST_OFB64_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

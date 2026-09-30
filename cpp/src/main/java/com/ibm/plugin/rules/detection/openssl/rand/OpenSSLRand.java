@@ -54,7 +54,8 @@ public final class OpenSSLRand {
                     .forObjectTypes("*")
                     .forMethods("RAND_bytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -65,7 +66,8 @@ public final class OpenSSLRand {
                     .forObjectTypes("*")
                     .forMethods("RAND_priv_bytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -189,7 +191,10 @@ public final class OpenSSLRand {
                     .forObjectTypes("*")
                     .forMethods("RAND_bytes_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -200,7 +205,10 @@ public final class OpenSSLRand {
                     .forObjectTypes("*")
                     .forMethods("RAND_priv_bytes_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

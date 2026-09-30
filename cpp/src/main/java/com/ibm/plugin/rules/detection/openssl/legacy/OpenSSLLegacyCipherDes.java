@@ -33,21 +33,25 @@ public final class OpenSSLLegacyCipherDes {
 
     private static final String BUNDLE = "OpenSSL";
 
+    // function(s), label, number of arguments[, argument giving the key size, its unit]
     private static final List<LegacyEntry> ENTRIES =
             List.of(
                     new LegacyEntry(
                             List.of("DES_set_key", "DES_set_key_checked", "DES_set_key_unchecked"),
-                            "DES"),
-                    new LegacyEntry("DES_ecb_encrypt", "DES-ECB"),
-                    new LegacyEntry(List.of("DES_ncbc_encrypt", "DES_cbc_encrypt"), "DES-CBC"),
-                    new LegacyEntry(List.of("DES_cfb64_encrypt", "DES_cfb_encrypt"), "DES-CFB"),
-                    new LegacyEntry("DES_ofb64_encrypt", "DES-OFB"),
-                    new LegacyEntry("DES_ede3_cbc_encrypt", "3DES-CBC"),
-                    new LegacyEntry("DES_ecb3_encrypt", "3DES-ECB"),
+                            "DES",
+                            2),
+                    new LegacyEntry("DES_ecb_encrypt", "DES-ECB", 4),
+                    new LegacyEntry(List.of("DES_ncbc_encrypt", "DES_cbc_encrypt"), "DES-CBC", 6),
+                    new LegacyEntry(List.of("DES_cfb64_encrypt", "DES_cfb_encrypt"), "DES-CFB", 7),
+                    new LegacyEntry("DES_ofb64_encrypt", "DES-OFB", 6),
+                    new LegacyEntry("DES_ede3_cbc_encrypt", "3DES-CBC", 8),
+                    new LegacyEntry("DES_ecb3_encrypt", "3DES-ECB", 6),
                     new LegacyEntry(
-                            List.of("DES_ede3_cfb64_encrypt", "DES_ede3_cfb_encrypt"), "3DES-CFB"),
-                    new LegacyEntry("DES_ede3_ofb64_encrypt", "3DES-OFB"),
-                    new LegacyEntry("DES_xcbc_encrypt", "DES-XCBC"));
+                            List.of("DES_ede3_cfb64_encrypt", "DES_ede3_cfb_encrypt"),
+                            "3DES-CFB",
+                            9),
+                    new LegacyEntry("DES_ede3_ofb64_encrypt", "3DES-OFB", 8),
+                    new LegacyEntry("DES_xcbc_encrypt", "DES-XCBC", 8));
 
     private OpenSSLLegacyCipherDes() {
         // private

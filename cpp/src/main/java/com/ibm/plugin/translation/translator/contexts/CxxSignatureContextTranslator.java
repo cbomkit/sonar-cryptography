@@ -27,21 +27,9 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.openssl.OpenSslSignatureAlgorithmMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.SaltLength;
-import com.ibm.mapper.model.Signature;
-import com.ibm.mapper.model.algorithms.DSA;
-import com.ibm.mapper.model.algorithms.ECDSA;
-import com.ibm.mapper.model.algorithms.EdDSA;
-import com.ibm.mapper.model.algorithms.MD5;
-import com.ibm.mapper.model.algorithms.MLDSA;
-import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.RSAssaPSS;
-import com.ibm.mapper.model.algorithms.SHA;
-import com.ibm.mapper.model.algorithms.SHA2;
-import com.ibm.mapper.model.algorithms.SHA3;
-import com.ibm.mapper.model.algorithms.SM2;
-import com.ibm.mapper.model.algorithms.SPHINCSPlus;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -79,136 +67,9 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
         }
 
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
-            String algorithmName = value.asString().toUpperCase().trim();
-
-            // RSA-PSS Signatures (PKCS#1 v2.1 / RSASSA-PSS) — must check before generic RSA-
-            if (algorithmName.equals("RSA-PSS") || algorithmName.startsWith("RSA-PSS-")) {
-                RSAssaPSS rsapss = new RSAssaPSS(detectionLocation);
-                if (algorithmName.contains("SHA256")) {
-                    rsapss.put(new SHA2(256, detectionLocation));
-                } else if (algorithmName.contains("SHA384")) {
-                    rsapss.put(new SHA2(384, detectionLocation));
-                } else if (algorithmName.contains("SHA512")) {
-                    rsapss.put(new SHA2(512, detectionLocation));
-                } else if (algorithmName.contains("SHA1")) {
-                    rsapss.put(new SHA(detectionLocation));
-                }
-                return Optional.of(rsapss);
-            }
-
-            // RSA Signatures (PKCS#1 v1.5)
-            // Names accepted by EVP_SIGNATURE_fetch; the digest is chosen when the operation is
-            // initialized. The RSA-PKCS1, RSA-X931 and RSA-NO-PADDING schemes are selected by the
-            // padding of the RSA signature primitive (RSA_private_encrypt).
-            switch (algorithmName) {
-                case "RSA-PKCS1" -> {
-                    return Optional.of(CxxRsaSignatureSchemes.pkcs1v15(detectionLocation));
-                }
-                case "RSA-X931" -> {
-                    return Optional.of(CxxRsaSignatureSchemes.x931(detectionLocation));
-                }
-                case "RSA-NO-PADDING" -> {
-                    return Optional.of(CxxRsaSignatureSchemes.withoutPadding(detectionLocation));
-                }
-                case "RSA" -> {
-                    return Optional.of(new RSA(Signature.class, detectionLocation));
-                }
-                case "DSA" -> {
-                    return Optional.of(new DSA(detectionLocation));
-                }
-                case "ECDSA" -> {
-                    return Optional.of(new ECDSA(detectionLocation));
-                }
-                default -> {
-                    // a name with a digest or a parameter set, handled below
-                }
-            }
-
-            if (algorithmName.startsWith("RSA-")) {
-                RSA rsa = new RSA(Signature.class, detectionLocation);
-                // MD5-SHA1 (TLS 1.0/1.1 handshake signatures) is represented by its MD5 part, as
-                // for the digest itself
-                if (algorithmName.contains("MD5")) {
-                    rsa.put(new MD5(detectionLocation));
-                } else if (algorithmName.contains("SHA1")) {
-                    rsa.put(new SHA(detectionLocation));
-                } else if (algorithmName.contains("SHA224")) {
-                    rsa.put(new SHA2(224, detectionLocation));
-                } else if (algorithmName.contains("SHA256")) {
-                    rsa.put(new SHA2(256, detectionLocation));
-                } else if (algorithmName.contains("SHA384")) {
-                    rsa.put(new SHA2(384, detectionLocation));
-                } else if (algorithmName.contains("SHA512")) {
-                    rsa.put(new SHA2(512, detectionLocation));
-                }
-                return Optional.of(rsa);
-            }
-
-            // DSA Signatures
-            if (algorithmName.startsWith("DSA-")) {
-                if (algorithmName.contains("SHA1")) {
-                    return Optional.of(new DSA(new SHA(detectionLocation)));
-                } else if (algorithmName.contains("SHA224")) {
-                    return Optional.of(new DSA(new SHA2(224, detectionLocation)));
-                } else if (algorithmName.contains("SHA256")) {
-                    return Optional.of(new DSA(new SHA2(256, detectionLocation)));
-                } else if (algorithmName.contains("SHA384")) {
-                    return Optional.of(new DSA(new SHA2(384, detectionLocation)));
-                } else if (algorithmName.contains("SHA512")) {
-                    return Optional.of(new DSA(new SHA2(512, detectionLocation)));
-                }
-                return Optional.of(new DSA(detectionLocation));
-            }
-
-            // ECDSA Signatures
-            if (algorithmName.startsWith("ECDSA-")) {
-                ECDSA ecdsa = new ECDSA(detectionLocation);
-                if (algorithmName.contains("SHA1")) {
-                    ecdsa.put(new SHA(detectionLocation));
-                } else if (algorithmName.contains("SHA3-256")) {
-                    ecdsa.put(new SHA3(256, detectionLocation));
-                } else if (algorithmName.contains("SHA3-384")) {
-                    ecdsa.put(new SHA3(384, detectionLocation));
-                } else if (algorithmName.contains("SHA3-512")) {
-                    ecdsa.put(new SHA3(512, detectionLocation));
-                } else if (algorithmName.contains("SHA224")) {
-                    ecdsa.put(new SHA2(224, detectionLocation));
-                } else if (algorithmName.contains("SHA256")) {
-                    ecdsa.put(new SHA2(256, detectionLocation));
-                } else if (algorithmName.contains("SHA384")) {
-                    ecdsa.put(new SHA2(384, detectionLocation));
-                } else if (algorithmName.contains("SHA512")) {
-                    ecdsa.put(new SHA2(512, detectionLocation));
-                }
-                return Optional.of(ecdsa);
-            }
-
-            // EdDSA Signatures
-            if (algorithmName.equals("ED25519") || algorithmName.equals("ED448")) {
-                return Optional.of(new EdDSA(detectionLocation));
-            }
-
-            // Post-Quantum: ML-DSA
-            if (algorithmName.startsWith("ML-DSA-")) {
-                if (algorithmName.equals("ML-DSA-44")) {
-                    return Optional.of(new MLDSA(44, detectionLocation));
-                } else if (algorithmName.equals("ML-DSA-65")) {
-                    return Optional.of(new MLDSA(65, detectionLocation));
-                } else if (algorithmName.equals("ML-DSA-87")) {
-                    return Optional.of(new MLDSA(87, detectionLocation));
-                }
-            }
-
-            // Post-Quantum: SLH-DSA
-            if (algorithmName.startsWith("SLH-DSA-")) {
-                String parameterSet = algorithmName.substring("SLH-DSA-".length());
-                return Optional.of(new SPHINCSPlus(parameterSet, detectionLocation));
-            }
-
-            // SM2
-            if (algorithmName.equals("SM2")) {
-                return Optional.of(new SM2(detectionLocation));
-            }
+            return new OpenSslSignatureAlgorithmMapper()
+                    .parse(value.asString(), detectionLocation)
+                    .map(node -> node);
         }
 
         return Optional.empty();

@@ -19,76 +19,30 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) Blowfish cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherBlowfish {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> BF_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("BF_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> BF_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("BF_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> BF_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("BF_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> BF_CFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("BF_cfb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> BF_OFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("BF_ofb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("BF_set_key", "BLOWFISH", 3, 1, Size.UnitType.BYTE),
+                    new LegacyEntry("BF_ecb_encrypt", "BLOWFISH-ECB", 4).keyAt(2),
+                    new LegacyEntry("BF_cbc_encrypt", "BLOWFISH-CBC", 6).keyAt(3),
+                    new LegacyEntry("BF_cfb64_encrypt", "BLOWFISH-CFB", 7).keyAt(3),
+                    new LegacyEntry("BF_ofb64_encrypt", "BLOWFISH-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherBlowfish() {
         // private
@@ -96,8 +50,7 @@ public final class OpenSSLLegacyCipherBlowfish {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                BF_SET_KEY, BF_ECB_ENCRYPT, BF_CBC_ENCRYPT, BF_CFB64_ENCRYPT, BF_OFB64_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

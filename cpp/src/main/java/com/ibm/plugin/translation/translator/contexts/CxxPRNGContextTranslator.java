@@ -24,9 +24,8 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
-import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.mapper.openssl.OpenSslPRNGMapper;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
@@ -49,66 +48,9 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
 
         if (value instanceof ValueAction<AstNode>
                 || value instanceof com.ibm.engine.model.Algorithm<AstNode>) {
-            return switch (value.asString().toUpperCase().trim()) {
-                // Basic RAND operations
-                case "RAND" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "RAND",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-                case "RAND-PSEUDO" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "RAND-PSEUDO",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-
-                // DRBG names accepted by EVP_RAND_fetch and RAND_set_DRBG_type. The cipher or
-                // digest of the DRBG is attached to the node as a child.
-                case "CTR-DRBG" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "CTR-DRBG",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-                case "HASH-DRBG" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "HASH-DRBG",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-                case "HMAC-DRBG" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "HMAC-DRBG",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-
-                case "SEED-SRC" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "SEED-SRC",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-                case "JITTER" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "JITTER",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-                case "TEST-RAND" ->
-                        Optional.of(
-                                new Algorithm(
-                                        "TEST-RAND",
-                                        PseudorandomNumberGenerator.class,
-                                        detectionLocation));
-
-                // Entropy seeding operations (not distinct algorithms — yield empty)
-                case "RAND-SEED", "RAND-ADD", "RAND-POLL" -> Optional.empty();
-
-                default -> Optional.empty();
-            };
+            return new OpenSslPRNGMapper()
+                    .parse(value.asString(), detectionLocation)
+                    .map(node -> node);
         }
 
         return Optional.empty();

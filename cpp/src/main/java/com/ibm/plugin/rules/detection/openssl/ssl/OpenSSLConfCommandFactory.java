@@ -32,8 +32,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.sonar.cxx.parser.CxxGrammarImpl;
-import org.sonar.cxx.parser.CxxPunctuator;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
 
 /**
@@ -70,7 +68,7 @@ public final class OpenSSLConfCommandFactory implements IValueFactory<AstNode> {
         if (call == null) {
             return Optional.empty();
         }
-        final List<AstNode> arguments = callArguments(call);
+        final List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(call);
         if (arguments.size() <= VALUE_ARGUMENT) {
             return Optional.empty();
         }
@@ -99,20 +97,5 @@ public final class OpenSSLConfCommandFactory implements IValueFactory<AstNode> {
             }
         }
         return null;
-    }
-
-    /**
-     * The arguments of a call. Several arguments are held in a single {@code initializerList}
-     * child, separated by commas.
-     */
-    @Nonnull
-    private static List<AstNode> callArguments(@Nonnull AstNode call) {
-        final List<AstNode> raw = CxxAstNodeHelper.getFunctionCallArguments(call);
-        if (raw.size() == 1 && raw.get(0).is(CxxGrammarImpl.initializerList)) {
-            return raw.get(0).getChildren().stream()
-                    .filter(child -> !child.is(CxxPunctuator.COMMA))
-                    .toList();
-        }
-        return raw;
     }
 }

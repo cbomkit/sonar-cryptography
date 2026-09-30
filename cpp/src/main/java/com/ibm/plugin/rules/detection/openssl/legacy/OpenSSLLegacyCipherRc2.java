@@ -19,76 +19,30 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) RC2 cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherRc2 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> RC2_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC2_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC2_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC2_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC2_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC2_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC2_CFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC2_cfb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC2_OFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC2_ofb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC2-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("RC2_set_key", "RC2", 4, 1, Size.UnitType.BYTE),
+                    new LegacyEntry("RC2_ecb_encrypt", "RC2-ECB", 4).keyAt(2),
+                    new LegacyEntry("RC2_cbc_encrypt", "RC2-CBC", 6).keyAt(3),
+                    new LegacyEntry("RC2_cfb64_encrypt", "RC2-CFB", 7).keyAt(3),
+                    new LegacyEntry("RC2_ofb64_encrypt", "RC2-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherRc2() {
         // private
@@ -96,12 +50,7 @@ public final class OpenSSLLegacyCipherRc2 {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                RC2_SET_KEY,
-                RC2_ECB_ENCRYPT,
-                RC2_CBC_ENCRYPT,
-                RC2_CFB64_ENCRYPT,
-                RC2_OFB64_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

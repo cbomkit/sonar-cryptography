@@ -28,45 +28,26 @@ import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
-import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
-import com.ibm.mapper.model.EllipticCurve;
-import com.ibm.mapper.model.EllipticCurveAlgorithm;
+import com.ibm.mapper.mapper.openssl.OpenSslKeyMapper;
+import com.ibm.mapper.mapper.openssl.OpenSslMacMapper;
 import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PrivateKey;
-import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.SecretKey;
-import com.ibm.mapper.model.algorithms.DH;
-import com.ibm.mapper.model.algorithms.DSA;
-import com.ibm.mapper.model.algorithms.Ed25519;
-import com.ibm.mapper.model.algorithms.Ed448;
-import com.ibm.mapper.model.algorithms.MLDSA;
-import com.ibm.mapper.model.algorithms.MLKEM;
-import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.RSAssaPSS;
-import com.ibm.mapper.model.algorithms.SPHINCSPlus;
-import com.ibm.mapper.model.algorithms.SecP256r1MLKEM768;
-import com.ibm.mapper.model.algorithms.SecP384r1MLKEM1024;
-import com.ibm.mapper.model.algorithms.X25519;
-import com.ibm.mapper.model.algorithms.X25519MLKEM768;
-import com.ibm.mapper.model.algorithms.X448;
-import com.ibm.mapper.model.algorithms.X448MLKEM1024;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.model.functionality.KeyDerivation;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Translator for C++ key detection contexts.
@@ -75,19 +56,6 @@ import javax.annotation.Nullable;
  * keys, secret keys) to the mapper model nodes.
  */
 public final class CxxKeyContextTranslator implements IContextTranslation<AstNode> {
-
-    /** Curve identifier (e.g. {@code "EC-P256"}) → standard curve name. */
-    private static final Map<String, String> CURVE_NAMES =
-            Map.ofEntries(
-                    Map.entry("EC-P192", "secp192r1"),
-                    Map.entry("EC-P224", "secp224r1"),
-                    Map.entry("EC-P256", "secp256r1"),
-                    Map.entry("EC-P384", "secp384r1"),
-                    Map.entry("EC-P521", "secp521r1"),
-                    Map.entry("EC-SECP256K1", "secp256k1"),
-                    Map.entry("EC-BRAINPOOLP256R1", "brainpoolP256r1"),
-                    Map.entry("EC-BRAINPOOLP384R1", "brainpoolP384r1"),
-                    Map.entry("EC-BRAINPOOLP512R1", "brainpoolP512r1"));
 
     @Override
     public @Nonnull Optional<INode> translate(
@@ -131,9 +99,8 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
             @Nonnull IValue<AstNode> value,
             @Nonnull IDetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        final Optional<INode> mac =
-                new CxxMacContextTranslator()
-                        .translate(bundleIdentifier, value, new MacContext(), detectionLocation);
+        final Optional<? extends INode> mac =
+                new OpenSslMacMapper().parse(value.asString(), detectionLocation);
         if (mac.isPresent() && mac.get() instanceof IAlgorithm macAlgorithm) {
             return Optional.of(new SecretKey(new Key(macAlgorithm)));
         }
@@ -158,8 +125,9 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
                     ? Optional.of(new SaltLength(saltSize.getValue(), detectionLocation))
                     : Optional.empty();
         } else if (value instanceof Curve<AstNode> curve) {
-            return Optional.ofNullable(CURVE_NAMES.get(curve.asString().toUpperCase().trim()))
-                    .map(name -> new EllipticCurve(name, detectionLocation));
+            return new OpenSslKeyMapper()
+                    .parseCurve(curve.asString(), detectionLocation)
+                    .map(node -> node);
         } else if (value instanceof KeyAction<AstNode> keyAction) {
             return switch (keyAction.getAction()) {
                 case PRIVATE_KEY_GENERATION ->
@@ -184,128 +152,11 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
         }
 
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
-            String algorithmName = value.asString().toUpperCase().trim();
-
-            // EC key on a named curve (e.g. EC_KEY_new_by_curve_name, EVP_PKEY_CTX_set_group_name),
-            // usable for ECDSA and ECDH
-            String curveName = CURVE_NAMES.get(algorithmName);
-            if (curveName != null) {
-                final EllipticCurveAlgorithm ec = new EllipticCurveAlgorithm(detectionLocation);
-                ec.put(new EllipticCurve(curveName, detectionLocation));
-                return Optional.of(ec);
-            }
-
-            // RSA key length (EVP_PKEY_CTX_set_rsa_keygen_bits) — any bit-length the code sets,
-            // not just a fixed whitelist
-            if (algorithmName.startsWith("RSA-") && !algorithmName.equals("RSA-PSS")) {
-                Integer bits = parseBits(algorithmName, "RSA-");
-                if (bits != null) {
-                    return Optional.of(new RSA(bits, detectionLocation));
-                }
-            }
-
-            // DSA parameter length (EVP_PKEY_CTX_set_dsa_paramgen_bits) — key length isn't
-            // modeled on DSA, so any bit-length resolves to the bare algorithm
-            if (algorithmName.startsWith("DSA-") && parseBits(algorithmName, "DSA-") != null) {
-                return Optional.of(new DSA(detectionLocation));
-            }
-
-            return switch (algorithmName) {
-                // RSA
-                case "RSA" -> Optional.of(new RSA(detectionLocation));
-                // a key restricted to RSA-PSS signatures
-                case "RSA-PSS" -> Optional.of(new RSAssaPSS(detectionLocation));
-
-                // DSA
-                case "DSA" -> Optional.of(new DSA(detectionLocation));
-
-                // EC
-                case "EC" -> Optional.of(new EllipticCurveAlgorithm(detectionLocation));
-
-                // DH
-                case "DH" -> Optional.of(new DH(detectionLocation));
-                case "DH-2048" -> Optional.of(finiteFieldDh(2048, detectionLocation));
-                case "DH-3072" -> Optional.of(finiteFieldDh(3072, detectionLocation));
-                case "DH-4096" -> Optional.of(finiteFieldDh(4096, detectionLocation));
-                // RFC 5114 groups (DH_get_1024_160 etc.): prime size and subgroup size
-                case "DH-1024-160" -> Optional.of(finiteFieldDh(1024, detectionLocation));
-                case "DH-2048-224", "DH-2048-256" ->
-                        Optional.of(finiteFieldDh(2048, detectionLocation));
-
-                // EdDSA
-                case "ED25519" -> Optional.of(new Ed25519(detectionLocation));
-                case "ED448" -> Optional.of(new Ed448(detectionLocation));
-
-                // X25519/X448
-                case "X25519" -> Optional.of(new X25519(detectionLocation));
-                case "X448" -> Optional.of(new X448(detectionLocation));
-
-                // ML-KEM (Post-Quantum)
-                case "ML-KEM-512" -> Optional.of(new MLKEM(512, detectionLocation));
-                case "ML-KEM-768" -> Optional.of(new MLKEM(768, detectionLocation));
-                case "ML-KEM-1024" -> Optional.of(new MLKEM(1024, detectionLocation));
-
-                // ML-DSA (Post-Quantum)
-                case "ML-DSA-44" -> Optional.of(new MLDSA(44, detectionLocation));
-                case "ML-DSA-65" -> Optional.of(new MLDSA(65, detectionLocation));
-                case "ML-DSA-87" -> Optional.of(new MLDSA(87, detectionLocation));
-
-                // SLH-DSA (Post-Quantum)
-                case "SLH-DSA-SHA2-128F" ->
-                        Optional.of(new SPHINCSPlus("SHA2-128F", detectionLocation));
-                case "SLH-DSA-SHA2-128S" ->
-                        Optional.of(new SPHINCSPlus("SHA2-128S", detectionLocation));
-                case "SLH-DSA-SHAKE-128F" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-128F", detectionLocation));
-                case "SLH-DSA-SHAKE-128S" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-128S", detectionLocation));
-                case "SLH-DSA-SHA2-192F" ->
-                        Optional.of(new SPHINCSPlus("SHA2-192F", detectionLocation));
-                case "SLH-DSA-SHA2-192S" ->
-                        Optional.of(new SPHINCSPlus("SHA2-192S", detectionLocation));
-                case "SLH-DSA-SHAKE-192F" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-192F", detectionLocation));
-                case "SLH-DSA-SHAKE-192S" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-192S", detectionLocation));
-                case "SLH-DSA-SHA2-256F" ->
-                        Optional.of(new SPHINCSPlus("SHA2-256F", detectionLocation));
-                case "SLH-DSA-SHA2-256S" ->
-                        Optional.of(new SPHINCSPlus("SHA2-256S", detectionLocation));
-                case "SLH-DSA-SHAKE-256F" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-256F", detectionLocation));
-                case "SLH-DSA-SHAKE-256S" ->
-                        Optional.of(new SPHINCSPlus("SHAKE-256S", detectionLocation));
-
-                // Hybrid Post-Quantum KEMs (PQC + Classical)
-                case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));
-                case "X448MLKEM1024" -> Optional.of(new X448MLKEM1024(detectionLocation));
-                case "SECP256R1MLKEM768" -> Optional.of(new SecP256r1MLKEM768(detectionLocation));
-                case "SECP384R1MLKEM1024" -> Optional.of(new SecP384r1MLKEM1024(detectionLocation));
-
-                // SM2
-                case "SM2" ->
-                        Optional.of(new com.ibm.mapper.model.algorithms.SM2(detectionLocation));
-
-                default -> Optional.empty();
-            };
+            return new OpenSslKeyMapper()
+                    .parse(value.asString(), detectionLocation)
+                    .map(node -> node);
         }
 
         return Optional.empty();
-    }
-
-    @Nullable private static Integer parseBits(@Nonnull String algorithmName, @Nonnull String prefix) {
-        try {
-            int bits = Integer.parseInt(algorithmName.substring(prefix.length()));
-            return bits > 0 ? bits : null;
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    @Nonnull
-    private static DH finiteFieldDh(int primeBits, @Nonnull DetectionLocation detectionLocation) {
-        DH dh = new DH(PublicKeyEncryption.class, detectionLocation);
-        dh.put(new KeyLength(primeBits, detectionLocation));
-        return dh;
     }
 }

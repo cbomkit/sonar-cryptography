@@ -19,76 +19,30 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) RC5 cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherRc5 {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> RC5_32_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC5_32_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC5_32_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC5_32_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC5_32_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC5_32_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC5_32_CFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC5_32_cfb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RC5_32_OFB64_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("RC5_32_ofb64_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RC5-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("RC5_32_set_key", "RC5", 4, 1, Size.UnitType.BYTE),
+                    new LegacyEntry("RC5_32_ecb_encrypt", "RC5-ECB", 4).keyAt(2),
+                    new LegacyEntry("RC5_32_cbc_encrypt", "RC5-CBC", 6).keyAt(3),
+                    new LegacyEntry("RC5_32_cfb64_encrypt", "RC5-CFB", 7).keyAt(3),
+                    new LegacyEntry("RC5_32_ofb64_encrypt", "RC5-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherRc5() {
         // private
@@ -96,12 +50,7 @@ public final class OpenSSLLegacyCipherRc5 {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                RC5_32_SET_KEY,
-                RC5_32_ECB_ENCRYPT,
-                RC5_32_CBC_ENCRYPT,
-                RC5_32_CFB64_ENCRYPT,
-                RC5_32_OFB64_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

@@ -114,6 +114,46 @@ public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
                     Map.entry(44, "PBES2-DES-EDE3-CBC"),
                     Map.entry(0, "PBES2-AES-256-CBC"));
 
+    /**
+     * Password-based encryption NIDs (obj_mac.h) → scheme identifiers, for the {@code pbe_nid} of
+     * {@code PKCS8_encrypt} and the {@code OBJ_nid2obj} object given to {@code EVP_PBE_CipherInit}:
+     * the PKCS#5 v1.5 (PBES1) and PKCS#12 schemes, and PBES2, whose cipher is given with it. -1
+     * selects PBES2 in {@code PKCS8_encrypt}.
+     */
+    public static final Map<Integer, String> PBE_ALGORITHM_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(9, "PBE-MD2-DES"),
+                    Map.entry(10, "PBE-MD5-DES"),
+                    Map.entry(168, "PBE-MD2-RC2-64"),
+                    Map.entry(169, "PBE-MD5-RC2-64"),
+                    Map.entry(170, "PBE-SHA1-DES"),
+                    Map.entry(68, "PBE-SHA1-RC2-64"),
+                    Map.entry(144, "PBE-SHA1-RC4-128"),
+                    Map.entry(145, "PBE-SHA1-RC4-40"),
+                    Map.entry(146, "PBE-SHA1-3DES"),
+                    Map.entry(147, "PBE-SHA1-2DES"),
+                    Map.entry(148, "PBE-SHA1-RC2-128"),
+                    Map.entry(149, "PBE-SHA1-RC2-40"),
+                    Map.entry(161, "PBES2"),
+                    Map.entry(-1, "PBES2"));
+
+    /** Password-based encryption NID constant names → scheme identifiers. */
+    public static final Map<String, String> PBE_ALGORITHM_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_pbeWithMD2AndDES_CBC", "PBE-MD2-DES"),
+                    Map.entry("NID_pbeWithMD5AndDES_CBC", "PBE-MD5-DES"),
+                    Map.entry("NID_pbeWithMD2AndRC2_CBC", "PBE-MD2-RC2-64"),
+                    Map.entry("NID_pbeWithMD5AndRC2_CBC", "PBE-MD5-RC2-64"),
+                    Map.entry("NID_pbeWithSHA1AndDES_CBC", "PBE-SHA1-DES"),
+                    Map.entry("NID_pbeWithSHA1AndRC2_CBC", "PBE-SHA1-RC2-64"),
+                    Map.entry("NID_pbe_WithSHA1And128BitRC4", "PBE-SHA1-RC4-128"),
+                    Map.entry("NID_pbe_WithSHA1And40BitRC4", "PBE-SHA1-RC4-40"),
+                    Map.entry("NID_pbe_WithSHA1And3_Key_TripleDES_CBC", "PBE-SHA1-3DES"),
+                    Map.entry("NID_pbe_WithSHA1And2_Key_TripleDES_CBC", "PBE-SHA1-2DES"),
+                    Map.entry("NID_pbe_WithSHA1And128BitRC2_CBC", "PBE-SHA1-RC2-128"),
+                    Map.entry("NID_pbe_WithSHA1And40BitRC2_CBC", "PBE-SHA1-RC2-40"),
+                    Map.entry("NID_pbes2", "PBES2"));
+
     /** Encryption NID constant names accepted by {@code PKCS12_create} → scheme identifiers. */
     public static final Map<String, String> PKCS12_ENCRYPTION_BY_NAME =
             Map.ofEntries(

@@ -19,8 +19,10 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -57,8 +59,10 @@ import javax.annotation.Nonnull;
  * EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256());
  * }</pre>
  *
- * <p>The PKCS#12 and PKCS#5 password-based functions are in {@link OpenSSLEvpKdfPkcs12}; {@link
- * #rules()} includes them.
+ * <p>The PKCS#5 PBKDF2 functions are in {@link OpenSSLEvpKdfPbkdf2}, the PKCS#12 and PKCS#5
+ * password-based functions in {@link OpenSSLEvpKdfPkcs12}, and the password-based encryption
+ * selected by its algorithm identifier in {@link OpenSSLPasswordBasedEncryption}; {@link #rules()}
+ * includes them.
  */
 public final class OpenSSLEvpKdf {
 
@@ -94,6 +98,21 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // EVP_KDF_derive(ctx, key, keylen, params): the length of the derived key, in bytes
+    private static final IDetectionRule<AstNode> EVP_KDF_DERIVE_KEY_LENGTH =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("EVP_KDF_derive")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     private static final IDetectionRule<AstNode> EVP_KDF_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -102,7 +121,11 @@ public final class OpenSSLEvpKdf {
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(List.of(EVP_KDF_CTX_SET_PARAMS, EVP_KDF_DERIVE));
+                    .withDependingDetectionRules(
+                            List.of(
+                                    EVP_KDF_CTX_SET_PARAMS,
+                                    EVP_KDF_DERIVE,
+                                    EVP_KDF_DERIVE_KEY_LENGTH));
 
     private static final IDetectionRule<AstNode> EVP_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -164,7 +187,9 @@ public final class OpenSSLEvpKdf {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
+                        OpenSSLEvpKdfPbkdf2.rules().stream(),
                         OpenSSLEvpKdfPkcs12.rules().stream(),
+                        OpenSSLPasswordBasedEncryption.rules().stream(),
                         Stream.of(EVP_KDF_FETCH, EVP_PKEY_CTX_NEW_ID, EVP_PKEY_CTX_NEW_FROM_NAME))
                 .flatMap(i -> i)
                 .toList();

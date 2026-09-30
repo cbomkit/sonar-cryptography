@@ -28,12 +28,15 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyEc;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -41,11 +44,11 @@ import javax.annotation.Nonnull;
  *
  * <p>These rules detect the protocol selected by the {@code *_method()} functions (TLS 1.0-1.3,
  * DTLS 1.0-1.2, QUIC and SSLv3), and the protocol versions, cipher suites, key exchange groups,
- * signature algorithms and SRTP protection profiles configured on a context or a connection,
- * directly or through {@code SSL_CONF_cmd}. Passing a method to {@code SSL_CTX_new} or {@code
- * SSL_CTX_set_ssl_version}, and ephemeral DH or ECDH parameters to {@code SSL_CTX_set_tmp_dh} or
- * {@code SSL_CTX_set_tmp_ecdh}, is not reported again: the method, DH group or EC curve is reported
- * where it is created.
+ * signature algorithms, ephemeral DH groups and EC curves and SRTP protection profiles configured
+ * on a context ({@link #contextRules()}) or a connection ({@link #connectionRules()}), directly or
+ * through {@code SSL_CONF_cmd}. A context created in the scanned code is reported with its method
+ * and its configuration ({@link OpenSSLSslContext}); the rules are detection rules on their own as
+ * well, for a context or connection created elsewhere.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLLibssl {
@@ -643,12 +646,68 @@ public final class OpenSSLLibssl {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // The method, set on a context or a connection after its creation
+
+    private static final IDetectionRule<AstNode> SSL_CTX_SET_SSL_VERSION =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SSL_CTX_set_ssl_version")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(methodRules())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> SSL_SET_SSL_METHOD =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes("*")
+                    .forMethods("SSL_set_ssl_method")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(methodRules())
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // Ephemeral key exchange parameters: the DH group or the EC curve of the given key
+
+    private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_DH =
+            ephemeralKeyExchange("SSL_CTX_set_tmp_dh", OpenSSLLegacyDh.rules());
+
+    private static final IDetectionRule<AstNode> SSL_SET_TMP_DH =
+            ephemeralKeyExchange("SSL_set_tmp_dh", OpenSSLLegacyDh.rules());
+
+    private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_ECDH =
+            ephemeralKeyExchange("SSL_CTX_set_tmp_ecdh", OpenSSLLegacyEc.rules());
+
+    private static final IDetectionRule<AstNode> SSL_SET_TMP_ECDH =
+            ephemeralKeyExchange("SSL_set_tmp_ecdh", OpenSSLLegacyEc.rules());
+
+    @Nonnull
+    private static IDetectionRule<AstNode> ephemeralKeyExchange(
+            @Nonnull String function, @Nonnull List<IDetectionRule<AstNode>> keyRules) {
+        return new DetectionRuleBuilder<AstNode>()
+                .createDetectionRule()
+                .forObjectTypes("*")
+                .forMethods(function)
+                .withMethodParameter("*")
+                .withMethodParameter("*")
+                .addDependingDetectionRules(keyRules)
+                .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_GROUPS))
+                .inBundle(() -> BUNDLE)
+                .withoutDependingDetectionRules();
+    }
+
     private OpenSSLLibssl() {
         // private
     }
 
+    /** The {@code *_method()} functions, each selecting a protocol. */
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    public static List<IDetectionRule<AstNode>> methodRules() {
         return List.of(
                 // TLS Generic
                 TLS_METHOD,
@@ -685,34 +744,60 @@ public final class OpenSSLLibssl {
                 // QUIC
                 OSSL_QUIC_CLIENT_METHOD,
                 OSSL_QUIC_CLIENT_THREAD_METHOD,
-                OSSL_QUIC_SERVER_METHOD,
-                // Cipher Configuration
+                OSSL_QUIC_SERVER_METHOD);
+    }
+
+    /** The configuration of a context, {@code SSL_CTX_*(ctx, ...)}. */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> contextRules() {
+        return List.of(
+                SSL_CTX_SET_SSL_VERSION,
                 SSL_CTX_SET_CIPHER_LIST,
-                SSL_SET_CIPHER_LIST,
                 SSL_CTX_SET_CIPHERSUITES,
-                SSL_SET_CIPHERSUITES,
-                // Protocol Version Configuration
                 SSL_CTX_SET_MIN_PROTO_VERSION,
                 SSL_CTX_SET_MAX_PROTO_VERSION,
+                // SSL_CTX_set1_curves_list is an alias for SSL_CTX_set1_groups_list
+                SSL_CTX_SET1_GROUPS_LIST,
+                SSL_CTX_SET1_SIGALGS_LIST,
+                SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
+                SSL_CTX_SET_TMP_DH,
+                SSL_CTX_SET_TMP_ECDH,
+                SSL_CTX_SET_TLSEXT_USE_SRTP);
+    }
+
+    /** The configuration of a connection, {@code SSL_*(ssl, ...)}. */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> connectionRules() {
+        return List.of(
+                SSL_SET_SSL_METHOD,
+                SSL_SET_CIPHER_LIST,
+                SSL_SET_CIPHERSUITES,
                 SSL_SET_MIN_PROTO_VERSION,
                 SSL_SET_MAX_PROTO_VERSION,
-                // KEX Group / Curve Configuration
-                // (SSL_CTX_set1_curves* and SSL_set1_curves* are aliases for the groups macros;
-                //  they expand to the same SSL_CTX_ctrl/SSL_ctrl calls with ctrl codes 91/92)
-                SSL_CTX_SET1_GROUPS_LIST,
+                // SSL_set1_curves_list is an alias for SSL_set1_groups_list
                 SSL_SET1_GROUPS_LIST,
-                // Signature Algorithm Configuration
-                SSL_CTX_SET1_SIGALGS_LIST,
                 SSL_SET1_SIGALGS_LIST,
-                SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
-                // SSL_CONF (string-driven config)
-                SSL_CONF_CMD_PROTOCOL_VERSION,
-                SSL_CONF_CMD_CIPHERS,
-                SSL_CONF_CMD_GROUPS,
-                SSL_CONF_CMD_SIGNATURE_ALGORITHMS,
-                // SRTP protection profile selection: a colon-separated list of profile names
-                SSL_CTX_SET_TLSEXT_USE_SRTP,
+                SSL_SET_TMP_DH,
+                SSL_SET_TMP_ECDH,
                 SSL_SET_TLSEXT_USE_SRTP);
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> buildRules() {
+        return Stream.of(
+                        methodRules().stream(),
+                        // contexts, reported with their method and configuration
+                        OpenSSLSslContext.rules().stream(),
+                        contextRules().stream(),
+                        connectionRules().stream(),
+                        // SSL_CONF (string-driven config)
+                        Stream.of(
+                                SSL_CONF_CMD_PROTOCOL_VERSION,
+                                SSL_CONF_CMD_CIPHERS,
+                                SSL_CONF_CMD_GROUPS,
+                                SSL_CONF_CMD_SIGNATURE_ALGORITHMS))
+                .flatMap(rules -> rules)
+                .toList();
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

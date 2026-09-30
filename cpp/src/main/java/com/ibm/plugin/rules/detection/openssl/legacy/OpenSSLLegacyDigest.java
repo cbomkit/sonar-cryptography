@@ -51,7 +51,7 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("SHA1_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -62,7 +62,9 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("SHA1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -73,7 +75,7 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("RIPEMD160_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -84,7 +86,9 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("RIPEMD160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -95,7 +99,9 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("WHIRLPOOL")
                     .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -106,7 +112,7 @@ public final class OpenSSLLegacyDigest {
                     .forObjectTypes("*")
                     .forMethods("WHIRLPOOL_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
                     .buildForContext(new DigestContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

@@ -20,11 +20,14 @@
 package com.ibm.plugin.rules.detection;
 
 import com.ibm.common.IObserver;
+import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.cxx.CxxScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.mapper.model.IAsset;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.collections.IAssetCollection;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.CxxAggregator;
 import com.ibm.plugin.translation.CxxTranslationProcess;
@@ -34,8 +37,13 @@ import com.ibm.rules.issue.Issue;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.AstNodeType;
 import com.sonar.cxx.sslr.api.Grammar;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.cxx.parser.CxxGrammarImpl;
@@ -60,8 +68,9 @@ import org.sonar.cxx.utils.CxxAstNodeHelper;
  *       and calls {@link #leaveFile(AstNode)}
  *   <li>We traverse the AST looking for function calls and constructor invocations
  *   <li>For each relevant node, we create a {@link DetectionExecutive} and start detection
- *   <li>When a finding is detected, {@link #update(Finding)} is called
- *   <li>The finding is translated, reorganized, enriched, and optionally reported
+ *   <li>When a finding is detected, {@link #update(Finding)} collects it
+ *   <li>Once the file is traversed, each finding that no other finding reports (see {@link
+ *       #leaveFile}) is translated, reorganized, enriched, and optionally reported
  * </ol>
  */
 public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
@@ -81,6 +90,16 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
     private final boolean isInventory;
     @Nonnull protected final CxxTranslationProcess cxxTranslationProcess;
     @Nonnull protected final List<IDetectionRule<AstNode>> detectionRules;
+
+    /** The findings of the file, handled once the file is traversed, see {@link #leaveFile}. */
+    @Nonnull
+    private final List<
+                    Finding<
+                            SquidCheck<?>,
+                            AstNode,
+                            Symbol,
+                            SquidAstVisitorContext<? extends Grammar>>>
+            fileFindings = new ArrayList<>();
 
     protected CxxBaseDetectionRule() {
         this.isInventory = false;
@@ -112,13 +131,38 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
      * entries are removed by {@link CxxSymbolExtensionRelease} once every rule of the scan has left
      * the file.
      *
+     * <p>A call can be detected on its own and also be reported by the finding of another call,
+     * e.g. {@code EVP_aes_256_gcm()} passed to {@code EVP_EncryptInit_ex}, a cipher fetched into a
+     * variable that is passed to it, or {@code EVP_EncryptInit_ex} made on a context created by
+     * {@code EVP_CIPHER_CTX_new()}. The findings of the file are therefore collected first, and a
+     * finding is handled only if its call is not reported by another finding of the file, and if it
+     * describes a cryptographic asset.
+     *
      * @param astNode the root AST node of the file that finished analysis, or {@code null} on a
      *     parse error
      */
     @Override
     public void leaveFile(@Nullable AstNode astNode) {
         if (astNode != null) {
+            fileFindings.clear();
             AstNodeTraversal.traverse(astNode, DETECTION_NODE_TYPES, this::processNode);
+            final List<
+                            Finding<
+                                    SquidCheck<?>,
+                                    AstNode,
+                                    Symbol,
+                                    SquidAstVisitorContext<? extends Grammar>>>
+                    findings = List.copyOf(fileFindings);
+            fileFindings.clear();
+            for (Finding<SquidCheck<?>, AstNode, Symbol, SquidAstVisitorContext<? extends Grammar>>
+                    finding : withoutFindingsReportedByOthers(findings)) {
+                final List<INode> nodes = cxxTranslationProcess.initiate(finding.detectionStore());
+                // an operation whose algorithm is not known, e.g. the key set on a cipher context
+                // initialized elsewhere, describes no cryptographic asset
+                if (describesAnAsset(nodes)) {
+                    onFinding(finding, nodes);
+                }
+            }
             CxxSymbolExtensionRelease.leaveFile(getContext(), this, astNode);
         }
         CxxAggregator.getLanguageSupport().notifyLeaveFile(getContext().getInputFile());
@@ -157,12 +201,106 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
     }
 
     /**
-     * Called when a finding is detected by the engine.
+     * The findings whose detection (a rule matched on a call) is not reported below the root of
+     * another finding. A finding is kept when every finding reporting its detection is itself
+     * reported by it, so that two findings never remove each other. A finding with the same
+     * detection as a kept one, reached through another call (e.g. a key passed to a setter of a
+     * context created elsewhere), is the same finding and is not kept again. A call reported below
+     * another finding by another rule is another detection, e.g. {@code EVP_SealInit} is both the
+     * encryption with its cipher and the encryption of the session key with the key given to it.
+     */
+    @Nonnull
+    private static <F extends Finding<?, AstNode, ?, ?>> List<F> withoutFindingsReportedByOthers(
+            @Nonnull List<F> findings) {
+        final List<Detection> roots = new ArrayList<>(findings.size());
+        final List<Set<Detection>> nestedDetections = new ArrayList<>(findings.size());
+        final Map<Detection, List<Integer>> reportedBy = new HashMap<>();
+        for (int i = 0; i < findings.size(); i++) {
+            final DetectionStore<?, AstNode, ?, ?> store = findings.get(i).detectionStore();
+            roots.add(
+                    new Detection(
+                            store.getDetectionRule(),
+                            position(
+                                    store.getDetectedExpression()
+                                            .orElse(findings.get(i).getMarkerTree()))));
+            final Set<Detection> nested = new HashSet<>();
+            store.getChildren().forEach(child -> collectDetections(child, nested));
+            nestedDetections.add(nested);
+            for (Detection detection : nested) {
+                reportedBy.computeIfAbsent(detection, d -> new ArrayList<>()).add(i);
+            }
+        }
+        final List<F> kept = new ArrayList<>(findings.size());
+        final Set<Detection> keptRoots = new HashSet<>();
+        for (int i = 0; i < findings.size(); i++) {
+            final int finding = i;
+            final boolean reportedByAnother =
+                    reportedBy.getOrDefault(roots.get(i), List.of()).stream()
+                            .anyMatch(
+                                    other ->
+                                            other != finding
+                                                    && !nestedDetections
+                                                            .get(finding)
+                                                            .contains(roots.get(other)));
+            if (!reportedByAnother && keptRoots.add(roots.get(i))) {
+                kept.add(findings.get(i));
+            }
+        }
+        return kept;
+    }
+
+    /** The detections of a detection store and of the stores below it. */
+    private static void collectDetections(
+            @Nonnull DetectionStore<?, AstNode, ?, ?> store, @Nonnull Set<Detection> detections) {
+        store.getDetectedExpressions()
+                .forEach(
+                        expression ->
+                                detections.add(
+                                        new Detection(
+                                                store.getDetectionRule(), position(expression))));
+        store.getChildren().forEach(child -> collectDetections(child, detections));
+    }
+
+    /** A detection rule matched on the call at a position; the rule is compared by identity. */
+    private record Detection(@Nonnull IDetectionRule<?> rule, @Nonnull String position) {
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Detection detection
+                    && detection.rule == rule
+                    && detection.position.equals(position);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * System.identityHashCode(rule) + position.hashCode();
+        }
+    }
+
+    /** Whether the translated nodes hold an asset (an algorithm, key, protocol or cipher suite). */
+    private static boolean describesAnAsset(@Nonnull List<INode> nodes) {
+        return nodes.stream()
+                .anyMatch(
+                        node ->
+                                node instanceof IAsset
+                                        || node instanceof IAssetCollection<?>
+                                        || describesAnAsset(
+                                                List.copyOf(node.getChildren().values())));
+    }
+
+    /** A node's position, by its first token: the matched calls may be detached copies. */
+    @Nonnull
+    private static String position(@Nonnull AstNode node) {
+        return node.getToken().getLine() + ":" + node.getToken().getColumn();
+    }
+
+    /**
+     * Called when a finding is detected by the engine. The finding is handled by {@link #onFinding}
+     * once the file is traversed, see {@link #leaveFile}.
      *
      * @param finding A finding containing detection store information.
      */
     @Override
-    public void update(
+    public final void update(
             @Nonnull
                     Finding<
                                     SquidCheck<?>,
@@ -170,7 +308,24 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
                                     Symbol,
                                     SquidAstVisitorContext<? extends Grammar>>
                             finding) {
-        final List<INode> nodes = cxxTranslationProcess.initiate(finding.detectionStore());
+        fileFindings.add(finding);
+    }
+
+    /**
+     * Handles a finding: adds its translation to the inventory and reports its issues.
+     *
+     * @param finding A finding containing detection store information.
+     * @param nodes The translation of the finding.
+     */
+    protected void onFinding(
+            @Nonnull
+                    Finding<
+                                    SquidCheck<?>,
+                                    AstNode,
+                                    Symbol,
+                                    SquidAstVisitorContext<? extends Grammar>>
+                            finding,
+            @Nonnull List<INode> nodes) {
         if (isInventory) {
             CxxAggregator.addNodes(nodes);
         }

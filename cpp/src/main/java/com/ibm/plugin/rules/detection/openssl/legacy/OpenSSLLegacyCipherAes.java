@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
@@ -33,18 +34,23 @@ public final class OpenSSLLegacyCipherAes {
 
     private static final String BUNDLE = "OpenSSL";
 
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
     private static final List<LegacyEntry> ENTRIES =
             List.of(
-                    new LegacyEntry("AES_set_encrypt_key", "AES"),
-                    new LegacyEntry("AES_set_decrypt_key", "AES"),
-                    new LegacyEntry("AES_ecb_encrypt", "AES-ECB"),
-                    new LegacyEntry("AES_cbc_encrypt", "AES-CBC"),
-                    new LegacyEntry("AES_cfb128_encrypt", "AES-CFB128"),
-                    new LegacyEntry("AES_ofb128_encrypt", "AES-OFB"),
-                    new LegacyEntry("AES_ige_encrypt", "AES-IGE"),
-                    new LegacyEntry("AES_cfb1_encrypt", "AES-CFB1"),
-                    new LegacyEntry("AES_cfb8_encrypt", "AES-CFB8"),
-                    new LegacyEntry("AES_bi_ige_encrypt", "AES-BI-IGE"));
+                    new LegacyEntry("AES_set_encrypt_key", "AES", 3, 1, Size.UnitType.BIT),
+                    new LegacyEntry("AES_set_decrypt_key", "AES", 3, 1, Size.UnitType.BIT),
+                    new LegacyEntry("AES_ecb_encrypt", "AES-ECB", 4).keyAt(2),
+                    new LegacyEntry("AES_cbc_encrypt", "AES-CBC", 6).keyAt(3),
+                    new LegacyEntry("AES_cfb128_encrypt", "AES-CFB128", 7).keyAt(3),
+                    new LegacyEntry("AES_ofb128_encrypt", "AES-OFB", 6).keyAt(3),
+                    new LegacyEntry("AES_ige_encrypt", "AES-IGE", 6).keyAt(3),
+                    new LegacyEntry("AES_cfb1_encrypt", "AES-CFB1", 7).keyAt(3),
+                    new LegacyEntry("AES_cfb8_encrypt", "AES-CFB8", 7).keyAt(3),
+                    new LegacyEntry("AES_bi_ige_encrypt", "AES-BI-IGE", 7).keyAt(3),
+                    // AES_wrap_key(key, iv, out, in, inlen) / AES_unwrap_key(...): RFC 3394
+                    new LegacyEntry("AES_wrap_key", "AES-WRAP", 5).keyAt(0),
+                    new LegacyEntry("AES_unwrap_key", "AES-WRAP", 5).keyAt(0));
 
     private OpenSSLLegacyCipherAes() {
         // private

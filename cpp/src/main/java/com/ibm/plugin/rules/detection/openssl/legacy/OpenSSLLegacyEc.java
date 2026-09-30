@@ -31,6 +31,7 @@ import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -55,7 +56,12 @@ public final class OpenSSLLegacyEc {
                     .forObjectTypes("*")
                     .forMethods("ECDSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -66,7 +72,9 @@ public final class OpenSSLLegacyEc {
                     .forObjectTypes("*")
                     .forMethods("ECDSA_do_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -77,7 +85,14 @@ public final class OpenSSLLegacyEc {
                     .forObjectTypes("*")
                     .forMethods("ECDSA_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -88,7 +103,11 @@ public final class OpenSSLLegacyEc {
                     .forObjectTypes("*")
                     .forMethods("ECDSA_do_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -143,22 +162,36 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // A group on a curve given by its parameters, not by name
-    private static final IDetectionRule<AstNode> EC_GROUP_NEW_CUSTOM_CURVE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods(
-                            "EC_GROUP_new_curve_GFp",
-                            "EC_GROUP_new_curve_GF2m",
-                            "EC_GROUP_new_from_params",
+    // A group on a curve given by its parameters, not by name: EC_GROUP_new_curve_GFp(p, a, b, ctx)
+    // and EC_GROUP_new_curve_GF2m(p, a, b, ctx), EC_GROUP_new_from_params(params, libctx, propq),
+    // EC_GROUP_new_from_ecparameters(params) and EC_GROUP_new_from_ecpkparameters(params)
+    private static final List<IDetectionRule<AstNode>> EC_GROUP_NEW_CUSTOM_CURVE =
+            List.of(
+                    customCurve(4, "EC_GROUP_new_curve_GFp", "EC_GROUP_new_curve_GF2m"),
+                    customCurve(3, "EC_GROUP_new_from_params"),
+                    customCurve(
+                            1,
                             "EC_GROUP_new_from_ecparameters",
-                            "EC_GROUP_new_from_ecpkparameters")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withAnyParameters()
-                    .buildForContext(new KeyContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+                            "EC_GROUP_new_from_ecpkparameters"));
+
+    @Nonnull
+    private static IDetectionRule<AstNode> customCurve(
+            int parameterCount, @Nonnull String... functions) {
+        IDetectionRule.ParametersFactoryBuilder<AstNode> parameters =
+                new DetectionRuleBuilder<AstNode>()
+                        .createDetectionRule()
+                        .forObjectTypes("*")
+                        .forMethods(functions)
+                        .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                        .withMethodParameter("*");
+        for (int i = 1; i < parameterCount; i++) {
+            parameters = parameters.withMethodParameter("*");
+        }
+        return parameters
+                .buildForContext(new KeyContext())
+                .inBundle(() -> BUNDLE)
+                .withoutDependingDetectionRules();
+    }
 
     // EC_KEY_set_group(key, group): the curve of the key is the curve of the group
     private static final IDetectionRule<AstNode> EC_KEY_SET_GROUP =
@@ -169,10 +202,12 @@ public final class OpenSSLLegacyEc {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .addDependingDetectionRules(
-                            List.of(
-                                    EC_GROUP_NEW_BY_CURVE_NAME,
-                                    EC_GROUP_NEW_BY_CURVE_NAME_EX,
-                                    EC_GROUP_NEW_CUSTOM_CURVE))
+                            Stream.concat(
+                                            Stream.of(
+                                                    EC_GROUP_NEW_BY_CURVE_NAME,
+                                                    EC_GROUP_NEW_BY_CURVE_NAME_EX),
+                                            EC_GROUP_NEW_CUSTOM_CURVE.stream())
+                                    .toList())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -203,7 +238,11 @@ public final class OpenSSLLegacyEc {
                     .forObjectTypes("*")
                     .forMethods("ECDH_compute_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withAnyParameters()
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -214,21 +253,24 @@ public final class OpenSSLLegacyEc {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                // ECDSA Signatures
-                ECDSA_SIGN,
-                ECDSA_SIGN_EX,
-                ECDSA_DO_SIGN,
-                ECDSA_DO_SIGN_EX,
-                // Keys and groups
-                EC_KEY_NEW_BY_CURVE_NAME,
-                EC_KEY_NEW_BY_CURVE_NAME_EX,
-                EC_GROUP_NEW_BY_CURVE_NAME,
-                EC_GROUP_NEW_BY_CURVE_NAME_EX,
-                EC_GROUP_NEW_CUSTOM_CURVE,
-                EC_KEY_GENERATE_KEY,
-                // Key Agreement
-                ECDH_COMPUTE_KEY);
+        return Stream.concat(
+                        Stream.of(
+                                // ECDSA Signatures
+                                ECDSA_SIGN,
+                                ECDSA_SIGN_EX,
+                                ECDSA_DO_SIGN,
+                                ECDSA_DO_SIGN_EX,
+                                // Keys and groups
+                                EC_KEY_NEW_BY_CURVE_NAME,
+                                EC_KEY_NEW_BY_CURVE_NAME_EX,
+                                EC_GROUP_NEW_BY_CURVE_NAME,
+                                EC_GROUP_NEW_BY_CURVE_NAME_EX,
+                                EC_KEY_GENERATE_KEY,
+                                // Key Agreement
+                                ECDH_COMPUTE_KEY),
+                        // Groups on custom curves
+                        EC_GROUP_NEW_CUSTOM_CURVE.stream())
+                .toList();
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

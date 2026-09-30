@@ -19,76 +19,28 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) SEED cipher APIs. */
-@SuppressWarnings("java:S1192")
 public final class OpenSSLLegacyCipherSeed {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> SEED_SET_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SEED_set_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SEED_ECB_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SEED_ecb_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-ECB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SEED_CBC_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SEED_cbc_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CBC"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SEED_CFB128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SEED_cfb128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> SEED_OFB128_ENCRYPT =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes("*")
-                    .forMethods("SEED_ofb128_encrypt")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("SEED-OFB"))
-                    .withAnyParameters()
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+    // function(s), label, number of arguments[, argument giving the key size, its unit]
+    private static final List<LegacyEntry> ENTRIES =
+            List.of(
+                    new LegacyEntry("SEED_set_key", "SEED", 2),
+                    new LegacyEntry("SEED_ecb_encrypt", "SEED-ECB", 4),
+                    new LegacyEntry("SEED_cbc_encrypt", "SEED-CBC", 6),
+                    new LegacyEntry("SEED_cfb128_encrypt", "SEED-CFB", 7),
+                    new LegacyEntry("SEED_ofb128_encrypt", "SEED-OFB", 6));
 
     private OpenSSLLegacyCipherSeed() {
         // private
@@ -96,12 +48,7 @@ public final class OpenSSLLegacyCipherSeed {
 
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
-        return List.of(
-                SEED_SET_KEY,
-                SEED_ECB_ENCRYPT,
-                SEED_CBC_ENCRYPT,
-                SEED_CFB128_ENCRYPT,
-                SEED_OFB128_ENCRYPT);
+        return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
     }
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =

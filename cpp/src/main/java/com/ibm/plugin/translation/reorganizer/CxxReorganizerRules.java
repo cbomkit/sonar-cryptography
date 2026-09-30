@@ -26,6 +26,7 @@ import com.ibm.mapper.model.ProbabilisticSignatureScheme;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SecretKey;
 import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
@@ -62,13 +63,20 @@ public final class CxxReorganizerRules {
                 AsymmetricBlockCipherReorganizer.INVERT_DIGEST_AND_ITS_SIZE,
                 AsymmetricBlockCipherReorganizer.MERGE_PKE_PARENT_AND_CHILD,
                 BlockCipherReorganizer.MERGE_BLOCK_CIPHER_PARENT_AND_CHILD,
+                // a legacy stream cipher operation on the key set up for it, e.g. RC4 on
+                // RC4_set_key
+                AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
+                        StreamCipher.class),
                 CipherParameterReorganizer.MOVE_KEY_LENGTH_UNDER_TAG_LENGTH_UP,
                 CipherParameterReorganizer.MOVE_NODES_UNDER_DECRYPT_UP,
                 CipherParameterReorganizer.MOVE_ENCRYPT_UNDER_ITS_CIPHER,
                 CipherParameterReorganizer.MOVE_DECRYPT_UNDER_ITS_CIPHER,
                 CipherParameterReorganizer.MOVE_NODES_UNDER_ENCRYPT_UP,
                 CipherSuiteReorganizer.ADD_TLS_PROTOCOL_AS_PARENT_NODE,
+                CipherSuiteReorganizer.ADD_TLS_PROTOCOL_AS_PARENT_OF_CIPHER_SUITES,
+                CipherSuiteReorganizer.REPLACE_TLS_WITH_VERSIONED_CHILD,
                 MacReorganizer.MERGE_UNKNOWN_MAC_PARENT_AND_CIPHER_CHILD,
+                MacReorganizer.MERGE_GMAC_PARENT_AND_GCM_CIPHER_CHILD,
                 MacReorganizer.MOVE_SOME_MAC_CHILDREN_UNDER_BLOCKCIPHER,
                 MacReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,
                 SignatureReorganizer.MERGE_UNKNOWN_SIGNATURE_PARENT_AND_CHILD,
