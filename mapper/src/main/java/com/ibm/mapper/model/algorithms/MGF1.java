@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MaskGenerationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
@@ -36,5 +37,25 @@ public final class MGF1 extends Algorithm implements MaskGenerationFunction {
     public MGF1(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    private MGF1(@Nonnull MGF1 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MGF1 copy() {
+        return new MGF1(this);
+    }
+
+    public MGF1(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull MGF1 mgf1) {
+        super(mgf1, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MGF1 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MGF1(kind, this);
     }
 }

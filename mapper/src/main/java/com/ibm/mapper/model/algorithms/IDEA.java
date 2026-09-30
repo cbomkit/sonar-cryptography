@@ -65,4 +65,20 @@ public final class IDEA extends Algorithm implements BlockCipher {
     public IDEA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull IDEA idea) {
         super(idea, asKind);
     }
+
+    private IDEA(@Nonnull IDEA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected IDEA copy() {
+        return new IDEA(this);
+    }
+
+    @Nonnull
+    @Override
+    public IDEA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new IDEA(kind, this);
+    }
 }

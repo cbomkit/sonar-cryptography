@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms.photonbeetle;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NonceLength;
 import com.ibm.mapper.model.TagLength;
@@ -60,5 +61,27 @@ public class PhotonBeetleAEAD extends Algorithm implements AuthenticatedEncrypti
     public PhotonBeetleAEAD(int rate, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new BlockSize(rate, detectionLocation));
+    }
+
+    private PhotonBeetleAEAD(@Nonnull PhotonBeetleAEAD algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PhotonBeetleAEAD copy() {
+        return new PhotonBeetleAEAD(this);
+    }
+
+    public PhotonBeetleAEAD(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull PhotonBeetleAEAD photonBeetleAEAD) {
+        super(photonBeetleAEAD, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PhotonBeetleAEAD asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PhotonBeetleAEAD(kind, this);
     }
 }

@@ -28,4 +28,14 @@ public final class IPSec extends Protocol {
     public IPSec(@Nonnull DetectionLocation detectionLocation) {
         super(new Protocol("IPSec", detectionLocation), IPSec.class);
     }
+
+    private IPSec(@Nonnull IPSec protocol) {
+        super(protocol);
+    }
+
+    @Nonnull
+    @Override
+    protected IPSec copy() {
+        return new IPSec(this);
+    }
 }

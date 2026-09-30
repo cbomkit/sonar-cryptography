@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -63,5 +64,26 @@ public class Dilithium extends Algorithm implements Signature {
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
+    }
+
+    private Dilithium(@Nonnull Dilithium algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Dilithium copy() {
+        return new Dilithium(this);
+    }
+
+    public Dilithium(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Dilithium dilithium) {
+        super(dilithium, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Dilithium asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Dilithium(kind, this);
     }
 }

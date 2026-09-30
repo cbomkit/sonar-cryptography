@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.gost;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,26 @@ public final class GOSTR341094 extends Algorithm implements Signature {
 
     public GOSTR341094(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private GOSTR341094(@Nonnull GOSTR341094 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR341094 copy() {
+        return new GOSTR341094(this);
+    }
+
+    public GOSTR341094(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull GOSTR341094 gostr341094) {
+        super(gostr341094, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public GOSTR341094 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new GOSTR341094(kind, this);
     }
 }

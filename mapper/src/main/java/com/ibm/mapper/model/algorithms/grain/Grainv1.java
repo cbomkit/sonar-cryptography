@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms.grain;
 
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.InitializationVectorLength;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.StreamCipher;
@@ -32,5 +33,25 @@ public class Grainv1 extends Grain {
         super(NAME, StreamCipher.class, detectionLocation);
         this.put(KeyLength.ofDefault(80, detectionLocation));
         this.put(new InitializationVectorLength(64, detectionLocation));
+    }
+
+    private Grainv1(@Nonnull Grainv1 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Grainv1 copy() {
+        return new Grainv1(this);
+    }
+
+    public Grainv1(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Grainv1 grainv1) {
+        super(asKind, grainv1);
+    }
+
+    @Nonnull
+    @Override
+    public Grainv1 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Grainv1(kind, this);
     }
 }

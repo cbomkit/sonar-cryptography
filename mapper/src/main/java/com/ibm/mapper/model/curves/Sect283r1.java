@@ -27,4 +27,14 @@ public final class Sect283r1 extends EllipticCurve {
     public Sect283r1(@Nonnull DetectionLocation detectionLocation) {
         super("sect283r1", detectionLocation);
     }
+
+    private Sect283r1(@Nonnull Sect283r1 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Sect283r1 copy() {
+        return new Sect283r1(this);
+    }
 }

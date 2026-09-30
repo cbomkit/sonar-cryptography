@@ -59,4 +59,24 @@ public final class XMSS extends Algorithm implements Signature, MessageDigest {
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private XMSS(@Nonnull XMSS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected XMSS copy() {
+        return new XMSS(this);
+    }
+
+    public XMSS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull XMSS xmss) {
+        super(xmss, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public XMSS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new XMSS(kind, this);
+    }
 }

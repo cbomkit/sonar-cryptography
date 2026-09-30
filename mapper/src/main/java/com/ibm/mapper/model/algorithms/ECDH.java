@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -55,5 +56,25 @@ public final class ECDH extends Algorithm implements KeyAgreement {
     public ECDH(@Nonnull EllipticCurve ellipticCurve) {
         this(ellipticCurve.getDetectionContext());
         this.put(ellipticCurve);
+    }
+
+    private ECDH(@Nonnull ECDH algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECDH copy() {
+        return new ECDH(this);
+    }
+
+    public ECDH(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECDH ecdh) {
+        super(ecdh, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ECDH asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECDH(kind, this);
     }
 }

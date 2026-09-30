@@ -27,4 +27,14 @@ public final class SIV extends Mode {
     public SIV(@Nonnull DetectionLocation detectionLocation) {
         super("SIV", detectionLocation);
     }
+
+    private SIV(@Nonnull SIV mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new SIV(this);
+    }
 }

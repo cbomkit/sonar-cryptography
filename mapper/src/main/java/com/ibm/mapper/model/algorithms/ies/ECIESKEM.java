@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.ies;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class ECIESKEM extends Algorithm implements KeyEncapsulationMechanism {
 
     public ECIESKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private ECIESKEM(@Nonnull ECIESKEM algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECIESKEM copy() {
+        return new ECIESKEM(this);
+    }
+
+    public ECIESKEM(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECIESKEM ecieskem) {
+        super(ecieskem, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ECIESKEM asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECIESKEM(kind, this);
     }
 }

@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.IAlgorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -61,5 +62,25 @@ public final class HMAC extends Algorithm implements Mac {
         return this.hasChildOfType(MessageDigest.class)
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
+    }
+
+    private HMAC(@Nonnull HMAC algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected HMAC copy() {
+        return new HMAC(this);
+    }
+
+    public HMAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull HMAC hmac) {
+        super(hmac, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public HMAC asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new HMAC(kind, this);
     }
 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class DSTU4145 extends Algorithm implements Signature {
 
     public DSTU4145(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private DSTU4145(@Nonnull DSTU4145 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected DSTU4145 copy() {
+        return new DSTU4145(this);
+    }
+
+    public DSTU4145(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DSTU4145 dstu4145) {
+        super(dstu4145, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public DSTU4145 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new DSTU4145(kind, this);
     }
 }

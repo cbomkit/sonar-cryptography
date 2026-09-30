@@ -58,7 +58,8 @@ public class Key implements IAsset {
         this.kind = asKind;
     }
 
-    private Key(@Nonnull Key key) {
+    /** A copy of the given key without its children. */
+    protected Key(@Nonnull Key key) {
         this.children = new HashMap<>();
         this.kind = key.kind;
         this.detectionLocation = key.detectionLocation;
@@ -129,11 +130,20 @@ public class Key implements IAsset {
     @Nonnull
     @Override
     public INode deepCopy() {
-        Key copy = new Key(this);
+        final Key copy = copy();
         for (INode child : this.children.values()) {
             copy.children.put(child.getKind(), child.deepCopy());
         }
         return copy;
+    }
+
+    /**
+     * A copy of this key without its children. A key class returns an instance of its own class,
+     * which the output reports the key by.
+     */
+    @Nonnull
+    protected Key copy() {
+        return new Key(this);
     }
 
     @Override

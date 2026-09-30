@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.vmpc;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public final class VMPCMAC extends Algorithm implements Mac {
     public VMPCMAC(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Mac.class, detectionLocation);
         this.put(new VMPC(detectionLocation));
+    }
+
+    private VMPCMAC(@Nonnull VMPCMAC algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPCMAC copy() {
+        return new VMPCMAC(this);
+    }
+
+    public VMPCMAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull VMPCMAC vmpcmac) {
+        super(vmpcmac, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public VMPCMAC asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new VMPCMAC(kind, this);
     }
 }

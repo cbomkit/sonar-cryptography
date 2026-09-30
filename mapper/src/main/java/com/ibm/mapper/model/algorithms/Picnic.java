@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -62,5 +63,25 @@ public final class Picnic extends Algorithm implements Signature {
     public Picnic(String parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new ParameterSetIdentifier(parameterSetIdentifier, detectionLocation));
+    }
+
+    private Picnic(@Nonnull Picnic algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Picnic copy() {
+        return new Picnic(this);
+    }
+
+    public Picnic(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Picnic picnic) {
+        super(picnic, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Picnic asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Picnic(kind, this);
     }
 }

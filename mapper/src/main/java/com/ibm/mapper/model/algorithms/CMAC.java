@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.IAlgorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -62,5 +63,25 @@ public final class CMAC extends Algorithm implements Mac {
         return this.hasChildOfType(BlockCipher.class)
                 .map(node -> this.name + "-" + ((IAlgorithm) node).getName())
                 .orElse(this.name);
+    }
+
+    private CMAC(@Nonnull CMAC algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected CMAC copy() {
+        return new CMAC(this);
+    }
+
+    public CMAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CMAC cmac) {
+        super(cmac, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public CMAC asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new CMAC(kind, this);
     }
 }

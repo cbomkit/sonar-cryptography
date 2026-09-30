@@ -32,7 +32,7 @@ public final class NonceLength extends Property {
     }
 
     private NonceLength(@Nonnull NonceLength nonceLength) {
-        super(nonceLength.type, nonceLength.detectionLocation, nonceLength.children);
+        super(nonceLength);
         this.value = nonceLength.value;
     }
 
@@ -49,12 +49,8 @@ public final class NonceLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        NonceLength copy = new NonceLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected NonceLength copy() {
+        return new NonceLength(this);
     }
 
     @Override

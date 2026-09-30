@@ -53,4 +53,20 @@ public class ISO9796 extends Algorithm implements Signature, ProbabilisticSignat
     public ISO9796(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ISO9796 iso) {
         super(iso, asKind);
     }
+
+    private ISO9796(@Nonnull ISO9796 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ISO9796 copy() {
+        return new ISO9796(this);
+    }
+
+    @Nonnull
+    @Override
+    public ISO9796 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ISO9796(kind, this);
+    }
 }

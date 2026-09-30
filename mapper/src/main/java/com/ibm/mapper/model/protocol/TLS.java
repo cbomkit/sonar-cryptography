@@ -86,4 +86,14 @@ public final class TLS extends Protocol {
         }
         return Optional.of((CipherSuiteCollection) node);
     }
+
+    private TLS(@Nonnull TLS protocol) {
+        super(protocol);
+    }
+
+    @Nonnull
+    @Override
+    protected TLS copy() {
+        return new TLS(this);
+    }
 }

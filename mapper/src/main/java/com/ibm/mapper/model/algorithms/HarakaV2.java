@@ -80,4 +80,20 @@ public final class HarakaV2 extends Algorithm implements MessageDigest {
     public HarakaV2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull HarakaV2 haraka) {
         super(haraka, asKind);
     }
+
+    private HarakaV2(@Nonnull HarakaV2 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected HarakaV2 copy() {
+        return new HarakaV2(this);
+    }
+
+    @Nonnull
+    @Override
+    public HarakaV2 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new HarakaV2(kind, this);
+    }
 }

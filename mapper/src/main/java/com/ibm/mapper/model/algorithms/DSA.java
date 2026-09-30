@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
@@ -48,5 +49,25 @@ public class DSA extends Algorithm implements Signature {
     public DSA(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    protected DSA(@Nonnull DSA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected DSA copy() {
+        return new DSA(this);
+    }
+
+    public DSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DSA dsa) {
+        super(dsa, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public DSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new DSA(kind, this);
     }
 }

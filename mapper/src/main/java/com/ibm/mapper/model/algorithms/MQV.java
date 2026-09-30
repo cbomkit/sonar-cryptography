@@ -58,4 +58,24 @@ public class MQV extends Algorithm implements KeyAgreement {
             @Nonnull DetectionLocation detectionLocation) {
         super(name, asKind, detectionLocation);
     }
+
+    protected MQV(@Nonnull MQV algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MQV copy() {
+        return new MQV(this);
+    }
+
+    public MQV(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull MQV mqv) {
+        super(mqv, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MQV asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MQV(kind, this);
+    }
 }

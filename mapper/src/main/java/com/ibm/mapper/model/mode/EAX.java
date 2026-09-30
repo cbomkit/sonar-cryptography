@@ -28,4 +28,14 @@ public final class EAX extends Mode {
     public EAX(@Nonnull DetectionLocation detectionLocation) {
         super("EAX", detectionLocation);
     }
+
+    private EAX(@Nonnull EAX mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new EAX(this);
+    }
 }

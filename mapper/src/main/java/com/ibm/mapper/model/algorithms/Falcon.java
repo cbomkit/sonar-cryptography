@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -63,5 +64,25 @@ public class Falcon extends Algorithm implements Signature {
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
+    }
+
+    private Falcon(@Nonnull Falcon algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Falcon copy() {
+        return new Falcon(this);
+    }
+
+    public Falcon(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Falcon falcon) {
+        super(falcon, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Falcon asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Falcon(kind, this);
     }
 }

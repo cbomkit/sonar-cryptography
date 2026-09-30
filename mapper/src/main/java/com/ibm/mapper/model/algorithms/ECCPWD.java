@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class ECCPWD extends Algorithm implements KeyAgreement {
 
     public ECCPWD(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
+    }
+
+    private ECCPWD(@Nonnull ECCPWD algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECCPWD copy() {
+        return new ECCPWD(this);
+    }
+
+    public ECCPWD(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECCPWD eccpwd) {
+        super(eccpwd, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ECCPWD asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECCPWD(kind, this);
     }
 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -54,5 +55,27 @@ public final class KDFDoublePipeline extends Algorithm implements KeyDerivationF
     public KDFDoublePipeline(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private KDFDoublePipeline(@Nonnull KDFDoublePipeline algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFDoublePipeline copy() {
+        return new KDFDoublePipeline(this);
+    }
+
+    public KDFDoublePipeline(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull KDFDoublePipeline kdfDoublePipeline) {
+        super(kdfDoublePipeline, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public KDFDoublePipeline asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new KDFDoublePipeline(kind, this);
     }
 }

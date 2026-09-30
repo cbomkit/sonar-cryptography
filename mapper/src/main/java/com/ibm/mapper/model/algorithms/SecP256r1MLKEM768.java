@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -53,5 +54,27 @@ public final class SecP256r1MLKEM768 extends Algorithm implements KeyEncapsulati
 
     public SecP256r1MLKEM768(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private SecP256r1MLKEM768(@Nonnull SecP256r1MLKEM768 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SecP256r1MLKEM768 copy() {
+        return new SecP256r1MLKEM768(this);
+    }
+
+    public SecP256r1MLKEM768(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull SecP256r1MLKEM768 secP256r1MLKEM768) {
+        super(secP256r1MLKEM768, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SecP256r1MLKEM768 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SecP256r1MLKEM768(kind, this);
     }
 }

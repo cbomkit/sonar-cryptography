@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.ParameterSetIdentifier;
@@ -73,5 +74,25 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
     public ANSIX942(@Nonnull String mode, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new ParameterSetIdentifier(mode, detectionLocation));
+    }
+
+    private ANSIX942(@Nonnull ANSIX942 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX942 copy() {
+        return new ANSIX942(this);
+    }
+
+    public ANSIX942(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ANSIX942 ansix942) {
+        super(ansix942, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ANSIX942 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ANSIX942(kind, this);
     }
 }

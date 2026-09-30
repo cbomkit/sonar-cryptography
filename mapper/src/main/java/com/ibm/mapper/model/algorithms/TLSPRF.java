@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.IAlgorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -66,5 +67,25 @@ public final class TLSPRF extends Algorithm implements KeyDerivationFunction {
         return this.hasChildOfType(MessageDigest.class)
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
+    }
+
+    private TLSPRF(@Nonnull TLSPRF algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected TLSPRF copy() {
+        return new TLSPRF(this);
+    }
+
+    public TLSPRF(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull TLSPRF tlsprf) {
+        super(tlsprf, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public TLSPRF asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new TLSPRF(kind, this);
     }
 }

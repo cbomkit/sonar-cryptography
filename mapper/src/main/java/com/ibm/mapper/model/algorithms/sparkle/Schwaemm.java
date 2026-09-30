@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NonceLength;
 import com.ibm.mapper.model.TagLength;
@@ -88,5 +89,25 @@ public class Schwaemm extends Algorithm implements AuthenticatedEncryption, Bloc
         this.put(new KeyLength(capacity, detectionLocation));
         this.put(new TagLength(capacity, detectionLocation));
         this.put(new NonceLength(rate, detectionLocation));
+    }
+
+    private Schwaemm(@Nonnull Schwaemm algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Schwaemm copy() {
+        return new Schwaemm(this);
+    }
+
+    public Schwaemm(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Schwaemm schwaemm) {
+        super(schwaemm, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Schwaemm asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Schwaemm(kind, this);
     }
 }

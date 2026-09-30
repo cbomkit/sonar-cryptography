@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.curves.Curve25519;
@@ -51,5 +52,25 @@ public final class X25519 extends Algorithm implements KeyAgreement {
         super(NAME, KeyAgreement.class, detectionLocation);
         this.put(new Curve25519(detectionLocation));
         this.put(new Oid("1.3.101.110", detectionLocation));
+    }
+
+    private X25519(@Nonnull X25519 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected X25519 copy() {
+        return new X25519(this);
+    }
+
+    public X25519(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull X25519 x25519) {
+        super(x25519, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public X25519 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new X25519(kind, this);
     }
 }

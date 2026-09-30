@@ -33,10 +33,7 @@ public final class NumberOfIterations extends Property {
     }
 
     public NumberOfIterations(@Nonnull NumberOfIterations numberOfIterations) {
-        super(
-                numberOfIterations.type,
-                numberOfIterations.detectionLocation,
-                numberOfIterations.children);
+        super(numberOfIterations);
         this.value = numberOfIterations.value;
     }
 
@@ -53,12 +50,8 @@ public final class NumberOfIterations extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        NumberOfIterations copy = new NumberOfIterations(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected NumberOfIterations copy() {
+        return new NumberOfIterations(this);
     }
 
     @Override

@@ -34,7 +34,7 @@ public abstract class Functionality extends Property {
     }
 
     protected Functionality(@Nonnull Functionality functionality) {
-        super(functionality.type, functionality.detectionLocation, functionality.children);
+        super(functionality);
     }
 
     @Nonnull

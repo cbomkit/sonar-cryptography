@@ -31,8 +31,9 @@ public class EllipticCurve extends Property {
         this.value = value;
     }
 
-    private EllipticCurve(@Nonnull EllipticCurve ellipticCurve) {
-        super(ellipticCurve.type, ellipticCurve.detectionLocation, ellipticCurve.children);
+    /** A copy of the given curve without its children. */
+    protected EllipticCurve(@Nonnull EllipticCurve ellipticCurve) {
+        super(ellipticCurve);
         this.value = ellipticCurve.value;
     }
 
@@ -47,14 +48,14 @@ public class EllipticCurve extends Property {
         return value;
     }
 
+    /**
+     * A curve class returns an instance of its own class, which the enrichers recognise the curve
+     * by.
+     */
     @Nonnull
     @Override
-    public INode deepCopy() {
-        EllipticCurve copy = new EllipticCurve(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected EllipticCurve copy() {
+        return new EllipticCurve(this);
     }
 
     @Override

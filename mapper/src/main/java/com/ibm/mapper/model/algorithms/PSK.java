@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class PSK extends Algorithm implements KeyAgreement {
 
     public PSK(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
+    }
+
+    private PSK(@Nonnull PSK algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PSK copy() {
+        return new PSK(this);
+    }
+
+    public PSK(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull PSK psk) {
+        super(psk, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PSK asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PSK(kind, this);
     }
 }

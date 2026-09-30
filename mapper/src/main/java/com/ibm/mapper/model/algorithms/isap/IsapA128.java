@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.isap;
 
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.InitializationVectorLength;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -31,5 +32,25 @@ public class IsapA128 extends Isap {
         super(NAME, detectionLocation);
         this.put(BlockSize.ofDefault(64, detectionLocation));
         this.put(new InitializationVectorLength(192, detectionLocation));
+    }
+
+    private IsapA128(@Nonnull IsapA128 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected IsapA128 copy() {
+        return new IsapA128(this);
+    }
+
+    public IsapA128(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull IsapA128 isapA128) {
+        super(asKind, isapA128);
+    }
+
+    @Nonnull
+    @Override
+    public IsapA128 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new IsapA128(kind, this);
     }
 }

@@ -24,6 +24,7 @@ import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.ClassicalBitSecurityLevel;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -80,5 +81,25 @@ public final class Esch extends Algorithm implements MessageDigest {
         } else if (digestSize == 384) {
             this.put(new ClassicalBitSecurityLevel(192, detectionLocation));
         }
+    }
+
+    private Esch(@Nonnull Esch algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Esch copy() {
+        return new Esch(this);
+    }
+
+    public Esch(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Esch esch) {
+        super(esch, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Esch asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Esch(kind, this);
     }
 }

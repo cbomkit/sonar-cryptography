@@ -41,7 +41,7 @@ public final class KeyLength extends Property {
     }
 
     private KeyLength(@Nonnull KeyLength keyLength) {
-        super(keyLength.type, keyLength.detectionLocation, keyLength.children, keyLength.origin);
+        super(keyLength);
         this.value = keyLength.value;
     }
 
@@ -71,12 +71,8 @@ public final class KeyLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        KeyLength copy = new KeyLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected KeyLength copy() {
+        return new KeyLength(this);
     }
 
     @Override

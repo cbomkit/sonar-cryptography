@@ -34,4 +34,14 @@ public final class IKE extends Protocol {
         super(new Protocol("IKE" + version.asString(), version.getDetectionContext()), IKE.class);
         this.put(version);
     }
+
+    private IKE(@Nonnull IKE protocol) {
+        super(protocol);
+    }
+
+    @Nonnull
+    @Override
+    protected IKE copy() {
+        return new IKE(this);
+    }
 }

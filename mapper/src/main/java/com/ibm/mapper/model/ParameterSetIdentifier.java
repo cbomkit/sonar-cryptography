@@ -33,10 +33,7 @@ public final class ParameterSetIdentifier extends Property {
     }
 
     private ParameterSetIdentifier(@Nonnull ParameterSetIdentifier parameterSetIdentifier) {
-        super(
-                parameterSetIdentifier.type,
-                parameterSetIdentifier.detectionLocation,
-                parameterSetIdentifier.children);
+        super(parameterSetIdentifier);
         this.value = parameterSetIdentifier.value;
     }
 
@@ -53,12 +50,8 @@ public final class ParameterSetIdentifier extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        ParameterSetIdentifier copy = new ParameterSetIdentifier(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected ParameterSetIdentifier copy() {
+        return new ParameterSetIdentifier(this);
     }
 
     @Override

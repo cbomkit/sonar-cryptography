@@ -30,4 +30,14 @@ public final class TBC extends Padding {
     public TBC(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
     }
+
+    private TBC(@Nonnull TBC padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected TBC copy() {
+        return new TBC(this);
+    }
 }

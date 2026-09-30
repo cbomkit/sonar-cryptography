@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -48,5 +49,27 @@ public final class ChaCha20Poly1305 extends Algorithm implements AuthenticatedEn
     public ChaCha20Poly1305(@Nonnull DetectionLocation detectionLocation) {
         super(new ChaCha20(detectionLocation), AuthenticatedEncryption.class);
         this.put(new Poly1305(detectionLocation));
+    }
+
+    private ChaCha20Poly1305(@Nonnull ChaCha20Poly1305 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ChaCha20Poly1305 copy() {
+        return new ChaCha20Poly1305(this);
+    }
+
+    public ChaCha20Poly1305(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull ChaCha20Poly1305 chaCha20Poly1305) {
+        super(chaCha20Poly1305, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ChaCha20Poly1305 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ChaCha20Poly1305(kind, this);
     }
 }

@@ -28,4 +28,14 @@ public final class ISO7816 extends Padding {
     public ISO7816(@Nonnull DetectionLocation detectionLocation) {
         super("ISO 7816", detectionLocation);
     }
+
+    private ISO7816(@Nonnull ISO7816 padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected ISO7816 copy() {
+        return new ISO7816(this);
+    }
 }

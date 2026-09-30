@@ -96,4 +96,20 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
     public RSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RSA rsa) {
         super(rsa, asKind);
     }
+
+    private RSA(@Nonnull final RSA rsa) {
+        super(rsa);
+    }
+
+    @Nonnull
+    @Override
+    protected RSA copy() {
+        return new RSA(this);
+    }
+
+    @Nonnull
+    @Override
+    public RSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new RSA(kind, this);
+    }
 }

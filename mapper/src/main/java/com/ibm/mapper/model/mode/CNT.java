@@ -28,4 +28,14 @@ public final class CNT extends Mode {
     public CNT(@Nonnull DetectionLocation detectionLocation) {
         super("CNT", detectionLocation);
     }
+
+    private CNT(@Nonnull CNT mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new CNT(this);
+    }
 }

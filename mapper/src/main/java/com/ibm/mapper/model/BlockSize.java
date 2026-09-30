@@ -40,7 +40,7 @@ public final class BlockSize extends Property {
     }
 
     private BlockSize(@Nonnull BlockSize blockSize) {
-        super(blockSize.type, blockSize.detectionLocation, blockSize.children, blockSize.origin);
+        super(blockSize);
         this.value = blockSize.value;
     }
 
@@ -70,12 +70,8 @@ public final class BlockSize extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        BlockSize copy = new BlockSize(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected BlockSize copy() {
+        return new BlockSize(this);
     }
 
     @Override

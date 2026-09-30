@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,26 @@ public final class RSAssaPSS extends Algorithm implements ProbabilisticSignature
 
     public RSAssaPSS(@Nonnull DetectionLocation detectionLocation) {
         super("RSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
+    }
+
+    private RSAssaPSS(@Nonnull RSAssaPSS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected RSAssaPSS copy() {
+        return new RSAssaPSS(this);
+    }
+
+    public RSAssaPSS(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RSAssaPSS rsAssaPSS) {
+        super(rsAssaPSS, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public RSAssaPSS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new RSAssaPSS(kind, this);
     }
 }

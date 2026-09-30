@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.gost;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,26 @@ public class CryptoPro extends Algorithm implements KeyWrap {
 
     public CryptoPro(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyWrap.class, detectionLocation);
+    }
+
+    private CryptoPro(@Nonnull CryptoPro algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected CryptoPro copy() {
+        return new CryptoPro(this);
+    }
+
+    public CryptoPro(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CryptoPro cryptoPro) {
+        super(cryptoPro, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public CryptoPro asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new CryptoPro(kind, this);
     }
 }

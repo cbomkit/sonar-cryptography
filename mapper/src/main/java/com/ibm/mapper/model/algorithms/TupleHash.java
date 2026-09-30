@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -54,5 +55,26 @@ public final class TupleHash extends Algorithm implements ExtendableOutputFuncti
     public TupleHash(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    private TupleHash(@Nonnull TupleHash algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected TupleHash copy() {
+        return new TupleHash(this);
+    }
+
+    public TupleHash(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull TupleHash tupleHash) {
+        super(tupleHash, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public TupleHash asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new TupleHash(kind, this);
     }
 }

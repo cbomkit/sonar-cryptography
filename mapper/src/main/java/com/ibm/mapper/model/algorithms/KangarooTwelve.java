@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -57,5 +58,27 @@ public final class KangarooTwelve extends Algorithm implements ExtendableOutputF
     public KangarooTwelve(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    private KangarooTwelve(@Nonnull KangarooTwelve algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected KangarooTwelve copy() {
+        return new KangarooTwelve(this);
+    }
+
+    public KangarooTwelve(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull KangarooTwelve kangarooTwelve) {
+        super(kangarooTwelve, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public KangarooTwelve asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new KangarooTwelve(kind, this);
     }
 }

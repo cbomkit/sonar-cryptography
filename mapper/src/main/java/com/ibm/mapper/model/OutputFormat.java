@@ -33,7 +33,7 @@ public final class OutputFormat extends Property {
     }
 
     private OutputFormat(@Nonnull OutputFormat outputFormat) {
-        super(outputFormat.type, outputFormat.detectionLocation, outputFormat.children);
+        super(outputFormat);
         this.value = outputFormat.value;
     }
 
@@ -50,12 +50,8 @@ public final class OutputFormat extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        OutputFormat copy = new OutputFormat(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected OutputFormat copy() {
+        return new OutputFormat(this);
     }
 
     @Override

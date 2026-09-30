@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -59,5 +60,25 @@ public final class Tiger extends Algorithm implements MessageDigest {
     public Tiger(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    private Tiger(@Nonnull Tiger algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Tiger copy() {
+        return new Tiger(this);
+    }
+
+    public Tiger(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Tiger tiger) {
+        super(tiger, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Tiger asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Tiger(kind, this);
     }
 }

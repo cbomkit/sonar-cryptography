@@ -73,4 +73,20 @@ public final class Skein extends Algorithm implements MessageDigest {
     public Skein(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Skein skein) {
         super(skein, asKind);
     }
+
+    private Skein(@Nonnull Skein algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Skein copy() {
+        return new Skein(this);
+    }
+
+    @Nonnull
+    @Override
+    public Skein asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Skein(kind, this);
+    }
 }

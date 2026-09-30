@@ -80,4 +80,20 @@ public final class SEED extends Algorithm implements BlockCipher, KeyWrap {
     public SEED(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SEED seed) {
         super(seed, asKind);
     }
+
+    private SEED(@Nonnull SEED algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SEED copy() {
+        return new SEED(this);
+    }
+
+    @Nonnull
+    @Override
+    public SEED asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SEED(kind, this);
+    }
 }

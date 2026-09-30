@@ -38,4 +38,24 @@ public class Grain extends Algorithm implements StreamCipher {
             @Nonnull DetectionLocation detectionLocation) {
         super(name, asKind, detectionLocation);
     }
+
+    protected Grain(@Nonnull Grain algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Grain copy() {
+        return new Grain(this);
+    }
+
+    public Grain(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Grain grain) {
+        super(grain, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Grain asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Grain(kind, this);
+    }
 }

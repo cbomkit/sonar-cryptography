@@ -66,4 +66,20 @@ public final class GOSTR34122015 extends Algorithm implements BlockCipher, Authe
             @Nonnull GOSTR34122015 gostr34122015) {
         super(gostr34122015, asKind);
     }
+
+    private GOSTR34122015(@Nonnull GOSTR34122015 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR34122015 copy() {
+        return new GOSTR34122015(this);
+    }
+
+    @Nonnull
+    @Override
+    public GOSTR34122015 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new GOSTR34122015(kind, this);
+    }
 }

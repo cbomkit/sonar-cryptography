@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.vmpc;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class VMPC extends Algorithm implements StreamCipher {
 
     public VMPC(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, StreamCipher.class, detectionLocation);
+    }
+
+    private VMPC(@Nonnull VMPC algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPC copy() {
+        return new VMPC(this);
+    }
+
+    public VMPC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull VMPC vmpc) {
+        super(vmpc, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public VMPC asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new VMPC(kind, this);
     }
 }

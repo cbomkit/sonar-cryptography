@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -54,5 +55,25 @@ public final class ANSIX963 extends Algorithm implements KeyDerivationFunction {
     public ANSIX963(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    private ANSIX963(@Nonnull ANSIX963 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX963 copy() {
+        return new ANSIX963(this);
+    }
+
+    public ANSIX963(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ANSIX963 ansix963) {
+        super(ansix963, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ANSIX963 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ANSIX963(kind, this);
     }
 }

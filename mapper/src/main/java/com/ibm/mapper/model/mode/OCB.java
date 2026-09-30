@@ -34,4 +34,14 @@ public final class OCB extends Mode {
         super("OCB", detectionLocation);
         this.put(new BlockSize(blockSize, detectionLocation));
     }
+
+    private OCB(@Nonnull OCB mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new OCB(this);
+    }
 }

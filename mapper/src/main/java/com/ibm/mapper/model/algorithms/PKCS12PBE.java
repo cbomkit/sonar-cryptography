@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedEncryption;
@@ -77,5 +78,26 @@ public final class PKCS12PBE extends Algorithm implements PasswordBasedEncryptio
     public PKCS12PBE(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private PKCS12PBE(@Nonnull PKCS12PBE algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PKCS12PBE copy() {
+        return new PKCS12PBE(this);
+    }
+
+    public PKCS12PBE(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull PKCS12PBE pkcs12pbe) {
+        super(pkcs12pbe, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PKCS12PBE asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PKCS12PBE(kind, this);
     }
 }

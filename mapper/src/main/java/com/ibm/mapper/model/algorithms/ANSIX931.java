@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,25 @@ public final class ANSIX931 extends Algorithm implements Signature {
 
     public ANSIX931(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private ANSIX931(@Nonnull ANSIX931 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX931 copy() {
+        return new ANSIX931(this);
+    }
+
+    public ANSIX931(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ANSIX931 ansix931) {
+        super(ansix931, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ANSIX931 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ANSIX931(kind, this);
     }
 }

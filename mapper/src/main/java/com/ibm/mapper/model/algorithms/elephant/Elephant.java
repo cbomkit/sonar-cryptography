@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.elephant;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.AuthenticatedEncryption;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NonceLength;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -56,5 +57,25 @@ public class Elephant extends Algorithm implements AuthenticatedEncryption {
         super(name, AuthenticatedEncryption.class, detectionLocation);
         this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new NonceLength(96, detectionLocation));
+    }
+
+    protected Elephant(@Nonnull Elephant algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Elephant copy() {
+        return new Elephant(this);
+    }
+
+    public Elephant(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Elephant elephant) {
+        super(elephant, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Elephant asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Elephant(kind, this);
     }
 }

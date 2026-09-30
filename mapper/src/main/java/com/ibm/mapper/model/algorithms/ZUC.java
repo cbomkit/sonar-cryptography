@@ -78,4 +78,20 @@ public final class ZUC extends Algorithm implements StreamCipher, Mac {
     public ZUC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ZUC zuc) {
         super(zuc, asKind);
     }
+
+    private ZUC(@Nonnull ZUC algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ZUC copy() {
+        return new ZUC(this);
+    }
+
+    @Nonnull
+    @Override
+    public ZUC asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ZUC(kind, this);
+    }
 }

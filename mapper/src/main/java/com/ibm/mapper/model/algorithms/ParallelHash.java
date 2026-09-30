@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -54,5 +55,26 @@ public final class ParallelHash extends Algorithm implements ExtendableOutputFun
     public ParallelHash(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    private ParallelHash(@Nonnull ParallelHash algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ParallelHash copy() {
+        return new ParallelHash(this);
+    }
+
+    public ParallelHash(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ParallelHash parallelHash) {
+        super(parallelHash, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ParallelHash asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ParallelHash(kind, this);
     }
 }

@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.shake.SHAKE;
@@ -52,5 +53,25 @@ public final class Ed448 extends EdDSA implements Signature {
         this.put(new Edwards448(detectionLocation));
         this.put(new SHAKE(256, detectionLocation));
         this.put(new Oid("1.3.101.113", detectionLocation));
+    }
+
+    private Ed448(@Nonnull Ed448 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Ed448 copy() {
+        return new Ed448(this);
+    }
+
+    public Ed448(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Ed448 ed448) {
+        super(asKind, ed448);
+    }
+
+    @Nonnull
+    @Override
+    public Ed448 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Ed448(kind, this);
     }
 }

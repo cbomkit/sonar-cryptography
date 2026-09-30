@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.ascon;
 
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -50,5 +51,26 @@ public final class AsconHash extends Ascon implements MessageDigest {
         super(NAME, MessageDigest.class, detectionLocation);
         this.put(new DigestSize(256, detectionLocation));
         this.put(BlockSize.ofDefault(64, detectionLocation));
+    }
+
+    private AsconHash(@Nonnull AsconHash algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected AsconHash copy() {
+        return new AsconHash(this);
+    }
+
+    public AsconHash(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull AsconHash asconHash) {
+        super(asKind, asconHash);
+    }
+
+    @Nonnull
+    @Override
+    public AsconHash asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new AsconHash(kind, this);
     }
 }

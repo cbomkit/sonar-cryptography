@@ -85,4 +85,20 @@ public final class Aria extends Algorithm implements BlockCipher, AuthenticatedE
     public Aria(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Aria aria) {
         super(aria, asKind);
     }
+
+    private Aria(@Nonnull Aria algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Aria copy() {
+        return new Aria(this);
+    }
+
+    @Nonnull
+    @Override
+    public Aria asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Aria(kind, this);
+    }
 }

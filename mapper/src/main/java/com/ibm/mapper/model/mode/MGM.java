@@ -28,4 +28,14 @@ public final class MGM extends Mode {
     public MGM(@Nonnull DetectionLocation detectionLocation) {
         super("MGM", detectionLocation);
     }
+
+    private MGM(@Nonnull MGM mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new MGM(this);
+    }
 }

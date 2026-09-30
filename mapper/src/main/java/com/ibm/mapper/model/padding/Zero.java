@@ -31,4 +31,14 @@ public final class Zero extends Padding {
     public Zero(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
     }
+
+    private Zero(@Nonnull Zero padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected Zero copy() {
+        return new Zero(this);
+    }
 }

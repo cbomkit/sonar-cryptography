@@ -34,6 +34,7 @@ import com.ibm.mapper.model.algorithms.blake.BLAKE2s;
 import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.mapper.model.algorithms.cast.CAST256;
 import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.mode.GMAC;
 import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
@@ -49,6 +50,17 @@ class AlgorithmNameCompositionTest {
         Mode cbc = new CBC(TEST);
         AES aes = new AES(256, cbc, TEST);
         assertThat(aes.asString()).isEqualTo("AES-256-CBC");
+    }
+
+    @Test
+    void aesAsAMacNamesOnlyItsMacMode() {
+        // the registry names AES as a MAC AES[-(128|192|256)][-(GMAC|CMAC)]
+        assertThat(new AES(128, new GMAC(TEST), TEST).asKind(Mac.class).asString())
+                .isEqualTo("AES-128-GMAC");
+        // a CBC-MAC or CFB-MAC over AES keeps its mode as a child, not in its name
+        assertThat(new AES(128, new CBC(TEST), new PKCS5(TEST), TEST).asKind(Mac.class).asString())
+                .isEqualTo("AES-128");
+        assertThat(new AES(new CBC(TEST), TEST).asKind(Mac.class).asString()).isEqualTo("AES");
     }
 
     @Test

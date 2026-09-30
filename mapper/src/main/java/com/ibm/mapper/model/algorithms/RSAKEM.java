@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public final class RSAKEM extends Algorithm implements KeyEncapsulationMechanism
 
     public RSAKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private RSAKEM(@Nonnull RSAKEM algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected RSAKEM copy() {
+        return new RSAKEM(this);
+    }
+
+    public RSAKEM(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RSAKEM rsakem) {
+        super(rsakem, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public RSAKEM asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new RSAKEM(kind, this);
     }
 }

@@ -27,4 +27,14 @@ public final class PKCS7 extends Padding {
     public PKCS7(@Nonnull DetectionLocation detectionLocation) {
         super("PKCS7", detectionLocation);
     }
+
+    private PKCS7(@Nonnull PKCS7 padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected PKCS7 copy() {
+        return new PKCS7(this);
+    }
 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.vmpc;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -63,5 +64,25 @@ public class VMPCKSA extends Algorithm implements StreamCipher {
     public VMPCKSA(int version, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new Version(String.valueOf(version), detectionLocation));
+    }
+
+    private VMPCKSA(@Nonnull VMPCKSA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected VMPCKSA copy() {
+        return new VMPCKSA(this);
+    }
+
+    public VMPCKSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull VMPCKSA vmpcksa) {
+        super(vmpcksa, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public VMPCKSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new VMPCKSA(kind, this);
     }
 }

@@ -32,7 +32,7 @@ public final class PasswordLength extends Property {
     }
 
     private PasswordLength(@Nonnull PasswordLength passwordLength) {
-        super(passwordLength.type, passwordLength.detectionLocation, passwordLength.children);
+        super(passwordLength);
         this.value = passwordLength.value;
     }
 
@@ -49,12 +49,8 @@ public final class PasswordLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        PasswordLength copy = new PasswordLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected PasswordLength copy() {
+        return new PasswordLength(this);
     }
 
     @Override

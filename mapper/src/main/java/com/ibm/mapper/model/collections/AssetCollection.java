@@ -29,20 +29,6 @@ public class AssetCollection extends AbstractAssetCollection<INode> {
         super(collection, AssetCollection.class);
     }
 
-    private AssetCollection(@Nonnull AssetCollection assetCollection) {
-        super(assetCollection.collection, assetCollection.kind);
-    }
-
-    @Nonnull
-    @Override
-    public INode deepCopy() {
-        AssetCollection copy = new AssetCollection(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
-    }
-
     @Nonnull
     @Override
     public AssetCollection createMerged(@Nonnull List<INode> mergedCollection) {

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.ntru;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,26 @@ public class NTRULPrime extends Algorithm implements KeyEncapsulationMechanism {
 
     public NTRULPrime(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private NTRULPrime(@Nonnull NTRULPrime algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRULPrime copy() {
+        return new NTRULPrime(this);
+    }
+
+    public NTRULPrime(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull NTRULPrime ntrulPrime) {
+        super(ntrulPrime, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public NTRULPrime asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new NTRULPrime(kind, this);
     }
 }

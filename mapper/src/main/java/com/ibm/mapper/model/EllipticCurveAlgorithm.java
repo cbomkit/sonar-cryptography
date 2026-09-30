@@ -55,4 +55,20 @@ public class EllipticCurveAlgorithm extends Algorithm
             @Nonnull EllipticCurveAlgorithm ellipticCurveAlgorithm) {
         super(ellipticCurveAlgorithm, asKind);
     }
+
+    private EllipticCurveAlgorithm(@Nonnull EllipticCurveAlgorithm algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected EllipticCurveAlgorithm copy() {
+        return new EllipticCurveAlgorithm(this);
+    }
+
+    @Nonnull
+    @Override
+    public EllipticCurveAlgorithm asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new EllipticCurveAlgorithm(kind, this);
+    }
 }

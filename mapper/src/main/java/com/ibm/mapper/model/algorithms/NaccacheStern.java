@@ -63,4 +63,20 @@ public final class NaccacheStern extends Algorithm implements PublicKeyEncryptio
             @Nonnull NaccacheStern naccacheStern) {
         super(naccacheStern, asKind);
     }
+
+    private NaccacheStern(@Nonnull NaccacheStern algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected NaccacheStern copy() {
+        return new NaccacheStern(this);
+    }
+
+    @Nonnull
+    @Override
+    public NaccacheStern asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new NaccacheStern(kind, this);
+    }
 }

@@ -33,4 +33,14 @@ public final class PrivateKey extends Key {
     public PrivateKey(@Nonnull Key key) {
         super(key, key.detectionLocation, PrivateKey.class);
     }
+
+    private PrivateKey(@Nonnull PrivateKey key) {
+        super(key);
+    }
+
+    @Nonnull
+    @Override
+    protected PrivateKey copy() {
+        return new PrivateKey(this);
+    }
 }

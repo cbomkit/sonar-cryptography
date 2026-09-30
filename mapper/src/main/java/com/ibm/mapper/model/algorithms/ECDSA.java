@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -71,5 +72,25 @@ public final class ECDSA extends Algorithm implements Signature {
 
     public ECDSA(@Nonnull String curveName, @Nonnull DetectionLocation detectionLocation) {
         this(new EllipticCurve(curveName, detectionLocation), detectionLocation);
+    }
+
+    private ECDSA(@Nonnull ECDSA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECDSA copy() {
+        return new ECDSA(this);
+    }
+
+    public ECDSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECDSA ecdsa) {
+        super(ecdsa, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ECDSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECDSA(kind, this);
     }
 }

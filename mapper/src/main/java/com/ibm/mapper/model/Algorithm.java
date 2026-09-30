@@ -61,6 +61,15 @@ public class Algorithm implements IAlgorithm, Cloneable {
         this.origin = origin;
     }
 
+    /** A copy of the given algorithm without its children. */
+    protected Algorithm(@Nonnull Algorithm algorithm) {
+        this.children = new HashMap<>();
+        this.kind = algorithm.kind;
+        this.detectionLocation = algorithm.detectionLocation;
+        this.name = algorithm.name;
+        this.origin = algorithm.origin;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -141,18 +150,33 @@ public class Algorithm implements IAlgorithm, Cloneable {
     @Nonnull
     @Override
     public INode deepCopy() {
-        try {
-            // Subclasses keep their mutable state in children. Cloning preserves the concrete
-            // algorithm type and metadata; the child tree must then be copied separately.
-            Algorithm copy = (Algorithm) super.clone();
-            copy.children = new HashMap<>();
-            for (INode child : this.children.values()) {
-                copy.children.put(child.getKind(), child.deepCopy());
-            }
-            return copy;
-        } catch (CloneNotSupportedException exception) {
-            throw new AssertionError(exception);
+        final Algorithm copy = copy();
+        for (INode child : this.children.values()) {
+            copy.children.put(child.getKind(), child.deepCopy());
         }
+        return copy;
+    }
+
+    /**
+     * A copy of this algorithm without its children. An algorithm class returns an instance of its
+     * own class, which gives the composed name of the algorithm, how the enrichers complete it and
+     * how the output reports it.
+     */
+    @Nonnull
+    protected Algorithm copy() {
+        return new Algorithm(this);
+    }
+
+    /**
+     * This algorithm as another kind, e.g. a block cipher used as a MAC: a node of the class of
+     * this algorithm with its name, detection location and origin, that shares its children. It
+     * takes the place of this algorithm. An algorithm class returns an instance of its own class,
+     * which gives the composed name of the algorithm (e.g. {@code AES-128-GMAC}), how the enrichers
+     * complete it and how the output reports it.
+     */
+    @Nonnull
+    public Algorithm asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Algorithm(this, kind);
     }
 
     public boolean is(@Nonnull final Class<? extends INode> type) {

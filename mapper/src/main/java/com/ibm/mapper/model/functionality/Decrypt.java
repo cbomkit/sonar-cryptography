@@ -19,7 +19,6 @@
  */
 package com.ibm.mapper.model.functionality;
 
-import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -34,11 +33,7 @@ public final class Decrypt extends Functionality {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Decrypt copy = new Decrypt(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Decrypt copy() {
+        return new Decrypt(this);
     }
 }

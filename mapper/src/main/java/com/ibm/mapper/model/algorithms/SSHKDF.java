@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.IAlgorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -64,5 +65,25 @@ public final class SSHKDF extends Algorithm implements KeyDerivationFunction {
         return this.hasChildOfType(MessageDigest.class)
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
+    }
+
+    private SSHKDF(@Nonnull SSHKDF algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SSHKDF copy() {
+        return new SSHKDF(this);
+    }
+
+    public SSHKDF(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SSHKDF sshkdf) {
+        super(sshkdf, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SSHKDF asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SSHKDF(kind, this);
     }
 }

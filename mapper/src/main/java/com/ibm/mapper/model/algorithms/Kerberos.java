@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -51,5 +52,25 @@ public final class Kerberos extends Algorithm implements KeyAgreement {
 
     public Kerberos(int version, @Nonnull DetectionLocation detectionLocation) {
         super(NAME + version, KeyAgreement.class, detectionLocation);
+    }
+
+    private Kerberos(@Nonnull Kerberos algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Kerberos copy() {
+        return new Kerberos(this);
+    }
+
+    public Kerberos(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Kerberos kerberos) {
+        super(kerberos, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Kerberos asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Kerberos(kind, this);
     }
 }

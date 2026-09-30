@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.IAlgorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -63,5 +64,25 @@ public final class HKDF extends Algorithm implements KeyDerivationFunction {
         return this.hasChildOfType(MessageDigest.class)
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
+    }
+
+    private HKDF(@Nonnull HKDF algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected HKDF copy() {
+        return new HKDF(this);
+    }
+
+    public HKDF(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull HKDF hkdf) {
+        super(hkdf, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public HKDF asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new HKDF(kind, this);
     }
 }

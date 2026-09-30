@@ -32,7 +32,7 @@ public final class Seed extends Property {
     }
 
     private Seed(@Nonnull Seed seed) {
-        super(seed.type, seed.detectionLocation, seed.children);
+        super(seed);
         this.value = seed.value;
     }
 
@@ -49,12 +49,8 @@ public final class Seed extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Seed copy = new Seed(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Seed copy() {
+        return new Seed(this);
     }
 
     @Override

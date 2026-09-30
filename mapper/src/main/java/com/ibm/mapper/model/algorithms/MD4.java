@@ -59,4 +59,24 @@ public final class MD4 extends Algorithm implements MessageDigest {
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new DigestSize(128, detectionLocation));
     }
+
+    private MD4(@Nonnull MD4 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MD4 copy() {
+        return new MD4(this);
+    }
+
+    public MD4(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull MD4 md4) {
+        super(md4, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MD4 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MD4(kind, this);
+    }
 }

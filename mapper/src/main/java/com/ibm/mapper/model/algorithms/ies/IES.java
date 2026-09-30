@@ -62,4 +62,20 @@ public class IES extends Algorithm implements PublicKeyEncryption, KeyEncapsulat
     public IES(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull IES ies) {
         super(ies, asKind);
     }
+
+    protected IES(@Nonnull IES algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected IES copy() {
+        return new IES(this);
+    }
+
+    @Nonnull
+    @Override
+    public IES asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new IES(kind, this);
+    }
 }

@@ -33,7 +33,7 @@ public final class Oid extends Property {
     }
 
     private Oid(@Nonnull Oid oid) {
-        super(Oid.class, oid.detectionLocation, oid.children);
+        super(oid);
         this.value = oid.value;
     }
 
@@ -50,12 +50,8 @@ public final class Oid extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Oid copy = new Oid(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Oid copy() {
+        return new Oid(this);
     }
 
     @Override

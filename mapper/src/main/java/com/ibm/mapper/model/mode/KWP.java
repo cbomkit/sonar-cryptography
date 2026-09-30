@@ -28,4 +28,14 @@ public final class KWP extends Mode {
     public KWP(@Nonnull DetectionLocation detectionLocation) {
         super("WRAP-PAD", detectionLocation);
     }
+
+    private KWP(@Nonnull KWP mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new KWP(this);
+    }
 }

@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -34,5 +35,25 @@ public final class DSS extends DSA {
 
     public DSS(@Nonnull DetectionLocation detectionLocation) {
         super(detectionLocation);
+    }
+
+    private DSS(@Nonnull DSS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected DSS copy() {
+        return new DSS(this);
+    }
+
+    public DSS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DSS dss) {
+        super(asKind, dss);
+    }
+
+    @Nonnull
+    @Override
+    public DSS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new DSS(kind, this);
     }
 }

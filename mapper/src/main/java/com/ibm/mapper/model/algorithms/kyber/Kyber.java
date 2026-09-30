@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.kyber;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Version;
@@ -93,5 +94,25 @@ public class Kyber extends Algorithm implements KeyEncapsulationMechanism {
             @Nonnull DetectionLocation detectionLocation) {
         this(parameterSetIdentifier, detectionLocation);
         this.put(new Version(submissionVersionNumber, detectionLocation));
+    }
+
+    private Kyber(@Nonnull Kyber algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Kyber copy() {
+        return new Kyber(this);
+    }
+
+    public Kyber(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Kyber kyber) {
+        super(kyber, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Kyber asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Kyber(kind, this);
     }
 }

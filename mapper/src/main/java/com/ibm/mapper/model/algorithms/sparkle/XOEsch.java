@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.sparkle;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -51,5 +52,25 @@ public final class XOEsch extends Algorithm implements MessageDigest {
     public XOEsch(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, MessageDigest.class, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));
+    }
+
+    private XOEsch(@Nonnull XOEsch algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected XOEsch copy() {
+        return new XOEsch(this);
+    }
+
+    public XOEsch(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull XOEsch xoEsch) {
+        super(xoEsch, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public XOEsch asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new XOEsch(kind, this);
     }
 }

@@ -27,4 +27,14 @@ public final class Secp192r1 extends EllipticCurve {
     public Secp192r1(@Nonnull DetectionLocation detectionLocation) {
         super("secp192r1", detectionLocation);
     }
+
+    private Secp192r1(@Nonnull Secp192r1 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Secp192r1 copy() {
+        return new Secp192r1(this);
+    }
 }

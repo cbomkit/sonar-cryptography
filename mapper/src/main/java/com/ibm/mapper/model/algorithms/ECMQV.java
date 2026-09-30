@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -55,5 +56,25 @@ public final class ECMQV extends MQV {
             @Nonnull EllipticCurve ellipticCurve, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(ellipticCurve);
+    }
+
+    private ECMQV(@Nonnull ECMQV algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECMQV copy() {
+        return new ECMQV(this);
+    }
+
+    public ECMQV(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECMQV ecmqv) {
+        super(asKind, ecmqv);
+    }
+
+    @Nonnull
+    @Override
+    public ECMQV asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECMQV(kind, this);
     }
 }

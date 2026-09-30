@@ -29,4 +29,14 @@ public final class GMAC extends Mode {
     public GMAC(@Nonnull DetectionLocation detectionLocation) {
         super("GMAC", detectionLocation);
     }
+
+    private GMAC(@Nonnull GMAC mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new GMAC(this);
+    }
 }

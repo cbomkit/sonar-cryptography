@@ -28,4 +28,14 @@ public final class Edwards448 extends EllipticCurve {
     public Edwards448(@Nonnull DetectionLocation detectionLocation) {
         super("Edwards448", detectionLocation);
     }
+
+    private Edwards448(@Nonnull Edwards448 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Edwards448 copy() {
+        return new Edwards448(this);
+    }
 }

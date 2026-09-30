@@ -32,7 +32,7 @@ public final class TagLength extends Property {
     }
 
     private TagLength(@Nonnull TagLength tagLength) {
-        super(tagLength.type, tagLength.detectionLocation, tagLength.children);
+        super(tagLength);
         this.value = tagLength.value;
     }
 
@@ -49,12 +49,8 @@ public final class TagLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        TagLength copy = new TagLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected TagLength copy() {
+        return new TagLength(this);
     }
 
     @Override

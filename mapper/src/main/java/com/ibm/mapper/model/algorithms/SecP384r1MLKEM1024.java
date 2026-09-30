@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -50,5 +51,27 @@ public final class SecP384r1MLKEM1024 extends Algorithm implements KeyEncapsulat
 
     public SecP384r1MLKEM1024(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private SecP384r1MLKEM1024(@Nonnull SecP384r1MLKEM1024 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SecP384r1MLKEM1024 copy() {
+        return new SecP384r1MLKEM1024(this);
+    }
+
+    public SecP384r1MLKEM1024(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull SecP384r1MLKEM1024 secP384r1MLKEM1024) {
+        super(secP384r1MLKEM1024, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SecP384r1MLKEM1024 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SecP384r1MLKEM1024(kind, this);
     }
 }

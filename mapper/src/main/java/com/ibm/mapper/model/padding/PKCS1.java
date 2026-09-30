@@ -28,4 +28,14 @@ public final class PKCS1 extends Padding {
     public PKCS1(@Nonnull DetectionLocation detectionLocation) {
         super("PKCS1", detectionLocation);
     }
+
+    private PKCS1(@Nonnull PKCS1 padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected PKCS1 copy() {
+        return new PKCS1(this);
+    }
 }
