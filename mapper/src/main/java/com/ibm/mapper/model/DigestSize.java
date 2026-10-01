@@ -31,9 +31,31 @@ public final class DigestSize extends Property {
         this.value = value;
     }
 
+    private DigestSize(
+            @Nonnull Integer value,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
+        super(DigestSize.class, detectionLocation, origin);
+        this.value = value;
+    }
+
     private DigestSize(@Nonnull DigestSize digestSize) {
-        super(digestSize.type, digestSize.detectionLocation, digestSize.children);
+        super(
+                digestSize.type,
+                digestSize.detectionLocation,
+                digestSize.children,
+                digestSize.origin);
         this.value = digestSize.value;
+    }
+
+    /**
+     * Creates a DigestSize with DEFAULT origin, for use in algorithm constructors where the size is
+     * a known constant rather than something directly detected in source code.
+     */
+    @Nonnull
+    public static DigestSize ofDefault(
+            @Nonnull Integer value, @Nonnull DetectionLocation detectionLocation) {
+        return new DigestSize(value, detectionLocation, NodeOrigin.DEFAULT);
     }
 
     @Nonnull
