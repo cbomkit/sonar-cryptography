@@ -41,7 +41,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("javax.crypto.KeyAgreement")
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -53,7 +53,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -66,7 +66,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -77,7 +77,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

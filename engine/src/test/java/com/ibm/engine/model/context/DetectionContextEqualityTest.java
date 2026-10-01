@@ -89,16 +89,19 @@ class DetectionContextEqualityTest {
     }
 
     @Test
-    void noneKindUsesTheDefaultRepresentation() {
+    void noneKindIsExplicitInThePropertyMap() {
         assertThat(new KeyContext(KeyContext.Kind.NONE))
                 .isEqualTo(new KeyContext())
                 .isEqualTo(new KeyContext(Map.of("kind", "NONE")));
+        assertThat(new KeyContext().get("kind")).contains("NONE");
         assertThat(new SignatureContext(SignatureContext.Kind.NONE))
                 .isEqualTo(new SignatureContext())
                 .isEqualTo(new SignatureContext(Map.of("kind", "NONE")));
+        assertThat(new SignatureContext().get("kind")).contains("NONE");
         assertThat(new ProtocolContext(ProtocolContext.Kind.NONE))
                 .isEqualTo(new ProtocolContext())
                 .isEqualTo(new ProtocolContext(Map.of("kind", "NONE")));
+        assertThat(new ProtocolContext().get("kind")).contains("NONE");
     }
 
     @Test

@@ -19,7 +19,6 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
@@ -47,15 +46,15 @@ public class KeyContext extends DetectionContext
      */
     @Deprecated(since = "1.3.0")
     public KeyContext(@Nonnull Kind kind) {
-        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
+        super(Map.of("kind", kind.name()));
     }
 
     public KeyContext() {
-        super(new HashMap<>());
+        super(Map.of("kind", Kind.NONE.name()));
     }
 
     public KeyContext(@Nonnull Map<String, String> properties) {
-        super(normalizeKind(properties));
+        super(properties);
     }
 
     /**

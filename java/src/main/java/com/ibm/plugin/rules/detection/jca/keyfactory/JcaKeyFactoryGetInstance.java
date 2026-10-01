@@ -41,7 +41,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .forMethods("getInstance")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 
@@ -53,7 +53,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 
@@ -65,7 +65,7 @@ public final class JcaKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(RuleSets.rulesOf(JcaKeyFactoryGenerate.class));
 

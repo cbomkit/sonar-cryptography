@@ -45,7 +45,7 @@ public final class JcaKeyAgreementGenerateSecret extends DetectionRuleSet<Tree> 
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .withMethodParameter("int")
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -56,7 +56,7 @@ public final class JcaKeyAgreementGenerateSecret extends DetectionRuleSet<Tree> 
                     .forMethods("generateSecret")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

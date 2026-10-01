@@ -39,7 +39,7 @@ public final class JcaSecretKeyFactoryTranslateKey extends DetectionRuleSet<Tree
                     .forMethods("translateKey")
                     .withMethodParameter("javax.crypto.SecretKey")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaSecretKeySpec.class))
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

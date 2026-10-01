@@ -42,7 +42,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .forMethods("getInstance")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
@@ -61,7 +61,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
@@ -80,7 +80,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(

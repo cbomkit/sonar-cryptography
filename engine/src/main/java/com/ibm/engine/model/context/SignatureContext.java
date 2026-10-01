@@ -19,7 +19,6 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
@@ -38,15 +37,15 @@ public class SignatureContext extends DetectionContext
      */
     @Deprecated(since = "1.3.0")
     public SignatureContext(@Nonnull Kind kind) {
-        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
+        super(Map.of("kind", kind.name()));
     }
 
     public SignatureContext() {
-        super(new HashMap<>());
+        super(Map.of("kind", Kind.NONE.name()));
     }
 
     public SignatureContext(@Nonnull Map<String, String> properties) {
-        super(normalizeKind(properties));
+        super(properties);
     }
 
     /**

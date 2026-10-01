@@ -41,7 +41,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -53,7 +53,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -64,7 +64,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -76,7 +76,7 @@ public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(Map.of()))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

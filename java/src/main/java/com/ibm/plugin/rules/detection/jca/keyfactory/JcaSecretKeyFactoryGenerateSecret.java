@@ -45,7 +45,7 @@ public final class JcaSecretKeyFactoryGenerateSecret extends DetectionRuleSet<Tr
                             new KeyActionFactory<>(KeyAction.Action.SECRET_KEY_GENERATION))
                     .withMethodParameter(KEY_SPEC_TYPE)
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaKeySpec.class))
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

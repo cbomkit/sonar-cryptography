@@ -46,7 +46,7 @@ public final class JcaKeyFactoryGenerate extends DetectionRuleSet<Tree> {
                             new KeyActionFactory<>(KeyAction.Action.PRIVATE_KEY_GENERATION))
                     .withMethodParameter(KEY_SPEC_TYPE)
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaKeySpec.class))
-                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -59,7 +59,7 @@ public final class JcaKeyFactoryGenerate extends DetectionRuleSet<Tree> {
                             new KeyActionFactory<>(KeyAction.Action.PUBLIC_KEY_GENERATION))
                     .withMethodParameter(KEY_SPEC_TYPE)
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaKeySpec.class))
-                    .buildForContext(new PublicKeyContext(Map.of()))
+                    .buildForContext(new PublicKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

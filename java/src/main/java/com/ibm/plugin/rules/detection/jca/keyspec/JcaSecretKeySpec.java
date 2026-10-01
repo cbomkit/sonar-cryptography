@@ -45,7 +45,7 @@ public final class JcaSecretKeySpec extends DetectionRuleSet<Tree> {
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(Map.of()))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

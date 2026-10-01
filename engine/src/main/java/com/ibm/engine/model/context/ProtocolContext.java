@@ -31,15 +31,15 @@ public class ProtocolContext extends DetectionContext
     }
 
     public ProtocolContext(@Nonnull ProtocolContext.Kind kind) {
-        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
+        super(Map.of("kind", kind.name()));
     }
 
     public ProtocolContext() {
-        super(Map.of());
+        super(Map.of("kind", Kind.NONE.name()));
     }
 
     public ProtocolContext(@Nonnull Map<String, String> properties) {
-        super(normalizeKind(properties));
+        super(properties);
     }
 
     @Nonnull
