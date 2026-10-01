@@ -134,7 +134,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetX25519DiffieHellman extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Key-derivation / secret-agreement operation rule
     // =========================================================================

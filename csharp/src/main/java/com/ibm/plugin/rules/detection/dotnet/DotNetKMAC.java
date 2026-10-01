@@ -89,7 +89,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetKMAC extends DetectionRuleSet<CSharpTree> {
 
-
     // new Kmac128(key) / new Kmac128(key, customizationString) — and the KmacXof128/256, Kmac256
     // siblings. Both constructor overloads (byte[], byte[]) and (ReadOnlySpan<Byte>,
     // ReadOnlySpan<Byte>) are covered by withAnyParameters().

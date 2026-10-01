@@ -182,7 +182,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetMLDsa extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Sign / Verify operation rules (depending rules on any tracked MLDsa/CompositeMLDsa-family
     // variable, mirroring DotNetDSA.java's SignData/VerifyData rules)

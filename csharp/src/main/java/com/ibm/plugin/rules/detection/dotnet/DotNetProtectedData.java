@@ -144,7 +144,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetProtectedData extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // ProtectedData — static-only class. Each static call is both the "creation" and
     // the "operation" at once (see class javadoc "Modeling decision").

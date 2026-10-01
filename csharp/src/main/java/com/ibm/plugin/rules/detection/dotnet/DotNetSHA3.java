@@ -79,7 +79,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetSHA3 extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // SHA3-256 / SHA3-384 / SHA3-512
     // =========================================================================

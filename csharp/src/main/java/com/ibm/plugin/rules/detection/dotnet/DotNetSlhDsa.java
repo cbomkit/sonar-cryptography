@@ -175,7 +175,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetSlhDsa extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Sign / Verify operation rules (depending rules on any tracked SlhDsa-family variable,
     // mirroring DotNetMLDsa.java's SignData/VerifyData/SignPreHash/VerifyPreHash rules; no

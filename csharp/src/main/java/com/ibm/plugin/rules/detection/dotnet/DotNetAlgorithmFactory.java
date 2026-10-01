@@ -168,7 +168,6 @@ import javax.annotation.Nonnull;
  */
 public final class DotNetAlgorithmFactory extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // SymmetricAlgorithm.Create(string) depending rules
     //

@@ -114,7 +114,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Depending rules — instance operations on an already-tracked RNG object,
     // shared by RandomNumberGenerator.Create()/Create(string) and

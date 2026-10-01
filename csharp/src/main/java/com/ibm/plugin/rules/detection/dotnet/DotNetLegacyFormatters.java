@@ -156,7 +156,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetLegacyFormatters extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Shared depending rules: signature operations (DSA + RSA PKCS#1 formatters)
     // =========================================================================

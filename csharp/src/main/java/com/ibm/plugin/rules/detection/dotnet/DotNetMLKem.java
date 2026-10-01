@@ -144,7 +144,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetMLKem extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // Encapsulate / Decapsulate operation rules (depending rules on any tracked MLKem-family
     // variable, mirroring GoCryptoMLKEM.java's ENCAPSULATE_768/DECAPSULATE_768 rules)

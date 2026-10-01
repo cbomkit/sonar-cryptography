@@ -136,7 +136,6 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("java:S1192")
 public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
 
-
     // =========================================================================
     // HKDF — static-only class, no instance. Each static method is its own
     // top-level rule (see class javadoc "Modeling decision").
