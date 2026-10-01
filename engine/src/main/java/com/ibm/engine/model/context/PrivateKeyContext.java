@@ -39,7 +39,7 @@ public class PrivateKeyContext extends KeyContext {
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return PrivateKeyContext.class;
     }
 }

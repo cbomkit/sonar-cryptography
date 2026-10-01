@@ -20,7 +20,7 @@
 package com.ibm.engine.rule;
 
 import com.ibm.engine.language.ILanguageTranslation;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.IActionFactory;
 import com.ibm.engine.model.factory.IValueFactory;
 import java.util.List;
@@ -46,7 +46,7 @@ public interface IDetectionRule<T> {
     boolean shouldMatchExactTypes();
 
     @Nonnull
-    IDetectionContext detectionValueContext();
+    DetectionContext detectionValueContext();
 
     @Nonnull
     IBundle bundle();
@@ -146,7 +146,7 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
-                @Nonnull IDetectionContext detectionValueContext);
+                @Nonnull DetectionContext detectionValueContext);
     }
 
     interface PositionBuilder<T> {
@@ -173,7 +173,7 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
-                @Nonnull IDetectionContext detectionValueContext);
+                @Nonnull DetectionContext detectionValueContext);
     }
 
     interface ParametersDependingRulesBuilder<T> {
@@ -197,7 +197,7 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
-                @Nonnull IDetectionContext detectionValueContext);
+                @Nonnull DetectionContext detectionValueContext);
     }
 
     interface ParametersFinalDetectionRuleBuilder<T> {
@@ -217,13 +217,13 @@ public interface IDetectionRule<T> {
 
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
-                @Nonnull IDetectionContext detectionValueContext);
+                @Nonnull DetectionContext detectionValueContext);
     }
 
     interface FinalDetectionRuleBuilder<T> {
         @Nonnull
         AddBundleDetectionRuleBuilder<T> buildForContext(
-                @Nonnull IDetectionContext detectionValueContext);
+                @Nonnull DetectionContext detectionValueContext);
     }
 
     interface AddBundleDetectionRuleBuilder<T> {

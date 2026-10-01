@@ -40,7 +40,7 @@ public class SecretKeyContext extends KeyContext {
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return SecretKeyContext.class;
     }
 }

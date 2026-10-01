@@ -69,7 +69,7 @@ public abstract class ITranslator<R, T, S, P> {
     private Map<Integer, List<INode>> translateStore(@Nonnull DetectionStore<R, T, S, P> store) {
         final String filePath = store.getScanContext().getRelativePath();
         final IBundle bundle = store.getDetectionRule().bundle();
-        final DetectionContext context = (DetectionContext) store.getDetectionValueContext();
+        final DetectionContext context = store.getDetectionValueContext();
 
         final Map<Integer, List<INode>> nodes = new HashMap<>();
         store.getActionValue()
