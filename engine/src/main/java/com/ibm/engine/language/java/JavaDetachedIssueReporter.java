@@ -32,6 +32,7 @@ import org.sonar.java.model.DefaultModuleScannerContext;
 import org.sonar.java.reporting.AnalyzerMessage;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
+import org.sonar.plugins.java.api.tree.Tree;
 
 /**
  * Raises a SonarQube issue for a detached (tree-free) cross-file detection through {@link
@@ -45,7 +46,7 @@ import org.sonar.plugins.java.api.JavaFileScannerContext;
  * (extended by both the production context and the CheckVerifier test context). If it cannot be
  * obtained, {@link #create} returns {@code null} and issue reporting degrades to CBOM-only.
  */
-public final class JavaDetachedIssueReporter implements IDetachedIssueReporter<JavaCheck> {
+public final class JavaDetachedIssueReporter implements IDetachedIssueReporter<JavaCheck, Tree> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaDetachedIssueReporter.class);
 
@@ -67,16 +68,17 @@ public final class JavaDetachedIssueReporter implements IDetachedIssueReporter<J
     }
 
     @Override
-    public void report(
-            @Nonnull JavaCheck rule,
-            @Nonnull DetachedSyntaxToken location,
-            @Nonnull String message) {
+    public void report(@Nonnull JavaCheck rule, @Nonnull Tree location, @Nonnull String message) {
+        if (!(location instanceof DetachedSyntaxToken detachedLocation)) {
+            LOGGER.debug("Skipping issue on non-detached location in {}: {}", inputFile, message);
+            return;
+        }
         final AnalyzerMessage.TextSpan span =
                 new AnalyzerMessage.TextSpan(
-                        location.line(),
-                        location.offset(),
-                        location.endLine(),
-                        location.endOffset());
+                        detachedLocation.line(),
+                        detachedLocation.offset(),
+                        detachedLocation.endLine(),
+                        detachedLocation.endOffset());
         sonarComponents.reportIssue(new AnalyzerMessage(rule, inputFile, span, message, 0));
     }
 

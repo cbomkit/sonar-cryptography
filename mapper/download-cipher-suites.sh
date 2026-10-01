@@ -19,8 +19,8 @@ set -eu
 url=https://ciphersuite.info/api/cs/
 target=ciphersuites.json
 tmp=$(mktemp)
-# Do not leave the temp file behind if we exit early.
-trap 'rm -f "$tmp"' EXIT
+# Do not leave the temp file(s) behind if we exit early.
+trap 'rm -f "$tmp" "$tmp.pretty"' EXIT
 
 # --fail makes curl exit non-zero on a 4xx/5xx instead of writing the error
 # page to disk. We download to a temp file so a bad response can never
@@ -29,6 +29,10 @@ if ! curl --fail --silent --show-error --location --max-time 60 "$url" -o "$tmp"
     echo "Failed to download $url - keeping the current $target" >&2
     exit 1
 fi
+
+# Pretty-print so the committed diff stays reviewable.
+python3 -m json.tool --indent 2 "$tmp" "$tmp.pretty"
+mv "$tmp.pretty" "$tmp"
 
 # The API has to give us parseable JSON with a plausible number of entries.
 # A sharp drop means the API changed or returned a partial body, and we would

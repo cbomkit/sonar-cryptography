@@ -87,6 +87,14 @@ public class Handler<R, T, S, P> {
         this.callStackAgent.add(recordedCall);
     }
 
+    /**
+     * Whether {@code tree} has already been recorded by an earlier detection rule's pass over the
+     * same call node.
+     */
+    public boolean isCallAlreadyRecorded(@Nonnull T tree) {
+        return this.callStackAgent.isRecorded(tree);
+    }
+
     public void detachCallsForFile(@Nonnull InputFile inputFile) {
         this.callStackAgent.detachCallsForFile(inputFile);
     }
