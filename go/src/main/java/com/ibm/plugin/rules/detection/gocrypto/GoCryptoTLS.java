@@ -27,6 +27,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -66,7 +67,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("MaxVersion")
                     .shouldBeDetectedAs(new ProtocolFactory<>())
                     .asChildOfParameterWithId(-1)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -80,7 +81,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("string") // addr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -95,7 +96,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("string") // addr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -109,7 +110,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("string") // laddr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -122,7 +123,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("net.Listener") // inner
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -135,7 +136,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("net.Conn") // conn
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -148,7 +149,7 @@ public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
                     .withMethodParameter("net.Conn") // conn
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 

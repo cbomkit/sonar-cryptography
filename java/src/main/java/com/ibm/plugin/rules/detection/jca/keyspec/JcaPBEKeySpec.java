@@ -23,7 +23,6 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.CHAR_ARRAY_TYPE;
 
 import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.PasswordSizeFactory;
@@ -32,6 +31,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -45,7 +45,7 @@ public final class JcaPBEKeySpec extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .withMethodParameter(CHAR_ARRAY_TYPE)
                     .shouldBeDetectedAs(new PasswordSizeFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -59,7 +59,7 @@ public final class JcaPBEKeySpec extends DetectionRuleSet<Tree> {
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new SaltSizeFactory<>())
                     .withMethodParameter("int")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -75,7 +75,7 @@ public final class JcaPBEKeySpec extends DetectionRuleSet<Tree> {
                     .withMethodParameter("int")
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

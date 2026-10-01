@@ -28,6 +28,7 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -40,7 +41,7 @@ public final class JcaKeyPairGeneratorGetInstance extends DetectionRuleSet<Tree>
                     .forMethods("getInstance")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
@@ -53,7 +54,7 @@ public final class JcaKeyPairGeneratorGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));
@@ -66,7 +67,7 @@ public final class JcaKeyPairGeneratorGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             RuleSets.rulesOf(JcaKeyPairGeneratorInitialize.class));

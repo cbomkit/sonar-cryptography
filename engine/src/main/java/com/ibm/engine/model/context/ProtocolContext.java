@@ -19,24 +19,27 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.Objects;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class ProtocolContext implements IDetectionContext, ISupportKind<ProtocolContext.Kind> {
+public class ProtocolContext extends DetectionContext
+        implements ISupportKind<ProtocolContext.Kind> {
 
     public enum Kind {
         TLS,
         NONE,
     }
 
-    @Nonnull private final ProtocolContext.Kind kind;
-
     public ProtocolContext(@Nonnull ProtocolContext.Kind kind) {
-        this.kind = kind;
+        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
     }
 
     public ProtocolContext() {
-        this.kind = ProtocolContext.Kind.NONE;
+        super(Map.of());
+    }
+
+    public ProtocolContext(@Nonnull Map<String, String> properties) {
+        super(normalizeKind(properties));
     }
 
     @Nonnull
@@ -48,22 +51,10 @@ public class ProtocolContext implements IDetectionContext, ISupportKind<Protocol
     @Nonnull
     @Override
     public Kind kind() {
-        return this.kind;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
+        try {
+            return Kind.valueOf(get("kind").orElse(Kind.NONE.name()));
+        } catch (IllegalArgumentException e) {
+            return Kind.NONE;
         }
-        if (other == null || getClass() != other.getClass()) {
-            return false;
-        }
-        return kind == ((ProtocolContext) other).kind;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getClass(), kind);
     }
 }

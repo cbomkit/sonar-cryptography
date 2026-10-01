@@ -28,6 +28,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaAlgorithmParameterSpec;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -40,7 +41,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .forMethods("initialize")
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -52,7 +53,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -63,7 +64,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .forMethods("initialize")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -75,7 +76,7 @@ public final class JcaKeyPairGeneratorInitialize extends DetectionRuleSet<Tree> 
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

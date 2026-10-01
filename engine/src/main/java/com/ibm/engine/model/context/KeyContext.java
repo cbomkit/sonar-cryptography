@@ -21,7 +21,6 @@ package com.ibm.engine.model.context;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 @SuppressWarnings("java:S115")
@@ -41,8 +40,6 @@ public class KeyContext extends DetectionContext
         UNKNOWN;
     }
 
-    @Nonnull private final Kind kind;
-
     /**
      * use a property map instead
      *
@@ -50,18 +47,15 @@ public class KeyContext extends DetectionContext
      */
     @Deprecated(since = "1.3.0")
     public KeyContext(@Nonnull Kind kind) {
-        super(new HashMap<>());
-        this.kind = kind;
+        super(kind == Kind.NONE ? Map.of() : Map.of("kind", kind.name()));
     }
 
     public KeyContext() {
         super(new HashMap<>());
-        this.kind = Kind.NONE;
     }
 
     public KeyContext(@Nonnull Map<String, String> properties) {
-        super(properties);
-        this.kind = Kind.NONE;
+        super(normalizeKind(properties));
     }
 
     /**
@@ -72,22 +66,16 @@ public class KeyContext extends DetectionContext
     @Deprecated(since = "1.3.0")
     @Nonnull
     public Kind kind() {
-        return kind;
+        try {
+            return Kind.valueOf(get("kind").orElse(Kind.NONE.name()));
+        } catch (IllegalArgumentException e) {
+            return Kind.NONE;
+        }
     }
 
     @Nonnull
     @Override
     public Class<? extends IDetectionContext> type() {
         return KeyContext.class;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return super.equals(other) && kind == ((KeyContext) other).kind;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), kind);
     }
 }

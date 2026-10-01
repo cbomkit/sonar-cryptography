@@ -57,8 +57,8 @@ public final class GoProtocolContextTranslator implements IContextTranslation<Tr
             return versionMapper.parse(protocol.asString(), detectionLocation).map(TLS::new);
         } else if (value instanceof CipherSuite<Tree> cipherSuite
                 && detectionContext instanceof ProtocolContext protocolContext) {
-            return switch (protocolContext.kind()) {
-                case TLS ->
+            return switch (protocolContext.get("kind").orElse("")) {
+                case "TLS" ->
                         new CipherSuiteMapper()
                                 .parse(cipherSuite.get(), detectionLocation)
                                 .map(com.ibm.mapper.model.CipherSuite.class::cast)

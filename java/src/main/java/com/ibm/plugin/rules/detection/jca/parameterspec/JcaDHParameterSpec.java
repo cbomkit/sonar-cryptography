@@ -28,6 +28,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -41,7 +42,7 @@ public final class JcaDHParameterSpec extends DetectionRuleSet<Tree> {
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.PRIME_P))
                     .withMethodParameter(BIGINTEGER_TYPE)
-                    .buildForContext(new KeyContext(KeyContext.Kind.DH))
+                    .buildForContext(new KeyContext(Map.of("kind", "DH")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -54,7 +55,7 @@ public final class JcaDHParameterSpec extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.PRIME_P))
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .withMethodParameter("int")
-                    .buildForContext(new KeyContext(KeyContext.Kind.DH))
+                    .buildForContext(new KeyContext(Map.of("kind", "DH")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

@@ -61,20 +61,52 @@ class DetectionContextEqualityTest {
     void keyContextsWithTheSameKindAndPropertiesAreEqual() {
         assertThat(new KeyContext(KeyContext.Kind.EC))
                 .isEqualTo(new KeyContext(KeyContext.Kind.EC))
-                .hasSameHashCodeAs(new KeyContext(KeyContext.Kind.EC));
+                .isEqualTo(new KeyContext(Map.of("kind", "EC")))
+                .hasSameHashCodeAs(new KeyContext(Map.of("kind", "EC")));
+        assertThat(new KeyContext(Map.of("kind", "EC")).kind()).isEqualTo(KeyContext.Kind.EC);
+        assertThat(new PrivateKeyContext(KeyContext.Kind.EC))
+                .isEqualTo(new PrivateKeyContext(Map.of("kind", "EC")));
     }
 
     @Test
     void signatureContextsDifferingOnlyByKindAreNotEqual() {
         assertThat(new SignatureContext(SignatureContext.Kind.PSS))
                 .isNotEqualTo(new SignatureContext(SignatureContext.Kind.MGF1));
+        assertThat(new SignatureContext(SignatureContext.Kind.PSS))
+                .isEqualTo(new SignatureContext(Map.of("kind", "PSS")));
+        assertThat(new SignatureContext(Map.of("kind", "PSS")).kind())
+                .isEqualTo(SignatureContext.Kind.PSS);
     }
 
     @Test
     void protocolContextsCompareByKind() {
         assertThat(new ProtocolContext(ProtocolContext.Kind.TLS))
                 .isEqualTo(new ProtocolContext(ProtocolContext.Kind.TLS))
+                .isEqualTo(new ProtocolContext(Map.of("kind", "TLS")))
                 .isNotEqualTo(new ProtocolContext(ProtocolContext.Kind.NONE));
+        assertThat(new ProtocolContext(Map.of("kind", "TLS")).kind())
+                .isEqualTo(ProtocolContext.Kind.TLS);
+    }
+
+    @Test
+    void noneKindUsesTheDefaultRepresentation() {
+        assertThat(new KeyContext(KeyContext.Kind.NONE))
+                .isEqualTo(new KeyContext())
+                .isEqualTo(new KeyContext(Map.of("kind", "NONE")));
+        assertThat(new SignatureContext(SignatureContext.Kind.NONE))
+                .isEqualTo(new SignatureContext())
+                .isEqualTo(new SignatureContext(Map.of("kind", "NONE")));
+        assertThat(new ProtocolContext(ProtocolContext.Kind.NONE))
+                .isEqualTo(new ProtocolContext())
+                .isEqualTo(new ProtocolContext(Map.of("kind", "NONE")));
+    }
+
+    @Test
+    void customKindValuesRemainInTheMap() {
+        KeyContext context = new KeyContext(Map.of("kind", "MLDSA"));
+        assertThat(context.get("kind")).contains("MLDSA");
+        assertThat(context.kind()).isEqualTo(KeyContext.Kind.NONE);
+        assertThat(context).isNotEqualTo(new KeyContext());
     }
 
     @Test
@@ -82,6 +114,9 @@ class DetectionContextEqualityTest {
         assertThat(new PRNGContext())
                 .isEqualTo(new PRNGContext())
                 .isNotEqualTo(new DigestContext());
+        assertThat(new PRNGContext(Map.of("kind", "secure")))
+                .isNotEqualTo(new PRNGContext())
+                .isEqualTo(new PRNGContext(Map.of("kind", "secure")));
     }
 
     @Test

@@ -22,7 +22,6 @@ package com.ibm.plugin.rules.detection.jca.keyspec;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
@@ -30,6 +29,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -45,7 +45,7 @@ public final class JcaSecretKeySpec extends DetectionRuleSet<Tree> {
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

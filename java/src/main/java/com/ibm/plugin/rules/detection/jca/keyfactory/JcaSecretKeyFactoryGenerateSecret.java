@@ -22,7 +22,6 @@ package com.ibm.plugin.rules.detection.jca.keyfactory;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.KEY_SPEC_TYPE;
 
 import com.ibm.engine.model.KeyAction;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
@@ -31,6 +30,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaKeySpec;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -45,7 +45,7 @@ public final class JcaSecretKeyFactoryGenerateSecret extends DetectionRuleSet<Tr
                             new KeyActionFactory<>(KeyAction.Action.SECRET_KEY_GENERATION))
                     .withMethodParameter(KEY_SPEC_TYPE)
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaKeySpec.class))
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

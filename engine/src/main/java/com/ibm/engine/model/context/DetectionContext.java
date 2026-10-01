@@ -34,6 +34,15 @@ public abstract class DetectionContext implements IDetectionContext {
         this.properties = Collections.unmodifiableMap(new HashMap<>(properties));
     }
 
+    protected static Map<String, String> normalizeKind(@Nonnull Map<String, String> properties) {
+        if (!"NONE".equals(properties.get("kind"))) {
+            return properties;
+        }
+        Map<String, String> normalized = new HashMap<>(properties);
+        normalized.remove("kind");
+        return normalized;
+    }
+
     public boolean contains(@Nonnull String key) {
         return properties.containsKey(key);
     }

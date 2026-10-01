@@ -21,7 +21,6 @@ package com.ibm.plugin.rules.detection.jca.keyagreement;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.KEY_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -29,6 +28,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaAlgorithmParameterSpec;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -41,7 +41,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forObjectTypes("javax.crypto.KeyAgreement")
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -53,7 +53,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -66,7 +66,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -77,7 +77,7 @@ public final class JcaKeyAgreementInit extends DetectionRuleSet<Tree> {
                     .forMethods("init")
                     .withMethodParameter(KEY_TYPE) // TODO: add rule to resolve key
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of()))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

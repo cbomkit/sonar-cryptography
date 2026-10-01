@@ -21,12 +21,12 @@ package com.ibm.plugin.rules.resolve;
 
 import static com.ibm.engine.detection.MethodMatcher.ANY;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -42,7 +42,7 @@ public final class ResolveValuesWithHooks {
                     .forMethods("generate_private_key")
                     .withMethodParameter(ANY)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveValuesWithHooks")
                     .withoutDependingDetectionRules();
 
