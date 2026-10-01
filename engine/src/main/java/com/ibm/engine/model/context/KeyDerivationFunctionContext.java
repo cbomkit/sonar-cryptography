@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class KeyDerivationFunctionContext extends DetectionContext implements IDetectionContext {
+public class KeyDerivationFunctionContext extends DetectionContext {
 
     public KeyDerivationFunctionContext() {
         super(new HashMap<>());

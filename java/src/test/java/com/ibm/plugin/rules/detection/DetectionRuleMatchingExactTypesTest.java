@@ -22,7 +22,7 @@ package com.ibm.plugin.rules.detection;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
@@ -67,14 +67,7 @@ class DetectionRuleMatchingExactTypesTest extends TestBase {
                                                     };
                                             return Optional.of(testValue);
                                         })
-                                .buildForContext(
-                                        new IDetectionContext() {
-                                            @Nonnull
-                                            @Override
-                                            public Class<? extends IDetectionContext> type() {
-                                                return IDetectionContext.class;
-                                            }
-                                        })
+                                .buildForContext(new DigestContext())
                                 .inBundle(() -> "testBundle")
                                 .withoutDependingDetectionRules()));
     }

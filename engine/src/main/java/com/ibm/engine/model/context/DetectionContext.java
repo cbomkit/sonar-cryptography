@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-public abstract class DetectionContext implements IDetectionContext {
+public abstract non-sealed class DetectionContext implements IDetectionContext {
     @Nonnull private final Map<String, String> properties;
 
     protected DetectionContext(@Nonnull Map<String, String> properties) {
@@ -51,7 +51,7 @@ public abstract class DetectionContext implements IDetectionContext {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public final boolean equals(Object other) {
         if (this == other) {
             return true;
         }
@@ -62,7 +62,7 @@ public abstract class DetectionContext implements IDetectionContext {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(getClass(), properties);
     }
 }

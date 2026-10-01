@@ -22,7 +22,7 @@ package com.ibm.engine.model.context;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class PrivateKeyContext extends KeyContext implements IDetectionContext {
+public class PrivateKeyContext extends KeyContext {
     /**
      * use a property map instead
      *
