@@ -23,8 +23,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 @SuppressWarnings("java:S115")
-public class KeyContext extends DetectionContext
-        implements IDetectionContext, ISupportKind<KeyContext.Kind> {
+public class KeyContext extends DetectionContext {
     public enum Kind {
         /* TODO: they are still used in JCA and Python, but should be removed */
         EC,

@@ -22,8 +22,7 @@ package com.ibm.engine.model.context;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class ProtocolContext extends DetectionContext
-        implements ISupportKind<ProtocolContext.Kind> {
+public class ProtocolContext extends DetectionContext {
 
     public enum Kind {
         TLS,
@@ -49,7 +48,6 @@ public class ProtocolContext extends DetectionContext
     }
 
     @Nonnull
-    @Override
     public Kind kind() {
         try {
             return Kind.valueOf(get("kind").orElse(Kind.NONE.name()));

@@ -22,8 +22,7 @@ package com.ibm.engine.model.context;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class SignatureContext extends DetectionContext
-        implements IDetectionContext, ISupportKind<SignatureContext.Kind> {
+public class SignatureContext extends DetectionContext {
     public enum Kind {
         PSS,
         MGF1,
