@@ -201,7 +201,7 @@ public class JavaLanguageTranslation implements ILanguageTranslation<Tree> {
 
             types.add(
                     string -> {
-                        if (matchContext.isHookContext() || exactMatch) {
+                        if (exactMatch) {
                             return argument.symbolType().is(string);
                         }
                         return argument.symbolType().is(string)
