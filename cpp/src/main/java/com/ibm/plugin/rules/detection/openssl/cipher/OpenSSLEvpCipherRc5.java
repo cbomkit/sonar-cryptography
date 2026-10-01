@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpCipherRc5 {
     private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc5_32_12_16_ecb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC5-ECB"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpCipherRc5 {
     private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc5_32_12_16_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CBC"))
                     .withoutParameters()
@@ -60,7 +61,7 @@ public final class OpenSSLEvpCipherRc5 {
     private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc5_32_12_16_cfb64", "EVP_rc5_32_12_16_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC5-CFB"))
                     .withoutParameters()
@@ -71,7 +72,7 @@ public final class OpenSSLEvpCipherRc5 {
     private static final IDetectionRule<AstNode> EVP_RC5_32_12_16_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc5_32_12_16_ofb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC5-OFB"))
                     .withoutParameters()

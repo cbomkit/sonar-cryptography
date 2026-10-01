@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_ecb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-ECB"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CBC"))
                     .withoutParameters()
@@ -60,7 +61,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_cfb64", "EVP_rc2_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-CFB"))
                     .withoutParameters()
@@ -71,7 +72,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_ofb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-OFB"))
                     .withoutParameters()
@@ -82,7 +83,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_40_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_40_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-40-CBC"))
                     .withoutParameters()
@@ -93,7 +94,7 @@ public final class OpenSSLEvpCipherRc2 {
     private static final IDetectionRule<AstNode> EVP_RC2_64_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc2_64_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2-64-CBC"))
                     .withoutParameters()

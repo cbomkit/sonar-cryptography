@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
@@ -45,7 +46,7 @@ public final class OpenSSLEvpKeyGenDsa {
     private static final IDetectionRule<AstNode> EVP_DSA_PARAMGEN_BITS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_bits")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -57,7 +58,7 @@ public final class OpenSSLEvpKeyGenDsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -69,7 +70,7 @@ public final class OpenSSLEvpKeyGenDsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md_props")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

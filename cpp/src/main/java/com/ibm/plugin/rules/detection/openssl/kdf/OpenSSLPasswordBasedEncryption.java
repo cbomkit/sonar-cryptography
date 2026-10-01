@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
@@ -55,7 +56,7 @@ public final class OpenSSLPasswordBasedEncryption {
     private static final IDetectionRule<AstNode> PKCS8_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS8_encrypt")
                     .withMethodParameter("*") // pbe_nid
                     .shouldBeDetectedAs(PBE_ALGORITHM)
@@ -79,7 +80,7 @@ public final class OpenSSLPasswordBasedEncryption {
     private static final IDetectionRule<AstNode> PKCS8_ENCRYPT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS8_encrypt_ex")
                     .withMethodParameter("*") // pbe_nid
                     .shouldBeDetectedAs(PBE_ALGORITHM)
@@ -105,7 +106,7 @@ public final class OpenSSLPasswordBasedEncryption {
     private static final IDetectionRule<AstNode> OBJ_NID2OBJ =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OBJ_nid2obj")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(PBE_ALGORITHM)
@@ -119,7 +120,7 @@ public final class OpenSSLPasswordBasedEncryption {
     private static final IDetectionRule<AstNode> EVP_PBE_CIPHER_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PBE_CipherInit")
                     .withMethodParameter("*") // pbe_obj
                     .addDependingDetectionRules(List.of(OBJ_NID2OBJ))
@@ -137,7 +138,7 @@ public final class OpenSSLPasswordBasedEncryption {
     private static final IDetectionRule<AstNode> EVP_PBE_CIPHER_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PBE_CipherInit_ex")
                     .withMethodParameter("*") // pbe_obj
                     .addDependingDetectionRules(List.of(OBJ_NID2OBJ))

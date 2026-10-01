@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
@@ -46,7 +47,7 @@ public final class OpenSSLEvpKeyGenRsa {
     private static final IDetectionRule<AstNode> EVP_RSA_KEYGEN_BITS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -60,7 +61,7 @@ public final class OpenSSLEvpKeyGenRsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods(
                             "EVP_PKEY_CTX_set_rsa_pss_keygen_md",
                             "EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md")
@@ -74,7 +75,7 @@ public final class OpenSSLEvpKeyGenRsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_md_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -89,7 +90,7 @@ public final class OpenSSLEvpKeyGenRsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -103,7 +104,7 @@ public final class OpenSSLEvpKeyGenRsa {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_SALTLEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpCipherChacha20 {
     private static final IDetectionRule<AstNode> EVP_CHACHA20 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_chacha20")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ChaCha20"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpCipherChacha20 {
     private static final IDetectionRule<AstNode> EVP_CHACHA20_POLY1305 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_chacha20_poly1305")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ChaCha20-Poly1305"))
                     .withoutParameters()

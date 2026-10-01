@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpCipherRc4 {
     private static final IDetectionRule<AstNode> EVP_RC4 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc4")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC4"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpCipherRc4 {
     private static final IDetectionRule<AstNode> EVP_RC4_40 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc4_40")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC4-40"))
                     .withoutParameters()
@@ -60,7 +61,7 @@ public final class OpenSSLEvpCipherRc4 {
     private static final IDetectionRule<AstNode> EVP_RC4_HMAC_MD5 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_rc4_hmac_md5")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC4-HMAC-MD5"))
                     .withoutParameters()

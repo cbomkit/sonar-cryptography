@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.ssl;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -54,7 +55,7 @@ public final class OpenSSLSslContext {
     private static final IDetectionRule<AstNode> SSL_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_new")
                     .withMethodParameter("*")
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
@@ -64,7 +65,7 @@ public final class OpenSSLSslContext {
     private static final IDetectionRule<AstNode> SSL_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_new")
                     .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLLibssl.methodRules())
@@ -75,7 +76,7 @@ public final class OpenSSLSslContext {
     private static final IDetectionRule<AstNode> SSL_CTX_NEW_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_new_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

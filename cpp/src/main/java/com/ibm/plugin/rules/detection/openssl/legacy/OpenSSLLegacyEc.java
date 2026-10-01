@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
@@ -53,7 +54,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> ECDSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("ECDSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withMethodParameter("*")
@@ -69,7 +70,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> ECDSA_DO_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("ECDSA_do_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withMethodParameter("*")
@@ -82,7 +83,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> ECDSA_SIGN_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("ECDSA_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withMethodParameter("*")
@@ -100,7 +101,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> ECDSA_DO_SIGN_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("ECDSA_do_sign_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA-SIGN"))
                     .withMethodParameter("*")
@@ -117,7 +118,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_KEY_new_by_curve_name")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
@@ -128,7 +129,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_KEY_NEW_BY_CURVE_NAME_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_KEY_new_by_curve_name_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -141,7 +142,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_GROUP_NEW_BY_CURVE_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_GROUP_new_by_curve_name")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLNidLookupFactory())
@@ -152,7 +153,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_GROUP_NEW_BY_CURVE_NAME_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_GROUP_new_by_curve_name_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -180,7 +181,7 @@ public final class OpenSSLLegacyEc {
         IDetectionRule.ParametersFactoryBuilder<AstNode> parameters =
                 new DetectionRuleBuilder<AstNode>()
                         .createDetectionRule()
-                        .forObjectTypes("*")
+                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                         .forMethods(functions)
                         .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                         .withMethodParameter("*");
@@ -197,7 +198,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_KEY_SET_GROUP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_KEY_set_group")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -217,7 +218,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EC_KEY_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
                     .withMethodParameter("*")
@@ -235,7 +236,7 @@ public final class OpenSSLLegacyEc {
     private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("ECDH_compute_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
                     .withMethodParameter("*")

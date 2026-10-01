@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
@@ -59,7 +60,7 @@ public final class OpenSSLEvpCipherRuleFactory {
             rules.add(
                     new DetectionRuleBuilder<AstNode>()
                             .createDetectionRule()
-                            .forObjectTypes("*")
+                            .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                             .forMethods(entry.functionName())
                             .shouldBeDetectedAs(new ValueActionFactory<>(entry.label()))
                             .withoutParameters()
@@ -168,7 +169,7 @@ public final class OpenSSLEvpCipherRuleFactory {
         final IDetectionRule.ParametersTypeBuilder<AstNode> call =
                 new DetectionRuleBuilder<AstNode>()
                         .createDetectionRule()
-                        .forObjectTypes("*")
+                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                         .forMethods(entry.functionNames().toArray(new String[0]))
                         .shouldBeDetectedAs(new ValueActionFactory<>(entry.label()));
         final CipherContext context = new CipherContext(Map.of("kind", LEGACY));

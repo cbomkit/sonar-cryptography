@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keyagreement;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
@@ -65,7 +66,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_KEYEXCH_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KEYEXCH_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -78,7 +79,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_KEM_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KEM_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -94,7 +95,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_ECDH_KDF_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -106,7 +107,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_ECDH_KDF_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_type")
                     .withMethodParameter("*")
                     .addDependingDetectionRules(List.of(EVP_PKEY_CTX_SET_ECDH_KDF_MD))
@@ -122,7 +123,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_KDF_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dh_kdf_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -134,7 +135,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_KDF_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dh_kdf_type")
                     .withMethodParameter("*")
                     .addDependingDetectionRules(List.of(EVP_PKEY_CTX_SET_DH_KDF_MD))
@@ -152,7 +153,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> OSSL_HPKE_STR2SUITE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_HPKE_str2suite")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLHpkeSuiteFactory())
@@ -165,7 +166,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> OSSL_HPKE_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_HPKE_CTX_new")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -181,7 +182,7 @@ public final class OpenSSLEvpKeyAgreement {
     private static final IDetectionRule<AstNode> OSSL_HPKE_KEYGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_HPKE_keygen")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLHpkeSuiteFactory())

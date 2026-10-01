@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -42,7 +43,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA224_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA224_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-224"))
                     .withMethodParameter("*")
@@ -53,7 +54,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-224"))
                     .withMethodParameter("*")
@@ -66,7 +67,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA256_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA256_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-256"))
                     .withMethodParameter("*")
@@ -77,7 +78,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-256"))
                     .withMethodParameter("*")
@@ -90,7 +91,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA384_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA384_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-384"))
                     .withMethodParameter("*")
@@ -101,7 +102,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA384 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA384")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-384"))
                     .withMethodParameter("*")
@@ -114,7 +115,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA512_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA512_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512"))
                     .withMethodParameter("*")
@@ -125,7 +126,7 @@ public final class OpenSSLLegacyDigestSha2 {
     private static final IDetectionRule<AstNode> SHA512 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA512")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512"))
                     .withMethodParameter("*")

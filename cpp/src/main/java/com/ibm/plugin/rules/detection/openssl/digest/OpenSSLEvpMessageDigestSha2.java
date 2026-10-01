@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.digest;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -42,7 +43,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-224"))
                     .withoutParameters()
@@ -53,7 +54,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-256"))
                     .withoutParameters()
@@ -64,7 +65,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA384 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha384")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-384"))
                     .withoutParameters()
@@ -75,7 +76,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA512 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha512")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512"))
                     .withoutParameters()
@@ -86,7 +87,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA512_224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha512_224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512/224"))
                     .withoutParameters()
@@ -97,7 +98,7 @@ public final class OpenSSLEvpMessageDigestSha2 {
     private static final IDetectionRule<AstNode> EVP_SHA512_256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha512_256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-512/256"))
                     .withoutParameters()

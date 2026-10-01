@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
@@ -52,7 +53,7 @@ public final class OpenSSLLegacyDsa {
     private static final IDetectionRule<AstNode> DSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DSA_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
                     .withMethodParameter("*")
@@ -68,7 +69,7 @@ public final class OpenSSLLegacyDsa {
     private static final IDetectionRule<AstNode> DSA_DO_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DSA_do_sign")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA-SIGN"))
                     .withMethodParameter("*")
@@ -84,7 +85,7 @@ public final class OpenSSLLegacyDsa {
     private static final IDetectionRule<AstNode> DSA_GENERATE_PARAMETERS_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DSA_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withMethodParameter("*")
@@ -105,7 +106,7 @@ public final class OpenSSLLegacyDsa {
     private static final IDetectionRule<AstNode> DSA_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
                     .withMethodParameter("*")

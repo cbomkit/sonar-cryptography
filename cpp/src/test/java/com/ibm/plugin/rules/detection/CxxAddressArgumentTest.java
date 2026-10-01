@@ -24,6 +24,7 @@ import static com.ibm.plugin.ExpectedFinding.assertFinding;
 import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
@@ -54,7 +55,7 @@ class CxxAddressArgumentTest extends TestBase {
     private static final IDetectionRule<AstNode> KEY_SETUP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("AES_set_encrypt_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
                     .withMethodParameter("*")
@@ -69,7 +70,7 @@ class CxxAddressArgumentTest extends TestBase {
     private static final IDetectionRule<AstNode> ENCRYPTION_WITH_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("AES_cbc_encrypt")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES-CBC"))
                     .withMethodParameter("*")

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
@@ -71,7 +72,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_KDF_CTX_SET_PARAMS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KDF_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -85,7 +86,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_KDF_DERIVE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KDF_derive")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -102,7 +103,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_KDF_DERIVE_KEY_LENGTH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KDF_derive")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -116,7 +117,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_KDF_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KDF_CTX_new")
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
@@ -130,7 +131,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KDF_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -153,7 +154,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_ID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new_id")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
@@ -168,7 +169,7 @@ public final class OpenSSLEvpKdf {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_FROM_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new_from_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

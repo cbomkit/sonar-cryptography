@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.digest;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -53,7 +54,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_SHA1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sha1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
                     .withoutParameters()
@@ -64,7 +65,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_RIPEMD160 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_ripemd160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
                     .withoutParameters()
@@ -75,7 +76,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_WHIRLPOOL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_whirlpool")
                     .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
                     .withoutParameters()
@@ -86,7 +87,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_SM3 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm3")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM3"))
                     .withoutParameters()
@@ -97,7 +98,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_MD5_SHA1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_md5_sha1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5-SHA1"))
                     .withoutParameters()
@@ -108,7 +109,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_MD_NULL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_md_null")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NULL"))
                     .withoutParameters()
@@ -119,7 +120,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_MD_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MD_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -134,7 +135,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_GET_DIGESTBYNAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_get_digestbyname")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
@@ -148,7 +149,7 @@ public final class OpenSSLEvpMessageDigest {
     private static final IDetectionRule<AstNode> EVP_Q_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_Q_digest")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

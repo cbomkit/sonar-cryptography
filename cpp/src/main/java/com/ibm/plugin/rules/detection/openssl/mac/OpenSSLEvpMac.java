@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.mac;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
@@ -59,7 +60,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -73,7 +74,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS_CIPHER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -87,7 +88,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_INIT_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_init")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -103,7 +104,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_INIT_CIPHER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_init")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -119,7 +120,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_CTX_new")
                     .withMethodParameter("*")
                     .buildForContext(new MacContext())
@@ -134,7 +135,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_MAC_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -149,7 +150,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> EVP_Q_MAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_Q_mac")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -175,7 +176,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> OSSL_CRMF_PBMP_NEW_MAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_CRMF_pbmp_new")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -193,7 +194,7 @@ public final class OpenSSLEvpMac {
     private static final IDetectionRule<AstNode> OSSL_CRMF_PBMP_NEW_OWF =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_CRMF_pbmp_new")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

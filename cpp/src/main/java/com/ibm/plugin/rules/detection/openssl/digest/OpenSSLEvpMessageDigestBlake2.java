@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.digest;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpMessageDigestBlake2 {
     private static final IDetectionRule<AstNode> EVP_BLAKE2B512 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_blake2b512")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2B-512"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpMessageDigestBlake2 {
     private static final IDetectionRule<AstNode> EVP_BLAKE2S256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_blake2s256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLAKE2S-256"))
                     .withoutParameters()

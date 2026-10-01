@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
@@ -52,7 +53,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_generate_parameters_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withMethodParameter("*")
@@ -70,7 +71,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_GET_1024_160 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_get_1024_160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
                     .withoutParameters()
@@ -81,7 +82,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_GET_2048_224 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_get_2048_224")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
                     .withoutParameters()
@@ -92,7 +93,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_GET_2048_256 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_get_2048_256")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
                     .withoutParameters()
@@ -106,7 +107,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withMethodParameter("*")
@@ -125,7 +126,7 @@ public final class OpenSSLLegacyDh {
     private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DH_compute_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withMethodParameter("*")

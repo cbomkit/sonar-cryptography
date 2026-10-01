@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Curve;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.context.KeyContext;
@@ -66,7 +67,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_GROUP_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_group_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -78,7 +79,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_EC_PARAMGEN_CURVE_NID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_ec_paramgen_curve_nid")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -97,7 +98,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_KEYGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_keygen", "EVP_PKEY_generate")
                     .shouldBeDetectedAs(
                             new KeyActionFactory<>(KeyAction.Action.PRIVATE_KEY_GENERATION))
@@ -124,7 +125,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_ID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new_id")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
@@ -139,7 +140,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_FROM_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new_from_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -157,7 +158,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_Q_KEYGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_Q_keygen")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -172,7 +173,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_PKEY_Q_KEYGEN_WITH_PARAMETER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_Q_keygen")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -190,7 +191,7 @@ public final class OpenSSLEvpKeyGen {
     private static final IDetectionRule<AstNode> EVP_KEYMGMT_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_KEYMGMT_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

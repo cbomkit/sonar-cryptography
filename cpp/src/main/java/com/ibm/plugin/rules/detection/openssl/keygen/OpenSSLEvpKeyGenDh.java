@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
@@ -62,7 +63,7 @@ public final class OpenSSLEvpKeyGenDh {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dh_paramgen_prime_len")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -74,7 +75,7 @@ public final class OpenSSLEvpKeyGenDh {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_NID =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dh_nid")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -96,7 +97,7 @@ public final class OpenSSLEvpKeyGenDh {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_DH_RFC5114 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_dh_rfc5114", "EVP_PKEY_CTX_set_dhx_rfc5114")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

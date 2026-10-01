@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -48,7 +49,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> SHA1_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA1_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
                     .withMethodParameter("*")
@@ -59,7 +60,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> SHA1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SHA1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
                     .withMethodParameter("*")
@@ -72,7 +73,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> RIPEMD160_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RIPEMD160_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
                     .withMethodParameter("*")
@@ -83,7 +84,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> RIPEMD160 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RIPEMD160")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
                     .withMethodParameter("*")
@@ -96,7 +97,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> WHIRLPOOL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("WHIRLPOOL")
                     .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
                     .withMethodParameter("*")
@@ -109,7 +110,7 @@ public final class OpenSSLLegacyDigest {
     private static final IDetectionRule<AstNode> WHIRLPOOL_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("WHIRLPOOL_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
                     .withMethodParameter("*")

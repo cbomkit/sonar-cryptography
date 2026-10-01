@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.ssl;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Protocol;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
@@ -60,7 +61,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLS_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLS_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
@@ -71,7 +72,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLS_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLS_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
@@ -82,7 +83,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLS_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLS_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
@@ -95,7 +96,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_2_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_2_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.2"))
                     .withoutParameters()
@@ -106,7 +107,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_2_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_2_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.2"))
                     .withoutParameters()
@@ -117,7 +118,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_2_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_2_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.2"))
                     .withoutParameters()
@@ -130,7 +131,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_1_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_1_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.1"))
                     .withoutParameters()
@@ -141,7 +142,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_1_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_1_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.1"))
                     .withoutParameters()
@@ -152,7 +153,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_1_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_1_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.1"))
                     .withoutParameters()
@@ -165,7 +166,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.0"))
                     .withoutParameters()
@@ -176,7 +177,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.0"))
                     .withoutParameters()
@@ -187,7 +188,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> TLSV1_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TLSv1_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLSv1.0"))
                     .withoutParameters()
@@ -200,7 +201,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSLV3_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSLv3_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SSLv3.0"))
                     .withoutParameters()
@@ -211,7 +212,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSLV3_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSLv3_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SSLv3.0"))
                     .withoutParameters()
@@ -222,7 +223,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSLV3_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSLv3_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SSLv3.0"))
                     .withoutParameters()
@@ -235,7 +236,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLS_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLS_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLS"))
                     .withoutParameters()
@@ -246,7 +247,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLS_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLS_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLS"))
                     .withoutParameters()
@@ -257,7 +258,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLS_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLS_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLS"))
                     .withoutParameters()
@@ -270,7 +271,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_2_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_2_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.2"))
                     .withoutParameters()
@@ -281,7 +282,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_2_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_2_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.2"))
                     .withoutParameters()
@@ -292,7 +293,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_2_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_2_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.2"))
                     .withoutParameters()
@@ -305,7 +306,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.0"))
                     .withoutParameters()
@@ -316,7 +317,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.0"))
                     .withoutParameters()
@@ -327,7 +328,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> DTLSV1_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("DTLSv1_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DTLSv1.0"))
                     .withoutParameters()
@@ -340,7 +341,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> OSSL_QUIC_CLIENT_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_QUIC_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("QUIC"))
                     .withoutParameters()
@@ -351,7 +352,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> OSSL_QUIC_CLIENT_THREAD_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_QUIC_client_thread_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("QUIC"))
                     .withoutParameters()
@@ -362,7 +363,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> OSSL_QUIC_SERVER_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("OSSL_QUIC_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("QUIC"))
                     .withoutParameters()
@@ -376,7 +377,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_CIPHER_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_cipher_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -388,7 +389,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_CIPHER_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_cipher_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -400,7 +401,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_CIPHERSUITES =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_ciphersuites")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -412,7 +413,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_CIPHERSUITES =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_ciphersuites")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -448,7 +449,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_MIN_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_min_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -460,7 +461,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_MAX_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_max_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -472,7 +473,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_MIN_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_min_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -484,7 +485,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_MAX_PROTO_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_max_proto_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -503,7 +504,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET1_GROUPS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set1_groups_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -515,7 +516,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET1_GROUPS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set1_groups_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -533,7 +534,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET1_SIGALGS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set1_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -546,7 +547,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET1_SIGALGS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set1_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -559,7 +560,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET1_CLIENT_SIGALGS_LIST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set1_client_sigalgs_list")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -609,7 +610,7 @@ public final class OpenSSLLibssl {
             @Nonnull ProtocolContext.Kind kind) {
         return new DetectionRuleBuilder<AstNode>()
                 .createDetectionRule()
-                .forObjectTypes("*")
+                .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                 .forMethods("SSL_CONF_cmd")
                 .withMethodParameter("*")
                 .withMethodParameter("*")
@@ -625,7 +626,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TLSEXT_USE_SRTP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_tlsext_use_srtp")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -637,7 +638,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_TLSEXT_USE_SRTP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_tlsext_use_srtp")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -651,7 +652,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_CTX_SET_SSL_VERSION =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_set_ssl_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -663,7 +664,7 @@ public final class OpenSSLLibssl {
     private static final IDetectionRule<AstNode> SSL_SET_SSL_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_set_ssl_method")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -691,7 +692,7 @@ public final class OpenSSLLibssl {
             @Nonnull String function, @Nonnull List<IDetectionRule<AstNode>> keyRules) {
         return new DetectionRuleBuilder<AstNode>()
                 .createDetectionRule()
-                .forObjectTypes("*")
+                .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                 .forMethods(function)
                 .withMethodParameter("*")
                 .withMethodParameter("*")

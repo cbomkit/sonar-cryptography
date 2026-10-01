@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -56,7 +57,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_CREATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_create")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -77,7 +78,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_CREATE_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_create_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -100,7 +101,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_CREATE_EX2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_create_ex2")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -128,7 +129,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_SET_MAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_set_mac")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withMethodParameter("*")
@@ -149,7 +150,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_PBE_KEYIVGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_PBE_keyivgen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-PBE"))
                     .withMethodParameter("*")
@@ -168,7 +169,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_PBE_KEYIVGEN_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_PBE_keyivgen_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12-PBE"))
                     .withMethodParameter("*")
@@ -189,7 +190,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS5_PBE_KEYIVGEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS5_PBE_keyivgen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBES1"))
                     .withMethodParameter("*")
@@ -208,7 +209,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS5_PBE_KEYIVGEN_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS5_PBE_keyivgen_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBES1"))
                     .withMethodParameter("*")
@@ -231,7 +232,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_asc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")
@@ -251,7 +252,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_ASC_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_asc_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")
@@ -273,7 +274,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_uni")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")
@@ -293,7 +294,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UNI_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_uni_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")
@@ -315,7 +316,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_utf8")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")
@@ -335,7 +336,7 @@ public final class OpenSSLEvpKdfPkcs12 {
     private static final IDetectionRule<AstNode> PKCS12_KEY_GEN_UTF8_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS12_key_gen_utf8_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS12KDF"))
                     .withMethodParameter("*")

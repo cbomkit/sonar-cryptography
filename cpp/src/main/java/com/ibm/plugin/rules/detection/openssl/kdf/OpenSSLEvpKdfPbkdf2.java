@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.kdf;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.IterationCountFactory;
@@ -53,7 +54,7 @@ public final class OpenSSLEvpKdfPbkdf2 {
     private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS5_PBKDF2_HMAC")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC"))
                     .withMethodParameter("*") // pass
@@ -79,7 +80,7 @@ public final class OpenSSLEvpKdfPbkdf2 {
     private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC_SHA1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS5_PBKDF2_HMAC_SHA1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF2-HMAC-SHA1"))
                     .withMethodParameter("*") // pass

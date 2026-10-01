@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
@@ -66,7 +67,7 @@ public final class OpenSSLPrivateKeyEncryption {
         IDetectionRule.ParametersFactoryBuilder<AstNode> parameters =
                 new DetectionRuleBuilder<AstNode>()
                         .createDetectionRule()
-                        .forObjectTypes("*")
+                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                         .forMethods(functions.toArray(new String[0]))
                         .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                         .withMethodParameter("*")

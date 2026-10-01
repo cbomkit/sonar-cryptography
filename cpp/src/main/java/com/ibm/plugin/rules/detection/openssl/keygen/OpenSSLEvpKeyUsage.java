@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.SignatureAction;
@@ -154,7 +155,7 @@ public final class OpenSSLEvpKeyUsage {
                             IDetectionRule.ParametersFactoryBuilder<AstNode> parameters =
                                     new DetectionRuleBuilder<AstNode>()
                                             .createDetectionRule()
-                                            .forObjectTypes("*")
+                                            .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                                             .forMethods(functions.names().toArray(new String[0]))
                                             .shouldBeDetectedAs(operation)
                                             .withMethodParameter("*");
@@ -189,7 +190,7 @@ public final class OpenSSLEvpKeyUsage {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -201,7 +202,7 @@ public final class OpenSSLEvpKeyUsage {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_NEW_FROM_PKEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_new_from_pkey")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -234,7 +235,7 @@ public final class OpenSSLEvpKeyUsage {
             @Nonnull String function, @Nonnull SignatureAction.Action action) {
         return new DetectionRuleBuilder<AstNode>()
                 .createDetectionRule()
-                .forObjectTypes("*")
+                .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                 .forMethods(function)
                 .shouldBeDetectedAs(new SignatureActionFactory<>(action))
                 .withMethodParameter("*")
@@ -253,7 +254,7 @@ public final class OpenSSLEvpKeyUsage {
             @Nonnull String function, @Nonnull SignatureAction.Action action) {
         return new DetectionRuleBuilder<AstNode>()
                 .createDetectionRule()
-                .forObjectTypes("*")
+                .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                 .forMethods(function)
                 .shouldBeDetectedAs(new SignatureActionFactory<>(action))
                 .withMethodParameter("*")
@@ -349,7 +350,7 @@ public final class OpenSSLEvpKeyUsage {
         IDetectionRule.ParametersFactoryBuilder<AstNode> parameters =
                 new DetectionRuleBuilder<AstNode>()
                         .createDetectionRule()
-                        .forObjectTypes("*")
+                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                         .forMethods(functions)
                         .shouldBeDetectedAs(operation)
                         .withMethodParameter("*");

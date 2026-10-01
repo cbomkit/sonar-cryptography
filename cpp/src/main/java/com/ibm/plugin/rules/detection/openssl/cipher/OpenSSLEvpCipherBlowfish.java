@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpCipherBlowfish {
     private static final IDetectionRule<AstNode> EVP_BF_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_bf_ecb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-ECB"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpCipherBlowfish {
     private static final IDetectionRule<AstNode> EVP_BF_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_bf_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CBC"))
                     .withoutParameters()
@@ -60,7 +61,7 @@ public final class OpenSSLEvpCipherBlowfish {
     private static final IDetectionRule<AstNode> EVP_BF_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_bf_cfb64", "EVP_bf_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-CFB"))
                     .withoutParameters()
@@ -71,7 +72,7 @@ public final class OpenSSLEvpCipherBlowfish {
     private static final IDetectionRule<AstNode> EVP_BF_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_bf_ofb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("BLOWFISH-OFB"))
                     .withoutParameters()

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -43,7 +44,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static final IDetectionRule<AstNode> EVP_SM4_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm4_ecb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-ECB"))
                     .withoutParameters()
@@ -54,7 +55,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static final IDetectionRule<AstNode> EVP_SM4_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm4_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CBC"))
                     .withoutParameters()
@@ -65,7 +66,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static final IDetectionRule<AstNode> EVP_SM4_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm4_cfb128", "EVP_sm4_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CFB"))
                     .withoutParameters()
@@ -76,7 +77,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static final IDetectionRule<AstNode> EVP_SM4_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm4_ofb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-OFB"))
                     .withoutParameters()
@@ -87,7 +88,7 @@ public final class OpenSSLEvpCipherSm4 {
     private static final IDetectionRule<AstNode> EVP_SM4_CTR =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_sm4_ctr")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SM4-CTR"))
                     .withoutParameters()

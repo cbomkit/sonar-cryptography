@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.rand;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.PRNGContext;
@@ -51,7 +52,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_BYTES =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_bytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withMethodParameter("*")
@@ -63,7 +64,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_PRIV_BYTES =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_priv_bytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withMethodParameter("*")
@@ -78,7 +79,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_CIPHER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -92,7 +93,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -106,7 +107,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_CIPHER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_instantiate")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -124,7 +125,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_instantiate")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -142,7 +143,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_CTX_new")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -158,7 +159,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> EVP_RAND_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -173,7 +174,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_SET_SEED_SOURCE_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_set_seed_source_type")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -188,7 +189,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_BYTES_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_bytes_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withMethodParameter("*")
@@ -202,7 +203,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_PRIV_BYTES_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_priv_bytes_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RAND"))
                     .withMethodParameter("*")
@@ -216,7 +217,7 @@ public final class OpenSSLRand {
     private static final IDetectionRule<AstNode> RAND_SET_DRBG_TYPE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RAND_set_DRBG_type")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

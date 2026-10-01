@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.Size;
@@ -83,7 +84,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_SIGN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_sign")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withMethodParameter("*")
@@ -102,7 +103,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_VERIFY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_verify")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withMethodParameter("*")
@@ -123,7 +124,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_PSS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withMethodParameter("*")
@@ -141,7 +142,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_PSS_MGF1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withMethodParameter("*")
@@ -160,7 +161,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_VERIFY_PKCS1_PSS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_verify_PKCS1_PSS")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withMethodParameter("*")
@@ -178,7 +179,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_VERIFY_PKCS1_PSS_MGF1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_verify_PKCS1_PSS_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withMethodParameter("*")
@@ -199,7 +200,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_TYPE_1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_type_1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1"))
                     .withMethodParameter("*")
@@ -213,7 +214,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_PKCS1_TYPE_1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_PKCS1_type_1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1"))
                     .withMethodParameter("*")
@@ -230,7 +231,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_X931 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_X931")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-X931"))
                     .withMethodParameter("*")
@@ -244,7 +245,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_X931 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_X931")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-X931"))
                     .withMethodParameter("*")
@@ -261,7 +262,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_generate_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withMethodParameter("*")
@@ -277,7 +278,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_GENERATE_KEY_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_generate_key_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withMethodParameter("*")
@@ -293,7 +294,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_GENERATE_MULTI_PRIME_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_generate_multi_prime_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withMethodParameter("*")
@@ -314,7 +315,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PUBLIC_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_public_encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -334,7 +335,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PRIVATE_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_private_encrypt")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
                     .withMethodParameter("*")
@@ -354,7 +355,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PUBLIC_DECRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_public_decrypt")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
                     .withMethodParameter("*")
@@ -374,7 +375,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PRIVATE_DECRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_private_decrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
@@ -396,7 +397,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_TYPE_2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_type_2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1-TYPE2"))
                     .withMethodParameter("*")
@@ -410,7 +411,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_PKCS1_TYPE_2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_PKCS1_type_2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PKCS1-TYPE2"))
                     .withMethodParameter("*")
@@ -427,7 +428,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_NONE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_none")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-NO-PADDING"))
                     .withMethodParameter("*")
@@ -441,7 +442,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_NONE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_none")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-NO-PADDING"))
                     .withMethodParameter("*")
@@ -458,7 +459,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_OAEP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_OAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
                     .withMethodParameter("*")
@@ -474,7 +475,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_PKCS1_OAEP =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_PKCS1_OAEP")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP"))
                     .withMethodParameter("*")
@@ -491,7 +492,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_ADD_PKCS1_OAEP_MGF1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_add_PKCS1_OAEP_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MGF1"))
                     .withMethodParameter("*")
@@ -510,7 +511,7 @@ public final class OpenSSLLegacyRsa {
     private static final IDetectionRule<AstNode> RSA_PADDING_CHECK_PKCS1_OAEP_MGF1 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("RSA_padding_check_PKCS1_OAEP_mgf1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-OAEP-MGF1"))
                     .withMethodParameter("*")

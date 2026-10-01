@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
@@ -51,7 +52,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_EncryptInit")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -66,7 +67,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_ENCRYPT_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_EncryptInit_ex", "EVP_EncryptInit_ex2")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -82,7 +83,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_DecryptInit")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
@@ -97,7 +98,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_DECRYPT_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_DecryptInit_ex", "EVP_DecryptInit_ex2")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
@@ -115,7 +116,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_CIPHER_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CipherInit")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -131,7 +132,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CipherInit_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -148,7 +149,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_CIPHER_INIT_EX2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CipherInit_ex2")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -168,7 +169,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_SEAL_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_SealInit")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -186,7 +187,7 @@ public final class OpenSSLEvpCipherInit {
     private static final IDetectionRule<AstNode> EVP_OPEN_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_OpenInit")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")

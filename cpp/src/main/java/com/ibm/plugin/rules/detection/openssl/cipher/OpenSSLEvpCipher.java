@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
@@ -59,7 +60,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> EVP_ENC_NULL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_enc_null")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NULL"))
                     .withoutParameters()
@@ -70,7 +71,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> EVP_GET_CIPHERBYNAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_get_cipherbyname")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(
@@ -96,7 +97,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> EVP_ASYM_CIPHER_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_ASYM_CIPHER_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -130,7 +131,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PADDING =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_padding")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -143,7 +144,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_OAEP_MD_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_oaep_md_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -161,7 +162,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -176,7 +177,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENCRYPT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_encrypt_ex")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -193,7 +194,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENVELOPED_DATA_CREATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_EnvelopedData_create")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -205,7 +206,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENVELOPED_DATA_CREATE_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_EnvelopedData_create_ex")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -219,7 +220,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_AUTH_ENVELOPED_DATA_CREATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_AuthEnvelopedData_create")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -231,7 +232,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_AUTH_ENVELOPED_DATA_CREATE_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_AuthEnvelopedData_create_ex")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -245,7 +246,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENCRYPTED_DATA_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_EncryptedData_encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -261,7 +262,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENCRYPTED_DATA_ENCRYPT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_EncryptedData_encrypt_ex")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -279,7 +280,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ENCRYPTED_DATA_SET1_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_EncryptedData_set1_key")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -294,7 +295,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> PKCS7_ENCRYPT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS7_encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -309,7 +310,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> PKCS7_ENCRYPT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS7_encrypt_ex")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -326,7 +327,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> PKCS7_SET_CIPHER =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("PKCS7_set_cipher")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
@@ -342,7 +343,7 @@ public final class OpenSSLEvpCipher {
     private static final IDetectionRule<AstNode> CMS_ADD0_RECIPIENT_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMS_add0_recipient_key")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

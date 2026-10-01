@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
                     .withMethodParameter("*")
@@ -51,7 +52,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD2_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD2_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
                     .withMethodParameter("*")
@@ -62,7 +63,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD4 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD4")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
                     .withMethodParameter("*")
@@ -75,7 +76,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD4_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD4_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
                     .withMethodParameter("*")
@@ -86,7 +87,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD5_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD5_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
                     .withMethodParameter("*")
@@ -97,7 +98,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MD5 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MD5")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
                     .withMethodParameter("*")
@@ -110,7 +111,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MDC2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MDC2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
                     .withMethodParameter("*")
@@ -123,7 +124,7 @@ public final class OpenSSLLegacyDigestMd {
     private static final IDetectionRule<AstNode> MDC2_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("MDC2_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
                     .withMethodParameter("*")

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
@@ -45,7 +46,7 @@ public final class OpenSSLEvpCipherParameters {
     private static final IDetectionRule<AstNode> EVP_CIPHER_CTX_SET_KEY_LENGTH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CIPHER_CTX_set_key_length")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -58,7 +59,7 @@ public final class OpenSSLEvpCipherParameters {
     private static final IDetectionRule<AstNode> EVP_CIPHER_CTX_SET_PADDING =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CIPHER_CTX_set_padding")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -71,7 +72,7 @@ public final class OpenSSLEvpCipherParameters {
     private static final IDetectionRule<AstNode> EVP_CIPHER_CTX_CTRL =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_CIPHER_CTX_ctrl")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

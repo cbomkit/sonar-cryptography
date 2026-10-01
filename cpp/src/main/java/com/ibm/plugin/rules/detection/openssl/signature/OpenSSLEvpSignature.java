@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.signature;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
@@ -54,7 +55,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT_EX_MDNAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_DigestSignInit_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -73,7 +74,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY_INIT_EX_MDNAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_DigestVerifyInit_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -94,7 +95,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> EVP_SIGNATURE_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_SIGNATURE_fetch")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -109,7 +110,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_mgf1_md_name")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -127,7 +128,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_SALTLEN =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_CTX_set_rsa_pss_saltlen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA-PSS"))
                     .withMethodParameter("*")
@@ -144,7 +145,7 @@ public final class OpenSSLEvpSignature {
     private static final IDetectionRule<AstNode> TS_CONF_SET_SIGNER_DIGEST =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("TS_CONF_set_signer_digest")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

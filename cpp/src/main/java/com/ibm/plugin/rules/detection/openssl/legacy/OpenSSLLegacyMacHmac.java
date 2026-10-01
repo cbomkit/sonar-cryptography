@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -42,7 +43,7 @@ public final class OpenSSLLegacyMacHmac {
     private static final IDetectionRule<AstNode> HMAC_INIT_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("HMAC_Init_ex")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withMethodParameter("*")
@@ -58,7 +59,7 @@ public final class OpenSSLLegacyMacHmac {
     private static final IDetectionRule<AstNode> HMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("HMAC_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withMethodParameter("*")
@@ -73,7 +74,7 @@ public final class OpenSSLLegacyMacHmac {
     private static final IDetectionRule<AstNode> HMAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("HMAC")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withMethodParameter("*")

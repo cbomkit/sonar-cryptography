@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.digest;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,7 +39,7 @@ public final class OpenSSLEvpMessageDigestMd {
     private static final IDetectionRule<AstNode> EVP_MD2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_md2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD2"))
                     .withoutParameters()
@@ -49,7 +50,7 @@ public final class OpenSSLEvpMessageDigestMd {
     private static final IDetectionRule<AstNode> EVP_MD4 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_md4")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD4"))
                     .withoutParameters()
@@ -60,7 +61,7 @@ public final class OpenSSLEvpMessageDigestMd {
     private static final IDetectionRule<AstNode> EVP_MD5 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_md5")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MD5"))
                     .withoutParameters()
@@ -71,7 +72,7 @@ public final class OpenSSLEvpMessageDigestMd {
     private static final IDetectionRule<AstNode> EVP_MDC2 =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_mdc2")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MDC2"))
                     .withoutParameters()

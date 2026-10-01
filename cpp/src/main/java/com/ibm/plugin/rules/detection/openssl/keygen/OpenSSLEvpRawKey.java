@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.keygen;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
@@ -55,7 +56,7 @@ public final class OpenSSLEvpRawKey {
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_new_mac_key", "EVP_PKEY_new_raw_private_key")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(RAW_KEY_TYPE)
@@ -72,7 +73,7 @@ public final class OpenSSLEvpRawKey {
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PRIVATE_KEY_EX =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_new_raw_private_key_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -92,7 +93,7 @@ public final class OpenSSLEvpRawKey {
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_CMAC_KEY =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_PKEY_new_CMAC_key")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withMethodParameter("*")

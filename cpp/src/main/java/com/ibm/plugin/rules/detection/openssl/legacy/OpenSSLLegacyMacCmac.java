@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -42,7 +43,7 @@ public final class OpenSSLLegacyMacCmac {
     private static final IDetectionRule<AstNode> CMAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("CMAC_Init")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
                     .withMethodParameter("*")

@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -42,7 +43,7 @@ public final class OpenSSLEvpCipherSeed {
     private static final IDetectionRule<AstNode> EVP_SEED_ECB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_seed_ecb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-ECB"))
                     .withoutParameters()
@@ -53,7 +54,7 @@ public final class OpenSSLEvpCipherSeed {
     private static final IDetectionRule<AstNode> EVP_SEED_CBC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_seed_cbc")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CBC"))
                     .withoutParameters()
@@ -64,7 +65,7 @@ public final class OpenSSLEvpCipherSeed {
     private static final IDetectionRule<AstNode> EVP_SEED_CFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_seed_cfb128", "EVP_seed_cfb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-CFB"))
                     .withoutParameters()
@@ -75,7 +76,7 @@ public final class OpenSSLEvpCipherSeed {
     private static final IDetectionRule<AstNode> EVP_SEED_OFB =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
-                    .forObjectTypes("*")
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_seed_ofb")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SEED-OFB"))
                     .withoutParameters()
