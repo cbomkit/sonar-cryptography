@@ -21,7 +21,6 @@ package com.ibm.plugin.rules.detection.jca.keyfactory;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
@@ -29,6 +28,7 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
@@ -42,7 +42,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .forMethods("getInstance")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
@@ -61,7 +61,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
@@ -80,7 +80,7 @@ public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree>
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(

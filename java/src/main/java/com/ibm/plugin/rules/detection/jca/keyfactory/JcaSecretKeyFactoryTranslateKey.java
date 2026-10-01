@@ -19,7 +19,6 @@
  */
 package com.ibm.plugin.rules.detection.jca.keyfactory;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -27,6 +26,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.jca.keyspec.JcaSecretKeySpec;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -39,7 +39,7 @@ public final class JcaSecretKeyFactoryTranslateKey extends DetectionRuleSet<Tree
                     .forMethods("translateKey")
                     .withMethodParameter("javax.crypto.SecretKey")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaSecretKeySpec.class))
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

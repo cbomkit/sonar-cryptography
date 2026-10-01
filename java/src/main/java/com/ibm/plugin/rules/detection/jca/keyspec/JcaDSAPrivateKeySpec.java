@@ -28,6 +28,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -43,7 +44,7 @@ public final class JcaDSAPrivateKeySpec extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.PRIME_P))
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .withMethodParameter(BIGINTEGER_TYPE)
-                    .buildForContext(new KeyContext(KeyContext.Kind.DSA))
+                    .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

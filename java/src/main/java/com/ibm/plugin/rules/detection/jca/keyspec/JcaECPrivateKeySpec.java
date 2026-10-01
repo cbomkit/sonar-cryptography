@@ -28,6 +28,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaECGenParameterSpec;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -41,7 +42,7 @@ public final class JcaECPrivateKeySpec extends DetectionRuleSet<Tree> {
                     .withMethodParameter(BIGINTEGER_TYPE) // the private value
                     .withMethodParameter("java.security.spec.ECParameterSpec")
                     .addDependingDetectionRules(RuleSets.rulesOf(JcaECGenParameterSpec.class))
-                    .buildForContext(new KeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new KeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
