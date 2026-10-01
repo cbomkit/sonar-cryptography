@@ -38,7 +38,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
+public final class BcOAEPEncoding
+        extends ContextualDetectionRuleSet<Tree, AsymmetricCipherOverrides> {
 
     private static final List<IDetectionRule<Tree>> constructors(
             @Nullable IDetectionContext encodingDetectionValueContext,
@@ -58,7 +59,7 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcAsymCipherEngine.class)
-                                        .withOverriddenContext(engineDetectionValueContext))
+                                        .withOverrides(engineDetectionValueContext))
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
                         .withDependingDetectionRules(RuleSets.rulesOf(BcAsymCipherInit.class)));
@@ -72,7 +73,7 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcAsymCipherEngine.class)
-                                        .withOverriddenContext(engineDetectionValueContext))
+                                        .withOverrides(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .buildForContext(context)
@@ -88,7 +89,7 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcAsymCipherEngine.class)
-                                        .withOverriddenContext(engineDetectionValueContext))
+                                        .withOverrides(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
@@ -105,14 +106,13 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
                         .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcAsymCipherEngine.class)
-                                        .withOverriddenContext(engineDetectionValueContext))
+                                        .withOverrides(engineDetectionValueContext))
                         .withMethodParameter("org.bouncycastle.crypto.Digest") // hash
                         .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                         .withMethodParameter("org.bouncycastle.crypto.Digest") // mgf1Hash
                         .addDependingDetectionRules(
                                 RuleSet.of(BcDigests.class)
-                                        .withOverriddenContext(
-                                                new DigestContext(Map.of("kind", "MGF1"))))
+                                        .withOverrides(new DigestContext(Map.of("kind", "MGF1"))))
                         .withMethodParameter(BYTE_ARRAY_TYPE)
                         .buildForContext(context)
                         .inBundle(() -> "Bc")
@@ -123,7 +123,9 @@ public final class BcOAEPEncoding extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
-        return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable AsymmetricCipherOverrides overrides) {
+        return constructors(
+                overrides == null ? null : overrides.encoding(),
+                overrides == null ? null : overrides.engine());
     }
 }

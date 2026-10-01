@@ -56,7 +56,7 @@ public final class BcGCMSIVBlockCipher extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
                             RuleSet.of(BcBlockCipherAndEngines.class)
-                                    .withOverriddenContext(
+                                    .withOverrides(
                                             new CipherContext(
                                                     Map.of(
                                                             "kind",
@@ -74,7 +74,7 @@ public final class BcGCMSIVBlockCipher extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
                     .addDependingDetectionRules(
                             RuleSet.of(BcBlockCipherAndEngines.class)
-                                    .withOverriddenContext(
+                                    .withOverrides(
                                             new CipherContext(
                                                     Map.of(
                                                             "kind",

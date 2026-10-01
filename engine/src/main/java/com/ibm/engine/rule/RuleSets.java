@@ -19,14 +19,12 @@
  */
 package com.ibm.engine.rule;
 
-import com.ibm.engine.model.context.IDetectionContext;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Registry for {@link DetectionRuleSet} lists. Every set is built lazily and, once installed, is
@@ -59,39 +57,26 @@ public final class RuleSets {
     private static final ConcurrentMap<CacheKey, List<? extends IDetectionRule<?>>> CONTEXTUAL =
             new ConcurrentHashMap<>();
 
-    private record CacheKey(Class<?> type, List<IDetectionContext> contexts) {}
+    private record CacheKey(Class<?> type, Object overrides) {}
 
     @Nonnull
     @SuppressWarnings("unchecked")
-    static <T> List<IDetectionRule<T>> rulesOf(
-            @Nonnull Class<? extends ContextualDetectionRuleSet<T>> type,
-            @Nonnull IDetectionContext... contexts) {
-        // Trailing nulls carry no information: contextAt(contexts, i) already returns null for
-        // any index at or past the end of the list, so a trailing null is indistinguishable from
-        // the position simply not being present. Trimming them means a single null override and
-        // a trailing null override resolve to the same entries as their default equivalents.
-        // Interior nulls are kept: they still mark "use the default for that position" and are
-        // positionally significant.
-        int end = contexts.length;
-        while (end > 0 && contexts[end - 1] == null) {
-            end--;
-        }
-        if (end == 0) {
+    static <T, O> List<IDetectionRule<T>> rulesOf(
+            @Nonnull Class<? extends ContextualDetectionRuleSet<T, O>> type,
+            @Nullable O overrides) {
+        if (overrides == null) {
             return (List<IDetectionRule<T>>) DEFAULTS.get(type);
         }
-        // Arrays.asList, not List.of: a context may legitimately be null, meaning "use the
-        // default for that position".
-        List<IDetectionContext> key =
-                Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(contexts, end)));
-        CacheKey cacheKey = new CacheKey(type, key);
+        CacheKey cacheKey = new CacheKey(type, overrides);
 
         List<? extends IDetectionRule<?>> cached = CONTEXTUAL.get(cacheKey);
         if (cached == null) {
             // Deliberately not computeIfAbsent: builds are recursive (a set asks the registry for
             // another set while it is being built) and a nested update throws
             // IllegalStateException.
-            ContextualDetectionRuleSet<T> set = (ContextualDetectionRuleSet<T>) instantiate(type);
-            cached = List.copyOf(set.buildRules(key));
+            ContextualDetectionRuleSet<T, O> set =
+                    (ContextualDetectionRuleSet<T, O>) instantiate(type);
+            cached = List.copyOf(set.buildRules(overrides));
             List<? extends IDetectionRule<?>> raced = CONTEXTUAL.putIfAbsent(cacheKey, cached);
             if (raced != null) {
                 cached = raced;

@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcDigests extends ContextualDetectionRuleSet<Tree> {
+public final class BcDigests extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
 
     private static final BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
@@ -190,8 +190,7 @@ public final class BcDigests extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
-        IDetectionContext context = contextAt(contexts, 0);
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
         return Stream.concat(
                         regularConstructors(context).stream(), otherConstructors(context).stream())
                 .toList();

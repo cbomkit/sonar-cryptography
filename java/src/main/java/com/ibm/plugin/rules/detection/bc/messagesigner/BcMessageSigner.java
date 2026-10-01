@@ -97,13 +97,13 @@ public final class BcMessageSigner extends DetectionRuleSet<Tree> {
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcDigests.class)
-                                        .withOverriddenContext(
+                                        .withOverrides(
                                                 new DigestContext(
                                                         Map.of("kind", "ASSET_COLLECTION"))))
                         .withMethodParameter("org.bouncycastle.crypto.Digest")
                         .addDependingDetectionRules(
                                 RuleSet.of(BcDigests.class)
-                                        .withOverriddenContext(
+                                        .withOverrides(
                                                 new DigestContext(
                                                         Map.of("kind", "ASSET_COLLECTION"))))
                         .buildForContext(new SignatureContext(Map.of("kind", "MESSAGE_SIGNER")))

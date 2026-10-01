@@ -17,30 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.engine.rule;
+package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
-import java.util.List;
-import javax.annotation.Nonnull;
+import com.ibm.engine.model.context.IDetectionContext;
 import javax.annotation.Nullable;
 
 /**
- * A rule set whose rules depend on an override value. Callers pass that value through {@link
- * RuleSet#of(Class)}; {@link RuleSets} caches the resulting rules per class and override value.
- * Override values must be immutable and compare by value. A {@code null} value uses the default
- * rules.
+ * Context overrides shared by asymmetric cipher encodings and their engines. A {@code null} field
+ * uses that rule's default context for the corresponding role.
  */
-public abstract class ContextualDetectionRuleSet<T, O> extends DetectionRuleSet<T> {
-
-    protected ContextualDetectionRuleSet() {
-        // only subclasses
-    }
-
-    @Nonnull
-    protected abstract List<IDetectionRule<T>> buildRules(@Nullable O overrides);
-
-    @Nonnull
-    @Override
-    protected final List<IDetectionRule<T>> buildRules() {
-        return buildRules(null);
-    }
-}
+public record AsymmetricCipherOverrides(
+        @Nullable IDetectionContext encoding, @Nullable IDetectionContext engine) {}

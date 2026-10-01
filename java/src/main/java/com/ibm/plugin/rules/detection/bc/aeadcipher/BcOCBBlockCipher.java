@@ -45,12 +45,11 @@ public final class BcOCBBlockCipher extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher") // hash cipher
                     .addDependingDetectionRules(
                             RuleSet.of(BcBlockCipherAndEngines.class)
-                                    .withOverriddenContext(
-                                            new CipherContext(Map.of("kind", "HASH"))))
+                                    .withOverrides(new CipherContext(Map.of("kind", "HASH"))))
                     .withMethodParameter("org.bouncycastle.crypto.BlockCipher") // main cipher
                     .addDependingDetectionRules(
                             RuleSet.of(BcBlockCipherAndEngines.class)
-                                    .withOverriddenContext(
+                                    .withOverrides(
                                             new CipherContext(
                                                     Map.of(
                                                             "kind",

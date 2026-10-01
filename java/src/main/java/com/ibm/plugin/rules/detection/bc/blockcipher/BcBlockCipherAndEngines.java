@@ -26,24 +26,23 @@ import com.ibm.engine.rule.RuleSet;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
 /**
  * All block-cipher rules, including every engine. Historically the static {@code all} accessor on
  * {@link BcBlockCipher}.
  */
-public final class BcBlockCipherAndEngines extends ContextualDetectionRuleSet<Tree> {
+public final class BcBlockCipherAndEngines
+        extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
 
     /** Only the first context (index 0) is used; any further contexts are ignored. */
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
-        IDetectionContext context = contextAt(contexts, 0);
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
         return Stream.of(
-                        RuleSet.of(BcBlockCipher.class).withOverriddenContext(context).stream(),
-                        RuleSet.of(BcBlockCipherEngine.class)
-                                .withOverriddenContext(context)
-                                .stream())
+                        RuleSet.of(BcBlockCipher.class).withOverrides(context).stream(),
+                        RuleSet.of(BcBlockCipherEngine.class).withOverrides(context).stream())
                 .flatMap(i -> i)
                 .toList();
     }
