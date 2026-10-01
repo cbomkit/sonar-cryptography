@@ -52,7 +52,7 @@
         <sonar.plugin.api.version>13.11.0.4459</sonar.plugin.api.version>
         <!-- language parser versions -->
         <sonar.java.version>8.22.0.41895</sonar.java.version>
-        <sonar.python.version>5.29.0.35837</sonar.python.version>
+        <sonar.python.version>5.31.0.36502</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
