@@ -42,6 +42,17 @@ public final class JsonCipherSuites {
                                     "AES 128 CCM 8",
                                     "SHA256")),
                     Map.entry(
+                            "TLS_AES_128_CCM_ASCONHASH256",
+                            new JsonCipherSuite(
+                                    "TLS_AES_128_CCM_ASCONHASH256",
+                                    null,
+                                    null,
+                                    new String[] {"0x00", "0x71"},
+                                    "AES",
+                                    "128 CCM ASCONHASH256",
+                                    null,
+                                    null)),
+                    Map.entry(
                             "TLS_AES_128_CCM_SHA256",
                             new JsonCipherSuite(
                                     "TLS_AES_128_CCM_SHA256",
@@ -52,6 +63,17 @@ public final class JsonCipherSuites {
                                     null,
                                     "AES 128 CCM",
                                     "SHA256")),
+                    Map.entry(
+                            "TLS_AES_128_GCM_ASCONHASH256",
+                            new JsonCipherSuite(
+                                    "TLS_AES_128_GCM_ASCONHASH256",
+                                    null,
+                                    null,
+                                    new String[] {"0x00", "0x70"},
+                                    "AES",
+                                    "128 GCM ASCONHASH256",
+                                    null,
+                                    null)),
                     Map.entry(
                             "TLS_AES_128_GCM_SHA256",
                             new JsonCipherSuite(
@@ -74,6 +96,17 @@ public final class JsonCipherSuites {
                                     null,
                                     "AES 256 GCM",
                                     "SHA384")),
+                    Map.entry(
+                            "TLS_ASCONAEAD128_SHA256",
+                            new JsonCipherSuite(
+                                    "TLS_ASCONAEAD128_SHA256",
+                                    null,
+                                    null,
+                                    new String[] {"0x00", "0x6F"},
+                                    "ASCONAEAD128",
+                                    "SHA256",
+                                    null,
+                                    null)),
                     Map.entry(
                             "TLS_CHACHA20_POLY1305_SHA256",
                             new JsonCipherSuite(
