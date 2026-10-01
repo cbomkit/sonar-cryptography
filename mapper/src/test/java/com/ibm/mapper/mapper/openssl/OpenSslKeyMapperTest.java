@@ -29,6 +29,8 @@ import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SPHINCSPlus;
+import com.ibm.mapper.model.curves.Brainpoolp256r1;
+import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -47,7 +49,7 @@ class OpenSslKeyMapperTest {
     void ecKeyOnANamedCurve() {
         INode ec = parse("EC-P256");
         assertThat(ec.asString()).isEqualTo("EC-secp256r1");
-        assertThat(ec.getChildren().get(EllipticCurve.class).asString()).isEqualTo("secp256r1");
+        assertThat(ec.getChildren().get(EllipticCurve.class)).isInstanceOf(Secp256r1.class);
     }
 
     @Test
@@ -79,8 +81,8 @@ class OpenSslKeyMapperTest {
 
     @Test
     void curves() {
-        assertThat(mapper.parseCurve("ec-brainpoolP256r1", location).orElseThrow().asString())
-                .isEqualTo("brainpoolP256r1");
+        assertThat(mapper.parseCurve("ec-brainpoolP256r1", location))
+                .containsInstanceOf(Brainpoolp256r1.class);
         assertThat(mapper.parseCurve("EC-UNKNOWN", location)).isEmpty();
     }
 

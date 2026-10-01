@@ -20,7 +20,6 @@
 package com.ibm.mapper.mapper.openssl;
 
 import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.ChaCha20Poly1305;
@@ -122,6 +121,8 @@ public class OpenSslKemMapper implements IMapper {
     @Nonnull
     private static DHKEM dhkemOverCurve(
             @Nonnull String curve, @Nonnull DetectionLocation detectionLocation) {
-        return new DHKEM(new ECDH(new EllipticCurve(curve, detectionLocation)), detectionLocation);
+        return new DHKEM(
+                new ECDH(new OpenSslCurveMapper().parse(curve, detectionLocation).orElseThrow()),
+                detectionLocation);
     }
 }

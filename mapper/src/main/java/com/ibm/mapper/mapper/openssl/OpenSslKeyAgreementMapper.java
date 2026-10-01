@@ -20,7 +20,6 @@
 package com.ibm.mapper.mapper.openssl;
 
 import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyLength;
@@ -89,6 +88,6 @@ public class OpenSslKeyAgreementMapper implements IMapper {
 
     @Nonnull
     private static ECDH ecdh(@Nonnull String curve, @Nonnull DetectionLocation detectionLocation) {
-        return new ECDH(new EllipticCurve(curve, detectionLocation));
+        return new ECDH(new OpenSslCurveMapper().parse(curve, detectionLocation).orElseThrow());
     }
 }

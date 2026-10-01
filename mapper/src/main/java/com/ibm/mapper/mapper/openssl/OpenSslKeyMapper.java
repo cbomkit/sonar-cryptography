@@ -41,7 +41,6 @@ import com.ibm.mapper.model.algorithms.X25519MLKEM768;
 import com.ibm.mapper.model.algorithms.X448;
 import com.ibm.mapper.model.algorithms.X448MLKEM1024;
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,18 +53,8 @@ import javax.annotation.Nullable;
  */
 public class OpenSslKeyMapper implements IMapper {
 
-    /** Curve identifier (e.g. {@code "EC-P256"}) → standard curve name. */
-    private static final Map<String, String> CURVE_NAMES =
-            Map.ofEntries(
-                    Map.entry("EC-P192", "secp192r1"),
-                    Map.entry("EC-P224", "secp224r1"),
-                    Map.entry("EC-P256", "secp256r1"),
-                    Map.entry("EC-P384", "secp384r1"),
-                    Map.entry("EC-P521", "secp521r1"),
-                    Map.entry("EC-SECP256K1", "secp256k1"),
-                    Map.entry("EC-BRAINPOOLP256R1", "brainpoolP256r1"),
-                    Map.entry("EC-BRAINPOOLP384R1", "brainpoolP384r1"),
-                    Map.entry("EC-BRAINPOOLP512R1", "brainpoolP512r1"));
+    /** The prefix of the name of an EC key on a named curve, e.g. {@code EC-P256}. */
+    private static final String EC_CURVE_PREFIX = "EC-";
 
     @Nonnull
     @Override
@@ -78,11 +67,9 @@ public class OpenSslKeyMapper implements IMapper {
 
         // EC key on a named curve (e.g. EC_KEY_new_by_curve_name, EVP_PKEY_CTX_set_group_name),
         // usable for ECDSA and ECDH
-        String curveName = CURVE_NAMES.get(algorithmName);
-        if (curveName != null) {
-            final EllipticCurveAlgorithm ec = new EllipticCurveAlgorithm(detectionLocation);
-            ec.put(new EllipticCurve(curveName, detectionLocation));
-            return Optional.of(ec);
+        final Optional<EllipticCurve> curve = parseCurve(algorithmName, detectionLocation);
+        if (curve.isPresent()) {
+            return curve.map(EllipticCurveAlgorithm::new);
         }
 
         // RSA key length (EVP_PKEY_CTX_set_rsa_keygen_bits) — any bit-length the code sets,
@@ -190,8 +177,13 @@ public class OpenSslKeyMapper implements IMapper {
         if (str == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(CURVE_NAMES.get(str.toUpperCase().trim()))
-                .map(name -> new EllipticCurve(name, detectionLocation));
+        final String curveName = str.toUpperCase().trim();
+        if (!curveName.startsWith(EC_CURVE_PREFIX)) {
+            return Optional.empty();
+        }
+        return new OpenSslCurveMapper()
+                .parse(curveName.substring(EC_CURVE_PREFIX.length()), detectionLocation)
+                .map(curve -> curve);
     }
 
     @Nullable private static Integer parseBits(@Nonnull String algorithmName, @Nonnull String prefix) {

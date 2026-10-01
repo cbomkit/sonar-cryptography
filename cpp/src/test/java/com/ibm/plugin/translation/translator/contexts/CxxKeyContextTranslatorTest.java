@@ -122,9 +122,9 @@ class CxxKeyContextTranslatorTest {
                 Arguments.of("EC-P384", "EC-secp384r1"),
                 Arguments.of("EC-P521", "EC-secp521r1"),
                 Arguments.of("EC-SECP256K1", "EC-secp256k1"),
-                Arguments.of("EC-BRAINPOOLP256R1", "EC-brainpoolP256r1"),
-                Arguments.of("EC-BRAINPOOLP384R1", "EC-brainpoolP384r1"),
-                Arguments.of("EC-BRAINPOOLP512R1", "EC-brainpoolP512r1"));
+                Arguments.of("EC-BRAINPOOLP256R1", "EC-Brainpoolp256r1"),
+                Arguments.of("EC-BRAINPOOLP384R1", "EC-Brainpoolp384r1"),
+                Arguments.of("EC-BRAINPOOLP512R1", "EC-Brainpoolp512r1"));
     }
 
     @ParameterizedTest

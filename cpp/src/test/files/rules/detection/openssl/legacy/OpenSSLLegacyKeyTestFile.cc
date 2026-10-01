@@ -38,14 +38,14 @@ void dsa_key(void) {
 
 void ec_key_on_named_curve(void) {
     EC_KEY *key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-    EC_KEY_generate_key(key); // Noncompliant {{(PrivateKey) EC}}
+    EC_KEY_generate_key(key); // Noncompliant {{(PrivateKey) EC-secp256r1}}
 }
 
 void ec_key_on_group(void) {
     EC_KEY *key = EC_KEY_new();
     EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp384r1);
     EC_KEY_set_group(key, group);
-    EC_KEY_generate_key(key); // Noncompliant {{(PrivateKey) EC}}
+    EC_KEY_generate_key(key); // Noncompliant {{(PrivateKey) EC-secp384r1}}
 }
 
 void ec_custom_curve(BIGNUM *p, BIGNUM *a, BIGNUM *b) {

@@ -20,7 +20,7 @@
 package com.ibm.mapper.mapper.ssl;
 
 import com.ibm.mapper.mapper.IMapper;
-import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.mapper.openssl.OpenSslCurveMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.MLKEM;
@@ -59,13 +59,8 @@ public final class OpenSslGroupMapper implements IMapper {
             case "X25519MLKEM768" -> Optional.of(new X25519MLKEM768(detectionLocation));
             case "SECP256R1MLKEM768" -> Optional.of(new SecP256r1MLKEM768(detectionLocation));
             case "SECP384R1MLKEM1024" -> Optional.of(new SecP384r1MLKEM1024(detectionLocation));
-            case "SECP256R1", "PRIME256V1", "P-256" ->
-                    Optional.of(new ECDH(new EllipticCurve("secp256r1", detectionLocation)));
-            case "SECP384R1", "P-384" ->
-                    Optional.of(new ECDH(new EllipticCurve("secp384r1", detectionLocation)));
-            case "SECP521R1", "P-521" ->
-                    Optional.of(new ECDH(new EllipticCurve("secp521r1", detectionLocation)));
-            default -> Optional.empty();
+            // a named elliptic curve group, e.g. secp256r1 or P-256
+            default -> new OpenSslCurveMapper().parse(str, detectionLocation).map(ECDH::new);
         };
     }
 }
