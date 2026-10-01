@@ -189,7 +189,7 @@ new DetectionRuleBuilder<Tree>()
     .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class));
 ```
 
-Here `context` is `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))` by default, but `BcBlockCipher` extends [`ContextualDetectionRuleSet<Tree>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java), so a caller can override it with `RuleSet.of(BcBlockCipher.class).withOverriddenContext(someContext)`. See the section on `ContextualDetectionRuleSet` and `RuleSets` in [*Extending the Sonar Cryptography Plugin for another language*](./LANGUAGE_SUPPORT.md#registering-your-rule) for how this works.
+Here `context` is `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))` by default, but `BcBlockCipher` extends [`ContextualDetectionRuleSet<Tree, IDetectionContext>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java), so a caller can override it with `RuleSet.of(BcBlockCipher.class).withOverrides(someContext)`. See the section on `ContextualDetectionRuleSet` and `RuleSets` in [*Extending the Sonar Cryptography Plugin for another language*](./LANGUAGE_SUPPORT.md#registering-your-rule) for how this works.
 
 We first specify the exact function call that we want to capture, which is here the constructor of the `org.bouncycastle.crypto.modes.CFBBlockCipher` object, with two parameters (of type `org.bouncycastle.crypto.BlockCipher` and `int`).
 

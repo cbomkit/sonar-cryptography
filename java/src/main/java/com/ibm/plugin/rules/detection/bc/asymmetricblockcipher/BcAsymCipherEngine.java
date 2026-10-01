@@ -33,7 +33,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree> {
+public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
 
     public static final List<String> blockCiphers =
             List.of(
@@ -69,7 +69,7 @@ public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree> {
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
-        return constructors(contextAt(contexts, 0));
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
+        return constructors(context);
     }
 }

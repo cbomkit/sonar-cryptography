@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class RuleSetsContextualTest {
@@ -87,11 +88,11 @@ class RuleSetsContextualTest {
 
     static final IDetectionRule<Object> STUB_RULE = new StubRule();
 
-    static final class ContextualLeaf extends ContextualDetectionRuleSet<Object> {
+    static final class ContextualLeaf
+            extends ContextualDetectionRuleSet<Object, IDetectionContext> {
         @Nonnull
         @Override
-        protected List<IDetectionRule<Object>> buildRules(
-                @Nonnull List<IDetectionContext> contexts) {
+        protected List<IDetectionRule<Object>> buildRules(@Nullable IDetectionContext overrides) {
             LEAF_BUILDS.incrementAndGet();
             // A fresh, mutable, non-empty list per call: List.copyOf hands back its argument
             // unchanged when it is already an immutable list, so returning List.of(STUB_RULE)
@@ -101,12 +102,26 @@ class RuleSetsContextualTest {
     }
 
     /** Builds by asking the registry for another contextual set, like BcOAEPEncoding does. */
-    static final class ContextualParent extends ContextualDetectionRuleSet<Object> {
+    static final class ContextualParent
+            extends ContextualDetectionRuleSet<Object, IDetectionContext> {
         @Nonnull
         @Override
-        protected List<IDetectionRule<Object>> buildRules(
-                @Nonnull List<IDetectionContext> contexts) {
-            return RuleSet.of(ContextualLeaf.class).withOverriddenContext(contextAt(contexts, 0));
+        protected List<IDetectionRule<Object>> buildRules(@Nullable IDetectionContext overrides) {
+            return RuleSet.of(ContextualLeaf.class).withOverrides(overrides);
+        }
+    }
+
+    private record PairOverrides(
+            @Nullable IDetectionContext encoding, @Nullable IDetectionContext engine) {}
+
+    static final class ContextualPair extends ContextualDetectionRuleSet<Object, PairOverrides> {
+        static final AtomicInteger BUILDS = new AtomicInteger();
+
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<Object>> buildRules(@Nullable PairOverrides overrides) {
+            BUILDS.incrementAndGet();
+            return new ArrayList<>(List.of(STUB_RULE));
         }
     }
 
@@ -116,8 +131,8 @@ class RuleSetsContextualTest {
 
     @Test
     void equalContextsShareOneList() {
-        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()))
-                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverrides(mgf1()))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(mgf1()));
     }
 
     @Test
@@ -127,8 +142,8 @@ class RuleSetsContextualTest {
         DigestContext a = new DigestContext(Map.of("kind", "DIFF_A"));
         DigestContext b = new DigestContext(Map.of("kind", "DIFF_B"));
         int before = LEAF_BUILDS.get();
-        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(a))
-                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(b));
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverrides(a))
+                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(b));
         assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
     }
 
@@ -139,32 +154,35 @@ class RuleSetsContextualTest {
     }
 
     @Test
-    void aTrailingNullResolvesToTheDefaultPath() {
-        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContext(null))
+    void aNullOverrideUsesTheDefaultPath() {
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverrides(null))
                 .isSameAs(RuleSets.rulesOf(ContextualLeaf.class));
     }
 
     @Test
-    void aTrailingNullAfterARealContextResolvesToTheSameKeyAsWithoutIt() {
-        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(mgf1(), null))
-                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
+    void equalOverrideRecordsShareOneList() {
+        assertThat(RuleSet.of(ContextualPair.class).withOverrides(new PairOverrides(mgf1(), null)))
+                .isSameAs(
+                        RuleSet.of(ContextualPair.class)
+                                .withOverrides(new PairOverrides(mgf1(), null)));
     }
 
     @Test
-    void positionMattersWhenOneOfTwoContextsIsNull() {
+    void fieldsMatterWhenOneOfTwoContextsIsNull() {
         // A marker unique to this test, unused elsewhere (including not reusing mgf1(), which
         // other tests also cache under), so no other test's cache entries perturb the build
         // count.
         DigestContext c = new DigestContext(Map.of("kind", "POSITION"));
-        int before = LEAF_BUILDS.get();
-        assertThat(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(null, c))
-                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContexts(c, null));
-        assertThat(LEAF_BUILDS.get() - before).isEqualTo(2);
+        int before = ContextualPair.BUILDS.get();
+        assertThat(RuleSet.of(ContextualPair.class).withOverrides(new PairOverrides(null, c)))
+                .isNotSameAs(
+                        RuleSet.of(ContextualPair.class).withOverrides(new PairOverrides(c, null)));
+        assertThat(ContextualPair.BUILDS.get() - before).isEqualTo(2);
     }
 
     @Test
     void aSetMayBuildByAskingForAnotherContextualSet() {
-        assertThat(RuleSet.of(ContextualParent.class).withOverriddenContext(mgf1()))
-                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverriddenContext(mgf1()));
+        assertThat(RuleSet.of(ContextualParent.class).withOverrides(mgf1()))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(mgf1()));
     }
 }

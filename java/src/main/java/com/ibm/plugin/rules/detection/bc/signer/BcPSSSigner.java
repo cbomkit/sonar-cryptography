@@ -70,8 +70,7 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
                             RuleSet.of(BcDigests.class)
-                                    .withOverriddenContext(
-                                            new DigestContext(Map.of("kind", "MGF1"))))
+                                    .withOverrides(new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
@@ -90,8 +89,7 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
                             RuleSet.of(BcDigests.class)
-                                    .withOverriddenContext(
-                                            new DigestContext(Map.of("kind", "MGF1"))))
+                                    .withOverrides(new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .withMethodParameter("byte")
                     .buildForContext(new SignatureContext())
@@ -111,8 +109,7 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
                             RuleSet.of(BcDigests.class)
-                                    .withOverriddenContext(
-                                            new DigestContext(Map.of("kind", "MGF1"))))
+                                    .withOverrides(new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
@@ -133,8 +130,7 @@ public final class BcPSSSigner extends DetectionRuleSet<Tree> {
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
                     .addDependingDetectionRules(
                             RuleSet.of(BcDigests.class)
-                                    .withOverriddenContext(
-                                            new DigestContext(Map.of("kind", "MGF1"))))
+                                    .withOverrides(new DigestContext(Map.of("kind", "MGF1"))))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)

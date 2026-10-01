@@ -19,38 +19,30 @@
  */
 package com.ibm.engine.rule;
 
-import com.ibm.engine.model.context.IDetectionContext;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * An explicit entry point for overriding a contextual rule set's detection contexts. Use {@link
- * RuleSets#rulesOf(Class)} when no override is needed. A {@code null} override uses the default
- * context for that position.
+ * An explicit entry point for overriding a contextual rule set. Use {@link RuleSets#rulesOf(Class)}
+ * when no override is needed. A {@code null} override uses the default rules.
  */
-public final class RuleSet<T> {
+public final class RuleSet<T, O> {
 
-    private final Class<? extends ContextualDetectionRuleSet<T>> type;
+    private final Class<? extends ContextualDetectionRuleSet<T, O>> type;
 
-    private RuleSet(Class<? extends ContextualDetectionRuleSet<T>> type) {
+    private RuleSet(Class<? extends ContextualDetectionRuleSet<T, O>> type) {
         this.type = type;
     }
 
     @Nonnull
-    public static <T> RuleSet<T> of(@Nonnull Class<? extends ContextualDetectionRuleSet<T>> type) {
+    public static <T, O> RuleSet<T, O> of(
+            @Nonnull Class<? extends ContextualDetectionRuleSet<T, O>> type) {
         return new RuleSet<>(type);
     }
 
     @Nonnull
-    public List<IDetectionRule<T>> withOverriddenContext(@Nullable IDetectionContext context) {
-        return RuleSets.rulesOf(type, context);
-    }
-
-    /** Overrides the first and second context positions, in that order. */
-    @Nonnull
-    public List<IDetectionRule<T>> withOverriddenContexts(
-            @Nullable IDetectionContext first, @Nullable IDetectionContext second) {
-        return RuleSets.rulesOf(type, first, second);
+    public List<IDetectionRule<T>> withOverrides(@Nullable O overrides) {
+        return RuleSets.rulesOf(type, overrides);
     }
 }

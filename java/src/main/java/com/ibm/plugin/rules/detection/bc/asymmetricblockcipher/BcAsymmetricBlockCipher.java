@@ -29,33 +29,26 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymmetricBlockCipher extends ContextualDetectionRuleSet<Tree> {
+public final class BcAsymmetricBlockCipher
+        extends ContextualDetectionRuleSet<Tree, AsymmetricCipherOverrides> {
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nonnull List<IDetectionContext> contexts) {
-        return constructors(contextAt(contexts, 0), contextAt(contexts, 1));
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable AsymmetricCipherOverrides overrides) {
+        return constructors(overrides);
     }
 
     @Nonnull
     private static List<IDetectionRule<Tree>> constructors(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+            @Nullable AsymmetricCipherOverrides overrides) {
+        IDetectionContext engineDetectionValueContext =
+                overrides == null ? null : overrides.engine();
         return Stream.of(
-                        RuleSet.of(BcPKCS1Encoding.class)
-                                .withOverriddenContexts(
-                                        encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
-                        RuleSet.of(BcOAEPEncoding.class)
-                                .withOverriddenContexts(
-                                        encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
-                        RuleSet.of(BcISO9796d1Encoding.class)
-                                .withOverriddenContexts(
-                                        encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
+                        RuleSet.of(BcPKCS1Encoding.class).withOverrides(overrides).stream(),
+                        RuleSet.of(BcOAEPEncoding.class).withOverrides(overrides).stream(),
+                        RuleSet.of(BcISO9796d1Encoding.class).withOverrides(overrides).stream(),
                         RuleSet.of(BcAsymCipherEngine.class)
-                                .withOverriddenContext(engineDetectionValueContext)
+                                .withOverrides(engineDetectionValueContext)
                                 .stream())
                 .flatMap(i -> i)
                 .toList();
