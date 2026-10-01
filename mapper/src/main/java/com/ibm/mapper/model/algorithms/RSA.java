@@ -96,18 +96,4 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
     public RSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RSA rsa) {
         super(rsa, asKind);
     }
-
-    private RSA(@Nonnull final RSA rsa) {
-        super(rsa.name, rsa.kind, rsa.detectionLocation);
-    }
-
-    @Nonnull
-    @Override
-    public INode deepCopy() {
-        RSA copy = new RSA(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
-    }
 }

@@ -26,8 +26,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
-public class Algorithm implements IAlgorithm {
-    @Nonnull protected final Map<Class<? extends INode>, INode> children;
+public class Algorithm implements IAlgorithm, Cloneable {
+    @Nonnull protected Map<Class<? extends INode>, INode> children;
     @Nonnull protected final Class<? extends IPrimitive> kind;
     @Nonnull protected final DetectionLocation detectionLocation;
     @Nonnull protected final String name;
@@ -59,14 +59,6 @@ public class Algorithm implements IAlgorithm {
         this.detectionLocation = detectionLocation;
         this.kind = asKind;
         this.origin = origin;
-    }
-
-    private Algorithm(@Nonnull Algorithm algorithm) {
-        this.children = new HashMap<>();
-        this.kind = algorithm.kind;
-        this.detectionLocation = algorithm.detectionLocation;
-        this.name = algorithm.name;
-        this.origin = algorithm.origin;
     }
 
     @Override
@@ -143,14 +135,24 @@ public class Algorithm implements IAlgorithm {
         this.children.remove(nodeType);
     }
 
+    /**
+     * Subclasses with mutable fields outside {@code children} must copy those fields themselves.
+     */
     @Nonnull
     @Override
     public INode deepCopy() {
-        Algorithm copy = new Algorithm(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
+        try {
+            // Subclasses keep their mutable state in children. Cloning preserves the concrete
+            // algorithm type and metadata; the child tree must then be copied separately.
+            Algorithm copy = (Algorithm) super.clone();
+            copy.children = new HashMap<>();
+            for (INode child : this.children.values()) {
+                copy.children.put(child.getKind(), child.deepCopy());
+            }
+            return copy;
+        } catch (CloneNotSupportedException exception) {
+            throw new AssertionError(exception);
         }
-        return copy;
     }
 
     public boolean is(@Nonnull final Class<? extends INode> type) {
