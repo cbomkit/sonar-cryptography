@@ -45,9 +45,9 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
 
     /**
      * Synthetic type name used for standalone C/C++ function calls that have no object qualifier.
-     * Detection rules for C-style functions (e.g., OpenSSL's EVP_DigestInit_ex) should use {@code
-     * forObjectTypes("*")} to match any type, or {@code forObjectTypes("<global>")} to match only
-     * standalone function calls.
+     * Detection rules for C-style functions (e.g., OpenSSL's EVP_DigestInit_ex) use {@code
+     * forObjectTypes(GLOBAL_SCOPE)}, so that a C++ member function of the same name (e.g. {@code
+     * hasher.MD5(...)}) does not match; {@code forObjectTypes("*")} matches any call.
      */
     public static final String GLOBAL_SCOPE = "<global>";
 
@@ -71,26 +71,21 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
     public Optional<IType> getInvokedObjectTypeString(
             @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
         if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
-            AstNode qualifier = CxxAstNodeHelper.getMemberAccessQualifier(methodInvocation);
-            if (qualifier != null) {
-                Type cxxType = AstNodeTypeExtension.getType(qualifier);
-                if (cxxType != null && !cxxType.isUnknown()) {
-                    return Optional.of(createTypeFromCxxType(cxxType, matchContext));
-                }
-
-                Symbol symbol = AstNodeSymbolExtension.getSymbol(qualifier);
-                if (symbol != null && !symbol.isUnknown()) {
-                    String fqn = symbol.fullyQualifiedName();
-                    if (fqn != null) {
-                        return Optional.of(createTypeFromFqn(fqn, matchContext));
-                    }
-                }
-
-                String identifierName = CxxAstNodeHelper.getIdentifierName(qualifier);
-                if (identifierName != null) {
-                    return Optional.of(createTypeFromFqn(identifierName, matchContext));
-                }
+            final Optional<IType> qualifierType = getQualifierType(matchContext, methodInvocation);
+            if (callsMemberFunction(methodInvocation)) {
+                return qualifierType;
             }
+            // a call through a function pointer member, e.g. api->EVP_sha256(), calls a C
+            // function, as a standalone call does
+            final IType globalScope = createTypeFromFqn(GLOBAL_SCOPE, matchContext);
+            return Optional.of(
+                    qualifierType
+                            .<IType>map(
+                                    type ->
+                                            typeString ->
+                                                    type.is(typeString)
+                                                            || globalScope.is(typeString))
+                            .orElse(globalScope));
         } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
             AstNode newTypeId = methodInvocation.getFirstChild(CxxGrammarImpl.newTypeId);
             if (newTypeId != null) {
@@ -107,10 +102,59 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
             // Standalone C/C++ function call (no member access qualifier).
             // Return a synthetic global scope type so MethodMatcher.match() doesn't
-            // short-circuit on empty. Detection rules should use forObjectTypes("*").
+            // short-circuit on empty. Detection rules match it with forObjectTypes(GLOBAL_SCOPE).
             return Optional.of(createTypeFromFqn(GLOBAL_SCOPE, matchContext));
         }
         return Optional.empty();
+    }
+
+    /** The type of the object a member is accessed on, e.g. of {@code obj} in {@code obj.f()}. */
+    @Nonnull
+    private Optional<IType> getQualifierType(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode memberAccess) {
+        AstNode qualifier = CxxAstNodeHelper.getMemberAccessQualifier(memberAccess);
+        if (qualifier == null) {
+            return Optional.empty();
+        }
+        Type cxxType = AstNodeTypeExtension.getType(qualifier);
+        if (cxxType != null && !cxxType.isUnknown()) {
+            return Optional.of(createTypeFromCxxType(cxxType, matchContext));
+        }
+
+        Symbol symbol = AstNodeSymbolExtension.getSymbol(qualifier);
+        if (symbol != null && !symbol.isUnknown()) {
+            String fqn = symbol.fullyQualifiedName();
+            if (fqn != null) {
+                return Optional.of(createTypeFromFqn(fqn, matchContext));
+            }
+        }
+
+        String identifierName = CxxAstNodeHelper.getIdentifierName(qualifier);
+        if (identifierName != null) {
+            return Optional.of(createTypeFromFqn(identifierName, matchContext));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Whether a member access calls a member function, i.e. its member resolves to a function of a
+     * class rather than to a function pointer member or an unresolved member.
+     */
+    private static boolean callsMemberFunction(@Nonnull AstNode memberAccess) {
+        final List<AstNode> children = memberAccess.getChildren();
+        for (int i = children.size() - 2; i >= 0; i--) {
+            final String operator = children.get(i).getTokenValue();
+            if (".".equals(operator) || "->".equals(operator)) {
+                AstNode member = children.get(i + 1);
+                if (!member.is(GenericTokenType.IDENTIFIER)) {
+                    member = member.getFirstDescendant(GenericTokenType.IDENTIFIER);
+                }
+                final Symbol symbol =
+                        member != null ? AstNodeSymbolExtension.getSymbol(member) : null;
+                return symbol != null && !symbol.isUnknown() && symbol.isFunctionSymbol();
+            }
+        }
+        return false;
     }
 
     @Nonnull
