@@ -27,6 +27,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -39,7 +40,7 @@ public final class JcaMGF1ParameterSpec extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.MGF1))
+                    .buildForContext(new SignatureContext(Map.of("kind", "MGF1")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

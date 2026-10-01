@@ -21,13 +21,13 @@ package com.ibm.plugin.rules.detection.jca.keyspec;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -40,7 +40,7 @@ public final class JcaDESKeySpec extends DetectionRuleSet<Tree> {
                     .forConstructor()
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.DES))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "DES")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -52,7 +52,7 @@ public final class JcaDESKeySpec extends DetectionRuleSet<Tree> {
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>())
                     .withMethodParameter("int")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.DES))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "DES")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 

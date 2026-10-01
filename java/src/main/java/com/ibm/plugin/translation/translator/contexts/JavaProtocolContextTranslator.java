@@ -49,10 +49,10 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
             return Optional.empty();
         }
 
-        final ProtocolContext.Kind kind = ((ProtocolContext) detectionContext).kind();
+        final String kind = ((ProtocolContext) detectionContext).get("kind").orElse("");
         if (value instanceof com.ibm.engine.model.Protocol<Tree> protocol) {
             return switch (kind) {
-                case TLS ->
+                case "TLS" ->
                         Optional.of(protocol)
                                 .map(
                                         p -> {
@@ -69,7 +69,7 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
             };
         } else if (value instanceof CipherSuite<Tree> cipherSuite) {
             return switch (kind) {
-                case TLS ->
+                case "TLS" ->
                         new CipherSuiteMapper()
                                 .parse(cipherSuite.get(), detectionLocation)
                                 .map(n -> n);

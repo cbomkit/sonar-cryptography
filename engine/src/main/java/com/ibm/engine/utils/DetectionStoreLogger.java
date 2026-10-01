@@ -25,7 +25,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
-import com.ibm.engine.model.context.ISupportKind;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -142,11 +141,6 @@ public class DetectionStoreLogger<R, T, S, P> {
             @Nonnull IDetectionContext detectionValueContext) {
         if (detectionValueContext instanceof DetectionContext context) {
             return detectionValueContext.getClass().getSimpleName() + "<" + context + ">";
-        } else if (detectionValueContext instanceof ISupportKind<?>) {
-            return detectionValueContext.getClass().getSimpleName()
-                    + "<"
-                    + ((ISupportKind<?>) detectionValueContext).kind()
-                    + ">";
         } else {
             return detectionValueContext.getClass().getSimpleName();
         }

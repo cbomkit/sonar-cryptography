@@ -25,6 +25,7 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -37,7 +38,7 @@ public final class SSLSetParameters extends DetectionRuleSet<Tree> {
                     .forMethods("setSSLParameters")
                     .withMethodParameter("javax.net.ssl.SSLParameters")
                     .addDependingDetectionRules(RuleSets.rulesOf(SSLParametersSetProtocols.class))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 

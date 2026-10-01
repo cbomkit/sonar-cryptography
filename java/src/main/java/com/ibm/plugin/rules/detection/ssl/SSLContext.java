@@ -25,6 +25,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -38,7 +39,7 @@ public final class SSLContext extends DetectionRuleSet<Tree> {
                     .forMethods("getInstance")
                     .withMethodParameter("java.lang.String")
                     .shouldBeDetectedAs(new ProtocolFactory<>())
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 
@@ -50,7 +51,7 @@ public final class SSLContext extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.lang.String")
                     .shouldBeDetectedAs(new ProtocolFactory<>())
                     .withMethodParameter("java.lang.String")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 
@@ -62,7 +63,7 @@ public final class SSLContext extends DetectionRuleSet<Tree> {
                     .withMethodParameter("java.lang.String")
                     .shouldBeDetectedAs(new ProtocolFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();
 

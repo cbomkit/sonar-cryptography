@@ -20,13 +20,13 @@
 package com.ibm.plugin.rules.resolve;
 
 import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
@@ -45,7 +45,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
@@ -56,7 +56,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter(TYPE + ".*")
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
@@ -67,7 +67,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter("ResolveNameTypeAndValuesTestFile.TestClass1")
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
@@ -78,7 +78,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter("list")
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
@@ -89,7 +89,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter("dict")
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
@@ -100,7 +100,7 @@ public final class ResolveNameTypeAndValues {
                     .forMethods(GENERATE_METHOD)
                     .withMethodParameter("set")
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
                     .inBundle(() -> "ResolveNameTypeAndValues")
                     .withoutDependingDetectionRules();
 
