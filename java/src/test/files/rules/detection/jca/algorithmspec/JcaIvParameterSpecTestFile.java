@@ -14,7 +14,7 @@ public class JcaIvParameterSpecTestFile {
         SecretKey secretKey = keyGen.generateKey();
         // Generate a random 16-byte IV
         byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         random.nextBytes(iv);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         // Encrypt

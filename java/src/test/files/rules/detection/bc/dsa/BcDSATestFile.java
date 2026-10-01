@@ -16,7 +16,7 @@ public class BcDSATestFile {
         // Generate key pair
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenParams =
-                new ECKeyGenerationParameters(curveParams, new SecureRandom());
+                new ECKeyGenerationParameters(curveParams, new SecureRandom()); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         keyPairGenerator.init(keyGenParams);
         AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
 
