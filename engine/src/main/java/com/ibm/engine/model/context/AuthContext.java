@@ -19,9 +19,10 @@
  */
 package com.ibm.engine.model.context;
 
+import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class AuthContext implements IDetectionContext, ISupportKind<AuthContext.Kind> {
+public class AuthContext extends DetectionContext {
 
     public enum Kind {
         JWT,
@@ -36,21 +37,21 @@ public class AuthContext implements IDetectionContext, ISupportKind<AuthContext.
     @Nonnull private final AuthContext.Kind kind;
 
     public AuthContext(@Nonnull AuthContext.Kind kind) {
+        super(Map.of("kind", kind.name()));
         this.kind = kind;
     }
 
     public AuthContext() {
-        this.kind = AuthContext.Kind.NONE;
+        this(AuthContext.Kind.NONE);
     }
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return AuthContext.class;
     }
 
     @Nonnull
-    @Override
     public Kind kind() {
         return this.kind;
     }

@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -28,11 +29,7 @@ import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class SamlAuthRules {
-
-    private SamlAuthRules() {
-        // nothing
-    }
+public final class SamlAuthRules extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> OPENSAML_SIGNATURE_VALIDATOR =
             new DetectionRuleBuilder<Tree>()
@@ -69,7 +66,8 @@ public final class SamlAuthRules {
                     .withoutDependingDetectionRules();
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 OPENSAML_SIGNATURE_VALIDATOR, OPENSAML_PROFILE_VALIDATOR, SPRING_SAML2_PROVIDER);
     }

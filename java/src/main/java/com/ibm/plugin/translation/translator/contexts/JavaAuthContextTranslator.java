@@ -21,7 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.AuthContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.ContextualEvidence;
@@ -38,7 +38,7 @@ public final class JavaAuthContextTranslator implements IContextTranslation<Tree
     public Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         final AuthContext.Kind kind = ((AuthContext) detectionContext).kind();
         if (kind == AuthContext.Kind.NONE) {

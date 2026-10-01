@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.jca.cipher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.functionality.Decapsulate;
 import com.ibm.plugin.TestBase;
@@ -37,7 +38,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 class JcaCipherUnwrapTest extends TestBase {
 
     protected JcaCipherUnwrapTest() {
-        super(JcaCipherWrap.rules());
+        super(RuleSets.rulesOf(JcaCipherWrap.class));
     }
 
     @Test

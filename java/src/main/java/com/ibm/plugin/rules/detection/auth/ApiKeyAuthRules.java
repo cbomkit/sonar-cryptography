@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -28,11 +29,7 @@ import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class ApiKeyAuthRules {
-
-    private ApiKeyAuthRules() {
-        // nothing
-    }
+public final class ApiKeyAuthRules extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> PAC4J_DIRECT_CLIENT =
             new DetectionRuleBuilder<Tree>()
@@ -60,7 +57,8 @@ public final class ApiKeyAuthRules {
                     .withoutDependingDetectionRules();
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(PAC4J_DIRECT_CLIENT, SPRING_REQUEST_HEADER_FILTER);
     }
 }

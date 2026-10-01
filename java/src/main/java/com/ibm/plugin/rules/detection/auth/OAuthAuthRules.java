@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -28,11 +29,7 @@ import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class OAuthAuthRules {
-
-    private OAuthAuthRules() {
-        // nothing
-    }
+public final class OAuthAuthRules extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SPRING_JWT_DECODER =
             new DetectionRuleBuilder<Tree>()
@@ -71,7 +68,8 @@ public final class OAuthAuthRules {
                     .withoutDependingDetectionRules();
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SPRING_JWT_DECODER, SPRING_OPAQUE_INTROSPECTOR, NIMBUS_ID_TOKEN_VALIDATOR);
     }
 }

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.context.AuthContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
@@ -43,7 +44,7 @@ class AuthInterfaceDetectionTest extends TestBase {
             new EnumMap<>(AuthContext.Kind.class);
 
     protected AuthInterfaceDetectionTest() {
-        super(AuthDetectionRules.rules());
+        super(RuleSets.rulesOf(AuthDetectionRules.class));
     }
 
     @Test

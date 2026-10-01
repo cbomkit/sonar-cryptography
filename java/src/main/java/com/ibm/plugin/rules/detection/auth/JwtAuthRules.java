@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection.auth;
 
 import com.ibm.engine.model.context.AuthContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -28,11 +29,7 @@ import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JwtAuthRules {
-
-    private JwtAuthRules() {
-        // nothing
-    }
+public final class JwtAuthRules extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> JJWT_PARSE_SIGNED =
             new DetectionRuleBuilder<Tree>()
@@ -68,7 +65,8 @@ public final class JwtAuthRules {
                     .withoutDependingDetectionRules();
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(JJWT_PARSE_SIGNED, NIMBUS_SIGNED_JWT, AUTH0_JWT_VERIFIER);
     }
 }
