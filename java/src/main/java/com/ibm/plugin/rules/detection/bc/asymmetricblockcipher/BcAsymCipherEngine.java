@@ -20,7 +20,7 @@
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -33,7 +33,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
+public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree, DetectionContext> {
 
     public static final List<String> blockCiphers =
             List.of(
@@ -45,9 +45,9 @@ public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree, I
                     "RSAEngine");
 
     private static @Nonnull List<IDetectionRule<Tree>> constructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null
                         ? detectionValueContext
                         : new CipherContext(Map.of("kind", "ASYMMETRIC_CIPHER_ENGINE"));
@@ -69,7 +69,7 @@ public final class BcAsymCipherEngine extends ContextualDetectionRuleSet<Tree, I
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable DetectionContext context) {
         return constructors(context);
     }
 }

@@ -20,8 +20,8 @@
 package com.ibm.plugin.rules.detection.bc.digest;
 
 import com.ibm.engine.model.Size;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.factory.DigestSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcDigests extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
+public final class BcDigests extends ContextualDetectionRuleSet<Tree, DetectionContext> {
 
     private static final BouncyCastleInfoMap infoMap = new BouncyCastleInfoMap();
 
@@ -103,9 +103,9 @@ public final class BcDigests extends ContextualDetectionRuleSet<Tree, IDetection
 
     @Nonnull
     private static List<IDetectionRule<Tree>> regularConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         final List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        final IDetectionContext context =
+        final DetectionContext context =
                 detectionValueContext != null ? detectionValueContext : new DigestContext();
 
         for (Map.Entry<String, BouncyCastleInfoMap.Info> entry : infoMap.entrySet()) {
@@ -131,9 +131,9 @@ public final class BcDigests extends ContextualDetectionRuleSet<Tree, IDetection
 
     @Nonnull
     private static List<IDetectionRule<Tree>> otherConstructors(
-            @Nullable IDetectionContext detectionValueContext) {
+            @Nullable DetectionContext detectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 detectionValueContext != null ? detectionValueContext : new DigestContext();
 
         constructorsList.add(
@@ -190,7 +190,7 @@ public final class BcDigests extends ContextualDetectionRuleSet<Tree, IDetection
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable DetectionContext context) {
         return Stream.concat(
                         regularConstructors(context).stream(), otherConstructors(context).stream())
                 .toList();

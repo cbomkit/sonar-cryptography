@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ class RuleSetsContextualTest {
 
         @Nonnull
         @Override
-        public Class<? extends IDetectionContext> type() {
+        public Class<? extends DetectionContext> type() {
             return NewContext.class;
         }
     }
@@ -82,7 +81,7 @@ class RuleSetsContextualTest {
 
         @Nonnull
         @Override
-        public IDetectionContext detectionValueContext() {
+        public DetectionContext detectionValueContext() {
             return new DigestContext();
         }
 
@@ -101,11 +100,10 @@ class RuleSetsContextualTest {
 
     static final IDetectionRule<Object> STUB_RULE = new StubRule();
 
-    static final class ContextualLeaf
-            extends ContextualDetectionRuleSet<Object, IDetectionContext> {
+    static final class ContextualLeaf extends ContextualDetectionRuleSet<Object, DetectionContext> {
         @Nonnull
         @Override
-        protected List<IDetectionRule<Object>> buildRules(@Nullable IDetectionContext overrides) {
+        protected List<IDetectionRule<Object>> buildRules(@Nullable DetectionContext overrides) {
             LEAF_BUILDS.incrementAndGet();
             // A fresh, mutable, non-empty list per call: List.copyOf hands back its argument
             // unchanged when it is already an immutable list, so returning List.of(STUB_RULE)
@@ -116,16 +114,16 @@ class RuleSetsContextualTest {
 
     /** Builds by asking the registry for another contextual set, like BcOAEPEncoding does. */
     static final class ContextualParent
-            extends ContextualDetectionRuleSet<Object, IDetectionContext> {
+            extends ContextualDetectionRuleSet<Object, DetectionContext> {
         @Nonnull
         @Override
-        protected List<IDetectionRule<Object>> buildRules(@Nullable IDetectionContext overrides) {
+        protected List<IDetectionRule<Object>> buildRules(@Nullable DetectionContext overrides) {
             return RuleSet.of(ContextualLeaf.class).withOverrides(overrides);
         }
     }
 
     private record PairOverrides(
-            @Nullable IDetectionContext encoding, @Nullable IDetectionContext engine) {}
+            @Nullable DetectionContext encoding, @Nullable DetectionContext engine) {}
 
     static final class ContextualPair extends ContextualDetectionRuleSet<Object, PairOverrides> {
         static final AtomicInteger BUILDS = new AtomicInteger();

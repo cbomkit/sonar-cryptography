@@ -19,7 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSet;
@@ -41,7 +41,7 @@ public final class BcAsymmetricBlockCipher
     @Nonnull
     private static List<IDetectionRule<Tree>> constructors(
             @Nullable AsymmetricCipherOverrides overrides) {
-        IDetectionContext engineDetectionValueContext =
+        DetectionContext engineDetectionValueContext =
                 overrides == null ? null : overrides.engine();
         return Stream.of(
                         RuleSet.of(BcPKCS1Encoding.class).withOverrides(overrides).stream(),

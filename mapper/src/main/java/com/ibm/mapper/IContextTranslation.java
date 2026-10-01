@@ -20,7 +20,7 @@
 package com.ibm.mapper;
 
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -33,6 +33,6 @@ public interface IContextTranslation<T> {
     Optional<INode> translate(
             @Nonnull final IBundle bundleIdentifier,
             @Nonnull final IValue<T> value,
-            @Nonnull final IDetectionContext detectionContext,
+            @Nonnull final DetectionContext detectionContext,
             @Nonnull final DetectionLocation detectionLocation);
 }

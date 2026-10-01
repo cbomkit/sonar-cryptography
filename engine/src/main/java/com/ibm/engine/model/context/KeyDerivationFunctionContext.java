@@ -34,7 +34,7 @@ public class KeyDerivationFunctionContext extends DetectionContext {
     }
 
     @Override
-    public @Nonnull Class<? extends IDetectionContext> type() {
+    public @Nonnull Class<? extends DetectionContext> type() {
         return KeyDerivationFunctionContext.class;
     }
 }

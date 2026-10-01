@@ -26,7 +26,6 @@ import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.mapper.mapper.bc.BcDsaMapper;
 import com.ibm.mapper.mapper.bc.BcMessageSignerMapper;
 import com.ibm.mapper.mapper.bc.BcOperationModeSigningMapper;
@@ -47,7 +46,7 @@ public final class JavaSignatureContextTranslator extends JavaAbstractLibraryTra
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof com.ibm.engine.model.Algorithm<Tree>) {
             final JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -66,11 +65,10 @@ public final class JavaSignatureContextTranslator extends JavaAbstractLibraryTra
     @Override
     protected @Nonnull Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> valueAction
-                && detectionContext instanceof DetectionContext context) {
-            final String kind = context.get("kind").orElse("");
+        if (value instanceof ValueAction<Tree> valueAction) {
+            final String kind = detectionContext.get("kind").orElse("");
             switch (kind) {
                 case "DSA":
                     BcDsaMapper bcDSAMapper = new BcDsaMapper();

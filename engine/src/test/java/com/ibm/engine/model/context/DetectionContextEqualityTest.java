@@ -36,7 +36,7 @@ class DetectionContextEqualityTest {
 
         @Nonnull
         @Override
-        public Class<? extends IDetectionContext> type() {
+        public Class<? extends DetectionContext> type() {
             return NewContext.class;
         }
     }
@@ -54,8 +54,7 @@ class DetectionContextEqualityTest {
 
     @Test
     void everyContextUsesTheBaseEqualityImplementation() throws NoSuchMethodException {
-        assertThat(IDetectionContext.class.getPermittedSubclasses())
-                .containsExactly(DetectionContext.class);
+        assertThat(Modifier.isAbstract(DetectionContext.class.getModifiers())).isTrue();
         assertThat(
                         Modifier.isFinal(
                                 DetectionContext.class

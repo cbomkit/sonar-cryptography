@@ -27,11 +27,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-public abstract non-sealed class DetectionContext implements IDetectionContext {
+/**
+ * Contexts are used as cache keys by {@link com.ibm.engine.rule.RuleSets}. Subclasses must
+ * represent all of their state in the immutable property map.
+ */
+public abstract class DetectionContext {
     @Nonnull private final Map<String, String> properties;
 
     protected DetectionContext(@Nonnull Map<String, String> properties) {
         this.properties = Collections.unmodifiableMap(new HashMap<>(properties));
+    }
+
+    @Nonnull
+    public abstract Class<? extends DetectionContext> type();
+
+    public boolean is(@Nonnull Class<? extends DetectionContext> kind) {
+        return kind.equals(type());
     }
 
     public boolean contains(@Nonnull String key) {

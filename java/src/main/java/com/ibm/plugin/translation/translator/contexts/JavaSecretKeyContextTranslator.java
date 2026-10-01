@@ -24,7 +24,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.PasswordSize;
 import com.ibm.engine.model.SaltSize;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.mapper.mapper.jca.JcaAlgorithmMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyDerivationFunction;
@@ -44,7 +44,7 @@ public final class JavaSecretKeyContextTranslator extends JavaAbstractLibraryTra
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree> algorithm) {
             JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -76,7 +76,7 @@ public final class JavaSecretKeyContextTranslator extends JavaAbstractLibraryTra
     @Override
     protected @Nonnull Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         return Optional.empty();
     }

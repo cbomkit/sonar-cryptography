@@ -19,7 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import javax.annotation.Nullable;
 
 /**
@@ -27,4 +27,4 @@ import javax.annotation.Nullable;
  * uses that rule's default context for the corresponding role.
  */
 public record AsymmetricCipherOverrides(
-        @Nullable IDetectionContext encoding, @Nullable IDetectionContext engine) {}
+        @Nullable DetectionContext encoding, @Nullable DetectionContext engine) {}

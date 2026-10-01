@@ -20,7 +20,7 @@
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -38,10 +38,10 @@ public final class BcISO9796d1Encoding
         extends ContextualDetectionRuleSet<Tree, AsymmetricCipherOverrides> {
 
     private static final List<IDetectionRule<Tree>> constructors(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+            @Nullable DetectionContext encodingDetectionValueContext,
+            @Nullable DetectionContext engineDetectionValueContext) {
         List<IDetectionRule<Tree>> constructorsList = new LinkedList<>();
-        IDetectionContext context =
+        DetectionContext context =
                 encodingDetectionValueContext != null
                         ? encodingDetectionValueContext
                         : new CipherContext(Map.of("kind", "ENCODING"));

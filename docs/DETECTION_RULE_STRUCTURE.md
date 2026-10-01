@@ -137,7 +137,7 @@ the Python binder, it does not check parameter types, since C# detection has no 
 resolution, and a `withMethodParameter` declaration in a mixed rule is matched by index whether
 or not the argument at that index is named.
 
-Then, `buildForContext(IDetectionContext detectionValueContext)` defines the detection context ([`IDetectionContext`](../engine/src/main/java/com/ibm/engine/model/context/IDetectionContext.java)) for all the detected values of your rule (but detections from dependent rules have their own context).
+Then, `buildForContext(DetectionContext detectionValueContext)` defines the detection context ([`DetectionContext`](../engine/src/main/java/com/ibm/engine/model/context/DetectionContext.java)) for all the detected values of your rule (but detections from dependent rules have their own context).
 A detection context is therefore linked to each detected value, and is designed to categorize your findings and to help you carry additional information that is not present in the detected value.
 For example, suppose you have two function calls `Cipher.getInstance("AES")` and `SecretKeyFactory.getInstance("AES")`. When writing detection rules to capture their cryptography information, you will in both cases capture the algorithm value "AES".
 But using the detection context, you can distinguish these two values. In the first case, using `buildForContext(new CipherContext())`, you can capture "AES" knowing that it is a cipher.
@@ -189,7 +189,7 @@ new DetectionRuleBuilder<Tree>()
     .withDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherInit.class));
 ```
 
-Here `context` is `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))` by default, but `BcBlockCipher` extends [`ContextualDetectionRuleSet<Tree, IDetectionContext>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java), so a caller can override it with `RuleSet.of(BcBlockCipher.class).withOverrides(someContext)`. See the section on `ContextualDetectionRuleSet` and `RuleSets` in [*Extending the Sonar Cryptography Plugin for another language*](./LANGUAGE_SUPPORT.md#registering-your-rule) for how this works.
+Here `context` is `new CipherContext(Map.of("kind", "BLOCK_CIPHER"))` by default, but `BcBlockCipher` extends [`ContextualDetectionRuleSet<Tree, DetectionContext>`](../engine/src/main/java/com/ibm/engine/rule/ContextualDetectionRuleSet.java), so a caller can override it with `RuleSet.of(BcBlockCipher.class).withOverrides(someContext)`. See the section on `ContextualDetectionRuleSet` and `RuleSets` in [*Extending the Sonar Cryptography Plugin for another language*](./LANGUAGE_SUPPORT.md#registering-your-rule) for how this works.
 
 We first specify the exact function call that we want to capture, which is here the constructor of the `org.bouncycastle.crypto.modes.CFBBlockCipher` object, with two parameters (of type `org.bouncycastle.crypto.BlockCipher` and `int`).
 

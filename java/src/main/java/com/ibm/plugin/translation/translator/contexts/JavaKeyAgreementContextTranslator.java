@@ -23,7 +23,7 @@ import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.mapper.mapper.jca.JcaAlgorithmMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
@@ -38,7 +38,7 @@ public final class JavaKeyAgreementContextTranslator extends JavaAbstractLibrary
     @Override
     protected @Nonnull Optional<INode> translateJCA(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof Algorithm<Tree> algorithm) {
             final JcaAlgorithmMapper jcaAlgorithmMapper = new JcaAlgorithmMapper();
@@ -59,7 +59,7 @@ public final class JavaKeyAgreementContextTranslator extends JavaAbstractLibrary
     @Override
     protected @Nonnull Optional<INode> translateBC(
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeySize<Tree> keySize) {
             KeyLength keyLength = new KeyLength(keySize.getValue(), detectionLocation);

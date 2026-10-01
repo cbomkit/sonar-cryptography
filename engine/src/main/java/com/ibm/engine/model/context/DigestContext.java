@@ -35,7 +35,7 @@ public class DigestContext extends DetectionContext {
 
     @Nonnull
     @Override
-    public Class<? extends IDetectionContext> type() {
+    public Class<? extends DetectionContext> type() {
         return DigestContext.class;
     }
 }

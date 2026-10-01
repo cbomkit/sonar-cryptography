@@ -19,7 +19,7 @@
  */
 package com.ibm.plugin.rules.detection.bc.blockcipher;
 
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSet;
@@ -35,11 +35,11 @@ import org.sonar.plugins.java.api.tree.Tree;
  * accessor.
  */
 public final class BcBlockCipherAndEngines
-        extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
+        extends ContextualDetectionRuleSet<Tree, DetectionContext> {
 
     @Nonnull
     @Override
-    protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable DetectionContext context) {
         return Stream.of(
                         RuleSet.of(BcBlockCipher.class).withOverrides(context).stream(),
                         RuleSet.of(BcBlockCipherEngine.class).withOverrides(context).stream())
