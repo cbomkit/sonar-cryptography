@@ -42,7 +42,8 @@ class AESEnricherTest extends TestBase {
         DetectionLocation location =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
         AES cbc = new AES(128, new CBC(location), location);
-        AES ecb = (AES) cbc.deepCopy();
+        INode ecb = cbc.deepCopy();
+        assertThat(ecb).isExactlyInstanceOf(AES.class);
         ecb.put(new ECB(location));
 
         AESEnricher enricher = new AESEnricher();

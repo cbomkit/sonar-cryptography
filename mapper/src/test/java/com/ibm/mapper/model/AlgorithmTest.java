@@ -39,9 +39,8 @@ class AlgorithmTest {
     void deepCopyKeepsAesTypeAndSeparatesModeBranches() {
         AES cbc = new AES(128, new CBC(LOCATION), LOCATION);
 
-        INode copied = cbc.deepCopy();
-        assertThat(copied).isExactlyInstanceOf(AES.class);
-        AES ecb = (AES) copied;
+        INode ecb = cbc.deepCopy();
+        assertThat(ecb).isExactlyInstanceOf(AES.class);
         ecb.put(new ECB(LOCATION));
 
         assertThat(cbc.asString()).isEqualTo("AES-128-CBC");
