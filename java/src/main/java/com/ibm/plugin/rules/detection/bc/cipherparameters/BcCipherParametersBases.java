@@ -27,6 +27,12 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
+/**
+ * Base cipher-parameter rules used by {@link BcParametersWith} to resolve a wrapped parameter.
+ * Keeping these separate from {@link BcCipherParameters} prevents wrapper rules from depending on
+ * the full set that contains those same wrapper rules. This replaces the former {@code
+ * BcCipherParameters.bases()} accessor.
+ */
 public final class BcCipherParametersBases extends DetectionRuleSet<Tree> {
 
     @Nonnull
