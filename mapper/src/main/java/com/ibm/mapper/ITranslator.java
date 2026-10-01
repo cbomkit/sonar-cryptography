@@ -21,7 +21,7 @@ package com.ibm.mapper;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.NodeOrigin;
@@ -69,7 +69,7 @@ public abstract class ITranslator<R, T, S, P> {
     private Map<Integer, List<INode>> translateStore(@Nonnull DetectionStore<R, T, S, P> store) {
         final String filePath = store.getScanContext().getRelativePath();
         final IBundle bundle = store.getDetectionRule().bundle();
-        final IDetectionContext context = store.getDetectionValueContext();
+        final DetectionContext context = (DetectionContext) store.getDetectionValueContext();
 
         final Map<Integer, List<INode>> nodes = new HashMap<>();
         store.getActionValue()
@@ -103,7 +103,7 @@ public abstract class ITranslator<R, T, S, P> {
     protected abstract Optional<INode> translate(
             @Nonnull final IBundle bundleIdentifier,
             @Nonnull IValue<T> value,
-            @Nonnull IDetectionContext detectionValueContext,
+            @Nonnull DetectionContext detectionValueContext,
             @Nonnull final String filePath);
 
     @Nullable protected abstract DetectionLocation getDetectionContextFrom(

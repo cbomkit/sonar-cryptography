@@ -28,7 +28,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ParameterIdentifier;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
@@ -63,12 +62,11 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<CSharpTree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
-        if (value instanceof ValueAction<?>
-                && detectionContext instanceof DetectionContext context) {
-            String kind = context.get("kind").orElse("");
+        if (value instanceof ValueAction<?>) {
+            String kind = detectionContext.get("kind").orElse("");
             return switch (kind) {
                 case "RSA" -> Optional.of(new RSA(detectionLocation));
                 case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
@@ -169,8 +167,7 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
             return Optional.of(
                     new NumberOfIterations(iterationCount.getValue(), detectionLocation));
         } else if (value instanceof ParameterIdentifier<?> parameterIdentifier
-                && detectionContext instanceof DetectionContext context
-                && "KEM".equals(context.get("kind").orElse(""))) {
+                && "KEM".equals(detectionContext.get("kind").orElse(""))) {
             // ML-KEM parameter set (DotNetMLKem.java): captured from the MLKemAlgorithm argument
             // (e.g. MLKemAlgorithm.MLKem768, resolved to the bare enum member name "MLKem768" — see
             // that class's javadoc). Mapped to the numeric suffix expected by
@@ -187,8 +184,7 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                 default -> Optional.empty();
             };
         } else if (value instanceof ParameterIdentifier<?> parameterIdentifier
-                && detectionContext instanceof DetectionContext context
-                && "MLDSA".equals(context.get("kind").orElse(""))) {
+                && "MLDSA".equals(detectionContext.get("kind").orElse(""))) {
             // ML-DSA parameter set (DotNetMLDsa.java): captured from the MLDsaAlgorithm argument
             // (e.g. MLDsaAlgorithm.MLDsa65, resolved to the bare enum member name "MLDsa65"),
             // mapped to the numeric suffix expected by MLDSA(int, DetectionLocation) /
@@ -200,8 +196,7 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                 default -> Optional.empty();
             };
         } else if (value instanceof ParameterIdentifier<?> parameterIdentifier
-                && detectionContext instanceof DetectionContext context
-                && "MLDSA_COMPOSITE".equals(context.get("kind").orElse(""))) {
+                && "MLDSA_COMPOSITE".equals(detectionContext.get("kind").orElse(""))) {
             // Composite ML-DSA parameter set (DotNetMLDsa.java): the CompositeMLDsaAlgorithm
             // member name (e.g. "MLDsa44WithECDsaP256") is a compound identifier, not a simple
             // numeric parameter set, so it is captured verbatim rather than parsed — see
@@ -209,8 +204,7 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
             return Optional.of(
                     new ParameterSetIdentifier(parameterIdentifier.asString(), detectionLocation));
         } else if (value instanceof ParameterIdentifier<?> parameterIdentifier
-                && detectionContext instanceof DetectionContext context
-                && "SLHDSA".equals(context.get("kind").orElse(""))) {
+                && "SLHDSA".equals(detectionContext.get("kind").orElse(""))) {
             // SLH-DSA parameter set (DotNetSlhDsa.java): captured from the SlhDsaAlgorithm
             // argument (e.g. SlhDsaAlgorithm.SlhDsaSha2_128s, resolved to the bare enum member
             // name "SlhDsaSha2_128s"), mapped to the FIPS 205 parameter set suffix (e.g.

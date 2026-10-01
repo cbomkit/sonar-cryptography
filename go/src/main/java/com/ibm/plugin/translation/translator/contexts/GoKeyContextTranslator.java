@@ -27,7 +27,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.gocrypto.GoCryptoCurveMapper;
@@ -63,13 +62,12 @@ public final class GoKeyContextTranslator implements IContextTranslation<Tree> {
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree>
-                && detectionContext instanceof DetectionContext context) {
+        if (value instanceof ValueAction<Tree>) {
             final GoCryptoCurveMapper curveMapper = new GoCryptoCurveMapper();
 
-            String kind = context.get("kind").orElse("");
+            String kind = detectionContext.get("kind").orElse("");
             switch (kind) {
                 case "RSA":
                     return Optional.of(new RSA(PublicKeyEncryption.class, detectionLocation));

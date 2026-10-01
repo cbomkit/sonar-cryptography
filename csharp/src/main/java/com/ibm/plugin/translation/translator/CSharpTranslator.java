@@ -27,8 +27,8 @@ import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
@@ -63,7 +63,7 @@ public class CSharpTranslator
     public Optional<INode> translate(
             @Nonnull final IBundle bundleIdentifier,
             @Nonnull final IValue<CSharpTree> value,
-            @Nonnull final IDetectionContext detectionValueContext,
+            @Nonnull final DetectionContext detectionValueContext,
             @Nonnull final String filePath) {
         DetectionLocation detectionLocation =
                 getDetectionContextFrom(value.getLocation(), bundleIdentifier, filePath);

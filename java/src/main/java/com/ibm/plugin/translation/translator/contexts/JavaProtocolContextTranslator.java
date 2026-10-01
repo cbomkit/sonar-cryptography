@@ -21,7 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.CipherSuite;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
@@ -43,7 +43,7 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
     public Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<Tree> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (!bundleIdentifier.getIdentifier().equals("SSL")) {
             return Optional.empty();

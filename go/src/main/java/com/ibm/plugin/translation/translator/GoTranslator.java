@@ -22,8 +22,8 @@ package com.ibm.plugin.translation.translator;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PRNGContext;
@@ -62,7 +62,7 @@ public class GoTranslator extends ITranslator<GoCheck, Tree, Symbol, GoScanConte
     public Optional<INode> translate(
             @Nonnull final IBundle bundleIdentifier,
             @Nonnull final IValue<Tree> value,
-            @Nonnull final IDetectionContext detectionValueContext,
+            @Nonnull final DetectionContext detectionValueContext,
             @Nonnull final String filePath) {
         DetectionLocation detectionLocation =
                 getDetectionContextFrom(value.getLocation(), bundleIdentifier, filePath);
