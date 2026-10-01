@@ -49,7 +49,8 @@ class OpenSSLGeneratedKeyTest extends TestBase {
                     finding(
                             "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:3072, "
+                                    + "PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
                     // 14: return EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
@@ -63,7 +64,8 @@ class OpenSSLGeneratedKeyTest extends TestBase {
                     // 28: RSA_generate_key_ex(rsa, 2048, e, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"));
 
     private int findings = 0;

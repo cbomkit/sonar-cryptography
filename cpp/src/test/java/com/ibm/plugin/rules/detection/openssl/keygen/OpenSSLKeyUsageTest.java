@@ -59,10 +59,11 @@ class OpenSSLKeyUsageTest extends TestBase {
                             "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[SignatureContext{SignatureAction:VERIFY}[CipherContext{ValueAction:RSA-PSS}, "
                                     + "DigestContext{ValueAction:SHA-384}]]]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:3072, "
                                     + "ProbabilisticSignatureScheme:RSA-PSS[KeyLength:3072, "
                                     + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
-                                    + "Oid:2.16.840.1.101.3.4.2.2], Oid:1.2.840.113549.1.1.10, Verify:VERIFY]]"),
+                                    + "Oid:2.16.840.1.101.3.4.2.2], Oid:1.2.840.113549.1.1.10, "
+                                    + "Verify:VERIFY]]"),
                     // 25: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
                     finding(
                             "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:KDF}]]",
@@ -78,9 +79,10 @@ class OpenSSLKeyUsageTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[CipherContext{CipherAction:ENCRYPT}, "
                                     + "CipherContext{ValueAction:RSA-OAEP}], PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, "
-                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, Oid:1.2.840.113549.1.1.7, "
-                                    + "Padding:OAEP]]"),
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, "
+                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, "
+                                    + "Oid:1.2.840.113549.1.1.7, Padding:OAEP]]"),
                     // 49: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ML-KEM-768");
                     finding(
                             "PrivateKeyContext{Algorithm:ML-KEM-768}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",
@@ -102,20 +104,22 @@ class OpenSSLKeyUsageTest extends TestBase {
                     // 64: return EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:4096}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:4096, "
+                                    + "PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
                     // 69: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
                     finding(
                             "KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[KeyContext{}[KeyContext{KeyAction:KDF}]]]",
                             "PrivateKey:FFDH[KeyAgreement:FFDH[KeyDerivation:KEYDERIVATION, "
-                                    + "KeyLength:2048, Oid:1.2.840.113549.1.3.1], KeyGeneration:KEYGENERATION]"),
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.3.1], "
+                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048]"),
                     // 79: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}], "
                                     + "PrivateKeyContext{KeySize:3072}]",
                             "PrivateKey:RSA[KeyEncapsulationMechanism:RSASVE[Encapsulate:ENCAPSULATE, "
-                                    + "KeyLength:3072], KeyGeneration:KEYGENERATION]"),
+                                    + "KeyLength:3072], KeyGeneration:KEYGENERATION, KeyLength:3072]"),
                     // 86: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
                     finding(
                             "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",

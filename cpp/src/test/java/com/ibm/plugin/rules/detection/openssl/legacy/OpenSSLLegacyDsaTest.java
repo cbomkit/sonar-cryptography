@@ -45,8 +45,9 @@ class OpenSSLLegacyDsaTest extends TestBase {
                     // 9: DSA_generate_key(dsa);
                     finding(
                             "PrivateKeyContext{ValueAction:DSA}[KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}]]",
-                            "PrivateKey:DSA[Signature:DSA-2048[KeyGeneration:KEYGENERATION, "
-                                    + "KeyLength:2048, Oid:1.2.840.10040.4.1]]"),
+                            "PrivateKey:DSA[KeyLength:2048, "
+                                    + "Signature:DSA-2048[KeyGeneration:KEYGENERATION, KeyLength:2048, "
+                                    + "Oid:1.2.840.10040.4.1]]"),
                     // 10: DSA_sign(0, buf, 32, buf, &siglen, dsa);
                     finding(
                             "SignatureContext{ValueAction:DSA-SIGN}",

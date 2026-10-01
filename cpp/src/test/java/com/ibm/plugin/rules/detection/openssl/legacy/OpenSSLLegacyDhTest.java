@@ -45,7 +45,8 @@ class OpenSSLLegacyDhTest extends TestBase {
                     // 9: DH_generate_key(dh);
                     finding(
                             "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}]]",
-                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:FFDH[KeyLength:2048, "
+                                    + "PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.3.1]]"),
                     // 10: DH_get_1024_160();
                     finding(

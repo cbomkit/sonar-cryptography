@@ -60,7 +60,7 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-384}], "
                                     + "PrivateKeyContext{KeySize:3072}]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:3072, "
                                     + "Signature:RSA-PKCS1-1.5-SHA-384[KeyLength:3072, "
                                     + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
                                     + "Oid:2.16.840.1.101.3.4.2.2], Oid:1.2.840.113549.1.1.12, Sign:SIGN]]"),
@@ -76,7 +76,7 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[SignatureContext{SignatureAction:VERIFY}, "
                                     + "PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:2048, "
                                     + "Signature:RSA-PKCS1-1.5[KeyLength:2048, Oid:1.2.840.113549.1.1.1, "
                                     + "Verify:VERIFY]]"),
                     // 28: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
@@ -97,14 +97,14 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[SignatureContext{SignatureAction:SIGN}, "
                                     + "PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:2048, "
                                     + "Signature:RSA-PKCS1-1.5[KeyLength:2048, Oid:1.2.840.113549.1.1.1, "
                                     + "Sign:SIGN]]"),
                     // 43: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-256}], "
                                     + "PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:2048, "
                                     + "Signature:RSA-PKCS1-1.5-SHA-256[KeyLength:2048, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
                                     + "Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.1.1.11, Sign:SIGN]]"),
@@ -112,8 +112,10 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[CipherContext{CipherAction:ENCRYPT}, "
                                     + "PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[Encrypt:ENCRYPT, "
-                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[Encrypt:ENCRYPT, "
+                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, "
+                                    + "Oid:1.2.840.113549.1.1.1]]"),
                     // 49: EVP_SealInit(ctx, EVP_aes_256_cbc(), &ek, ekl, iv, &pkey, 1);
                     finding(
                             "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:AES-256-CBC}]",
@@ -123,8 +125,10 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[CipherContext{CipherAction:DECRYPT}, "
                                     + "PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[Decrypt:DECRYPT, "
-                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[Decrypt:DECRYPT, "
+                                    + "KeyGeneration:KEYGENERATION, KeyLength:2048, "
+                                    + "Oid:1.2.840.113549.1.1.1]]"),
                     // 54: EVP_OpenInit(ctx, EVP_aes_256_cbc(), ek, ekl, iv, pkey);
                     finding(
                             "CipherContext{CipherAction:DECRYPT}[CipherContext{ValueAction:AES-256-CBC}]",
@@ -151,7 +155,7 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[SignatureContext{SignatureAction:SIGN}, "
                                     + "PrivateKeyContext{KeySize:3072}]",
-                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:3072, "
                                     + "Signature:RSA-PKCS1-1.5[KeyLength:3072, Oid:1.2.840.113549.1.1.1, "
                                     + "Sign:SIGN]]"));
 

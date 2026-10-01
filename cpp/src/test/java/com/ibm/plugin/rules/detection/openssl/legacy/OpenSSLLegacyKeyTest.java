@@ -49,22 +49,26 @@ class OpenSSLLegacyKeyTest extends TestBase {
                     // 8: RSA_generate_key_ex(rsa, 3072, e, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:3072}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:3072, "
+                                    + "PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
                     // 9: RSA *old = RSA_generate_key(1024, 65537, NULL, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:1024}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-1024[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:1024, "
+                                    + "PublicKeyEncryption:RSA-1024[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:1024, Oid:1.2.840.113549.1.1.1]]"),
                     // 11: RSA_generate_multi_prime_key(multi, 4096, 3, e, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:4096}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:4096, "
+                                    + "PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
                     // 16: DH_generate_key(dh);
                     finding(
                             "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH-2048-256}]",
-                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:FFDH[KeyLength:2048, "
+                                    + "PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.3.1]]"),
                     // 20: DH *unrelated = DH_get_1024_160();
                     finding(
@@ -77,18 +81,21 @@ class OpenSSLLegacyKeyTest extends TestBase {
                     // 24: DH_generate_key(dh);
                     finding(
                             "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH}[KeyContext{KeySize:3072}]]",
-                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-3072[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:FFDH[KeyLength:3072, "
+                                    + "PublicKeyEncryption:FFDH-3072[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.3.1]]"),
                     // 30: DH_generate_key(dh);
                     finding(
                             "PrivateKeyContext{ValueAction:DH}[KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}]]",
-                            "PrivateKey:FFDH[PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:FFDH[KeyLength:2048, "
+                                    + "PublicKeyEncryption:FFDH-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.3.1]]"),
                     // 36: DSA_generate_key(dsa);
                     finding(
                             "PrivateKeyContext{ValueAction:DSA}[KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}]]",
-                            "PrivateKey:DSA[Signature:DSA-2048[KeyGeneration:KEYGENERATION, "
-                                    + "KeyLength:2048, Oid:1.2.840.10040.4.1]]"),
+                            "PrivateKey:DSA[KeyLength:2048, "
+                                    + "Signature:DSA-2048[KeyGeneration:KEYGENERATION, KeyLength:2048, "
+                                    + "Oid:1.2.840.10040.4.1]]"),
                     // 41: EC_KEY_generate_key(key);
                     finding(
                             "PrivateKeyContext{ValueAction:EC}[KeyContext{ValueAction:EC-P256}]",

@@ -45,12 +45,14 @@ class OpenSSLLegacyRsaTest extends TestBase {
                     // 17: RSA_generate_key_ex(rsa, 2048, e, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
                     // 18: RSA_generate_multi_prime_key(rsa, 2048, 3, e, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
                     // 20: RSA_public_encrypt(32, buf, buf, rsa, 1);
                     finding(
@@ -168,7 +170,8 @@ class OpenSSLLegacyRsaTest extends TestBase {
                     // 53: RSA_generate_key(2048, 65537, NULL, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"));
 
     private int findings = 0;

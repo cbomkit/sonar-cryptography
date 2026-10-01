@@ -165,7 +165,8 @@ public final class KeyReorgenizer {
      *
      * <p>This rule applies when the algorithm has a {@link KeyGeneration} child for a private key
      * and is not already held by a key. The algorithm keeps its children, e.g. its key length or
-     * curve, and the private key takes its place among the roots or under its parent.
+     * curve, and the private key takes its place among the roots or under its parent. The private
+     * key also has the key length of the algorithm, which is the size of the key.
      */
     @Nonnull
     public static IReorganizerRule makePrivateKeyOfGeneratedAlgorithm(
@@ -182,6 +183,8 @@ public final class KeyReorgenizer {
                         (node, parent, roots) -> {
                             final PrivateKey privateKey =
                                     new PrivateKey(new Key((IAlgorithm) node));
+                            node.hasChildOfType(KeyLength.class)
+                                    .ifPresent(keyLength -> privateKey.put(keyLength.deepCopy()));
                             if (parent == null) {
                                 final List<INode> rootsCopy = new ArrayList<>(roots);
                                 rootsCopy.replaceAll(root -> root == node ? privateKey : root);

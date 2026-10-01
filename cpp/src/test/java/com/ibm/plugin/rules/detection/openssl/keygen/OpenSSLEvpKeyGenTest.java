@@ -78,12 +78,14 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     finding(
                             "KeyContext{ValueAction:RSA}[KeyContext{KeySize:2048}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
                     // 46: EVP_PKEY_Q_keygen(NULL, NULL, "RSA", 2048);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:2048}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
                     // 47: EVP_KEYMGMT_fetch(NULL, "ML-KEM-768", NULL);
                     finding(

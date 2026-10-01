@@ -49,7 +49,8 @@ class OpenSSLEvpKeyGenContextTest extends TestBase {
                     finding(
                             "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:3072, "
+                                    + "PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
                     // 14: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
@@ -83,7 +84,8 @@ class OpenSSLEvpKeyGenContextTest extends TestBase {
                     // 45: EVP_PKEY *rsa = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:4096}]",
-                            "PrivateKey:RSA[PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                            "PrivateKey:RSA[KeyLength:4096, "
+                                    + "PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
                     // 46: EVP_PKEY *ec = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
