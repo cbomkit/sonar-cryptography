@@ -14,6 +14,7 @@
         <module>python</module>
         <module>go</module>
         <module>csharp</module>
+        <module>cpp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
