@@ -19,39 +19,28 @@
  */
 package com.ibm.plugin.rules.detection.jca.algorithmspec;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaAlgorithmParameterSpec {
-
-    private JcaAlgorithmParameterSpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaAlgorithmParameterSpec::buildRules);
+public final class JcaAlgorithmParameterSpec extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        JcaECParameterSpec.rules().stream(),
-                        JcaECGenParameterSpec.rules().stream(),
-                        JcaPSSParameterSpec.rules().stream(),
-                        JcaMGF1ParameterSpec.rules().stream(),
-                        JcaDHGenParameterSpec.rules().stream(),
-                        JcaDHParameterSpec.rules().stream(),
-                        JcaGCMParameterSpec.rules().stream(),
-                        JcaIvParameterSpec.rules().stream())
+                        RuleSets.rulesOf(JcaECParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaECGenParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaPSSParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaMGF1ParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHGenParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaGCMParameterSpec.class).stream(),
+                        RuleSets.rulesOf(JcaIvParameterSpec.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

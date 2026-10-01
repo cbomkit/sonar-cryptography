@@ -19,10 +19,10 @@
  */
 package com.ibm.plugin.rules.detection.gocrypto;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
@@ -39,27 +39,16 @@ import org.sonar.plugins.go.api.Tree;
  *   <li>crypto/sha512 - SHA-384 and SHA-512 hash functions
  * </ul>
  */
-public final class GoCryptoHash {
-
-    private GoCryptoHash() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoHash::buildRules);
+public final class GoCryptoHash extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        GoCryptoMD5.rules().stream(),
-                        GoCryptoSHA1.rules().stream(),
-                        GoCryptoSHA256.rules().stream(),
-                        GoCryptoSHA512.rules().stream())
+                        RuleSets.rulesOf(GoCryptoMD5.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA1.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA256.class).stream(),
+                        RuleSets.rulesOf(GoCryptoSHA512.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

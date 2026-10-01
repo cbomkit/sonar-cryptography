@@ -19,8 +19,9 @@
  */
 package com.ibm.plugin.rules.detection.jca;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.jca.algorithmparametergenerator.JcaAlgorithmParameterGeneratorGetInstance;
 import com.ibm.plugin.rules.detection.jca.cipher.JcaCipherGetInstance;
 import com.ibm.plugin.rules.detection.jca.digest.JcaDigest;
@@ -33,46 +34,35 @@ import com.ibm.plugin.rules.detection.jca.keyspec.JcaSecretKeySpec;
 import com.ibm.plugin.rules.detection.jca.mac.JcaMacGetInstance;
 import com.ibm.plugin.rules.detection.jca.signature.JcaSignatureGetInstance;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaDetectionRules {
-    private JcaDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaDetectionRules::buildRules);
+public final class JcaDetectionRules extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
                         // cipher algorithm
-                        JcaCipherGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaCipherGetInstance.class).stream(),
                         // key
-                        JcaKeyFactoryGetInstance.rules().stream(),
-                        JcaKeyGeneratorGetInstance.rules().stream(),
-                        JcaKeyPairGeneratorGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaKeyFactoryGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaKeyGeneratorGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaKeyPairGeneratorGetInstance.class).stream(),
                         // secret key
-                        JcaSecretKeyFactoryGetInstance.rules().stream(),
-                        JcaSecretKeySpec.rules().stream(),
+                        RuleSets.rulesOf(JcaSecretKeyFactoryGetInstance.class).stream(),
+                        RuleSets.rulesOf(JcaSecretKeySpec.class).stream(),
                         // digest
-                        JcaDigest.rules().stream(),
+                        RuleSets.rulesOf(JcaDigest.class).stream(),
                         // signature
-                        JcaSignatureGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaSignatureGetInstance.class).stream(),
                         // mac
-                        JcaMacGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaMacGetInstance.class).stream(),
                         // algorithm
-                        JcaAlgorithmParameterGeneratorGetInstance.rules().stream(),
+                        RuleSets.rulesOf(JcaAlgorithmParameterGeneratorGetInstance.class).stream(),
                         // key agreement
-                        JcaKeyAgreementGetInstance.rules().stream())
+                        RuleSets.rulesOf(JcaKeyAgreementGetInstance.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

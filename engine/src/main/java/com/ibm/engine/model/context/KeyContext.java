@@ -19,13 +19,11 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
 @SuppressWarnings("java:S115")
-public class KeyContext extends DetectionContext
-        implements IDetectionContext, ISupportKind<KeyContext.Kind> {
+public class KeyContext extends DetectionContext {
     public enum Kind {
         /* TODO: they are still used in JCA and Python, but should be removed */
         EC,
@@ -40,8 +38,6 @@ public class KeyContext extends DetectionContext
         UNKNOWN;
     }
 
-    @Nonnull private final Kind kind;
-
     /**
      * use a property map instead
      *
@@ -49,18 +45,15 @@ public class KeyContext extends DetectionContext
      */
     @Deprecated(since = "1.3.0")
     public KeyContext(@Nonnull Kind kind) {
-        super(new HashMap<>());
-        this.kind = kind;
+        super(Map.of("kind", kind.name()));
     }
 
     public KeyContext() {
-        super(new HashMap<>());
-        this.kind = Kind.NONE;
+        super(Map.of("kind", Kind.NONE.name()));
     }
 
     public KeyContext(@Nonnull Map<String, String> properties) {
         super(properties);
-        this.kind = Kind.NONE;
     }
 
     /**
@@ -71,7 +64,11 @@ public class KeyContext extends DetectionContext
     @Deprecated(since = "1.3.0")
     @Nonnull
     public Kind kind() {
-        return kind;
+        try {
+            return Kind.valueOf(get("kind").orElse(Kind.NONE.name()));
+        } catch (IllegalArgumentException e) {
+            return Kind.NONE;
+        }
     }
 
     @Nonnull

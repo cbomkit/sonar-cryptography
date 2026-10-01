@@ -19,37 +19,27 @@
  */
 package com.ibm.plugin.rules.detection.jca.keyspec;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaKeySpec {
-    private JcaKeySpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeySpec::buildRules);
+public final class JcaKeySpec extends DetectionRuleSet<Tree> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return Stream.of(
-                        JcaSecretKeySpec.rules().stream(),
-                        JcaDESKeySpec.rules().stream(),
-                        JcaDESedeKeySpec.rules().stream(),
-                        JcaDHPrivateKeySpec.rules().stream(),
-                        JcaPBEKeySpec.rules().stream(),
-                        JcaDSAPrivateKeySpec.rules().stream(),
-                        JcaECPrivateKeySpec.rules().stream())
+                        RuleSets.rulesOf(JcaSecretKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDESKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDESedeKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDHPrivateKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaPBEKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaDSAPrivateKeySpec.class).stream(),
+                        RuleSets.rulesOf(JcaECPrivateKeySpec.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

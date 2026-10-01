@@ -27,7 +27,7 @@ import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -45,14 +45,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 
 class DuplicateDependingRules2Test extends TestBase {
 
-    static IDetectionContext detectionContext =
-            new IDetectionContext() {
-                @Nonnull
-                @Override
-                public Class<? extends IDetectionContext> type() {
-                    return IDetectionContext.class;
-                }
-            };
+    static DigestContext detectionContext = new DigestContext();
 
     public DuplicateDependingRules2Test() {
         super(

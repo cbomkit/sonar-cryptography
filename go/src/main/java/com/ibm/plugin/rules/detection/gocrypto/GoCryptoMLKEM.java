@@ -25,12 +25,11 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -55,11 +54,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoMLKEM {
-
-    private GoCryptoMLKEM() {
-        // private
-    }
+public final class GoCryptoMLKEM extends DetectionRuleSet<Tree> {
 
     // EncapsulationKey768.Encapsulate() (sharedKey, ciphertext []byte)
     // Encapsulates a shared key using the ML-KEM-768 encapsulation key
@@ -227,16 +222,9 @@ public final class GoCryptoMLKEM {
                     .inBundle(() -> "GoCrypto")
                     .withDependingDetectionRules(List.of(ENCAPSULATE_1024));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoMLKEM::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 GENERATE_KEY_768,
                 GENERATE_KEY_1024,

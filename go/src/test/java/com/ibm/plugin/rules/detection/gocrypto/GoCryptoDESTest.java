@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
@@ -43,7 +44,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoDESTest extends TestBase {
 
     public GoCryptoDESTest() {
-        super(GoCryptoDES.rules());
+        super(RuleSets.rulesOf(GoCryptoDES.class));
     }
 
     @Test

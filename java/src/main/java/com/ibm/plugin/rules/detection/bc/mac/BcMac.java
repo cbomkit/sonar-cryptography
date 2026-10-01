@@ -27,26 +27,22 @@ import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.MacSizeFactory;
 import com.ibm.engine.model.factory.ParameterIdentifierFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.aeadcipher.BcKGCMBlockCipher;
-import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipher;
+import com.ibm.plugin.rules.detection.bc.blockcipher.BcBlockCipherAndEngines;
 import com.ibm.plugin.rules.detection.bc.blockcipherpadding.BcBlockCipherPadding;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcMac {
-
-    private BcMac() {
-        // private
-    }
+public final class BcMac extends DetectionRuleSet<Tree> {
 
     private static final List<String> constructorBlockCipher =
             /*
@@ -123,10 +119,11 @@ public final class BcMac {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(macClass))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipher.all())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorBlockCipherAndMacSize) {
@@ -137,13 +134,14 @@ public final class BcMac {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(macClass))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipher.all())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                             .withMethodParameter("int")
                             .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                             .asChildOfParameterWithId(-1)
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorMacSize) {
@@ -158,7 +156,7 @@ public final class BcMac {
                             .asChildOfParameterWithId(-1)
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorBlockCipherAndBlockCipherPadding) {
@@ -169,13 +167,15 @@ public final class BcMac {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(macClass))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipher.all())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                             .withMethodParameter(
                                     "org.bouncycastle.crypto.paddings.BlockCipherPadding")
-                            .addDependingDetectionRules(BcBlockCipherPadding.rules())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherPadding.class))
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorBlockCipherAndMacSizeAndBlockCipherPadding) {
@@ -186,16 +186,18 @@ public final class BcMac {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(macClass))
                             .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                            .addDependingDetectionRules(BcBlockCipher.all())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                             .withMethodParameter("int")
                             .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                             .asChildOfParameterWithId(-1)
                             .withMethodParameter(
                                     "org.bouncycastle.crypto.paddings.BlockCipherPadding")
-                            .addDependingDetectionRules(BcBlockCipherPadding.rules())
+                            .addDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBlockCipherPadding.class))
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorDigest) {
@@ -206,10 +208,10 @@ public final class BcMac {
                             .forConstructor()
                             .shouldBeDetectedAs(new ValueActionFactory<>(macClass))
                             .withMethodParameter("org.bouncycastle.crypto.Digest")
-                            .addDependingDetectionRules(BcDigests.rules())
+                            .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
 
         for (String macClass : constructorMethodDetection) {
@@ -224,7 +226,7 @@ public final class BcMac {
                             .withAnyParameters()
                             .buildForContext(new MacContext())
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcMacInit.rules()));
+                            .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
         }
         return constructorsList;
     }
@@ -239,10 +241,10 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("GMac"))
                         .withMethodParameter("org.bouncycastle.crypto.modes.GCMModeCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -251,13 +253,13 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("GMac"))
                         .withMethodParameter("org.bouncycastle.crypto.modes.GCMModeCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -266,10 +268,10 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("KGMac"))
                         .withMethodParameter("org.bouncycastle.crypto.modes.KGCMBlockCipher")
-                        .addDependingDetectionRules(BcKGCMBlockCipher.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcKGCMBlockCipher.class))
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -278,13 +280,13 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("KGMac"))
                         .withMethodParameter("org.bouncycastle.crypto.modes.KGCMBlockCipher")
-                        .addDependingDetectionRules(BcKGCMBlockCipher.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcKGCMBlockCipher.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -295,7 +297,7 @@ public final class BcMac {
                         .withoutParameters()
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -304,7 +306,7 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipherMac"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
@@ -313,7 +315,7 @@ public final class BcMac {
                         .asChildOfParameterWithId(-1)
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -322,7 +324,7 @@ public final class BcMac {
                         .forConstructor()
                         .shouldBeDetectedAs(new ValueActionFactory<>("CFBBlockCipherMac"))
                         .withMethodParameter("org.bouncycastle.crypto.BlockCipher")
-                        .addDependingDetectionRules(BcBlockCipher.all())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherAndEngines.class))
                         .withMethodParameter("int")
                         .shouldBeDetectedAs(new BlockSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
@@ -330,10 +332,10 @@ public final class BcMac {
                         .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                         .asChildOfParameterWithId(-1)
                         .withMethodParameter("org.bouncycastle.crypto.paddings.BlockCipherPadding")
-                        .addDependingDetectionRules(BcBlockCipherPadding.rules())
+                        .addDependingDetectionRules(RuleSets.rulesOf(BcBlockCipherPadding.class))
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -347,7 +349,7 @@ public final class BcMac {
                         .withMethodParameter("int")
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -361,7 +363,7 @@ public final class BcMac {
                         .withMethodParameter(BYTE_ARRAY_TYPE)
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -377,7 +379,7 @@ public final class BcMac {
                         .asChildOfParameterWithId(-1)
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         constructorsList.add(
                 new DetectionRuleBuilder<Tree>()
@@ -388,20 +390,16 @@ public final class BcMac {
                         .withMethodParameter("org.bouncycastle.crypto.macs.SkeinMac")
                         .buildForContext(new MacContext())
                         .inBundle(() -> "Bc")
-                        .withDependingDetectionRules(BcMacInit.rules()));
+                        .withDependingDetectionRules(RuleSets.rulesOf(BcMacInit.class)));
 
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            Stream.of(simpleConstructors().stream(), specialConstructors().stream())
-                                    .flatMap(i -> i)
-                                    .toList());
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return Stream.of(simpleConstructors().stream(), specialConstructors().stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

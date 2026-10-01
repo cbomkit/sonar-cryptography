@@ -21,22 +21,18 @@ package com.ibm.plugin.rules.detection.bc.basicagreement;
 
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcBasicAgreement {
-
-    private BcBasicAgreement() {
-        // nothing
-    }
+public final class BcBasicAgreement extends DetectionRuleSet<Tree> {
 
     private static final List<String> basicAgreements =
             Arrays.asList(
@@ -61,17 +57,16 @@ public final class BcBasicAgreement {
                             .withoutParameters()
                             .buildForContext(new KeyContext(Map.of("kind", "DH")))
                             .inBundle(() -> "Bc")
-                            .withDependingDetectionRules(BcBasicAgreementInit.rules()));
+                            .withDependingDetectionRules(
+                                    RuleSets.rulesOf(BcBasicAgreementInit.class)));
         }
 
         return constructorsList;
     }
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> simpleConstructors());
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return simpleConstructors();
     }
 }

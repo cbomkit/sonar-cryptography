@@ -25,11 +25,10 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -44,11 +43,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoRC4 {
-
-    private GoCryptoRC4() {
-        // private
-    }
+public final class GoCryptoRC4 extends DetectionRuleSet<Tree> {
 
     // (*rc4.Cipher).XORKeyStream(dst, src []byte)
     // Encrypts/decrypts using XOR with the key stream
@@ -79,16 +74,9 @@ public final class GoCryptoRC4 {
                     .inBundle(() -> "GoCrypto")
                     .withDependingDetectionRules(List.of(XOR_KEY_STREAM));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoRC4::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW_CIPHER);
     }
 }

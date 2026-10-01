@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -39,7 +40,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoEllipticTest extends TestBase {
 
     public GoCryptoEllipticTest() {
-        super(GoCryptoElliptic.rules());
+        super(RuleSets.rulesOf(GoCryptoElliptic.class));
     }
 
     @Test

@@ -21,18 +21,17 @@ package com.ibm.plugin.rules.detection.jca.keyspec;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaDESedeKeySpec {
+public final class JcaDESedeKeySpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> DESede_KEY_SPEC_1 =
             new DetectionRuleBuilder<Tree>()
@@ -41,7 +40,7 @@ public final class JcaDESedeKeySpec {
                     .forConstructor()
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.DESede))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "DESede")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -53,24 +52,13 @@ public final class JcaDESedeKeySpec {
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new KeySizeFactory<>())
                     .withMethodParameter("int")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.DESede))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "DESede")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaDESedeKeySpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaDESedeKeySpec::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(DESede_KEY_SPEC_1, DESede_KEY_SPEC_2);
     }
 }

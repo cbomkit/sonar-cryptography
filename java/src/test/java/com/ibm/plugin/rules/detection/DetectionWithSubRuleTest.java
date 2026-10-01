@@ -21,6 +21,7 @@ package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
@@ -40,7 +41,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 class DetectionWithSubRuleTest extends TestBase {
 
     public DetectionWithSubRuleTest() {
-        super(JcaCipherGetInstance.rules());
+        super(RuleSets.rulesOf(JcaCipherGetInstance.class));
     }
 
     @Override

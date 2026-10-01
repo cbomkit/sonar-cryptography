@@ -23,19 +23,18 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BIGINTEGER_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
 import com.ibm.engine.model.AlgorithmParameter;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmParameterFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JcaECParameterSpec {
+public final class JcaECParameterSpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> EC_FIELD_P =
             new DetectionRuleBuilder<Tree>()
@@ -44,7 +43,7 @@ public final class JcaECParameterSpec {
                     .forConstructor()
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .shouldBeDetectedAs(new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.P))
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -55,7 +54,7 @@ public final class JcaECParameterSpec {
                     .forConstructor()
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.M))
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
     private static final IDetectionRule<Tree> EC_FIELD_F2m_2 =
@@ -66,7 +65,7 @@ public final class JcaECParameterSpec {
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.M))
                     .withMethodParameter(BIGINTEGER_TYPE)
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -78,7 +77,7 @@ public final class JcaECParameterSpec {
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.M))
                     .withMethodParameter("int[]")
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -110,7 +109,7 @@ public final class JcaECParameterSpec {
                                                     new AlgorithmParameterFactory<>(
                                                             AlgorithmParameter.Kind.B))
                                             .buildForContext(
-                                                    new PrivateKeyContext(KeyContext.Kind.EC))
+                                                    new PrivateKeyContext(Map.of("kind", "EC")))
                                             .inBundle(() -> "Jca")
                                             .withoutDependingDetectionRules(),
                                     new DetectionRuleBuilder<Tree>()
@@ -134,31 +133,20 @@ public final class JcaECParameterSpec {
                                                             AlgorithmParameter.Kind.B))
                                             .withMethodParameter(BYTE_ARRAY_TYPE)
                                             .buildForContext(
-                                                    new PrivateKeyContext(KeyContext.Kind.EC))
+                                                    new PrivateKeyContext(Map.of("kind", "EC")))
                                             .inBundle(() -> "Jca")
                                             .withoutDependingDetectionRules()))
                     .withMethodParameter("java.security.spec.ECPoint")
                     .withMethodParameter(BIGINTEGER_TYPE)
                     .shouldBeDetectedAs(new AlgorithmParameterFactory<>(AlgorithmParameter.Kind.N))
                     .withMethodParameter("int")
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.EC))
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "EC")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaECParameterSpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaECParameterSpec::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(EC_PARAMETER_SPEC);
     }
 }

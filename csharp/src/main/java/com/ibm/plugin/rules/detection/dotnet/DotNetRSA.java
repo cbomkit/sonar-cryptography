@@ -31,6 +31,7 @@ import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -64,11 +65,7 @@ import javax.annotation.Nonnull;
  * carry additional cryptographic information worth extracting.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetRSA {
-
-    private DotNetRSA() {
-        // nothing
-    }
+public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Property setter rules (synthetic set_X method invocations)
@@ -303,7 +300,8 @@ public final class DotNetRSA {
                     .withDependingDetectionRules(RSA_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(RSA_CREATE, RSA_CRYPTO_SERVICE_PROVIDER, RSA_CNG, RSA_OPENSSL);
     }
 }

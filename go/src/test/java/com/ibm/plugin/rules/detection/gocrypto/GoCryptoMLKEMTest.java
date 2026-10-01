@@ -26,6 +26,7 @@ import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.Oid;
@@ -42,7 +43,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoMLKEMTest extends TestBase {
 
     public GoCryptoMLKEMTest() {
-        super(GoCryptoMLKEM.rules());
+        super(RuleSets.rulesOf(GoCryptoMLKEM.class));
     }
 
     @Test

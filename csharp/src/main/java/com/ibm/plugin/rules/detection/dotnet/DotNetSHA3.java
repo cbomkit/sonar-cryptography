@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -76,11 +77,7 @@ import javax.annotation.Nonnull;
  * convention above, are not modeled as depending rules for the fixed-digest classes either.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetSHA3 {
-
-    private DotNetSHA3() {
-        // nothing
-    }
+public final class DotNetSHA3 extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // SHA3-256 / SHA3-384 / SHA3-512
@@ -151,7 +148,8 @@ public final class DotNetSHA3 {
                     .withDependingDetectionRules(List.of());
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(SHA3_256_CREATE, SHA3_384_CREATE, SHA3_512_CREATE, SHAKE_128, SHAKE_256);
     }
 }

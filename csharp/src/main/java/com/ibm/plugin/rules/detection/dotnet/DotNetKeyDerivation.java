@@ -26,6 +26,7 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.IterationCountFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -133,11 +134,7 @@ import javax.annotation.Nonnull;
  * an intentional, documented exclusion, not an oversight.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetKeyDerivation {
-
-    private DotNetKeyDerivation() {
-        // nothing
-    }
+public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // HKDF — static-only class, no instance. Each static method is its own
@@ -304,7 +301,8 @@ public final class DotNetKeyDerivation {
                     .withDependingDetectionRules(PDB_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 HKDF_EXTRACT,
                 HKDF_EXPAND,

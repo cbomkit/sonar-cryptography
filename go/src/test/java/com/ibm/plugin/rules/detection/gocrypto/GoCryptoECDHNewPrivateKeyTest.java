@@ -28,6 +28,7 @@ import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
@@ -46,7 +47,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoECDHNewPrivateKeyTest extends TestBase {
 
     public GoCryptoECDHNewPrivateKeyTest() {
-        super(GoCryptoECDH.rules());
+        super(RuleSets.rulesOf(GoCryptoECDH.class));
     }
 
     @Test

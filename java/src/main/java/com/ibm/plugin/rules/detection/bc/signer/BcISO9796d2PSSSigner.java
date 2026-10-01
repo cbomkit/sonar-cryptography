@@ -23,21 +23,17 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.asymmetricblockcipher.BcAsymmetricBlockCipher;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcISO9796d2PSSSigner {
-
-    private BcISO9796d2PSSSigner() {
-        // nothing
-    }
+public final class BcISO9796d2PSSSigner extends DetectionRuleSet<Tree> {
 
     private static final String CLASS_NAME = "ISO9796d2PSSSigner";
 
@@ -48,15 +44,15 @@ public final class BcISO9796d2PSSSigner {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -65,22 +61,20 @@ public final class BcISO9796d2PSSSigner {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.AsymmetricBlockCipher")
-                    .addDependingDetectionRules(BcAsymmetricBlockCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcAsymmetricBlockCipher.class))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("boolean")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2));
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2);
     }
 }

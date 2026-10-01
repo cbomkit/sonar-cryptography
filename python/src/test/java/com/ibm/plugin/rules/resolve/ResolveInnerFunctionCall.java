@@ -21,17 +21,17 @@ package com.ibm.plugin.rules.resolve;
 
 import static com.ibm.engine.detection.MethodMatcher.ANY;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class ResolveValuesWithHooks {
+public final class ResolveInnerFunctionCall {
     // This class of rules is not made private for testing purposes: it is accessed directly by the
     // test class to test *only* these rules
 
@@ -42,11 +42,11 @@ public final class ResolveValuesWithHooks {
                     .forMethods("generate_private_key")
                     .withMethodParameter(ANY)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new PrivateKeyContext(KeyContext.Kind.UNKNOWN))
-                    .inBundle(() -> "ResolveValuesWithHooks")
+                    .buildForContext(new PrivateKeyContext(Map.of("kind", "UNKNOWN")))
+                    .inBundle(() -> "ResolveInnerFunctionCall")
                     .withoutDependingDetectionRules();
 
-    private ResolveValuesWithHooks() {
+    private ResolveInnerFunctionCall() {
         // nothing
     }
 

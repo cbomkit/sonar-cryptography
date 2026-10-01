@@ -31,22 +31,18 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.CurveFactory;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.hash.PycaHash;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class PycaEllipticCurve {
-
-    private PycaEllipticCurve() {
-        // private
-    }
+public final class PycaEllipticCurve extends DetectionRuleSet<Tree> {
 
     private static final String TYPE = "cryptography.hazmat.primitives.asymmetric.ec";
     private static final String GENERATE_METHOD = "generate_private_key";
@@ -62,7 +58,9 @@ public final class PycaEllipticCurve {
                             "cryptography.hazmat.primitives.*") // This "type" accepts both hashes
                     // and pre-hashes
                     .addDependingDetectionRules(
-                            PycaHash.rules()) // The parameter of ECDSA can either be an immediate
+                            RuleSets.rulesOf(
+                                    PycaHash.class)) // The parameter of ECDSA can either be an
+                    // immediate
                     // hash, or a hash enclosed in the pre-hash function
                     .buildForContext(new SignatureContext(Map.of("algorithm", "ECDSA")))
                     .inBundle(() -> "Pyca")
@@ -144,16 +142,9 @@ public final class PycaEllipticCurve {
                     .inBundle(() -> "Pyca")
                     .withDependingDetectionRules(List.of(PRIVATE_NUMBERS_EC));
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(PycaEllipticCurve::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(GENERATION_EC, DERIVATION_EC, PUBLIC_NUMBERS_EC);
     }
 }

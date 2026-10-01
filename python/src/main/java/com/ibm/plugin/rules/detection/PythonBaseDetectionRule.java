@@ -24,6 +24,7 @@ import com.ibm.engine.detection.Finding;
 import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.python.PythonScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.plugin.PythonAggregator;
@@ -51,7 +52,7 @@ public abstract class PythonBaseDetectionRule extends PythonVisitorCheck
 
     protected PythonBaseDetectionRule() {
         this.isInventory = false;
-        this.detectionRules = PythonDetectionRules.rules();
+        this.detectionRules = RuleSets.rulesOf(PythonDetectionRules.class);
         this.pythonTranslationProcess =
                 new PythonTranslationProcess(PythonReorganizerRules.rules());
     }

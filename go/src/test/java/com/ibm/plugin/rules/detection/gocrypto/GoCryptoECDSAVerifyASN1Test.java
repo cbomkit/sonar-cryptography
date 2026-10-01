@@ -28,6 +28,7 @@ import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
@@ -45,7 +46,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoECDSAVerifyASN1Test extends TestBase {
 
     public GoCryptoECDSAVerifyASN1Test() {
-        super(GoCryptoECDSA.rules());
+        super(RuleSets.rulesOf(GoCryptoECDSA.class));
     }
 
     @Test

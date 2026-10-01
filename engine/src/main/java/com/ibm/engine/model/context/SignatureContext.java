@@ -19,19 +19,15 @@
  */
 package com.ibm.engine.model.context;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class SignatureContext extends DetectionContext
-        implements IDetectionContext, ISupportKind<SignatureContext.Kind> {
+public class SignatureContext extends DetectionContext {
     public enum Kind {
         PSS,
         MGF1,
         NONE
     }
-
-    @Nonnull private final Kind kind;
 
     /**
      * use a property map instead
@@ -40,18 +36,15 @@ public class SignatureContext extends DetectionContext
      */
     @Deprecated(since = "1.3.0")
     public SignatureContext(@Nonnull Kind kind) {
-        super(new HashMap<>());
-        this.kind = kind;
+        super(Map.of("kind", kind.name()));
     }
 
     public SignatureContext() {
-        super(new HashMap<>());
-        this.kind = Kind.NONE;
+        super(Map.of("kind", Kind.NONE.name()));
     }
 
     public SignatureContext(@Nonnull Map<String, String> properties) {
         super(properties);
-        this.kind = Kind.NONE;
     }
 
     /**
@@ -62,7 +55,11 @@ public class SignatureContext extends DetectionContext
     @Deprecated(since = "1.3.0")
     @Nonnull
     public Kind kind() {
-        return kind;
+        try {
+            return Kind.valueOf(get("kind").orElse(Kind.NONE.name()));
+        } catch (IllegalArgumentException e) {
+            return Kind.NONE;
+        }
     }
 
     @Nonnull

@@ -22,20 +22,16 @@ package com.ibm.plugin.rules.detection.bc.cipherparameters;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 
 import com.ibm.engine.model.context.AlgorithmParameterContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcNTRUSigningPrivateKeyParameters {
-
-    private BcNTRUSigningPrivateKeyParameters() {
-        // nothing
-    }
+public final class BcNTRUSigningPrivateKeyParameters extends DetectionRuleSet<Tree> {
 
     /*
      * This base constructor is not a CipherParameters class.
@@ -59,7 +55,7 @@ public final class BcNTRUSigningPrivateKeyParameters {
                     .withMethodParameter("boolean")
                     .withMethodParameter("int")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -88,7 +84,7 @@ public final class BcNTRUSigningPrivateKeyParameters {
                     .withMethodParameter("boolean")
                     .withMethodParameter("int")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
@@ -133,21 +129,16 @@ public final class BcNTRUSigningPrivateKeyParameters {
                     .withMethodParameter("java.util.List")
                     .withMethodParameter(
                             "org.bouncycastle.pqc.legacy.crypto.ntru.NTRUSigningPublicKeyParameters")
-                    .addDependingDetectionRules(BcNTRUSigningPublicKeyParameters.rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(BcNTRUSigningPublicKeyParameters.class))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(
-                    () ->
-                            List.of(
-                                    PRIVATE_KEY_CONSTRUCTOR_1,
-                                    PRIVATE_KEY_CONSTRUCTOR_2,
-                                    PRIVATE_KEY_CONSTRUCTOR_3));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(
+                PRIVATE_KEY_CONSTRUCTOR_1, PRIVATE_KEY_CONSTRUCTOR_2, PRIVATE_KEY_CONSTRUCTOR_3);
     }
 }

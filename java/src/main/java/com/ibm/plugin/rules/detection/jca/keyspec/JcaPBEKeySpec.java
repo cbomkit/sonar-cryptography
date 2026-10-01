@@ -23,21 +23,20 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import static com.ibm.plugin.rules.detection.TypeShortcuts.CHAR_ARRAY_TYPE;
 
 import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.PasswordSizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
 @SuppressWarnings("java:S1192")
-public final class JcaPBEKeySpec {
+public final class JcaPBEKeySpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> PBE_KEY_SPEC_1 =
             new DetectionRuleBuilder<Tree>()
@@ -46,7 +45,7 @@ public final class JcaPBEKeySpec {
                     .forConstructor()
                     .withMethodParameter(CHAR_ARRAY_TYPE)
                     .shouldBeDetectedAs(new PasswordSizeFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -60,7 +59,7 @@ public final class JcaPBEKeySpec {
                     .withMethodParameter(BYTE_ARRAY_TYPE)
                     .shouldBeDetectedAs(new SaltSizeFactory<>())
                     .withMethodParameter("int")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -76,24 +75,13 @@ public final class JcaPBEKeySpec {
                     .withMethodParameter("int")
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.PBE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "PBE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaPBEKeySpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaPBEKeySpec::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(PBE_KEY_SPEC_1, PBE_KEY_SPEC_2, PBE_KEY_SPEC_3);
     }
 }

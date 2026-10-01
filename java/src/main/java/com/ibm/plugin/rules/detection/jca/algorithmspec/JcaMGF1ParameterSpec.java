@@ -23,15 +23,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaMGF1ParameterSpec {
+public final class JcaMGF1ParameterSpec extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> MGF1_1 =
             new DetectionRuleBuilder<Tree>()
@@ -40,24 +40,13 @@ public final class JcaMGF1ParameterSpec {
                     .forConstructor()
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SignatureContext(SignatureContext.Kind.MGF1))
+                    .buildForContext(new SignatureContext(Map.of("kind", "MGF1")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaMGF1ParameterSpec() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaMGF1ParameterSpec::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(MGF1_1);
     }
 }

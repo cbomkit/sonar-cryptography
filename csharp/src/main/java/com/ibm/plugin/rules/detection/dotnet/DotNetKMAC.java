@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -86,11 +87,7 @@ import javax.annotation.Nonnull;
  * equivalent hash-computation methods either.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetKMAC {
-
-    private DotNetKMAC() {
-        // nothing
-    }
+public final class DotNetKMAC extends DetectionRuleSet<CSharpTree> {
 
     // new Kmac128(key) / new Kmac128(key, customizationString) — and the KmacXof128/256, Kmac256
     // siblings. Both constructor overloads (byte[], byte[]) and (ReadOnlySpan<Byte>,
@@ -108,7 +105,8 @@ public final class DotNetKMAC {
     }
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 kmacRule("Kmac128"),
                 kmacRule("Kmac256"),

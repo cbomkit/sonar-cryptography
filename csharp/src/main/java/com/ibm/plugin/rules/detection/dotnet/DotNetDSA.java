@@ -28,6 +28,7 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -56,11 +57,7 @@ import javax.annotation.Nonnull;
  * regardless of the concrete DSA subclass.
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetDSA {
-
-    private DotNetDSA() {
-        // nothing
-    }
+public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Property setter rules (synthetic set_X method invocations)
@@ -255,7 +252,8 @@ public final class DotNetDSA {
                     .withDependingDetectionRules(DSA_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(DSA_CREATE, DSA_CNG, DSA_CSP, DSA_OPENSSL);
     }
 }

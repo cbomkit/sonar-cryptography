@@ -21,7 +21,12 @@ package com.ibm.engine.model.context;
 
 import javax.annotation.Nonnull;
 
-public interface IDetectionContext {
+/**
+ * Contexts are used as cache keys by {@link com.ibm.engine.rule.RuleSets}. All implementations
+ * extend {@link DetectionContext}, which compares the concrete class and immutable property map.
+ * Subclasses must represent all of their state in that map.
+ */
+public sealed interface IDetectionContext permits DetectionContext {
 
     @Nonnull
     Class<? extends IDetectionContext> type();

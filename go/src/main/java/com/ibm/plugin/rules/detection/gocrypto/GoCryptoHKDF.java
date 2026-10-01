@@ -24,12 +24,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -45,11 +45,7 @@ import org.sonar.plugins.go.api.Tree;
  * </ul>
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoHKDF {
-
-    private GoCryptoHKDF() {
-        // private
-    }
+public final class GoCryptoHKDF extends DetectionRuleSet<Tree> {
 
     // hkdf.New(hash func() hash.Hash, secret, salt, info []byte) io.Reader
     // Returns an HKDF reader that combines Extract and Expand
@@ -60,7 +56,7 @@ public final class GoCryptoHKDF {
                     .forMethods("New")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
                     .withMethodParameter("func() hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("[]byte")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
@@ -80,7 +76,7 @@ public final class GoCryptoHKDF {
                     .forObjectTypes("golang.org/x/crypto/hkdf", "crypto/hkdf")
                     .forMethods("Extract")
                     .withMethodParameter("func() hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("[]byte")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
@@ -100,7 +96,7 @@ public final class GoCryptoHKDF {
                     .forMethods("Expand")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
                     .withMethodParameter("func() hash.Hash")
-                    .addDependingDetectionRules(GoCryptoHash.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(GoCryptoHash.class))
                     .withMethodParameter("[]byte")
                     .addDependingDetectionRules(List.of(EXTRACT))
                     .withMethodParameter("[]byte")
@@ -111,16 +107,9 @@ public final class GoCryptoHKDF {
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoHKDF::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(NEW, EXPAND);
     }
 }

@@ -20,45 +20,66 @@
 package com.ibm.plugin.rules.detection;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.dotnet.*;
+import com.ibm.engine.rule.RuleSets;
+import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
+import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
+import com.ibm.plugin.rules.detection.dotnet.DotNetChaCha20Poly1305;
+import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
+import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
+import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
+import com.ibm.plugin.rules.detection.dotnet.DotNetECDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetHMAC;
+import com.ibm.plugin.rules.detection.dotnet.DotNetKMAC;
+import com.ibm.plugin.rules.detection.dotnet.DotNetKeyDerivation;
+import com.ibm.plugin.rules.detection.dotnet.DotNetLegacyFormatters;
+import com.ibm.plugin.rules.detection.dotnet.DotNetMLDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetMLKem;
+import com.ibm.plugin.rules.detection.dotnet.DotNetProtectedData;
+import com.ibm.plugin.rules.detection.dotnet.DotNetRC2;
+import com.ibm.plugin.rules.detection.dotnet.DotNetRSA;
+import com.ibm.plugin.rules.detection.dotnet.DotNetRandomNumberGenerator;
+import com.ibm.plugin.rules.detection.dotnet.DotNetRfc2898DeriveBytes;
+import com.ibm.plugin.rules.detection.dotnet.DotNetSHA;
+import com.ibm.plugin.rules.detection.dotnet.DotNetSHA3;
+import com.ibm.plugin.rules.detection.dotnet.DotNetSlhDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetTripleDES;
+import com.ibm.plugin.rules.detection.dotnet.DotNetX25519DiffieHellman;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /** Aggregates all C# detection rule lists. */
-public final class CSharpDetectionRules {
-
-    private CSharpDetectionRules() {
-        // nothing
-    }
+public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return Stream.of(
-                        DotNetAES.rules().stream(),
-                        DotNetChaCha20Poly1305.rules().stream(),
-                        DotNetDES.rules().stream(),
-                        DotNetTripleDES.rules().stream(),
-                        DotNetRC2.rules().stream(),
-                        DotNetRSA.rules().stream(),
-                        DotNetECDsa.rules().stream(),
-                        DotNetECDiffieHellman.rules().stream(),
-                        DotNetX25519DiffieHellman.rules().stream(),
-                        DotNetMLKem.rules().stream(),
-                        DotNetMLDsa.rules().stream(),
-                        DotNetSlhDsa.rules().stream(),
-                        DotNetDSA.rules().stream(),
-                        DotNetLegacyFormatters.rules().stream(),
-                        DotNetSHA.rules().stream(),
-                        DotNetSHA3.rules().stream(),
-                        DotNetHMAC.rules().stream(),
-                        DotNetKMAC.rules().stream(),
-                        DotNetRfc2898DeriveBytes.rules().stream(),
-                        DotNetKeyDerivation.rules().stream(),
-                        DotNetRandomNumberGenerator.rules().stream(),
-                        DotNetProtectedData.rules().stream(),
-                        DotNetAlgorithmFactory.rules().stream())
+                        RuleSets.rulesOf(DotNetAES.class).stream(),
+                        RuleSets.rulesOf(DotNetChaCha20Poly1305.class).stream(),
+                        RuleSets.rulesOf(DotNetDES.class).stream(),
+                        RuleSets.rulesOf(DotNetTripleDES.class).stream(),
+                        RuleSets.rulesOf(DotNetRC2.class).stream(),
+                        RuleSets.rulesOf(DotNetRSA.class).stream(),
+                        RuleSets.rulesOf(DotNetECDsa.class).stream(),
+                        RuleSets.rulesOf(DotNetECDiffieHellman.class).stream(),
+                        RuleSets.rulesOf(DotNetX25519DiffieHellman.class).stream(),
+                        RuleSets.rulesOf(DotNetMLKem.class).stream(),
+                        RuleSets.rulesOf(DotNetMLDsa.class).stream(),
+                        RuleSets.rulesOf(DotNetSlhDsa.class).stream(),
+                        RuleSets.rulesOf(DotNetDSA.class).stream(),
+                        RuleSets.rulesOf(DotNetLegacyFormatters.class).stream(),
+                        RuleSets.rulesOf(DotNetSHA.class).stream(),
+                        RuleSets.rulesOf(DotNetSHA3.class).stream(),
+                        RuleSets.rulesOf(DotNetHMAC.class).stream(),
+                        RuleSets.rulesOf(DotNetKMAC.class).stream(),
+                        RuleSets.rulesOf(DotNetRfc2898DeriveBytes.class).stream(),
+                        RuleSets.rulesOf(DotNetKeyDerivation.class).stream(),
+                        RuleSets.rulesOf(DotNetRandomNumberGenerator.class).stream(),
+                        RuleSets.rulesOf(DotNetProtectedData.class).stream(),
+                        RuleSets.rulesOf(DotNetAlgorithmFactory.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

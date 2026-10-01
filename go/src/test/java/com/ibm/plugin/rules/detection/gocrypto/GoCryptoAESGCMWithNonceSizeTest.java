@@ -27,6 +27,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
@@ -44,7 +45,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoAESGCMWithNonceSizeTest extends TestBase {
 
     public GoCryptoAESGCMWithNonceSizeTest() {
-        super(GoCryptoAES.rules());
+        super(RuleSets.rulesOf(GoCryptoAES.class));
     }
 
     @Test

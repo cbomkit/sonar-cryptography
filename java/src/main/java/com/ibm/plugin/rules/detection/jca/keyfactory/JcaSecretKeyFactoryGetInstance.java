@@ -21,19 +21,19 @@ package com.ibm.plugin.rules.detection.jca.keyfactory;
 
 import static com.ibm.plugin.rules.detection.TypeShortcuts.STRING_TYPE;
 
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaSecretKeyFactoryGetInstance {
+public final class JcaSecretKeyFactoryGetInstance extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SECRET_KEY_FACTORY_1 =
             new DetectionRuleBuilder<Tree>()
@@ -42,12 +42,15 @@ public final class JcaSecretKeyFactoryGetInstance {
                     .forMethods("getInstance")
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SECRET_KEY_FACTORY_2 =
@@ -58,12 +61,15 @@ public final class JcaSecretKeyFactoryGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter(STRING_TYPE)
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
     private static final IDetectionRule<Tree> SECRET_KEY_FACTORY_3 =
@@ -74,28 +80,20 @@ public final class JcaSecretKeyFactoryGetInstance {
                     .withMethodParameter(STRING_TYPE)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .withMethodParameter("java.security.Provider")
-                    .buildForContext(new SecretKeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new SecretKeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            JcaSecretKeyFactoryGenerateSecret.rules().stream(),
-                                            JcaSecretKeyFactoryTranslateKey.rules().stream())
+                                            RuleSets.rulesOf(
+                                                    JcaSecretKeyFactoryGenerateSecret.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(JcaSecretKeyFactoryTranslateKey.class)
+                                                    .stream())
                                     .toList());
 
-    private JcaSecretKeyFactoryGetInstance() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaSecretKeyFactoryGetInstance::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SECRET_KEY_FACTORY_1, SECRET_KEY_FACTORY_2, SECRET_KEY_FACTORY_3);
     }
 }

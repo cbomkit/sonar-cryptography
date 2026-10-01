@@ -28,6 +28,7 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
@@ -49,7 +50,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoHKDFExpandTest extends TestBase {
 
     public GoCryptoHKDFExpandTest() {
-        super(GoCryptoHKDF.rules());
+        super(RuleSets.rulesOf(GoCryptoHKDF.class));
     }
 
     @Test

@@ -22,16 +22,17 @@ package com.ibm.plugin.rules.detection.jca.keygenerator;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.parameterspec.JcaParameterSpec;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaKeyGeneratorInit {
+public final class JcaKeyGeneratorInit extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> KEY_GENERATOR_INIT_1 =
             new DetectionRuleBuilder<Tree>()
@@ -40,7 +41,7 @@ public final class JcaKeyGeneratorInit {
                     .forMethods("init")
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -52,7 +53,7 @@ public final class JcaKeyGeneratorInit {
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -62,8 +63,8 @@ public final class JcaKeyGeneratorInit {
                     .forObjectTypes("javax.crypto.KeyGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaParameterSpec.rules())
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
@@ -73,26 +74,15 @@ public final class JcaKeyGeneratorInit {
                     .forObjectTypes("javax.crypto.KeyGenerator")
                     .forMethods("init")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaParameterSpec.class))
                     .withMethodParameter("java.security.SecureRandom")
-                    .buildForContext(new KeyContext(KeyContext.Kind.NONE))
+                    .buildForContext(new KeyContext(Map.of("kind", "NONE")))
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaKeyGeneratorInit() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaKeyGeneratorInit::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(
                 KEY_GENERATOR_INIT_1,
                 KEY_GENERATOR_INIT_2,

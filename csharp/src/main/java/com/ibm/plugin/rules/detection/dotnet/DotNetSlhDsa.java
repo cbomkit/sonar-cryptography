@@ -27,6 +27,7 @@ import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ParameterIdentifierFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
@@ -172,11 +173,7 @@ import javax.annotation.Nonnull;
  * PKCS#8/SPKI/PEM export — same convention as RSA/ECDsa/ECDiffieHellman/MLKem/MLDsa).
  */
 @SuppressWarnings("java:S1192")
-public final class DotNetSlhDsa {
-
-    private DotNetSlhDsa() {
-        // nothing
-    }
+public final class DotNetSlhDsa extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Sign / Verify operation rules (depending rules on any tracked SlhDsa-family variable,
@@ -354,7 +351,8 @@ public final class DotNetSlhDsa {
                     .withDependingDetectionRules(SLHDSA_DEPENDING_RULES);
 
     @Nonnull
-    public static List<IDetectionRule<CSharpTree>> rules() {
+    @Override
+    protected List<IDetectionRule<CSharpTree>> buildRules() {
         return List.of(
                 SLHDSA_GENERATE_KEY,
                 SLHDSA_IMPORT_PRIVATE_KEY,

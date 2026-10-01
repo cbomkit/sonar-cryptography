@@ -24,19 +24,15 @@ import static com.ibm.plugin.rules.detection.TypeShortcuts.BYTE_ARRAY_TYPE;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.MacSizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAEADParameters {
-
-    private BcAEADParameters() {
-        // nothing
-    }
+public final class BcAEADParameters extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_1 =
             new DetectionRuleBuilder<Tree>()
@@ -45,7 +41,7 @@ public final class BcAEADParameters {
                     .forObjectExactTypes("org.bouncycastle.crypto.params.AEADParameters")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.params.KeyParameter")
-                    .addDependingDetectionRules(BcKeyParameter.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcKeyParameter.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
@@ -60,7 +56,7 @@ public final class BcAEADParameters {
                     .forObjectExactTypes("org.bouncycastle.crypto.params.AEADParameters")
                     .forConstructor()
                     .withMethodParameter("org.bouncycastle.crypto.params.KeyParameter")
-                    .addDependingDetectionRules(BcKeyParameter.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcKeyParameter.class))
                     .withMethodParameter("int")
                     .shouldBeDetectedAs(new MacSizeFactory<>(Size.UnitType.BIT))
                     .withMethodParameter(BYTE_ARRAY_TYPE)
@@ -69,11 +65,9 @@ public final class BcAEADParameters {
                     .inBundle(() -> "Bc")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2));
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2);
     }
 }

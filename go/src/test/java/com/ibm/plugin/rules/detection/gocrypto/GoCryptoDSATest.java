@@ -29,6 +29,7 @@ import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
@@ -47,7 +48,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 class GoCryptoDSATest extends TestBase {
 
     public GoCryptoDSATest() {
-        super(GoCryptoDSA.rules());
+        super(RuleSets.rulesOf(GoCryptoDSA.class));
     }
 
     @Test

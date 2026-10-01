@@ -20,16 +20,16 @@
 package com.ibm.plugin.rules.detection.jca.signature;
 
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.jca.algorithmspec.JcaAlgorithmParameterSpec;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class JcaSignatureSetParameter {
+public final class JcaSignatureSetParameter extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> SIGNATURE_SET_PARAMETER =
             new DetectionRuleBuilder<Tree>()
@@ -37,25 +37,14 @@ public final class JcaSignatureSetParameter {
                     .forObjectTypes("java.security.Signature")
                     .forMethods("setParameter")
                     .withMethodParameter("java.security.spec.AlgorithmParameterSpec")
-                    .addDependingDetectionRules(JcaAlgorithmParameterSpec.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(JcaAlgorithmParameterSpec.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Jca")
                     .withoutDependingDetectionRules();
 
-    private JcaSignatureSetParameter() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(JcaSignatureSetParameter::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(SIGNATURE_SET_PARAMETER);
     }
 }

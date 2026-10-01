@@ -23,11 +23,11 @@ import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.factory.CipherSuiteFactory;
 import com.ibm.engine.model.factory.ProtocolFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.go.api.Tree;
 
@@ -50,11 +50,7 @@ import org.sonar.plugins.go.api.Tree;
  * identified, the CipherSuiteMapper maps the IANA name to structured nodes.
  */
 @SuppressWarnings("java:S1192")
-public final class GoCryptoTLS {
-
-    private GoCryptoTLS() {
-        // private
-    }
+public final class GoCryptoTLS extends DetectionRuleSet<Tree> {
 
     private static final IDetectionRule<Tree> CONFIG =
             new DetectionRuleBuilder<Tree>()
@@ -71,7 +67,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("MaxVersion")
                     .shouldBeDetectedAs(new ProtocolFactory<>())
                     .asChildOfParameterWithId(-1)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -85,7 +81,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("string") // addr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -100,7 +96,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("string") // addr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -114,7 +110,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("string") // laddr
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -127,7 +123,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("net.Listener") // inner
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -140,7 +136,7 @@ public final class GoCryptoTLS {
                     .withMethodParameter("net.Conn") // conn
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
@@ -153,20 +149,13 @@ public final class GoCryptoTLS {
                     .withMethodParameter("net.Conn") // conn
                     .withMethodParameter("*tls.Config") // config
                     .addDependingDetectionRules(List.of(CONFIG))
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "GoCrypto")
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(GoCryptoTLS::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules() {
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
         return List.of(DIAL, DIAL_WITH_DIALER, LISTEN, NEW_LISTENER, SERVER, CLIENT);
     }
 }

@@ -20,53 +20,36 @@
 package com.ibm.plugin.rules.detection.bc.asymmetricblockcipher;
 
 import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.rule.ContextualDetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSet;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcAsymmetricBlockCipher {
-
-    private BcAsymmetricBlockCipher() {
-        // nothing
-    }
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> buildRules(null, null));
+public final class BcAsymmetricBlockCipher
+        extends ContextualDetectionRuleSet<Tree, AsymmetricCipherOverrides> {
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules(@Nullable AsymmetricCipherOverrides overrides) {
+        return constructors(overrides);
     }
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
-        return encodingDetectionValueContext == null && engineDetectionValueContext == null
-                ? RULES.get()
-                : buildRules(encodingDetectionValueContext, engineDetectionValueContext);
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<Tree>> buildRules(
-            @Nullable IDetectionContext encodingDetectionValueContext,
-            @Nullable IDetectionContext engineDetectionValueContext) {
+    private static List<IDetectionRule<Tree>> constructors(
+            @Nullable AsymmetricCipherOverrides overrides) {
+        IDetectionContext engineDetectionValueContext =
+                overrides == null ? null : overrides.engine();
         return Stream.of(
-                        BcPKCS1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
-                        BcOAEPEncoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
-                        BcISO9796d1Encoding.rules(
-                                encodingDetectionValueContext, engineDetectionValueContext)
-                                .stream(),
-                        BcAsymCipherEngine.rules(engineDetectionValueContext).stream())
+                        RuleSet.of(BcPKCS1Encoding.class).withOverrides(overrides).stream(),
+                        RuleSet.of(BcOAEPEncoding.class).withOverrides(overrides).stream(),
+                        RuleSet.of(BcISO9796d1Encoding.class).withOverrides(overrides).stream(),
+                        RuleSet.of(BcAsymCipherEngine.class)
+                                .withOverrides(engineDetectionValueContext)
+                                .stream())
                 .flatMap(i -> i)
                 .toList();
     }

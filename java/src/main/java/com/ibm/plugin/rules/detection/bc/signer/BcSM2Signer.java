@@ -21,20 +21,16 @@ package com.ibm.plugin.rules.detection.bc.signer;
 
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.bc.digest.BcDigests;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
-public final class BcSM2Signer {
-
-    private BcSM2Signer() {
-        // nothing
-    }
+public final class BcSM2Signer extends DetectionRuleSet<Tree> {
 
     private static final String CLASS_NAME = "SM2Signer";
 
@@ -47,7 +43,7 @@ public final class BcSM2Signer {
                     .withoutParameters()
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_2 =
             new DetectionRuleBuilder<Tree>()
@@ -56,10 +52,10 @@ public final class BcSM2Signer {
                     .forConstructor()
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_3 =
             new DetectionRuleBuilder<Tree>()
@@ -70,7 +66,7 @@ public final class BcSM2Signer {
                     .withMethodParameter("org.bouncycastle.crypto.signers.DSAEncoding")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     private static final IDetectionRule<Tree> CONSTRUCTOR_4 =
             new DetectionRuleBuilder<Tree>()
@@ -80,16 +76,14 @@ public final class BcSM2Signer {
                     .shouldBeDetectedAs(new ValueActionFactory<>(CLASS_NAME))
                     .withMethodParameter("org.bouncycastle.crypto.signers.DSAEncoding")
                     .withMethodParameter("org.bouncycastle.crypto.Digest")
-                    .addDependingDetectionRules(BcDigests.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(BcDigests.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "Bc")
-                    .withDependingDetectionRules(BcSignerInit.rules());
-
-    private static final Supplier<List<IDetectionRule<Tree>>> RULES =
-            Memoize.of(() -> List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3, CONSTRUCTOR_4));
+                    .withDependingDetectionRules(RuleSets.rulesOf(BcSignerInit.class));
 
     @Nonnull
-    public static List<IDetectionRule<Tree>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<Tree>> buildRules() {
+        return List.of(CONSTRUCTOR_1, CONSTRUCTOR_2, CONSTRUCTOR_3, CONSTRUCTOR_4);
     }
 }
