@@ -21,11 +21,63 @@ package com.ibm.mapper.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.mapper.model.algorithms.AES;
+import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.ascon.Ascon128;
+import com.ibm.mapper.model.mode.CBC;
+import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class AlgorithmTest {
+
+    private static final DetectionLocation LOCATION =
+            new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+    @Test
+    void deepCopyKeepsAesTypeAndSeparatesModeBranches() {
+        AES cbc = new AES(128, new CBC(LOCATION), LOCATION);
+
+        INode ecb = cbc.deepCopy();
+        assertThat(ecb).isExactlyInstanceOf(AES.class);
+        ecb.put(new ECB(LOCATION));
+
+        assertThat(cbc.asString()).isEqualTo("AES-128-CBC");
+        assertThat(ecb.asString()).isEqualTo("AES-128-ECB");
+        assertThat(ecb.getChildren()).isNotSameAs(cbc.getChildren());
+        assertThat(ecb.hasChildOfType(KeyLength.class).orElseThrow())
+                .isNotSameAs(cbc.hasChildOfType(KeyLength.class).orElseThrow());
+
+        ecb.put(new KeyLength(256, LOCATION));
+        assertThat(cbc.asString()).isEqualTo("AES-128-CBC");
+        assertThat(ecb.asString()).isEqualTo("AES-256-ECB");
+    }
+
+    @Test
+    void deepCopyKeepsIndirectAndSpecializedTypes() {
+        assertThat(new Ascon128(LOCATION).deepCopy()).isExactlyInstanceOf(Ascon128.class);
+        assertThat(new EllipticCurveAlgorithm(LOCATION).deepCopy())
+                .isExactlyInstanceOf(EllipticCurveAlgorithm.class);
+
+        RSA rsa = new RSA(2048, LOCATION);
+        INode copy = rsa.deepCopy();
+        assertThat(copy).isExactlyInstanceOf(RSA.class);
+        assertThat(copy.hasChildOfType(KeyLength.class).orElseThrow())
+                .isNotSameAs(rsa.hasChildOfType(KeyLength.class).orElseThrow());
+    }
+
+    @Test
+    void deepCopyKeepsMetadata() {
+        Algorithm original = new Algorithm("AES", BlockCipher.class, LOCATION, NodeOrigin.DEFAULT);
+
+        Algorithm copy = (Algorithm) original.deepCopy();
+
+        assertThat(copy.getName()).isEqualTo(original.getName());
+        assertThat(copy.getKind()).isEqualTo(original.getKind());
+        assertThat(copy.getDetectionContext()).isSameAs(original.getDetectionContext());
+        assertThat(copy.getOrigin()).isEqualTo(NodeOrigin.DEFAULT);
+    }
 
     @Test
     void recastConstructor_shouldCopyChildrenMap() {
