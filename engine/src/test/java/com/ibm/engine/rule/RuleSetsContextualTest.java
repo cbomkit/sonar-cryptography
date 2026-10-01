@@ -22,6 +22,7 @@ package com.ibm.engine.rule;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.language.ILanguageTranslation;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import java.util.ArrayList;
@@ -33,6 +34,18 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class RuleSetsContextualTest {
+
+    private static final class NewContext extends DetectionContext {
+        private NewContext(Map<String, String> properties) {
+            super(properties);
+        }
+
+        @Nonnull
+        @Override
+        public Class<? extends IDetectionContext> type() {
+            return NewContext.class;
+        }
+    }
 
     /**
      * Counts how often {@link ContextualLeaf} was actually built. The {@code isNotSameAs}
@@ -133,6 +146,20 @@ class RuleSetsContextualTest {
     void equalContextsShareOneList() {
         assertThat(RuleSet.of(ContextualLeaf.class).withOverrides(mgf1()))
                 .isSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(mgf1()));
+    }
+
+    @Test
+    void newContextSubclassesUseInheritedEqualityAsCacheKeys() {
+        NewContext one = new NewContext(Map.of("kind", "NEW_A"));
+        NewContext equivalent = new NewContext(Map.of("kind", "NEW_A"));
+        NewContext different = new NewContext(Map.of("kind", "NEW_B"));
+
+        assertThat(RuleSet.of(ContextualLeaf.class).withOverrides(one))
+                .isSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(equivalent))
+                .isNotSameAs(RuleSet.of(ContextualLeaf.class).withOverrides(different))
+                .isNotSameAs(
+                        RuleSet.of(ContextualLeaf.class)
+                                .withOverrides(new DigestContext(Map.of("kind", "NEW_A"))));
     }
 
     @Test

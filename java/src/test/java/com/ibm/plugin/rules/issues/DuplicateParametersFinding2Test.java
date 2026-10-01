@@ -25,7 +25,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
@@ -43,14 +43,7 @@ import org.sonar.plugins.java.api.tree.Tree;
 
 class DuplicateParametersFinding2Test extends TestBase {
 
-    static IDetectionContext detectionContext =
-            new IDetectionContext() {
-                @Nonnull
-                @Override
-                public Class<? extends IDetectionContext> type() {
-                    return IDetectionContext.class;
-                }
-            };
+    static DigestContext detectionContext = new DigestContext();
 
     public static List<IDetectionRule<Tree>> seatRules =
             List.of(

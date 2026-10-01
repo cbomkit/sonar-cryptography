@@ -21,11 +21,50 @@ package com.ibm.engine.model.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
 
 class DetectionContextEqualityTest {
+
+    private static final class NewContext extends DetectionContext {
+        private NewContext(Map<String, String> properties) {
+            super(properties);
+        }
+
+        @Nonnull
+        @Override
+        public Class<? extends IDetectionContext> type() {
+            return NewContext.class;
+        }
+    }
+
+    @Test
+    void newSubclassesInheritValueEquality() {
+        NewContext one = new NewContext(Map.of("kind", "X"));
+        NewContext equivalent = new NewContext(Map.of("kind", "X"));
+        NewContext different = new NewContext(Map.of("kind", "Y"));
+
+        assertThat(one).isEqualTo(equivalent).hasSameHashCodeAs(equivalent);
+        assertThat(one).isNotEqualTo(different);
+        assertThat(one).isNotEqualTo(new DigestContext(Map.of("kind", "X")));
+    }
+
+    @Test
+    void everyContextUsesTheBaseEqualityImplementation() throws NoSuchMethodException {
+        assertThat(IDetectionContext.class.getPermittedSubclasses())
+                .containsExactly(DetectionContext.class);
+        assertThat(
+                        Modifier.isFinal(
+                                DetectionContext.class
+                                        .getMethod("equals", Object.class)
+                                        .getModifiers()))
+                .isTrue();
+        assertThat(Modifier.isFinal(DetectionContext.class.getMethod("hashCode").getModifiers()))
+                .isTrue();
+    }
 
     @Test
     void sameClassAndSamePropertiesAreEqual() {
