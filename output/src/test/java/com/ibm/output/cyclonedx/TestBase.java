@@ -27,6 +27,8 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
 import com.ibm.output.Constants;
 import com.ibm.output.cyclondx.CBOMOutputFile;
+import com.ibm.output.cyclondx.serializer.CycloneDx17JsonGenerator;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +37,6 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.cyclonedx.Version;
 import org.cyclonedx.exception.GeneratorException;
-import org.cyclonedx.generators.BomGeneratorFactory;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Evidence;
@@ -92,13 +93,20 @@ public abstract class TestBase {
     }
 
     private void printBom(@Nonnull Bom bom) {
-        final BomJsonGenerator bomGenerator =
-                BomGeneratorFactory.createJson(Version.VERSION_16, bom);
+        final BomJsonGenerator bomGenerator = new CycloneDx17JsonGenerator(bom, Version.VERSION_17);
         try {
+            Field specVersionField = Bom.class.getDeclaredField("specVersion");
+            specVersionField.setAccessible(true);
+            specVersionField.set(bom, "1.7");
             final String bomString = bomGenerator.toJsonString();
+            assertThat(bomString).contains("\"specVersion\" : \"1.7\"");
             LOGGER.info(bomString);
         } catch (GeneratorException e) {
             LOGGER.error(e.getMessage());
+            throw new AssertionError("Could not generate CBOM", e);
+        } catch (Exception e) {
+            LOGGER.error("Could not set specVersion: {}", e.getMessage());
+            throw new AssertionError("Could not set specVersion", e);
         }
     }
 }

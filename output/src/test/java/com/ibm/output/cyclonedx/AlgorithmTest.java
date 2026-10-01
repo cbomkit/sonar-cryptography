@@ -31,12 +31,20 @@ import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
+import com.ibm.mapper.model.algorithms.EdDSA;
 import com.ibm.mapper.model.algorithms.MGF1;
+import com.ibm.mapper.model.algorithms.MLDSA;
+import com.ibm.mapper.model.algorithms.MLKEM;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.RSAKEM;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.algorithms.SHA3;
+import com.ibm.mapper.model.algorithms.Scrypt;
+import com.ibm.mapper.model.curves.Curve25519;
+import com.ibm.mapper.model.curves.Edwards25519;
 import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.model.curves.Secp384r1;
 import com.ibm.mapper.model.functionality.Decrypt;
@@ -102,6 +110,7 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getCryptoFunctions()).hasSize(2);
                     assertThat(algorithmProperties.getCryptoFunctions())
                             .contains(CryptoFunction.ENCRYPT, CryptoFunction.KEYGEN);
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("RSAES-PKCS1");
                 });
     }
 
@@ -280,6 +289,8 @@ class AlgorithmTest extends TestBase {
                                         .isEqualTo("1.2.840.113549.1.1.7");
                                 assertThat(algorithmProperties.getPadding())
                                         .isEqualTo(Padding.OAEP);
+                                assertThat(algorithmProperties.getAlgorithmFamily())
+                                        .isEqualTo("RSAES-PKCS1");
                                 assertThat(algorithmProperties.getCryptoFunctions())
                                         .contains(CryptoFunction.DECRYPT, CryptoFunction.KEYGEN);
                             } else if (algorithmProperties.getPrimitive().equals(Primitive.HASH)) {
@@ -384,8 +395,8 @@ class AlgorithmTest extends TestBase {
 
                     final AlgorithmProperties algorithmProperties =
                             component.getCryptoProperties().getAlgorithmProperties();
-                    assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.PKE);
-                    assertThat(algorithmProperties.getCurve()).isEqualTo("secp256r1");
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("nist/P-256");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDSA");
                 });
     }
 
@@ -405,9 +416,207 @@ class AlgorithmTest extends TestBase {
 
                     final AlgorithmProperties algorithmProperties =
                             component.getCryptoProperties().getAlgorithmProperties();
-                    assertThat(algorithmProperties.getPrimitive()).isEqualTo(Primitive.KEY_AGREE);
-                    assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("nist/P-384");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDH");
+                });
+    }
+
+    @Test
+    void sectCurve() {
+        this.assertsNode(
+                () -> {
+                    final EllipticCurveAlgorithm curve =
+                            new EllipticCurveAlgorithm(
+                                    new com.ibm.mapper.model.curves.Sect163k1(detectionLocation));
+                    return curve;
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("EC-sect163k1");
+                    final AlgorithmProperties algorithmProperties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(algorithmProperties.getEllipticCurve()).isEqualTo("secg/sect163k1");
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDSA");
+                });
+    }
+
+    @Test
+    void rsaPSSAlgorithmFamily() {
+        this.assertsNode(
+                () -> new RSAssaPSS(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    Component component = bom.getComponents().get(0);
+                    final AlgorithmProperties algorithmProperties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("RSASSA-PSS");
+                });
+    }
+
+    @Test
+    void sha1AlgorithmFamily() {
+        this.assertsNode(
+                () -> new SHA(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("SHA-1");
+                });
+    }
+
+    @Test
+    void sha2AlgorithmFamily() {
+        this.assertsNode(
+                () -> new SHA2(256, detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("SHA-2");
+                });
+    }
+
+    @Test
+    void sha3AlgorithmFamily() {
+        this.assertsNode(
+                () -> new SHA3(256, detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("SHA-3");
+                });
+    }
+
+    @Test
+    void bareSha3AlgorithmFamily() {
+        this.assertsNode(
+                () -> new SHA3(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("SHA-3");
+                });
+    }
+
+    @Test
+    void edDSAAlgorithmFamily() {
+        this.assertsNode(
+                () -> new EdDSA(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("EdDSA");
+                });
+    }
+
+    @Test
+    void mlKEMAlgorithmFamily() {
+        this.assertsNode(
+                () -> new MLKEM(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ML-KEM");
+                });
+    }
+
+    @Test
+    void mlDSAAlgorithmFamily() {
+        this.assertsNode(
+                () -> new MLDSA(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ML-DSA");
+                });
+    }
+
+    @Test
+    void scryptAlgorithmFamily() {
+        this.assertsNode(
+                () -> new Scrypt(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("scrypt");
+                });
+    }
+
+    @Test
+    void rsaKEMNoFamily() {
+        this.assertsNode(
+                () -> new RSAKEM(detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isNull();
+                });
+    }
+
+    @Test
+    void curve25519AlgorithmFamily() {
+        this.assertsNode(
+                () -> new EllipticCurveAlgorithm(new Curve25519(detectionLocation)),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("ECDH");
+                });
+    }
+
+    @Test
+    void edwards25519AlgorithmFamily() {
+        this.assertsNode(
+                () -> new EllipticCurveAlgorithm(new Edwards25519(detectionLocation)),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final AlgorithmProperties algorithmProperties =
+                            bom.getComponents()
+                                    .get(0)
+                                    .getCryptoProperties()
+                                    .getAlgorithmProperties();
+                    assertThat(algorithmProperties.getAlgorithmFamily()).isEqualTo("EdDSA");
                 });
     }
 }

@@ -21,9 +21,11 @@ package com.ibm.output.cyclondx.builder;
 
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Protocol;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.cyclonedx.model.Component;
+import org.cyclonedx.model.component.crypto.RelatedCryptographicAsset;
 import org.cyclonedx.model.component.evidence.Occurrence;
 
 public interface IProtocolComponentBuilder {
@@ -39,6 +41,10 @@ public interface IProtocolComponentBuilder {
 
     @Nonnull
     IProtocolComponentBuilder cipherSuites(@Nullable INode cipherSuiteCollection);
+
+    @Nonnull
+    IProtocolComponentBuilder relatedCryptographicAssets(
+            @Nullable List<RelatedCryptographicAsset> assets);
 
     @Nonnull
     IProtocolComponentBuilder occurrences(@Nullable Occurrence... occurrences);
