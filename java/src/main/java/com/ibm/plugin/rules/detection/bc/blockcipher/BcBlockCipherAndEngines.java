@@ -30,13 +30,13 @@ import javax.annotation.Nullable;
 import org.sonar.plugins.java.api.tree.Tree;
 
 /**
- * All block-cipher rules, including every engine. Historically the static {@code all} accessor on
- * {@link BcBlockCipher}.
+ * Combines block-cipher mode and engine rules for callers that accept either form. The same context
+ * override is passed to both rule sets. This replaces the former {@code BcBlockCipher.all()}
+ * accessor.
  */
 public final class BcBlockCipherAndEngines
         extends ContextualDetectionRuleSet<Tree, IDetectionContext> {
 
-    /** Only the first context (index 0) is used; any further contexts are ignored. */
     @Nonnull
     @Override
     protected List<IDetectionRule<Tree>> buildRules(@Nullable IDetectionContext context) {
