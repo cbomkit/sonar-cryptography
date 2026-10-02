@@ -67,3 +67,29 @@ void quick_by_alias(void) {
     EVP_PKEY_Q_keygen(NULL, NULL, "MLKEM1024"); // Noncompliant {{(PrivateKey) ML-KEM}}
     EVP_PKEY_Q_keygen(NULL, NULL, "MLDSA65"); // Noncompliant {{(PrivateKey) ML-DSA}}
 }
+
+void rsa_bits_in_parentheses(void) {
+    EVP_PKEY *pkey = NULL;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL); // Noncompliant {{(PrivateKey) RSA}}
+    EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, (int)(3072));
+    EVP_PKEY_generate(ctx, &pkey);
+}
+
+void context_declared_with_another_variable(void) {
+    EVP_PKEY *pkey = NULL;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), *unused = NULL; // Noncompliant {{(PrivateKey) RSA}}
+    EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 4096);
+    EVP_PKEY_generate(ctx, &pkey);
+}
+
+enum class KeyBits : int { RSA = 2048 };
+
+void rsa_bits_by_named_cast(void) {
+    EVP_PKEY *pkey = NULL;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL); // Noncompliant {{(PrivateKey) RSA}}
+    EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, static_cast<int>(KeyBits::RSA));
+    EVP_PKEY_generate(ctx, &pkey);
+}

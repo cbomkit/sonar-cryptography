@@ -133,7 +133,29 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     finding(
                             "PrivateKeyContext{Algorithm:ML-DSA-65}",
                             "PrivateKey:ML-DSA[Signature:ML-DSA-65[KeyGeneration:KEYGENERATION, "
-                                    + "Oid:2.16.840.1.101.3.4.3.18, ParameterSetIdentifier:65]]"));
+                                    + "Oid:2.16.840.1.101.3.4.3.18, ParameterSetIdentifier:65]]"),
+                    // 73: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
+                            "PrivateKey:RSA[KeyLength:3072, "
+                                    + "PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
+                    // 81: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), *unused =
+                    // NULL;
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:4096}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
+                            "PrivateKey:RSA[KeyLength:4096, "
+                                    + "PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
+                    // 91: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+                    finding(
+                            "KeyContext{ValueAction:RSA}[KeyContext{KeySize:2048}, "
+                                    + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
+                            "PrivateKey:RSA[KeyLength:2048, "
+                                    + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"));
 
     private int findings = 0;
 
