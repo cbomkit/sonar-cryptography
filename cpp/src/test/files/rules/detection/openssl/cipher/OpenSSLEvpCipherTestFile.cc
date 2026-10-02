@@ -211,3 +211,8 @@ void test_evp_cipher() {
     EVP_seed_cfb(); // Noncompliant {{(BlockCipher) SEED-128-CFB}}
     EVP_sm4_cfb(); // Noncompliant {{(BlockCipher) SM4-CFB}}
 }
+
+void ciphers_by_nid(void) {
+    EVP_get_cipherbynid(NID_aes_256_gcm); // Noncompliant {{(AuthenticatedEncryption) AES-256-GCM}}
+    EVP_get_cipherbynid(1018); // Noncompliant {{(AuthenticatedEncryption) ChaCha20-Poly1305}}
+}

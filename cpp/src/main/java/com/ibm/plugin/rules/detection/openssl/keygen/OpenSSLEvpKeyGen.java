@@ -25,6 +25,7 @@ import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -188,6 +189,35 @@ public final class OpenSSLEvpKeyGen {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
 
+    // EVP_RSA_gen(bits) and EVP_EC_gen(curve) (rsa.h, ec.h): EVP_PKEY_Q_keygen for an RSA key of
+    // the given size and an EC key on the given curve
+
+    private static final IDetectionRule<AstNode> EVP_RSA_GEN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_RSA_gen")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLKeyParameterFactory())
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+
+    private static final IDetectionRule<AstNode> EVP_EC_GEN =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_EC_gen")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLKeyParameterFactory())
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+
     private static final IDetectionRule<AstNode> EVP_KEYMGMT_FETCH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -215,6 +245,8 @@ public final class OpenSSLEvpKeyGen {
                                 EVP_PKEY_CTX_NEW_FROM_NAME,
                                 EVP_PKEY_Q_KEYGEN,
                                 EVP_PKEY_Q_KEYGEN_WITH_PARAMETER,
+                                EVP_RSA_GEN,
+                                EVP_EC_GEN,
                                 EVP_KEYMGMT_FETCH),
                         // keys created from raw bytes
                         OpenSSLEvpRawKey.rules().stream())

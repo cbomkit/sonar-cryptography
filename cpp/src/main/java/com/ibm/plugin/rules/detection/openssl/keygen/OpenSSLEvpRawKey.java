@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.openssl.keygen;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -36,9 +37,9 @@ import javax.annotation.Nonnull;
 
 /**
  * Detection rules for OpenSSL keys created from raw bytes: MAC keys (HMAC, CMAC, Poly1305, SipHash)
- * and X25519, X448, Ed25519 and Ed448 private keys. The key type and the key length are reported,
- * and the operations performed with the key are followed as for a generated key (see {@link
- * OpenSSLEvpKeyUsage}), e.g. the HMAC computed with {@code EVP_DigestSign}.
+ * and X25519, X448, Ed25519 and Ed448 private and public keys. The key type and the key length are
+ * reported, and the operations performed with the key are followed as for a generated key (see
+ * {@link OpenSSLEvpKeyUsage}), e.g. the HMAC computed with {@code EVP_DigestSign}.
  */
 public final class OpenSSLEvpRawKey {
 
@@ -89,6 +90,43 @@ public final class OpenSSLEvpRawKey {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
 
+    // EVP_PKEY_new_raw_public_key(type, e, pub, len)
+    private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PUBLIC_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_PKEY_new_raw_public_key")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(RAW_KEY_TYPE)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(0)
+                    .buildForContext(new PublicKeyContext(RAW_KEY))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+
+    // EVP_PKEY_new_raw_public_key_ex(libctx, keytype, propq, pub, len)
+    private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PUBLIC_KEY_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_PKEY_new_raw_public_key_ex")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.RAW_KEY_TYPE_NAMES, true))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(1)
+                    .buildForContext(new PublicKeyContext(RAW_KEY))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+
     // EVP_PKEY_new_CMAC_key(e, priv, len, cipher)
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_CMAC_KEY =
             new DetectionRuleBuilder<AstNode>()
@@ -114,6 +152,10 @@ public final class OpenSSLEvpRawKey {
     @Nonnull
     static List<IDetectionRule<AstNode>> rules() {
         return List.of(
-                EVP_PKEY_NEW_RAW_KEY, EVP_PKEY_NEW_RAW_PRIVATE_KEY_EX, EVP_PKEY_NEW_CMAC_KEY);
+                EVP_PKEY_NEW_RAW_KEY,
+                EVP_PKEY_NEW_RAW_PRIVATE_KEY_EX,
+                EVP_PKEY_NEW_RAW_PUBLIC_KEY,
+                EVP_PKEY_NEW_RAW_PUBLIC_KEY_EX,
+                EVP_PKEY_NEW_CMAC_KEY);
     }
 }

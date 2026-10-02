@@ -60,10 +60,10 @@ import javax.annotation.Nonnull;
  * EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256());
  * }</pre>
  *
- * <p>The PKCS#5 PBKDF2 functions are in {@link OpenSSLEvpKdfPbkdf2}, the PKCS#12 and PKCS#5
- * password-based functions in {@link OpenSSLEvpKdfPkcs12}, and the password-based encryption
- * selected by its algorithm identifier in {@link OpenSSLPasswordBasedEncryption}; {@link #rules()}
- * includes them.
+ * <p>The PKCS#5 PBKDF2 functions are in {@link OpenSSLEvpKdfPbkdf2}, the scrypt functions in {@link
+ * OpenSSLEvpKdfScrypt}, the PKCS#12 and PKCS#5 password-based functions in {@link
+ * OpenSSLEvpKdfPkcs12}, and the password-based encryption selected by its algorithm identifier in
+ * {@link OpenSSLPasswordBasedEncryption}; {@link #rules()} includes them.
  */
 public final class OpenSSLEvpKdf {
 
@@ -169,6 +169,7 @@ public final class OpenSSLEvpKdf {
     private static List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
                         OpenSSLEvpKdfPbkdf2.rules().stream(),
+                        OpenSSLEvpKdfScrypt.rules().stream(),
                         OpenSSLEvpKdfPkcs12.rules().stream(),
                         OpenSSLPasswordBasedEncryption.rules().stream(),
                         Stream.of(EVP_KDF_FETCH, EVP_PKEY_CTX_NEW_ID, EVP_PKEY_CTX_NEW_FROM_NAME))

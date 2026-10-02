@@ -244,20 +244,112 @@ public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
             Map.ofEntries(
                     Map.entry(4, "MD5"),
                     Map.entry(64, "SHA-1"),
-                    Map.entry(675, "SHA-224"),
+                    Map.entry(95, "MDC2"),
+                    Map.entry(117, "RIPEMD160"),
+                    Map.entry(257, "MD4"),
                     Map.entry(672, "SHA-256"),
                     Map.entry(673, "SHA-384"),
-                    Map.entry(674, "SHA-512"));
+                    Map.entry(674, "SHA-512"),
+                    Map.entry(675, "SHA-224"),
+                    Map.entry(1056, "BLAKE2B-512"),
+                    Map.entry(1057, "BLAKE2S-256"),
+                    Map.entry(1094, "SHA-512/224"),
+                    Map.entry(1095, "SHA-512/256"),
+                    Map.entry(1096, "SHA3-224"),
+                    Map.entry(1097, "SHA3-256"),
+                    Map.entry(1098, "SHA3-384"),
+                    Map.entry(1099, "SHA3-512"),
+                    Map.entry(1100, "SHAKE128"),
+                    Map.entry(1101, "SHAKE256"),
+                    Map.entry(1143, "SM3"));
 
     /** Digest NID constant names → digest names. */
     public static final Map<String, String> DIGEST_BY_NAME =
             Map.ofEntries(
+                    Map.entry("NID_md4", "MD4"),
                     Map.entry("NID_md5", "MD5"),
                     Map.entry("NID_sha1", "SHA-1"),
                     Map.entry("NID_sha224", "SHA-224"),
                     Map.entry("NID_sha256", "SHA-256"),
                     Map.entry("NID_sha384", "SHA-384"),
-                    Map.entry("NID_sha512", "SHA-512"));
+                    Map.entry("NID_sha512", "SHA-512"),
+                    Map.entry("NID_sha512_224", "SHA-512/224"),
+                    Map.entry("NID_sha512_256", "SHA-512/256"),
+                    Map.entry("NID_sha3_224", "SHA3-224"),
+                    Map.entry("NID_sha3_256", "SHA3-256"),
+                    Map.entry("NID_sha3_384", "SHA3-384"),
+                    Map.entry("NID_sha3_512", "SHA3-512"),
+                    Map.entry("NID_shake128", "SHAKE128"),
+                    Map.entry("NID_shake256", "SHAKE256"),
+                    Map.entry("NID_ripemd160", "RIPEMD160"),
+                    Map.entry("NID_sm3", "SM3"),
+                    Map.entry("NID_mdc2", "MDC2"),
+                    Map.entry("NID_blake2b512", "BLAKE2B-512"),
+                    Map.entry("NID_blake2s256", "BLAKE2S-256"));
+
+    /** Cipher NIDs (obj_mac.h) → cipher names. */
+    public static final Map<Integer, String> CIPHER_BY_CODE =
+            Map.ofEntries(
+                    Map.entry(5, "RC4"),
+                    Map.entry(29, "DES-ECB"),
+                    Map.entry(31, "DES-CBC"),
+                    Map.entry(33, "DESede3-ECB"),
+                    Map.entry(44, "DESede3-CBC"),
+                    Map.entry(91, "BLOWFISH-CBC"),
+                    Map.entry(418, "AES-128-ECB"),
+                    Map.entry(419, "AES-128-CBC"),
+                    Map.entry(420, "AES-128-OFB"),
+                    Map.entry(421, "AES-128-CFB"),
+                    Map.entry(422, "AES-192-ECB"),
+                    Map.entry(423, "AES-192-CBC"),
+                    Map.entry(426, "AES-256-ECB"),
+                    Map.entry(427, "AES-256-CBC"),
+                    Map.entry(428, "AES-256-OFB"),
+                    Map.entry(429, "AES-256-CFB"),
+                    Map.entry(751, "CAMELLIA-128-CBC"),
+                    Map.entry(753, "CAMELLIA-256-CBC"),
+                    Map.entry(895, "AES-128-GCM"),
+                    Map.entry(896, "AES-128-CCM"),
+                    Map.entry(898, "AES-192-GCM"),
+                    Map.entry(901, "AES-256-GCM"),
+                    Map.entry(902, "AES-256-CCM"),
+                    Map.entry(904, "AES-128-CTR"),
+                    Map.entry(906, "AES-256-CTR"),
+                    Map.entry(1018, "CHACHA20-POLY1305"),
+                    Map.entry(1019, "CHACHA20"),
+                    Map.entry(1134, "SM4-CBC"));
+
+    /** Cipher NID constant names → cipher names. */
+    public static final Map<String, String> CIPHER_BY_NAME =
+            Map.ofEntries(
+                    Map.entry("NID_aes_128_ecb", "AES-128-ECB"),
+                    Map.entry("NID_aes_128_cbc", "AES-128-CBC"),
+                    Map.entry("NID_aes_128_ofb128", "AES-128-OFB"),
+                    Map.entry("NID_aes_128_cfb128", "AES-128-CFB"),
+                    Map.entry("NID_aes_128_ctr", "AES-128-CTR"),
+                    Map.entry("NID_aes_128_gcm", "AES-128-GCM"),
+                    Map.entry("NID_aes_128_ccm", "AES-128-CCM"),
+                    Map.entry("NID_aes_192_ecb", "AES-192-ECB"),
+                    Map.entry("NID_aes_192_cbc", "AES-192-CBC"),
+                    Map.entry("NID_aes_192_gcm", "AES-192-GCM"),
+                    Map.entry("NID_aes_256_ecb", "AES-256-ECB"),
+                    Map.entry("NID_aes_256_cbc", "AES-256-CBC"),
+                    Map.entry("NID_aes_256_ofb128", "AES-256-OFB"),
+                    Map.entry("NID_aes_256_cfb128", "AES-256-CFB"),
+                    Map.entry("NID_aes_256_ctr", "AES-256-CTR"),
+                    Map.entry("NID_aes_256_gcm", "AES-256-GCM"),
+                    Map.entry("NID_aes_256_ccm", "AES-256-CCM"),
+                    Map.entry("NID_chacha20", "CHACHA20"),
+                    Map.entry("NID_chacha20_poly1305", "CHACHA20-POLY1305"),
+                    Map.entry("NID_des_ecb", "DES-ECB"),
+                    Map.entry("NID_des_cbc", "DES-CBC"),
+                    Map.entry("NID_des_ede3_ecb", "DESede3-ECB"),
+                    Map.entry("NID_des_ede3_cbc", "DESede3-CBC"),
+                    Map.entry("NID_camellia_128_cbc", "CAMELLIA-128-CBC"),
+                    Map.entry("NID_camellia_256_cbc", "CAMELLIA-256-CBC"),
+                    Map.entry("NID_sm4_cbc", "SM4-CBC"),
+                    Map.entry("NID_bf_cbc", "BLOWFISH-CBC"),
+                    Map.entry("NID_rc4", "RC4"));
 
     /** HMAC NIDs (obj_mac.h) → MAC names. */
     public static final Map<Integer, String> HMAC_BY_CODE =

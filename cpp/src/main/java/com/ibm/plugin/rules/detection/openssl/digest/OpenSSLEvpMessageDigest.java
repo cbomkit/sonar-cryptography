@@ -25,6 +25,7 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -41,10 +42,10 @@ import javax.annotation.Nonnull;
  * <p>Per-family digest specifiers with multiple variants live in their own {@code
  * OpenSSLEvpMessageDigest<Family>} classes (MD, SHA-2, SHA-3/SHAKE, BLAKE2); this class holds the
  * remaining single-variant digests (SHA-1, RIPEMD, Whirlpool, SM3, combined/special digests) and
- * the digests selected by name ({@code EVP_MD_fetch}, {@code EVP_get_digestbyname}, {@code
- * EVP_Q_digest}), and aggregates every family's rules in {@link #rules()}. The digest given to
- * {@code EVP_DigestInit} and the other functions that take an {@code EVP_MD} is reported where it
- * is created.
+ * the digests selected by name or NID ({@code EVP_MD_fetch}, {@code EVP_get_digestbyname}, {@code
+ * EVP_get_digestbynid}, {@code EVP_Q_digest}), and aggregates every family's rules in {@link
+ * #rules()}. The digest given to {@code EVP_DigestInit} and the other functions that take an {@code
+ * EVP_MD} is reported where it is created.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpMessageDigest {
@@ -145,6 +146,21 @@ public final class OpenSSLEvpMessageDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // EVP_get_digestbynid(nid) (evp.h): EVP_get_digestbyname for the digest of the NID
+    private static final IDetectionRule<AstNode> EVP_GET_DIGESTBYNID =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_get_digestbynid")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.DIGEST_BY_CODE,
+                                    OpenSSLNidLookupFactory.DIGEST_BY_NAME))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     // EVP_Q_digest(libctx, name, propq, data, datalen, md, mdlen): one-shot digest by name
     private static final IDetectionRule<AstNode> EVP_Q_DIGEST =
             new DetectionRuleBuilder<AstNode>()
@@ -198,6 +214,7 @@ public final class OpenSSLEvpMessageDigest {
                 // Digest selected by name: fetch, legacy lookup and one-shot digest
                 EVP_MD_FETCH,
                 EVP_GET_DIGESTBYNAME,
+                EVP_GET_DIGESTBYNID,
                 EVP_Q_DIGEST);
     }
 

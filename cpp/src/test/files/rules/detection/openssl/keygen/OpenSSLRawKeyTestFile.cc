@@ -25,3 +25,12 @@ void imported_ed25519_key(const unsigned char *priv, EVP_MD_CTX *mdctx) {
     EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, priv, 32); // Noncompliant {{(PrivateKey) Ed25519}}
     EVP_DigestSignInit(mdctx, NULL, NULL, NULL, pkey);
 }
+
+void imported_ed25519_public_key(const unsigned char *pub, EVP_MD_CTX *mdctx) {
+    EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, pub, 32); // Noncompliant {{(PublicKey) Ed25519}}
+    EVP_DigestVerifyInit(mdctx, NULL, NULL, NULL, pkey);
+}
+
+void imported_x25519_public_key_by_name(const unsigned char *pub) {
+    EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key_ex(NULL, "X25519", NULL, pub, 32); // Noncompliant {{(PublicKey) x25519}}
+}

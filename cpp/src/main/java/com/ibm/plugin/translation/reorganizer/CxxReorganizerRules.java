@@ -23,6 +23,7 @@ import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SecretKey;
 import com.ibm.mapper.model.Signature;
@@ -111,6 +112,7 @@ public final class CxxReorganizerRules {
                 KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(KeyEncapsulationMechanism.class),
                 // the operations performed with a key created from raw bytes are found on the key
                 KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(PrivateKey.class),
+                KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(PublicKey.class),
                 KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(SecretKey.class),
                 // the operations performed with a private key, e.g. ECDSA with an EC key
                 KeyUsageReorganizer.MAKE_ALGORITHMS_OF_PRIVATE_KEY_OPERATIONS,

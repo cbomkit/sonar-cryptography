@@ -47,6 +47,11 @@ void quick_and_fetch(void) {
     EVP_KEYMGMT_fetch(NULL, "ML-KEM-768", NULL); // Noncompliant {{(KeyEncapsulationMechanism) ML-KEM-768}}
 }
 
+void quick_by_algorithm(void) {
+    EVP_RSA_gen(3072); // Noncompliant {{(PrivateKey) RSA}}
+    EVP_EC_gen("P-256"); // Noncompliant {{(PrivateKey) EC}}
+}
+
 void ec_curves_without_a_nist_prime_name(void) {
     EVP_PKEY_CTX *k283 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL); // Noncompliant {{(PublicKeyEncryption) EC-sect283k1}}
     EVP_PKEY_CTX_set_group_name(k283, "sect283k1");
@@ -56,4 +61,9 @@ void ec_curves_without_a_nist_prime_name(void) {
     EVP_PKEY_CTX_set_ec_paramgen_curve_nid(p224, NID_secp224r1);
     EVP_PKEY_CTX *p224_code = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL); // Noncompliant {{(PublicKeyEncryption) EC-secp224r1}}
     EVP_PKEY_CTX_set_ec_paramgen_curve_nid(p224_code, 713);
+}
+
+void quick_by_alias(void) {
+    EVP_PKEY_Q_keygen(NULL, NULL, "MLKEM1024"); // Noncompliant {{(PrivateKey) ML-KEM}}
+    EVP_PKEY_Q_keygen(NULL, NULL, "MLDSA65"); // Noncompliant {{(PrivateKey) ML-DSA}}
 }

@@ -758,7 +758,16 @@ class OpenSSLEvpCipherTest extends TestBase {
                             "CipherContext{ValueAction:SEED-CFB}",
                             "BlockCipher:SEED-128-CFB[BlockSize:128, KeyLength:128, Mode:CFB]"),
                     // 212: EVP_sm4_cfb();
-                    finding("CipherContext{ValueAction:SM4-CFB}", "BlockCipher:SM4-CFB[Mode:CFB]"));
+                    finding("CipherContext{ValueAction:SM4-CFB}", "BlockCipher:SM4-CFB[Mode:CFB]"),
+                    // 216: EVP_get_cipherbynid(NID_aes_256_gcm);
+                    finding(
+                            "CipherContext{ValueAction:AES-256-GCM}",
+                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, Mode:GCM, "
+                                    + "Oid:2.16.840.1.101.3.4.1.46]"),
+                    // 217: EVP_get_cipherbynid(1018);
+                    finding(
+                            "CipherContext{ValueAction:CHACHA20-POLY1305}",
+                            "AuthenticatedEncryption:ChaCha20-Poly1305[MessageDigest:Poly1305[Digest:DIGEST]]"));
 
     private int findings = 0;
 

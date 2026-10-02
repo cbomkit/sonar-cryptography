@@ -97,3 +97,9 @@ void test_ssl() {
     SSL_CTX_set1_groups(ctx, NULL, 0);
     SSL_set1_groups(s, NULL, 0);
 }
+
+void former_method_names(void) {
+    SSLv23_method(); // Noncompliant {{(TLS) TLS}}
+    SSLv23_client_method(); // Noncompliant {{(TLS) TLS}}
+    SSLv23_server_method(); // Noncompliant {{(TLS) TLS}}
+}

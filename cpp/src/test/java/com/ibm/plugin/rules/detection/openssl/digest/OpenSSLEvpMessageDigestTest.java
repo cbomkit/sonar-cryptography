@@ -172,7 +172,22 @@ class OpenSSLEvpMessageDigestTest extends TestBase {
                     finding(
                             "DigestContext{Algorithm:SHA-256}",
                             "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"));
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 44: EVP_get_digestbynid(NID_sha256);
+                    finding(
+                            "DigestContext{ValueAction:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 45: EVP_get_digestbynid(672);
+                    finding(
+                            "DigestContext{ValueAction:SHA-256}",
+                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                    // 46: EVP_get_digestbynid(NID_sha3_256);
+                    finding(
+                            "DigestContext{ValueAction:SHA3-256}",
+                            "MessageDigest:SHA3-256[BlockSize:1088, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.8]"));
 
     private int findings = 0;
 

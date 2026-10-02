@@ -232,6 +232,12 @@ public final class OpenSSLNameCanonicalizerFactory implements IValueFactory<AstN
                     Map.entry("SLH-DSA-SHAKE-256F", "SLH-DSA-SHAKE-256F"),
                     Map.entry("SLH-DSA-SHAKE-256S", "SLH-DSA-SHAKE-256S"),
                     // aliases
+                    Map.entry("MLKEM512", "ML-KEM-512"),
+                    Map.entry("MLKEM768", "ML-KEM-768"),
+                    Map.entry("MLKEM1024", "ML-KEM-1024"),
+                    Map.entry("MLDSA44", "ML-DSA-44"),
+                    Map.entry("MLDSA65", "ML-DSA-65"),
+                    Map.entry("MLDSA87", "ML-DSA-87"),
                     Map.entry("RSAENCRYPTION", "RSA"),
                     Map.entry("RSASSA-PSS", "RSA-PSS"),
                     Map.entry("DHKEYAGREEMENT", "DH"),

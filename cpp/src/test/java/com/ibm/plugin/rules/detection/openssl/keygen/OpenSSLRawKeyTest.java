@@ -85,7 +85,22 @@ class OpenSSLRawKeyTest extends TestBase {
                             "PrivateKey:Ed25519[KeyLength:256, "
                                     + "Signature:Ed25519[EllipticCurve:Edwards25519, "
                                     + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
-                                    + "Oid:2.16.840.1.101.3.4.2.3], Oid:1.3.101.112, Sign:SIGN]]"));
+                                    + "Oid:2.16.840.1.101.3.4.2.3], Oid:1.3.101.112, Sign:SIGN]]"),
+                    // 30: EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL,
+                    // pub, 32);
+                    finding(
+                            "PublicKeyContext{ValueAction:ED25519}[SignatureContext{SignatureAction:VERIFY}, "
+                                    + "PublicKeyContext{KeySize:256}]",
+                            "PublicKey:Ed25519[KeyLength:256, "
+                                    + "Signature:Ed25519[EllipticCurve:Edwards25519, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3], Oid:1.3.101.112, Verify:VERIFY]]"),
+                    // 35: EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key_ex(NULL, "X25519", NULL,
+                    // pub, 32);
+                    finding(
+                            "PublicKeyContext{Algorithm:X25519}[PublicKeyContext{KeySize:256}]",
+                            "PublicKey:x25519[KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110], KeyLength:256]"));
 
     private int findings = 0;
 

@@ -92,26 +92,48 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                             "KeyContext{Algorithm:ML-KEM-768}",
                             "KeyEncapsulationMechanism:ML-KEM-768[Oid:2.16.840.1.101.3.4.4.2, "
                                     + "ParameterSetIdentifier:768]"),
-                    // 51: EVP_PKEY_CTX *k283 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    // 51: EVP_RSA_gen(3072);
+                    finding(
+                            "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:3072}]",
+                            "PrivateKey:RSA[KeyLength:3072, "
+                                    + "PublicKeyEncryption:RSA-3072[KeyGeneration:KEYGENERATION, "
+                                    + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
+                    // 52: EVP_EC_gen("P-256");
+                    finding(
+                            "PrivateKeyContext{ValueAction:EC}[PrivateKeyContext{Curve:EC-P-256}]",
+                            "PrivateKey:EC[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
+                                    + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
+                    // 56: EVP_PKEY_CTX *k283 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
                             "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-sect283k1}]",
                             "PublicKeyEncryption:EC-sect283k1[EllipticCurve:sect283k1, "
                                     + "Oid:1.2.840.10045.2.1]"),
-                    // 53: EVP_PKEY_CTX *b163 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    // 58: EVP_PKEY_CTX *b163 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
                             "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-B-163}]",
                             "PublicKeyEncryption:EC-sect163r2[EllipticCurve:sect163r2, "
                                     + "Oid:1.2.840.10045.2.1]"),
-                    // 55: EVP_PKEY_CTX *p224 = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    // 60: EVP_PKEY_CTX *p224 = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
                     finding(
                             "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-secp224r1}]",
                             "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
-                    // 57: EVP_PKEY_CTX *p224_code = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    // 62: EVP_PKEY_CTX *p224_code = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
                     finding(
                             "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-secp224r1}]",
                             "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
-                                    + "Oid:1.2.840.10045.2.1]"));
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 67: EVP_PKEY_Q_keygen(NULL, NULL, "MLKEM1024");
+                    finding(
+                            "PrivateKeyContext{Algorithm:ML-KEM-1024}",
+                            "PrivateKey:ML-KEM[KeyEncapsulationMechanism:ML-KEM-1024["
+                                    + "KeyGeneration:KEYGENERATION, Oid:2.16.840.1.101.3.4.4.3, "
+                                    + "ParameterSetIdentifier:1024]]"),
+                    // 68: EVP_PKEY_Q_keygen(NULL, NULL, "MLDSA65");
+                    finding(
+                            "PrivateKeyContext{Algorithm:ML-DSA-65}",
+                            "PrivateKey:ML-DSA[Signature:ML-DSA-65[KeyGeneration:KEYGENERATION, "
+                                    + "Oid:2.16.840.1.101.3.4.3.18, ParameterSetIdentifier:65]]"));
 
     private int findings = 0;
 

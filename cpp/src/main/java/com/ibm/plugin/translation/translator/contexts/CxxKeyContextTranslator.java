@@ -29,6 +29,7 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.openssl.OpenSslKeyMapper;
@@ -38,6 +39,7 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.SecretKey;
 import com.ibm.mapper.model.functionality.Decapsulate;
@@ -90,8 +92,9 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
     }
 
     /**
-     * A key created from raw bytes: a secret key holding its MAC algorithm, or a private key
-     * holding its asymmetric algorithm. The key is imported, not generated.
+     * A key created from raw bytes: a secret key holding its MAC algorithm, or a private or public
+     * key (by the detection context) holding its asymmetric algorithm. The key is imported, not
+     * generated.
      */
     @Nonnull
     private Optional<INode> rawKey(
@@ -106,7 +109,13 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
         }
         return translateValue(bundleIdentifier, value, detectionContext, detectionLocation)
                 .filter(IAlgorithm.class::isInstance)
-                .map(algorithm -> new PrivateKey(new Key((IAlgorithm) algorithm)));
+                .map(
+                        algorithm -> {
+                            final Key key = new Key((IAlgorithm) algorithm);
+                            return detectionContext.is(PublicKeyContext.class)
+                                    ? new PublicKey(key)
+                                    : new PrivateKey(key);
+                        });
     }
 
     @Nonnull

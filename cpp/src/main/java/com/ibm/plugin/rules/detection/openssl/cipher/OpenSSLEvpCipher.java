@@ -81,16 +81,31 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // EVP_get_cipherbynid(nid) (evp.h): EVP_get_cipherbyname for the cipher of the NID
+    private static final IDetectionRule<AstNode> EVP_GET_CIPHERBYNID =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_get_cipherbynid")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.CIPHER_BY_CODE,
+                                    OpenSSLNidLookupFactory.CIPHER_BY_NAME))
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     /**
-     * The calls that select a cipher: the EVP_* cipher functions, EVP_CIPHER_fetch and
-     * EVP_get_cipherbyname. The cipher argument of the init functions ({@link
-     * OpenSSLEvpCipherInit}) is traced back to one of them.
+     * The calls that select a cipher: the EVP_* cipher functions, EVP_CIPHER_fetch,
+     * EVP_get_cipherbyname and EVP_get_cipherbynid. The cipher argument of the init functions
+     * ({@link OpenSSLEvpCipherInit}) is traced back to one of them.
      */
     private static final List<IDetectionRule<AstNode>> CIPHER_SELECTION =
             Stream.of(
                             cipherFamilyRules().stream(),
                             OpenSSLEvpCipherFetch.rules().stream(),
-                            Stream.of(EVP_ENC_NULL, EVP_GET_CIPHERBYNAME))
+                            Stream.of(EVP_ENC_NULL, EVP_GET_CIPHERBYNAME, EVP_GET_CIPHERBYNID))
                     .flatMap(i -> i)
                     .toList();
 
@@ -408,6 +423,7 @@ public final class OpenSSLEvpCipher {
                 EVP_ENC_NULL,
                 // Legacy lookup
                 EVP_GET_CIPHERBYNAME,
+                EVP_GET_CIPHERBYNID,
                 // EVP_ASYM_CIPHER_fetch - Asymmetric cipher algorithm fetch
                 EVP_ASYM_CIPHER_FETCH,
                 // RSA OAEP context setters

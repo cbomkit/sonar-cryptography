@@ -56,13 +56,13 @@ public final class OpenSSLLibssl {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // TLS Generic (Version Negotiation)
+    // TLS Generic (Version Negotiation); SSLv23_*method are their former names (ssl.h)
 
     private static final IDetectionRule<AstNode> TLS_METHOD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("TLS_method")
+                    .forMethods("TLS_method", "SSLv23_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
@@ -73,7 +73,7 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("TLS_client_method")
+                    .forMethods("TLS_client_method", "SSLv23_client_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
@@ -84,7 +84,7 @@ public final class OpenSSLLibssl {
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("TLS_server_method")
+                    .forMethods("TLS_server_method", "SSLv23_server_method")
                     .shouldBeDetectedAs(new ValueActionFactory<>("TLS"))
                     .withoutParameters()
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))

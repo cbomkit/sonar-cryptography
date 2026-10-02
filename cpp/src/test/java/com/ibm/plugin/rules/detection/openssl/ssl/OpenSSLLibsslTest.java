@@ -206,7 +206,13 @@ class OpenSSLLibsslTest extends TestBase {
                             "ProtocolContext{Algorithm:X25519:FRODOKEM976AES:secp256r1}",
                             "MergeableCollection:[KeyAgreement:x25519[EllipticCurve:Curve25519, "
                                     + "Oid:1.3.101.110], Unknown:FRODOKEM976AES, "
-                                    + "KeyAgreement:ECDH[EllipticCurve:secp256r1, Oid:1.3.132.1.12]]"));
+                                    + "KeyAgreement:ECDH[EllipticCurve:secp256r1, Oid:1.3.132.1.12]]"),
+                    // 102: SSLv23_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"),
+                    // 103: SSLv23_client_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"),
+                    // 104: SSLv23_server_method();
+                    finding("ProtocolContext{ValueAction:TLS}", "TLS:TLS"));
 
     private int findings = 0;
 

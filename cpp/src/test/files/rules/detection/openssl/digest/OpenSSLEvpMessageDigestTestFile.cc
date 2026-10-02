@@ -39,3 +39,9 @@ void test_evp_message_digest() {
     // Digest name as the OpenSSL 3.x provider fetch name (OSSL_DIGEST_NAME_SHA2_256).
     EVP_MD_fetch(NULL, "SHA2-256", NULL); // Noncompliant {{(MessageDigest) SHA-256}}
 }
+
+void digests_by_nid(void) {
+    EVP_get_digestbynid(NID_sha256); // Noncompliant {{(MessageDigest) SHA-256}}
+    EVP_get_digestbynid(672); // Noncompliant {{(MessageDigest) SHA-256}}
+    EVP_get_digestbynid(NID_sha3_256); // Noncompliant {{(MessageDigest) SHA3-256}}
+}
