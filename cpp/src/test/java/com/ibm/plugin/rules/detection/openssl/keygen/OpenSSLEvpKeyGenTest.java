@@ -56,22 +56,22 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                                     + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:2.16.840.1.101.3.4.3.2]"),
                     // 19: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
                     finding(
-                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-P256}]",
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-prime256v1}]",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 25: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
                     finding(
-                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-P256}]",
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-prime256v1}]",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 30: EVP_PKEY_CTX *p192 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
-                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P192}]",
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P-192}]",
                             "PublicKeyEncryption:EC-secp192r1[EllipticCurve:secp192r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 32: EVP_PKEY_CTX *p224 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
-                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P224}]",
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-SECP224R1}]",
                             "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 39: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
@@ -91,7 +91,27 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     finding(
                             "KeyContext{Algorithm:ML-KEM-768}",
                             "KeyEncapsulationMechanism:ML-KEM-768[Oid:2.16.840.1.101.3.4.4.2, "
-                                    + "ParameterSetIdentifier:768]"));
+                                    + "ParameterSetIdentifier:768]"),
+                    // 51: EVP_PKEY_CTX *k283 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    finding(
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-sect283k1}]",
+                            "PublicKeyEncryption:EC-sect283k1[EllipticCurve:sect283k1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 53: EVP_PKEY_CTX *b163 = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+                    finding(
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-B-163}]",
+                            "PublicKeyEncryption:EC-sect163r2[EllipticCurve:sect163r2, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 55: EVP_PKEY_CTX *p224 = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-secp224r1}]",
+                            "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 57: EVP_PKEY_CTX *p224_code = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-secp224r1}]",
+                            "PublicKeyEncryption:EC-secp224r1[EllipticCurve:secp224r1, "
+                                    + "Oid:1.2.840.10045.2.1]"));
 
     private int findings = 0;
 

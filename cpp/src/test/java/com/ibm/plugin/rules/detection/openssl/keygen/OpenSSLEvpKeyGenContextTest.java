@@ -54,7 +54,7 @@ class OpenSSLEvpKeyGenContextTest extends TestBase {
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
                     // 14: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
                     finding(
-                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P384}, "
+                            "KeyContext{Algorithm:EC}[KeyContext{Curve:EC-P-384}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
                             "PrivateKey:EC[PublicKeyEncryption:EC-secp384r1[EllipticCurve:secp384r1, "
                                     + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
@@ -89,7 +89,7 @@ class OpenSSLEvpKeyGenContextTest extends TestBase {
                                     + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
                     // 46: EVP_PKEY *ec = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
-                            "PrivateKeyContext{Algorithm:EC}[PrivateKeyContext{Curve:EC-P256}]",
+                            "PrivateKeyContext{Algorithm:EC}[PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
                     // 47: EVP_PKEY *x25519 = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");

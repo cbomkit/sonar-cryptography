@@ -44,38 +44,62 @@ import org.slf4j.LoggerFactory;
  * <p>The engine hands this factory a numeric code (e.g. {@code 415}) when the argument is a numeric
  * literal, or when it is an unscoped enum constant with an explicit {@code = constantExpression}
  * value. An unscoped enum constant with no explicit value instead resolves to its own declared name
- * (e.g. {@code "NID_X9_62_prime256v1"}), looked up in {@code byName}. A plain identifier with no
- * attached symbol at all (such as an unexpanded OpenSSL macro constant when no include directories
- * are configured) is not a resolved value and never reaches this factory, so that shape produces no
- * finding. A code outside both tables resolves to nothing.
+ * (e.g. {@code "NID_X9_62_prime256v1"}), looked up in {@code byName}, as does an OpenSSL macro
+ * constant that is not expanded because no include directories are configured (see {@code
+ * CxxSemantic}). A code or name outside both tables resolves to nothing.
  */
 public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSSLNidLookupFactory.class);
 
-    /** OpenSSL curve NID codes (obj_mac.h) → curve identifier strings. */
+    /**
+     * Curve NIDs (obj_mac.h) → {@code "EC-"} and the curve's short name, for the named curves the
+     * mapper models (see {@code OpenSslCurveMapper}).
+     */
     public static final Map<Integer, String> CURVE_BY_CODE =
             Map.ofEntries(
-                    Map.entry(409, "EC-P192"),
-                    Map.entry(415, "EC-P256"),
-                    Map.entry(714, "EC-SECP256K1"),
-                    Map.entry(715, "EC-P384"),
-                    Map.entry(716, "EC-P521"),
-                    Map.entry(927, "EC-BRAINPOOLP256R1"),
-                    Map.entry(931, "EC-BRAINPOOLP384R1"),
-                    Map.entry(933, "EC-BRAINPOOLP512R1"));
+                    Map.entry(409, "EC-prime192v1"),
+                    Map.entry(415, "EC-prime256v1"),
+                    Map.entry(713, "EC-secp224r1"),
+                    Map.entry(714, "EC-secp256k1"),
+                    Map.entry(715, "EC-secp384r1"),
+                    Map.entry(716, "EC-secp521r1"),
+                    Map.entry(721, "EC-sect163k1"),
+                    Map.entry(723, "EC-sect163r2"),
+                    Map.entry(726, "EC-sect233k1"),
+                    Map.entry(727, "EC-sect233r1"),
+                    Map.entry(729, "EC-sect283k1"),
+                    Map.entry(730, "EC-sect283r1"),
+                    Map.entry(731, "EC-sect409k1"),
+                    Map.entry(732, "EC-sect409r1"),
+                    Map.entry(733, "EC-sect571k1"),
+                    Map.entry(734, "EC-sect571r1"),
+                    Map.entry(927, "EC-brainpoolP256r1"),
+                    Map.entry(931, "EC-brainpoolP384r1"),
+                    Map.entry(933, "EC-brainpoolP512r1"));
 
-    /** OpenSSL curve NID constant names → curve identifier strings. */
+    /** Curve NID constant names → {@code "EC-"} and the curve's short name. */
     public static final Map<String, String> CURVE_BY_NAME =
             Map.ofEntries(
-                    Map.entry("NID_X9_62_prime192v1", "EC-P192"),
-                    Map.entry("NID_X9_62_prime256v1", "EC-P256"),
-                    Map.entry("NID_secp256k1", "EC-SECP256K1"),
-                    Map.entry("NID_secp384r1", "EC-P384"),
-                    Map.entry("NID_secp521r1", "EC-P521"),
-                    Map.entry("NID_brainpoolP256r1", "EC-BRAINPOOLP256R1"),
-                    Map.entry("NID_brainpoolP384r1", "EC-BRAINPOOLP384R1"),
-                    Map.entry("NID_brainpoolP512r1", "EC-BRAINPOOLP512R1"));
+                    Map.entry("NID_X9_62_prime192v1", "EC-prime192v1"),
+                    Map.entry("NID_secp224r1", "EC-secp224r1"),
+                    Map.entry("NID_X9_62_prime256v1", "EC-prime256v1"),
+                    Map.entry("NID_secp256k1", "EC-secp256k1"),
+                    Map.entry("NID_secp384r1", "EC-secp384r1"),
+                    Map.entry("NID_secp521r1", "EC-secp521r1"),
+                    Map.entry("NID_brainpoolP256r1", "EC-brainpoolP256r1"),
+                    Map.entry("NID_brainpoolP384r1", "EC-brainpoolP384r1"),
+                    Map.entry("NID_brainpoolP512r1", "EC-brainpoolP512r1"),
+                    Map.entry("NID_sect163k1", "EC-sect163k1"),
+                    Map.entry("NID_sect163r2", "EC-sect163r2"),
+                    Map.entry("NID_sect233k1", "EC-sect233k1"),
+                    Map.entry("NID_sect233r1", "EC-sect233r1"),
+                    Map.entry("NID_sect283k1", "EC-sect283k1"),
+                    Map.entry("NID_sect283r1", "EC-sect283r1"),
+                    Map.entry("NID_sect409k1", "EC-sect409k1"),
+                    Map.entry("NID_sect409r1", "EC-sect409r1"),
+                    Map.entry("NID_sect571k1", "EC-sect571k1"),
+                    Map.entry("NID_sect571r1", "EC-sect571r1"));
 
     /**
      * OpenSSL key type identifiers of the KDFs available through the EVP_PKEY interface (evp.h /

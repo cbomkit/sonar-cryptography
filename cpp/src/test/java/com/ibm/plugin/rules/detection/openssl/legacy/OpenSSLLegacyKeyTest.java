@@ -98,12 +98,12 @@ class OpenSSLLegacyKeyTest extends TestBase {
                                     + "Oid:1.2.840.10040.4.1]]"),
                     // 41: EC_KEY_generate_key(key);
                     finding(
-                            "PrivateKeyContext{ValueAction:EC}[KeyContext{ValueAction:EC-P256}]",
+                            "PrivateKeyContext{ValueAction:EC}[KeyContext{ValueAction:EC-prime256v1}]",
                             "PrivateKey:EC-secp256r1[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
                     // 48: EC_KEY_generate_key(key);
                     finding(
-                            "PrivateKeyContext{ValueAction:EC}[KeyContext{}[KeyContext{ValueAction:EC-P384}]]",
+                            "PrivateKeyContext{ValueAction:EC}[KeyContext{}[KeyContext{ValueAction:EC-secp384r1}]]",
                             "PrivateKey:EC-secp384r1[PublicKeyEncryption:EC-secp384r1[EllipticCurve:secp384r1, "
                                     + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
                     // 52: EC_GROUP *group = EC_GROUP_new_curve_GFp(p, a, b, NULL);

@@ -44,12 +44,12 @@ class OpenSSLLegacyEcTest extends TestBase {
             List.of(
                     // 18: EC_KEY_new_by_curve_name(415);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 19: EC_KEY_new_by_curve_name_ex(NULL, NULL, 415);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 20: EC_KEY_generate_key(key);
@@ -59,12 +59,12 @@ class OpenSSLLegacyEcTest extends TestBase {
                                     + "Oid:1.2.840.10045.2.1]]"),
                     // 25: EC_KEY_new_by_curve_name(p256_nid);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 29: EC_KEY_new_by_curve_name(CurveNid::P256);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 31: ECDSA_sign(0, buf, 32, buf, &siglen, key);
@@ -77,12 +77,12 @@ class OpenSSLLegacyEcTest extends TestBase {
                     finding("SignatureContext{ValueAction:ECDSA-SIGN}", "Signature:ECDSA"),
                     // 36: EC_GROUP_new_by_curve_name(415);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 37: EC_GROUP_new_by_curve_name_ex(NULL, NULL, 415);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 38: EC_GROUP_new_curve_GFp(bn, bn, bn, ctx);

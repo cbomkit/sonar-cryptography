@@ -54,7 +54,7 @@ class OpenSSLGeneratedKeyTest extends TestBase {
                                     + "KeyLength:3072, Oid:1.2.840.113549.1.1.1]]"),
                     // 14: return EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
-                            "PrivateKeyContext{Algorithm:EC}[PrivateKeyContext{Curve:EC-P256}]",
+                            "PrivateKeyContext{Algorithm:EC}[PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "KeyGeneration:KEYGENERATION, Oid:1.2.840.10045.2.1]]"),
                     // 19: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);

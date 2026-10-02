@@ -47,7 +47,7 @@ class OpenSslKeyMapperTest {
 
     @Test
     void ecKeyOnANamedCurve() {
-        INode ec = parse("EC-P256");
+        INode ec = parse("EC-P-256");
         assertThat(ec.asString()).isEqualTo("EC-secp256r1");
         assertThat(ec.getChildren().get(EllipticCurve.class)).isInstanceOf(Secp256r1.class);
     }

@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Resolves an OpenSSL bare-name string argument (e.g. a digest {@code md_name} like {@code
- * "SHA256"}, or an EC group name like {@code "P-256"}) to the identifier string the corresponding
+ * "SHA256"}, or a cipher name like {@code "DES3"}) to the identifier string the corresponding
  * {@code Cxx*ContextTranslator} switches on, using a caller-supplied canonicalization table. Names
  * already in a recognized form, or not recognized at all, pass through unchanged, so the
  * translator's own {@code default -> Optional.empty()} decides whether they surface.
@@ -106,25 +106,6 @@ public final class OpenSSLNameCanonicalizerFactory implements IValueFactory<AstN
                     Map.entry("SN_SHA3_512", "SHA3-512"),
                     Map.entry("SN_SM3", "SM3"),
                     Map.entry("SN_RIPEMD160", "RIPEMD160"));
-
-    /** Curve/group name argument (e.g. {@code EVP_PKEY_CTX_set_group_name}) → {@code "EC-P256"}. */
-    public static final Map<String, String> GROUP_NAMES =
-            Map.ofEntries(
-                    Map.entry("P-192", "EC-P192"),
-                    Map.entry("PRIME192V1", "EC-P192"),
-                    Map.entry("P-224", "EC-P224"),
-                    Map.entry("SECP224R1", "EC-P224"),
-                    Map.entry("P-256", "EC-P256"),
-                    Map.entry("PRIME256V1", "EC-P256"),
-                    Map.entry("SECP256R1", "EC-P256"),
-                    Map.entry("P-384", "EC-P384"),
-                    Map.entry("SECP384R1", "EC-P384"),
-                    Map.entry("P-521", "EC-P521"),
-                    Map.entry("SECP521R1", "EC-P521"),
-                    Map.entry("SECP256K1", "EC-SECP256K1"),
-                    Map.entry("BRAINPOOLP256R1", "EC-BRAINPOOLP256R1"),
-                    Map.entry("BRAINPOOLP384R1", "EC-BRAINPOOLP384R1"),
-                    Map.entry("BRAINPOOLP512R1", "EC-BRAINPOOLP512R1"));
 
     /**
      * Cipher name or alias accepted by {@code EVP_CIPHER_fetch}/{@code EVP_get_cipherbyname} (e.g.

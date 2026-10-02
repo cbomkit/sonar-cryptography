@@ -26,6 +26,9 @@ import com.ibm.mapper.model.curves.Secp192r1;
 import com.ibm.mapper.model.curves.Secp256k1;
 import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.model.curves.Secp521r1;
+import com.ibm.mapper.model.curves.Sect163r2;
+import com.ibm.mapper.model.curves.Sect283k1;
+import com.ibm.mapper.model.curves.Sect571r1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -41,7 +44,7 @@ class OpenSslCurveMapperTest {
         assertThat(mapper.parse("P-256", location)).containsInstanceOf(Secp256r1.class);
         assertThat(mapper.parse("secp256r1", location)).containsInstanceOf(Secp256r1.class);
         assertThat(mapper.parse("prime256v1", location)).containsInstanceOf(Secp256r1.class);
-        assertThat(mapper.parse("P521", location)).containsInstanceOf(Secp521r1.class);
+        assertThat(mapper.parse("P-521", location)).containsInstanceOf(Secp521r1.class);
         assertThat(mapper.parse("prime192v1", location)).containsInstanceOf(Secp192r1.class);
     }
 
@@ -53,7 +56,17 @@ class OpenSslCurveMapperTest {
     }
 
     @Test
+    void binaryCurvesByNistAndSecNames() {
+        assertThat(mapper.parse("sect283k1", location)).containsInstanceOf(Sect283k1.class);
+        assertThat(mapper.parse("K-283", location)).containsInstanceOf(Sect283k1.class);
+        assertThat(mapper.parse("sect163r2", location)).containsInstanceOf(Sect163r2.class);
+        assertThat(mapper.parse("B-163", location)).containsInstanceOf(Sect163r2.class);
+        assertThat(mapper.parse("B-571", location)).containsInstanceOf(Sect571r1.class);
+    }
+
+    @Test
     void unknownNames() {
+        assertThat(mapper.parse("P256", location)).isEmpty();
         assertThat(mapper.parse("X25519", location)).isEmpty();
         assertThat(mapper.parse(null, location)).isEmpty();
     }

@@ -62,7 +62,7 @@ class OpenSSLMacrosTest extends TestBase {
                     finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
                     // 28: EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"));
 

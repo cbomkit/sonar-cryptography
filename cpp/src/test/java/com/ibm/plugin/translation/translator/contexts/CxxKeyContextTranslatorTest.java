@@ -116,15 +116,17 @@ class CxxKeyContextTranslatorTest {
 
     private static Stream<Arguments> ecCurveVariants() {
         return Stream.of(
-                Arguments.of("EC-P192", "EC-secp192r1"),
-                Arguments.of("EC-P224", "EC-secp224r1"),
-                Arguments.of("EC-P256", "EC-secp256r1"),
-                Arguments.of("EC-P384", "EC-secp384r1"),
-                Arguments.of("EC-P521", "EC-secp521r1"),
+                Arguments.of("EC-P-192", "EC-secp192r1"),
+                Arguments.of("EC-P-224", "EC-secp224r1"),
+                Arguments.of("EC-P-256", "EC-secp256r1"),
+                Arguments.of("EC-P-384", "EC-secp384r1"),
+                Arguments.of("EC-P-521", "EC-secp521r1"),
                 Arguments.of("EC-SECP256K1", "EC-secp256k1"),
                 Arguments.of("EC-BRAINPOOLP256R1", "EC-Brainpoolp256r1"),
                 Arguments.of("EC-BRAINPOOLP384R1", "EC-Brainpoolp384r1"),
-                Arguments.of("EC-BRAINPOOLP512R1", "EC-Brainpoolp512r1"));
+                Arguments.of("EC-BRAINPOOLP512R1", "EC-Brainpoolp512r1"),
+                Arguments.of("EC-sect283k1", "EC-sect283k1"),
+                Arguments.of("EC-B-163", "EC-sect163r2"));
     }
 
     @ParameterizedTest

@@ -49,7 +49,7 @@ class OpenSSLKeyUsageTest extends TestBase {
                     // 5: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-256}], "
-                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                                    + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1-SHA-256[EllipticCurve:secp256r1, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
@@ -72,7 +72,7 @@ class OpenSSLKeyUsageTest extends TestBase {
                     // 33: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[KeyContext{}[KeyContext{KeyAction:KDF}], "
-                                    + "PrivateKeyContext{Curve:EC-P384}]",
+                                    + "PrivateKeyContext{Curve:EC-P-384}]",
                             "PrivateKey:EC[KeyAgreement:ECDH[EllipticCurve:secp384r1, "
                                     + "KeyDerivation:KEYDERIVATION, Oid:1.3.132.1.12], KeyGeneration:KEYGENERATION]"),
                     // 41: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048);

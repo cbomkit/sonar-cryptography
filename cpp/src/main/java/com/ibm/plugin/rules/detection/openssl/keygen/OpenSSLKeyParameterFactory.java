@@ -25,7 +25,6 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.factory.IValueFactory;
-import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -33,13 +32,16 @@ import javax.annotation.Nonnull;
 /**
  * Resolves a key generation parameter: a key size in bits (e.g. the bits of {@code
  * EVP_PKEY_Q_keygen(NULL, NULL, "RSA", 2048)}) or a group name (e.g. {@code
- * EVP_PKEY_CTX_set_group_name(ctx, "P-256")}). An elliptic curve name resolves to a {@link Curve}
- * (e.g. {@code "EC-P256"}); a finite-field group name ({@code "ffdhe2048"}) resolves to the size of
- * its prime.
+ * EVP_PKEY_CTX_set_group_name(ctx, "P-256")}). A finite-field group name ({@code "ffdhe2048"})
+ * resolves to the size of its prime; any other group name resolves to a {@link Curve} of that name
+ * (e.g. {@code "EC-P-256"}), which the key mapper recognizes by any of its OpenSSL names.
  */
 public final class OpenSSLKeyParameterFactory implements IValueFactory<AstNode> {
 
     private static final String FFDHE = "FFDHE";
+
+    /** The prefix of a curve, by which the key mapper tells it from other algorithm names. */
+    private static final String EC_CURVE_PREFIX = "EC-";
 
     @Override
     @Nonnull
@@ -64,12 +66,6 @@ public final class OpenSSLKeyParameterFactory implements IValueFactory<AstNode> 
                 return Optional.empty();
             }
         }
-        final String curve =
-                OpenSSLNameCanonicalizerFactory.canonicalize(
-                        OpenSSLNameCanonicalizerFactory.GROUP_NAMES, name);
-        if (!curve.startsWith("EC-")) {
-            return Optional.empty();
-        }
-        return Optional.of(new Curve<>(curve, resolvedValue.tree()));
+        return Optional.of(new Curve<>(EC_CURVE_PREFIX + name.trim(), resolvedValue.tree()));
     }
 }

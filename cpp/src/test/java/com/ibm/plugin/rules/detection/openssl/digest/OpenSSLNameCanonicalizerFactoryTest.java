@@ -66,32 +66,6 @@ class OpenSSLNameCanonicalizerFactoryTest {
      * com.ibm.plugin.translation.translator.contexts.CxxKeyContextTranslator} actually recognizes,
      * otherwise the finding is silently dropped as {@code Optional.empty()}.
      */
-    @ParameterizedTest
-    @CsvSource({
-        // OpenSSL EVP_PKEY_CTX_set_group_name name, expected canonical form
-        "P-192, EC-P192",
-        "PRIME192V1, EC-P192",
-        "P-224, EC-P224",
-        "SECP224R1, EC-P224",
-        "P-256, EC-P256",
-        "PRIME256V1, EC-P256",
-        "SECP256R1, EC-P256",
-        "P-384, EC-P384",
-        "SECP384R1, EC-P384",
-        "P-521, EC-P521",
-        "SECP521R1, EC-P521",
-        "SECP256K1, EC-SECP256K1",
-        "BRAINPOOLP256R1, EC-BRAINPOOLP256R1",
-        "BRAINPOOLP384R1, EC-BRAINPOOLP384R1",
-        "BRAINPOOLP512R1, EC-BRAINPOOLP512R1",
-    })
-    void canonicalizesOpenSslGroupNames(String openSslName, String expectedCanonical) {
-        assertThat(
-                        OpenSSLNameCanonicalizerFactory.canonicalize(
-                                OpenSSLNameCanonicalizerFactory.GROUP_NAMES, openSslName))
-                .isEqualTo(expectedCanonical);
-    }
-
     @Test
     void unrecognizedNamePassesThroughUnchanged() {
         assertThat(OpenSSLNameCanonicalizerFactory.canonicalize(Map.of(), "SOME-UNKNOWN-DIGEST"))

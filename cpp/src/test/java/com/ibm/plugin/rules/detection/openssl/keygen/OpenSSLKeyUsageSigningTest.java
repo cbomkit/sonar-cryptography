@@ -51,7 +51,7 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     // 8: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-256}], "
-                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                                    + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1-SHA-256[EllipticCurve:secp256r1, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
@@ -67,7 +67,7 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     // 18: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-384}], "
-                                    + "PrivateKeyContext{Curve:EC-P384}]",
+                                    + "PrivateKeyContext{Curve:EC-P-384}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp384r1-SHA-384[EllipticCurve:secp384r1, "
                                     + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
@@ -82,13 +82,13 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     // 28: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}, "
-                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                                    + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1[EllipticCurve:secp256r1, Sign:SIGN]]"),
                     // 33: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-512}], "
-                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                                    + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1-SHA-512[EllipticCurve:secp256r1, "
                                     + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
@@ -142,13 +142,13 @@ class OpenSSLKeyUsageSigningTest extends TestBase {
                     // 62: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:VERIFY}, "
-                                    + "PrivateKeyContext{Curve:EC-P256}]",
+                                    + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1[EllipticCurve:secp256r1, Verify:VERIFY]]"),
                     // 68: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[SignatureContext{SignatureAction:VERIFY}, "
-                                    + "PrivateKeyContext{Curve:EC-P384}]",
+                                    + "PrivateKeyContext{Curve:EC-P-384}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp384r1[EllipticCurve:secp384r1, Verify:VERIFY]]"),
                     // 73: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072);

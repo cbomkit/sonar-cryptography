@@ -72,7 +72,7 @@ class OpenSSLLibsslContextTest extends TestBase {
                             "PublicKeyEncryption:FFDH-2048[KeyLength:2048, Oid:1.2.840.113549.1.3.1]"),
                     // 18: EC_KEY *ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
                     finding(
-                            "KeyContext{ValueAction:EC-P256}",
+                            "KeyContext{ValueAction:EC-prime256v1}",
                             "PublicKeyEncryption:EC-secp256r1[EllipticCurve:secp256r1, "
                                     + "Oid:1.2.840.10045.2.1]"),
                     // 23: SSL_CTX_set_ssl_version(ctx, TLSv1_2_method());
