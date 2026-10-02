@@ -692,7 +692,7 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             return memberSelect instanceof MemberSelectTree memberSelectTree
                     && referencesSymbol(memberSelectTree.expression(), trackedSymbol);
         }
-        return true;
+        return false;
     }
 
     private boolean referencesSymbol(@Nonnull Tree tree, @Nullable Symbol trackedSymbol) {
@@ -736,18 +736,6 @@ public final class GoDetectionEngine implements IDetectionEngine<Tree, Symbol> {
     @Override
     public Optional<TraceSymbol<Symbol>> getMethodInvocationParameterSymbol(
             @Nonnull Tree methodInvocation, @Nonnull Parameter<Tree> parameter) {
-        if (methodInvocation
-                instanceof
-                FunctionInvocationWIthIdentifiersTree functionInvocationWIthIdentifiersTree) {
-            for (IdentifierTree identifierTree :
-                    functionInvocationWIthIdentifiersTree.identifiers()) {
-                if (identifierTree.type().equals("error")) {
-                    continue;
-                }
-                return Optional.of(TraceSymbol.createFrom(identifierTree.symbol()));
-            }
-            return Optional.of(TraceSymbol.createWithStateNoSymbol());
-        }
         if (methodInvocation instanceof FunctionInvocationTree functionInvocation) {
             List<Tree> arguments = functionInvocation.arguments();
             if (arguments != null
