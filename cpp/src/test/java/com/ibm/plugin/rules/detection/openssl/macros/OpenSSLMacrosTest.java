@@ -47,7 +47,7 @@ class OpenSSLMacrosTest extends TestBase {
             List.of(
                     // 6: EVP_KDF *kdf = EVP_KDF_fetch(NULL, OSSL_KDF_NAME_HKDF, NULL);
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]]",
                             "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
                                     + "Oid:2.16.840.1.101.3.4.2.1]]"),

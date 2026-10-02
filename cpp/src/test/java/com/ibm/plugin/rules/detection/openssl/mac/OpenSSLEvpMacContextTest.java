@@ -48,13 +48,13 @@ class OpenSSLEvpMacContextTest extends TestBase {
             List.of(
                     // 5: EVP_MAC *mac = EVP_MAC_fetch(NULL, "hmac", NULL);
                     finding(
-                            "MacContext{Algorithm:hmac}[MacContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "MacContext{Algorithm:hmac}[MacContext{}[MacContext{}[DigestContext{Algorithm:SHA-256}]]]",
                             "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
                                     + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
                                     + "Tag:TAG]"),
                     // 15: EVP_MAC *mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
                     finding(
-                            "MacContext{Algorithm:CMAC}[MacContext{}[CipherContext{Algorithm:aes-256-cbc}]]",
+                            "MacContext{Algorithm:CMAC}[MacContext{}[MacContext{}[CipherContext{Algorithm:aes-256-cbc}]]]",
                             "Mac:CMAC-AES[BlockCipher:AES-256-CBC[BlockSize:128, KeyLength:256, "
                                     + "Mode:CBC, Oid:2.16.840.1.101.3.4.1.42], Tag:TAG]"),
                     // 25: EVP_MAC_fetch(NULL, "Poly1305", NULL);
@@ -71,7 +71,7 @@ class OpenSSLEvpMacContextTest extends TestBase {
                                     + "ParameterSetIdentifier:256], ParameterSetIdentifier:256, Tag:TAG]"),
                     // 31: EVP_MAC *mac = EVP_MAC_fetch(NULL, "GMAC", NULL);
                     finding(
-                            "MacContext{Algorithm:GMAC}[MacContext{}[CipherContext{Algorithm:aes-128-gcm}]]",
+                            "MacContext{Algorithm:GMAC}[MacContext{}[MacContext{}[CipherContext{Algorithm:aes-128-gcm}]]]",
                             "Mac:AES-128-GMAC[BlockSize:128, KeyLength:128, Mode:GMAC,"
                                     + " Oid:2.16.840.1.101.3.4.1.9, Tag:TAG]"));
 

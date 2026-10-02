@@ -20,19 +20,17 @@
 package com.ibm.plugin.rules.detection.openssl.rand;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
-import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
-import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory;
+import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -76,35 +74,25 @@ public final class OpenSSLRand {
     // EVP_RAND API: the DRBG is fetched by name; its cipher (CTR-DRBG) or digest (HASH-DRBG,
     // HMAC-DRBG) is set through OSSL_PARAMs of the context created from it
 
-    private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_CIPHER =
+    private static final List<IDetectionRule<AstNode>> PARAMS_RULES =
+            Stream.of(OpenSSLParams.cipherRules().stream(), OpenSSLParams.digestRules().stream())
+                    .flatMap(i -> i)
+                    .toList();
+
+    private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_RAND_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
-                    .buildForContext(new CipherContext())
+                    .addDependingDetectionRules(PARAMS_RULES)
+                    .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_RAND_CTX_SET_PARAMS_DIGEST =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_RAND_CTX_set_params")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_CIPHER =
+    // EVP_RAND_instantiate(ctx, strength, prediction_resistance, pstr, pstr_len, params)
+    private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
@@ -115,28 +103,8 @@ public final class OpenSSLRand {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_RAND_INSTANTIATE_DIGEST =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_RAND_instantiate")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
+                    .addDependingDetectionRules(PARAMS_RULES)
+                    .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -150,11 +118,7 @@ public final class OpenSSLRand {
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(
-                            List.of(
-                                    EVP_RAND_CTX_SET_PARAMS_CIPHER,
-                                    EVP_RAND_CTX_SET_PARAMS_DIGEST,
-                                    EVP_RAND_INSTANTIATE_CIPHER,
-                                    EVP_RAND_INSTANTIATE_DIGEST));
+                            List.of(EVP_RAND_CTX_SET_PARAMS, EVP_RAND_INSTANTIATE));
 
     private static final IDetectionRule<AstNode> EVP_RAND_FETCH =
             new DetectionRuleBuilder<AstNode>()

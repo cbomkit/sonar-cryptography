@@ -43,11 +43,9 @@ import org.sonar.cxx.squidbridge.checks.SquidCheck;
  * <p>{@code EVP_MAC_fetch(lib, "HMAC"/"CMAC"/"GMAC", props)} raises one finding per MAC family (the
  * real fetched name) rather than guessing a digest/cipher that isn't visible at the fetch call
  * site. The real digest (HMAC) or cipher (CMAC/GMAC), when the code sets one via {@code
- * EVP_MAC_CTX_set_params(ctx, params)}, is a separate, independently traced finding: {@code params}
- * is resolved back to its {@code OSSL_PARAM params[] = {...}} declaration (see {@link
- * com.ibm.engine.language.cxx.CxxSemantic#resolveValues}), and {@link
- * com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory} scans that array for the
- * {@code "digest"}/{@code "cipher"}-keyed entry.
+ * EVP_MAC_CTX_set_params(ctx, params)}, is detected from the {@code "digest"}/{@code "cipher"}
+ * entry written to {@code params} (see {@link
+ * com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams}).
  */
 class OpenSSLEvpMacTest extends TestBase {
 

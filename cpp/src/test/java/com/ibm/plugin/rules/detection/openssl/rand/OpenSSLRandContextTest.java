@@ -47,12 +47,12 @@ class OpenSSLRandContextTest extends TestBase {
             List.of(
                     // 5: EVP_RAND *rand = EVP_RAND_fetch(NULL, "CTR-DRBG", NULL);
                     finding(
-                            "PRNGContext{Algorithm:CTR-DRBG}[PRNGContext{}[CipherContext{Algorithm:AES-256-CTR}]]",
+                            "PRNGContext{Algorithm:CTR-DRBG}[PRNGContext{}[PRNGContext{}[CipherContext{Algorithm:AES-256-CTR}]]]",
                             "PseudorandomNumberGenerator:CTR_DRBG-AES-256[BlockCipher:AES-256-CTR[BlockSize:128, "
                                     + "KeyLength:256, Mode:CTR, Oid:2.16.840.1.101.3.4.1.4]]"),
                     // 15: EVP_RAND *rand = EVP_RAND_fetch(NULL, "hmac-drbg", NULL);
                     finding(
-                            "PRNGContext{Algorithm:hmac-drbg}[PRNGContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "PRNGContext{Algorithm:hmac-drbg}[PRNGContext{}[PRNGContext{}[DigestContext{Algorithm:SHA-256}]]]",
                             "PseudorandomNumberGenerator:HMAC_DRBG-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
                                     + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]]"),
                     // 25: EVP_RAND_fetch(NULL, "SEED-SRC", NULL);

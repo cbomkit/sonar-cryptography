@@ -49,32 +49,32 @@ class OpenSSLEvpKdfContextTest extends TestBase {
             List.of(
                     // 5: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "hkdf", NULL);
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:hkdf}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunctionContext{Algorithm:hkdf}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]]",
                             "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
                                     + "Oid:2.16.840.1.101.3.4.2.1]]"),
                     // 17: EVP_KDF *kdf = EVP_KDF_fetch(NULL, name, NULL);
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:PBKDF2}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]",
+                            "KeyDerivationFunctionContext{Algorithm:PBKDF2}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]]",
                             "PasswordBasedKeyDerivationFunction:PBKDF2-SHA-512[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
                                     + "Oid:2.16.840.1.101.3.4.2.3]]"),
                     // 27: EVP_KDF *hkdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]",
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]]",
                             "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
                                     + "Oid:2.16.840.1.101.3.4.2.1]]"),
                     // 35: EVP_KDF *sshkdf = EVP_KDF_fetch(NULL, "SSHKDF", NULL);
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:SSHKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]",
+                            "KeyDerivationFunctionContext{Algorithm:SSHKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]]",
                             "KeyDerivationFunction:SSHKDF-SHA-512[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
                                     + "Oid:2.16.840.1.101.3.4.2.3]]"),
                     // 45: EVP_KDF_CTX *hkdf_ctx = EVP_KDF_CTX_new(EVP_KDF_fetch(NULL, "HKDF",
                     // NULL));
                     finding(
-                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-384}]]",
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-384}]]]",
                             "KeyDerivationFunction:HKDF-SHA-384[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
                                     + "Oid:2.16.840.1.101.3.4.2.2]]"),
@@ -86,7 +86,25 @@ class OpenSSLEvpKdfContextTest extends TestBase {
                     // 55: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
                     finding(
                             "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{KeySize:256}]]",
-                            "KeyDerivationFunction:HKDF[KeyDerivation:KEYDERIVATION, KeyLength:256]"));
+                            "KeyDerivationFunction:HKDF[KeyDerivation:KEYDERIVATION, KeyLength:256]"),
+                    // 61: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-256}]]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                    // 72: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-384}]]]",
+                            "KeyDerivationFunction:HKDF-SHA-384[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
+                                    + "Oid:2.16.840.1.101.3.4.2.2]]"),
+                    // 82: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]]",
+                            "KeyDerivationFunction:HKDF-SHA-512[KeyDerivation:KEYDERIVATION, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
+                                    + "Oid:2.16.840.1.101.3.4.2.3]]"));
 
     private int findings = 0;
 

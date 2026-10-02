@@ -21,7 +21,6 @@ package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
-import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
@@ -29,6 +28,7 @@ import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
+import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -76,31 +76,14 @@ public final class OpenSSLEvpKdf {
                     .forMethods("EVP_KDF_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
+                    .addDependingDetectionRules(OpenSSLParams.digestRules())
+                    .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // EVP_KDF_derive(ctx, key, keylen, params): the length of the derived key, in bytes, and the
+    // parameters set for the derivation
     private static final IDetectionRule<AstNode> EVP_KDF_DERIVE =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_KDF_derive")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // EVP_KDF_derive(ctx, key, keylen, params): the length of the derived key, in bytes
-    private static final IDetectionRule<AstNode> EVP_KDF_DERIVE_KEY_LENGTH =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
@@ -110,6 +93,7 @@ public final class OpenSSLEvpKdf {
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLParams.digestRules())
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -122,11 +106,7 @@ public final class OpenSSLEvpKdf {
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(
-                            List.of(
-                                    EVP_KDF_CTX_SET_PARAMS,
-                                    EVP_KDF_DERIVE,
-                                    EVP_KDF_DERIVE_KEY_LENGTH));
+                    .withDependingDetectionRules(List.of(EVP_KDF_CTX_SET_PARAMS, EVP_KDF_DERIVE));
 
     private static final IDetectionRule<AstNode> EVP_KDF_FETCH =
             new DetectionRuleBuilder<AstNode>()

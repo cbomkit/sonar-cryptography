@@ -20,7 +20,6 @@
 package com.ibm.plugin.rules.detection.openssl.mac;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
-import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
@@ -28,11 +27,12 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
-import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLParamsScannerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
+import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -57,35 +57,25 @@ public final class OpenSSLEvpMac {
 
     private static final String BUNDLE = "OpenSSL";
 
-    private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS_DIGEST =
+    private static final List<IDetectionRule<AstNode>> PARAMS_RULES =
+            Stream.of(OpenSSLParams.digestRules().stream(), OpenSSLParams.cipherRules().stream())
+                    .flatMap(i -> i)
+                    .toList();
+
+    private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("EVP_MAC_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
+                    .addDependingDetectionRules(PARAMS_RULES)
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final IDetectionRule<AstNode> EVP_MAC_CTX_SET_PARAMS_CIPHER =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_MAC_CTX_set_params")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
-                    .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_INIT_DIGEST =
+    // EVP_MAC_init(ctx, key, keylen, params)
+    private static final IDetectionRule<AstNode> EVP_MAC_INIT =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
@@ -94,26 +84,8 @@ public final class OpenSSLEvpMac {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "digest", OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_MAC_INIT_CIPHER =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_MAC_init")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLParamsScannerFactory(
-                                    "cipher", OpenSSLNameCanonicalizerFactory.CIPHER_NAMES))
-                    .buildForContext(new CipherContext())
+                    .addDependingDetectionRules(PARAMS_RULES)
+                    .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -125,12 +97,7 @@ public final class OpenSSLEvpMac {
                     .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(
-                            List.of(
-                                    EVP_MAC_CTX_SET_PARAMS_DIGEST,
-                                    EVP_MAC_CTX_SET_PARAMS_CIPHER,
-                                    EVP_MAC_INIT_DIGEST,
-                                    EVP_MAC_INIT_CIPHER));
+                    .withDependingDetectionRules(List.of(EVP_MAC_CTX_SET_PARAMS, EVP_MAC_INIT));
 
     private static final IDetectionRule<AstNode> EVP_MAC_FETCH =
             new DetectionRuleBuilder<AstNode>()
