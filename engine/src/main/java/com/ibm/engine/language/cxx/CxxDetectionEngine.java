@@ -90,18 +90,6 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         this.handler = handler;
     }
 
-    /**
-     * Exposes the scan's {@link com.ibm.engine.language.IScanContext}, which for C++ wraps
-     * sonar-cxx's {@code SquidAstVisitorContext} and, through it, the file's root {@code
-     * SymbolTable}. {@link CxxSemantic} uses this to look up a type name by scope rather than by
-     * walking an {@code AstNode} to a {@code Symbol}, since a qualified reference's left-hand type
-     * name is never given its own attached symbol (only declarator/usage-site identifiers are).
-     */
-    @Nonnull
-    public IScanContext<SquidCheck<?>, AstNode> getScanContext() {
-        return detectionStore.getScanContext();
-    }
-
     @Override
     public void run(@Nonnull AstNode tree) {
         run(TraceSymbol.createStart(), tree);

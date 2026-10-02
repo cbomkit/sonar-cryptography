@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.sonar.cxx.sslr.api.AstNode;
+import com.sonar.cxx.sslr.api.GenericTokenType;
 import com.sonar.cxx.sslr.api.Token;
 import com.sonar.cxx.sslr.api.TokenType;
 import java.net.URI;
@@ -34,13 +35,11 @@ import org.sonar.cxx.parser.CxxPunctuator;
 import org.sonar.cxx.parser.CxxTokenType;
 
 /**
- * {@link CxxLanguageTranslation#getMethodParameterTypes} matches a literal argument (e.g. {@code
- * withMethodParameter("\"AES-256-GCM\"")}) via its private {@code extractLiteralText}, which reads
- * the raw token when the literal isn't wrapped in a {@code LITERAL} grammar node - a shape that
- * occurs when the argument is several grammar levels deep with no single-child collapse in between.
- * This test builds that shape directly (a raw {@code STRING} token nested two levels under the
- * argument node, with no {@code LITERAL}-typed node anywhere above it) and asserts the resulting
- * type matches the literal's text.
+ * {@link CxxLanguageTranslation#getMethodParameterTypes} gives an argument that is a literal its
+ * source text as its type (e.g. matched by {@code withMethodParameter("\"AES-256-GCM\"")}), also
+ * when the literal is not wrapped in a {@code LITERAL} grammar node but is reached through nodes of
+ * one child each. A literal that is only part of the argument, as {@code 2} in {@code a[2]}, does
+ * not give the argument its text.
  */
 class CxxLanguageTranslationLiteralArgumentTest {
 
@@ -57,6 +56,23 @@ class CxxLanguageTranslationLiteralArgumentTest {
         assertThat(types).hasSize(1);
         assertThat(types.get(0).is("\"AES-256-GCM\"")).isTrue();
         assertThat(types.get(0).is("\"something-else\"")).isFalse();
+    }
+
+    @Test
+    void doesNotMatchALiteralThatIsOnlyPartOfTheArgument() {
+        AstNode subscript = new AstNode(new PlainAstNodeType(), "postfixExpression", null);
+        subscript.addChild(new AstNode(fakeToken(GenericTokenType.IDENTIFIER, "a")));
+        subscript.addChild(new AstNode(fakeToken(CxxPunctuator.BR_LEFT, "[")));
+        subscript.addChild(new AstNode(fakeToken(CxxTokenType.NUMBER, "2")));
+        subscript.addChild(new AstNode(fakeToken(CxxPunctuator.BR_RIGHT, "]")));
+        AstNode methodInvocation = buildFunctionCall(subscript);
+
+        List<IType> types =
+                translation.getMethodParameterTypes(
+                        MatchContext.createForHookContext(), methodInvocation);
+
+        assertThat(types).hasSize(1);
+        assertThat(types.get(0).is("2")).isFalse();
     }
 
     /**

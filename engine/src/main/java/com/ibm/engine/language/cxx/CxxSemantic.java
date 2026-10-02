@@ -36,6 +36,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.cxx.parser.CxxGrammarImpl;
+import org.sonar.cxx.parser.CxxKeyword;
+import org.sonar.cxx.parser.CxxPunctuator;
 import org.sonar.cxx.parser.CxxTokenType;
 import org.sonar.cxx.squidbridge.api.AstNodeSymbolExtension;
 import org.sonar.cxx.squidbridge.api.Symbol;
@@ -61,6 +63,14 @@ public final class CxxSemantic {
         CxxGrammarImpl.exclusiveOrExpression,
         CxxGrammarImpl.inclusiveOrExpression,
         CxxGrammarImpl.unaryExpression
+    };
+
+    /** The C++ cast keywords, e.g. {@code static_cast} in {@code static_cast<int>(x)}. */
+    private static final AstNodeType[] NAMED_CASTS = {
+        CxxKeyword.STATIC_CAST,
+        CxxKeyword.REINTERPRET_CAST,
+        CxxKeyword.CONST_CAST,
+        CxxKeyword.DYNAMIC_CAST
     };
 
     private static final Pattern INTEGER_SUFFIX_PATTERN = Pattern.compile("[uUlL]+$");
@@ -181,6 +191,22 @@ public final class CxxSemantic {
                 return resolveValuesInternal(
                         clazz,
                         referencedId,
+                        selections,
+                        valueFactory,
+                        returnEnclosingParam,
+                        detectionEngine,
+                        depth + 1,
+                        resolvingVariables);
+            }
+        } else if (tree.is(CxxGrammarImpl.postfixExpression)
+                && tree.getFirstChild().is(NAMED_CASTS)) {
+            // "static_cast<type>(operand)" and the other C++ casts: the value of the operand
+            final AstNode open = tree.getFirstChild(CxxPunctuator.BR_LEFT);
+            final AstNode operand = open != null ? open.getNextSibling() : null;
+            if (operand != null) {
+                return resolveValuesInternal(
+                        clazz,
+                        operand,
                         selections,
                         valueFactory,
                         returnEnclosingParam,
@@ -438,7 +464,7 @@ public final class CxxSemantic {
         // unbounded ancestor walk it does for the overwhelmingly common non-scoped-enum identifier.
         Symbol symbol = AstNodeSymbolExtension.getSymbol(tree);
         if (symbol == null) {
-            symbol = resolveScopedEnumConstant(tree, detectionEngine);
+            symbol = resolveScopedEnumConstant(tree);
         }
         if (symbol instanceof Symbol.VariableSymbol variableSymbol && !symbol.isUnknown()) {
             boolean skipField = variableSymbol.isField();
@@ -630,12 +656,9 @@ public final class CxxSemantic {
      * Type::CONSTANT}), looks it up inside the left-hand type's qualified-only member scope when
      * that type is a scoped enum, since a scoped enum's constants are reachable only through their
      * own member scope, not the normal enclosing-scope chain. Returns null for any other {@code
-     * nestedNameSpecifier} shape (namespace, class, unresolved type, or an unscoped enum), leaving
-     * those for the normal lookup path or a future, more general qualified-name resolution to
-     * handle.
+     * nestedNameSpecifier} shape (namespace, class, unresolved type, or an unscoped enum).
      */
-    @Nullable private static Symbol resolveScopedEnumConstant(
-            @Nonnull AstNode identifierNode, @Nullable CxxDetectionEngine detectionEngine) {
+    @Nullable private static Symbol resolveScopedEnumConstant(@Nonnull AstNode identifierNode) {
         AstNode qualifiedId = identifierNode.getFirstAncestor(CxxGrammarImpl.qualifiedId);
         if (qualifiedId == null) {
             return null;
@@ -644,27 +667,12 @@ public final class CxxSemantic {
         if (nestedNameSpecifier == null) {
             return null;
         }
-        // nestedNameSpecifier does not carry a bare IDENTIFIER child directly for a type-qualified
-        // reference; "Mode::" parses as nestedNameSpecifier -> typeName -> className -> IDENTIFIER,
-        // so the type name token has to be found as a descendant, not a direct child.
+        // "Mode::" parses as nestedNameSpecifier -> typeName -> className -> IDENTIFIER, so the
+        // type name token is a descendant, not a direct child
         AstNode typeNameNode = nestedNameSpecifier.getFirstDescendant(GenericTokenType.IDENTIFIER);
-        if (typeNameNode == null) {
-            return null;
-        }
-        // A className-wrapped type-name reference (as opposed to a declarator/usage-site
-        // identifier) is never given its own attached Symbol by CxxSymbolResolverVisitor, since
-        // isInsideDeclarator(...) treats any className ancestor as a declaration site and skips
-        // usage resolution for it, even though this occurrence is a genuine read. The type symbol
-        // is still registered by name in the enclosing scope table, so it is found by a
-        // name-based scope lookup rather than an AstNode-to-Symbol association.
-        Symbol typeSymbolCandidate = AstNodeSymbolExtension.getSymbol(typeNameNode);
-        if (typeSymbolCandidate == null) {
-            SymbolTable rootScope = rootSymbolTable(detectionEngine);
-            if (rootScope != null) {
-                typeSymbolCandidate = rootScope.lookupSymbol(typeNameNode.getTokenValue());
-            }
-        }
-        if (!(typeSymbolCandidate instanceof Symbol.TypeSymbol typeSymbol)
+        if (typeNameNode == null
+                || !(AstNodeSymbolExtension.getSymbol(typeNameNode)
+                        instanceof Symbol.TypeSymbol typeSymbol)
                 || !typeSymbol.isScopedEnum()) {
             return null;
         }
@@ -673,21 +681,6 @@ public final class CxxSemantic {
             return null;
         }
         return memberScope.getSymbol(identifierNode.getTokenValue());
-    }
-
-    /**
-     * The file's root {@code SymbolTable}, reached through the scan context rather than any
-     * particular {@code AstNode}, since a qualified reference's left-hand type name has no attached
-     * symbol of its own to start a lookup from (see {@link #resolveScopedEnumConstant}).
-     */
-    @Nullable private static SymbolTable rootSymbolTable(@Nullable CxxDetectionEngine detectionEngine) {
-        if (detectionEngine == null) {
-            return null;
-        }
-        if (detectionEngine.getScanContext() instanceof CxxScanContext cxxScanContext) {
-            return cxxScanContext.cxxVisitorContext().getSymbolTable();
-        }
-        return null;
     }
 
     @Nonnull
@@ -700,6 +693,19 @@ public final class CxxSemantic {
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
             @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+        // "( expression )": the value of the expression
+        if (tree.getNumberOfChildren() == 3 && tree.getFirstChild().is(CxxPunctuator.BR_LEFT)) {
+            return resolveValuesInternal(
+                    clazz,
+                    tree.getChildren().get(1),
+                    selections,
+                    valueFactory,
+                    returnEnclosingParam,
+                    detectionEngine,
+                    depth + 1,
+                    resolvingVariables);
+        }
+
         AstNode literal = tree.getFirstChild(CxxGrammarImpl.LITERAL);
         if (literal != null) {
             return resolveLiteral(

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.cxx.parser.CxxGrammarImpl;
@@ -226,15 +227,9 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
             AstNode argument = arguments.get(i);
             boolean exactMatch = matchMatrix.get(i);
 
-            String literalText = extractLiteralText(argument);
-            if (literalText != null) {
-                types.add(createTypeFromLiteralText(literalText));
-                continue;
-            }
-
-            String identifierName = extractIdentifierText(argument);
-            if (identifierName != null) {
-                types.add(createTypeFromLiteralText(identifierName));
+            final String argumentText = argumentText(argument);
+            if (argumentText != null) {
+                types.add(createTypeFromArgumentText(argumentText));
                 continue;
             }
 
@@ -334,71 +329,37 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
     }
 
     /**
-     * Extracts the source text of a literal argument. Returns the raw token text (with surrounding
-     * quotes for string literals) so rules can match e.g. {@code
-     * withMethodParameter("\"CTR-DRBG\"")}. Returns null when the argument is not a literal.
+     * The source text of an argument that is a literal or an identifier, e.g. {@code "digest"}
+     * (with its quotes), {@code 32} or {@code OSSL_KDF_PARAM_DIGEST}, or null for any other
+     * expression. Rules match such an argument by its text, as the key of an {@code OSSL_PARAM}
+     * entry is matched by {@code withMethodParameter("\"digest\"")}.
      */
-    private String extractLiteralText(@Nonnull AstNode argument) {
-        AstNode literal = argument;
-        if (!literal.is(CxxGrammarImpl.LITERAL)) {
-            literal = argument.getFirstDescendant(CxxGrammarImpl.LITERAL);
+    @Nullable private static String argumentText(@Nonnull AstNode argument) {
+        AstNode node = argument;
+        while (!node.is(CxxGrammarImpl.LITERAL) && node.getNumberOfChildren() == 1) {
+            node = node.getFirstChild();
         }
-        if (literal != null) {
-            StringBuilder sb = new StringBuilder();
-            for (var token : literal.getTokens()) {
-                sb.append(token.getValue());
-            }
-            String text = sb.toString().trim();
-            if (!text.isEmpty()) {
-                return text;
-            }
+        if (node.is(CxxGrammarImpl.LITERAL)) {
+            final StringBuilder text = new StringBuilder();
+            node.getTokens().forEach(token -> text.append(token.getValue()));
+            return text.toString();
         }
-        // Fallback: check for raw STRING/NUMBER/CHARACTER tokens (used when argument is
-        // the initializerClause wrapping a literal expression directly).
-        if ("STRING".equals(String.valueOf(argument.getType()))
-                || "NUMBER".equals(String.valueOf(argument.getType()))
-                || "CHARACTER".equals(String.valueOf(argument.getType()))) {
-            String text = argument.getTokenValue();
-            return (text == null || text.isEmpty()) ? null : text;
+        if (node.hasChildren()) {
+            return null;
         }
-        // Walk down for STRING/NUMBER/CHARACTER tokens inside initializerClause.
-        for (AstNode d :
-                argument.getDescendants(
-                        CxxTokenType.STRING, CxxTokenType.NUMBER, CxxTokenType.CHARACTER)) {
-            String text = d.getTokenValue();
-            if (text != null && !text.isEmpty()) {
-                return text;
-            }
+        if (node.is(
+                CxxTokenType.STRING,
+                CxxTokenType.NUMBER,
+                CxxTokenType.CHARACTER,
+                GenericTokenType.IDENTIFIER)) {
+            return node.getTokenValue();
         }
         return null;
     }
 
-    private IType createTypeFromLiteralText(@Nonnull String literalText) {
-        return typeString -> literalText.equals(typeString);
-    }
-
-    /**
-     * Extracts the text of an IDENTIFIER argument (e.g. a macro / const / enum constant name passed
-     * as a function argument). Rules can then match by identifier name via {@code
-     * .withMethodParameter("EVP_PKEY_DH")}. Returns null if the argument is not a plain identifier
-     * expression.
-     */
-    private String extractIdentifierText(@Nonnull AstNode argument) {
-        // Only match if subtree contains a single IDENTIFIER leaf (plain identifier arg).
-        AstNode cur = argument;
-        while (cur != null && !cur.getChildren().isEmpty()) {
-            if (cur.getChildren().size() != 1) {
-                return null;
-            }
-            cur = cur.getChildren().get(0);
-        }
-        if (cur != null && "IDENTIFIER".equals(String.valueOf(cur.getType()))) {
-            String text = cur.getTokenValue();
-            if (text != null && !text.isEmpty()) {
-                return text;
-            }
-        }
-        return null;
+    @Nonnull
+    private static IType createTypeFromArgumentText(@Nonnull String argumentText) {
+        return argumentText::equals;
     }
 
     IType createTypeFromCxxType(@Nonnull Type cxxType, @Nonnull MatchContext matchContext) {

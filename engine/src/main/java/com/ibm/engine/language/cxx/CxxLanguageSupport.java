@@ -174,9 +174,9 @@ public final class CxxLanguageSupport
         }
         for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(tree)) {
             if (containsBracedInitList(argument)) {
-                // A braced-init-list argument (e.g. an array/aggregate literal) is not covered by
-                // CxxSemantic's value resolution today, so we cannot faithfully reproduce it at
-                // record time; keep such calls on the retained-tree fallback path.
+                // A braced-init-list argument (e.g. an array/aggregate literal) resolves to the
+                // list node itself (see CxxSemantic#resolveValues), which a detached call cannot
+                // hold, so such calls stay on the retained-tree path.
                 return false;
             }
         }
