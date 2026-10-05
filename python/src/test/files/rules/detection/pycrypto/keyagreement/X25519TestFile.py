@@ -4,8 +4,8 @@ from Crypto.Protocol.DH import key_agreement, import_x25519_public_key, import_x
 def kdf(x):
         return SHAKE128.new(x).read(32)    # Noncompliant {{(ExtendableOutputFunction) SHAKE128}}
 
-pub_key = import_x25519_public_key(b'some 32 bytes public key')
-priv_key = import_x25519_private_key(b'some 32 bytes private key')
+pub_key = import_x25519_public_key(b'\xab' * 32)
+priv_key = import_x25519_private_key(b'\xcd' * 32)
 
 session_key = key_agreement(               # Noncompliant {{(KeyAgreement) x25519}}
         kdf=kdf,
