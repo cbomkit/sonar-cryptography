@@ -75,7 +75,7 @@ public final class PythonCryptoHash extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA512"))
                     .withOptionalNamedMethodParameter("data", ANY)
-                    .withOptionalNamedMethodParameter("truncate", "int")
+                    .withOptionalNamedMethodParameter("truncate", "str")
                     .shouldBeDetectedAs(new DigestSizeFactory<>(UnitType.BIT))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new DigestContext(Map.of("preHash", "SHA512")))
