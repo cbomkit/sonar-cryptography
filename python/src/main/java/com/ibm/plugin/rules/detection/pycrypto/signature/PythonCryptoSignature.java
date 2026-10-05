@@ -112,7 +112,7 @@ public final class PythonCryptoSignature extends DetectionRuleSet<Tree> {
                     .asChildOfParameterWithId(-1)
                     .addDependingDetectionRules(RuleSets.rulesOf(PythonCryptoRSA.class))
                     .withOptionalNamedMethodParameter("mask_func", ANY)
-                    .withOptionalNamedMethodParameter("salt", "int")
+                    .withOptionalNamedMethodParameter("salt_bytes", "int")
                     .shouldBeDetectedAs(new SaltSizeFactory<>(UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("rand_func", ANY)
