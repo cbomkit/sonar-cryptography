@@ -127,7 +127,7 @@ public final class PythonCryptoSignature extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Signature.pss", "Cryptodome.Signature.pss")
                     .forMethods("MGF1")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MGF1"))
-                    .withNamedMethodParameter("msgSeed", ANY)
+                    .withNamedMethodParameter("mgfSeed", ANY)
                     .withNamedMethodParameter("maskLen", "int")
                     .withNamedMethodParameter("hash_gen", ANY) // Crypto.Hash.* or Cryptodome.Hash.*
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
