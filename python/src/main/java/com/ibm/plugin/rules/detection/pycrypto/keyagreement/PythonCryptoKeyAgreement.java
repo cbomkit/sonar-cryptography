@@ -101,8 +101,9 @@ public final class PythonCryptoKeyAgreement extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Protocol.DH", "Cryptodome.Protocol.DH")
                     .forMethods("key_agreement")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withMethodParameter(ANY) // kdf
-                    .withMethodParameter(
+                    .withNamedMethodParameter("kdf", ANY) // kdf
+                    .withOptionalNamedMethodParameter(
+                            "static_priv",
                             ANY) // Crypto.PublicKey.ECC.ECCKey or Cryptodome.PublicKey.ECC.ECCKey
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
@@ -113,7 +114,32 @@ public final class PythonCryptoKeyAgreement extends DetectionRuleSet<Tree> {
                                                     IMPORT_X25519_PRIVATE_KEY,
                                                     IMPORT_X448_PRIVATE_KEY))
                                     .toList())
-                    .withMethodParameter(
+                    .withOptionalNamedMethodParameter(
+                            "static_pub",
+                            ANY) // Crypto.PublicKey.ECC.ECCKey or Cryptodome.PublicKey.ECC.ECCKey
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(
+                            Stream.concat(
+                                            RuleSets.rulesOf(PythonCryptoECC.class).stream(),
+                                            Stream.of(
+                                                    IMPORT_X25519_PUBLIC_KEY,
+                                                    IMPORT_X448_PUBLIC_KEY))
+                                    .toList())
+                    .withOptionalNamedMethodParameter(
+                            "eph_priv",
+                            ANY) // Crypto.PublicKey.ECC.ECCKey or Cryptodome.PublicKey.ECC.ECCKey
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(
+                            Stream.concat(
+                                            RuleSets.rulesOf(PythonCryptoECC.class).stream(),
+                                            Stream.of(
+                                                    IMPORT_X25519_PRIVATE_KEY,
+                                                    IMPORT_X448_PRIVATE_KEY))
+                                    .toList())
+                    .withOptionalNamedMethodParameter(
+                            "eph_pub",
                             ANY) // Crypto.PublicKey.ECC.ECCKey or Cryptodome.PublicKey.ECC.ECCKey
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
