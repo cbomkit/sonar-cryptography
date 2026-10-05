@@ -246,7 +246,7 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .withOptionalNamedMethodParameter("hashAlgo", ANY)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
-                    .withOptionalNamedMethodParameter("msgfunc", ANY)
+                    .withOptionalNamedMethodParameter("mgfunc", ANY)
                     .withOptionalNamedMethodParameter("label", ANY)
                     .withOptionalNamedMethodParameter("randfunc", ANY)
                     .buildForContext(new CipherContext())
