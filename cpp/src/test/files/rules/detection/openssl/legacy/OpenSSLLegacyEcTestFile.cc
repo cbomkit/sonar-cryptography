@@ -6,7 +6,7 @@
 // reference (CurveNid::P256), not the normal enclosing-scope chain.
 enum class CurveNid : int { P256 = 415 };
 
-void test_legacy_ec() {
+void test_legacy_ec(EC_KEY *signing_key) {
     EC_KEY* key = NULL;
     EC_GROUP* grp = NULL;
     EC_POINT* pt = NULL;
@@ -28,10 +28,10 @@ void test_legacy_ec() {
     // CxxSymbolResolverVisitor's TypeSymbol#memberScope lookup.
     EC_KEY_new_by_curve_name(CurveNid::P256); // Noncompliant {{(PublicKeyEncryption) EC-secp256r1}}
 
-    ECDSA_sign(0, buf, 32, buf, &siglen, key); // Noncompliant {{(Signature) ECDSA}}
-    ECDSA_do_sign(buf, 32, key); // Noncompliant {{(Signature) ECDSA}}
-    ECDSA_sign_ex(0, buf, 32, buf, &siglen, bn, bn, key); // Noncompliant {{(Signature) ECDSA}}
-    ECDSA_do_sign_ex(buf, 32, bn, bn, key); // Noncompliant {{(Signature) ECDSA}}
+    ECDSA_sign(0, buf, 32, buf, &siglen, signing_key); // Noncompliant {{(Signature) ECDSA}}
+    ECDSA_do_sign(buf, 32, signing_key); // Noncompliant {{(Signature) ECDSA}}
+    ECDSA_sign_ex(0, buf, 32, buf, &siglen, bn, bn, signing_key); // Noncompliant {{(Signature) ECDSA}}
+    ECDSA_do_sign_ex(buf, 32, bn, bn, signing_key); // Noncompliant {{(Signature) ECDSA}}
 
     EC_GROUP_new_by_curve_name(415); // Noncompliant {{(PublicKeyEncryption) EC-secp256r1}}
     EC_GROUP_new_by_curve_name_ex(NULL, NULL, 415); // Noncompliant {{(PublicKeyEncryption) EC-secp256r1}}
@@ -41,5 +41,5 @@ void test_legacy_ec() {
     EC_GROUP_new_from_ecpkparameters(NULL); // Noncompliant {{(PublicKeyEncryption) EC}}
     EC_GROUP_new_from_params(NULL, NULL, NULL); // Noncompliant {{(PublicKeyEncryption) EC}}
 
-    ECDH_compute_key(buf, sizeof(buf), pt, key, NULL); // Noncompliant {{(KeyAgreement) ECDH}}
+    ECDH_compute_key(buf, sizeof(buf), pt, signing_key, NULL); // Noncompliant {{(KeyAgreement) ECDH}}
 }

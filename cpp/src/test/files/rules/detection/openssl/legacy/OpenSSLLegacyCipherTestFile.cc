@@ -56,14 +56,14 @@ void test_legacy_cipher_des() {
     int num = 0;
     DES_key_schedule ds;
     DES_cblock dc;
-    DES_set_key(&dc, &ds); // Noncompliant {{(BlockCipher) DES-56}}
+    DES_set_key(&dc, &ds);
     DES_ecb_encrypt(&dc, &dc, &ds, 1); // Noncompliant {{(BlockCipher) DES-56-ECB}}
     DES_ede3_cbc_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, 1); // Noncompliant {{(BlockCipher) DESede168-CBC}}
     DES_ecb3_encrypt(&dc, &dc, &ds, &ds, &ds, 1); // Noncompliant {{(BlockCipher) DESede168-ECB}}
     DES_ede3_cfb64_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, &num, 1); // Noncompliant {{(BlockCipher) DESede168-CFB}}
     DES_ofb64_encrypt(buf, buf, 64, &ds, &dc, &num); // Noncompliant {{(BlockCipher) DES-56-OFB}}
-    DES_set_key_checked(&dc, &ds); // Noncompliant {{(BlockCipher) DES-56}}
-    DES_set_key_unchecked(&dc, &ds); // Noncompliant {{(BlockCipher) DES-56}}
+    DES_set_key_checked(&dc, &ds);
+    DES_set_key_unchecked(&dc, &ds);
     DES_ncbc_encrypt(buf, buf, 64, &ds, &dc, 1); // Noncompliant {{(BlockCipher) DES-56-CBC}}
     DES_cbc_encrypt(buf, buf, 64, &ds, &dc, 1); // Noncompliant {{(BlockCipher) DES-56-CBC}}
     DES_cfb64_encrypt(buf, buf, 64, &ds, &dc, &num, 1); // Noncompliant {{(BlockCipher) DES-56-CFB}}
@@ -123,8 +123,8 @@ void test_legacy_cipher_idea() {
     unsigned char iv[8];
     int num = 0;
     IDEA_KEY_SCHEDULE ik;
-    IDEA_set_encrypt_key(buf, &ik); // Noncompliant {{(BlockCipher) IDEA}}
-    IDEA_set_decrypt_key(&ik, &ik); // Noncompliant {{(BlockCipher) IDEA}}
+    IDEA_set_encrypt_key(buf, &ik);
+    IDEA_set_decrypt_key(&ik, &ik);
     IDEA_ecb_encrypt(buf, buf, &ik); // Noncompliant {{(BlockCipher) IDEA-ECB}}
     IDEA_cbc_encrypt(buf, buf, 64, &ik, iv, 1); // Noncompliant {{(BlockCipher) IDEA-CBC}}
     IDEA_cfb64_encrypt(buf, buf, 64, &ik, iv, &num, 1); // Noncompliant {{(BlockCipher) IDEA-CFB}}
@@ -152,7 +152,7 @@ void test_legacy_cipher_seed() {
     unsigned char iv[16];
     int num = 0;
     SEED_KEY_SCHEDULE sk;
-    SEED_set_key(buf, &sk); // Noncompliant {{(BlockCipher) SEED-128}}
+    SEED_set_key(buf, &sk);
     SEED_ecb_encrypt(buf, buf, &sk, 1); // Noncompliant {{(BlockCipher) SEED-128-ECB}}
     SEED_cbc_encrypt(buf, buf, 64, &sk, iv, 1); // Noncompliant {{(BlockCipher) SEED-128-CBC}}
     SEED_cfb128_encrypt(buf, buf, 64, &sk, iv, &num, 1); // Noncompliant {{(BlockCipher) SEED-128-CFB}}

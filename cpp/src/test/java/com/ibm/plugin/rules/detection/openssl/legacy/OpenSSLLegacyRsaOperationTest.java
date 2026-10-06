@@ -49,8 +49,8 @@ class OpenSSLLegacyRsaOperationTest extends TestBase {
                     // 4: RSA_public_encrypt(len, in, out, rsa, RSA_PKCS1_OAEP_PADDING);
                     finding(
                             "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:RSA-OAEP}]",
-                            "PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, Oid:1.2.840.113549.1.1.7, "
-                                    + "Padding:OAEP]"),
+                            "PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, "
+                                    + "Oid:1.2.840.113549.1.1.7, Padding:OAEP]"),
                     // 5: RSA_private_decrypt(len, in, out, rsa, RSA_PKCS1_PADDING);
                     finding(
                             "CipherContext{CipherAction:DECRYPT}[CipherContext{ValueAction:RSA-PKCS1-TYPE2}]",
@@ -59,11 +59,13 @@ class OpenSSLLegacyRsaOperationTest extends TestBase {
                     // 6: RSA_public_encrypt(len, in, out, rsa, RSA_NO_PADDING);
                     finding(
                             "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:RSA-NO-PADDING}]",
-                            "PublicKeyEncryption:RSA[Encrypt:ENCRYPT, Oid:1.2.840.113549.1.1.1]"),
+                            "PublicKeyEncryption:RSA[Encrypt:ENCRYPT, Oid:1.2.840.113549.1.1.1, "
+                                    + "Padding:Raw]"),
                     // 10: RSA_private_encrypt(len, in, out, rsa, RSA_PKCS1_PADDING);
                     finding(
                             "SignatureContext{SignatureAction:SIGN}[SignatureContext{ValueAction:RSA-PKCS1}]",
-                            "Signature:RSA-PKCS1-1.5[Oid:1.2.840.113549.1.1.1, Padding:PKCS1, Sign:SIGN]"),
+                            "Signature:RSA-PKCS1-1.5[Oid:1.2.840.113549.1.1.1, Padding:PKCS1, "
+                                    + "Sign:SIGN]"),
                     // 11: RSA_public_decrypt(len, in, out, rsa, RSA_X931_PADDING);
                     finding(
                             "SignatureContext{SignatureAction:VERIFY}[SignatureContext{ValueAction:RSA-X931}]",

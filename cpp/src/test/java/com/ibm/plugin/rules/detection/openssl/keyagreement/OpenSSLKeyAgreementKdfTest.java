@@ -46,14 +46,15 @@ class OpenSSLKeyAgreementKdfTest extends TestBase {
                     finding(
                             "KeyDerivationFunctionContext{ValueAction:X963KDF}[KeyDerivationFunctionContext{}[DigestContext{ValueAction:SHA-256}]]",
                             "KeyDerivationFunction:ANSI-KDF-X9.63[KeyDerivation:KEYDERIVATION, "
-                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]]"),
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]]"),
                     // 16: EVP_PKEY_CTX_set_dh_kdf_type(ctx, EVP_PKEY_DH_KDF_X9_42);
                     finding(
                             "KeyDerivationFunctionContext{ValueAction:X942KDF-ASN1}[KeyDerivationFunctionContext{}[DigestContext{ValueAction:SHA-384}]]",
                             "KeyDerivationFunction:ANSI-KDF-X9.42-SHA-384-ASN1[KeyDerivation:KEYDERIVATION, "
-                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
-                                    + "Oid:2.16.840.1.101.3.4.2.2], ParameterSetIdentifier:ASN1]"),
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, "
+                                    + "DigestSize:384, Oid:2.16.840.1.101.3.4.2.2], "
+                                    + "ParameterSetIdentifier:ASN1]"),
                     // 29: EVP_KEM_fetch(NULL, "RSA", NULL);
                     finding(
                             "KeyAgreementContext{Algorithm:RSA}",
@@ -101,6 +102,16 @@ class OpenSSLKeyAgreementKdfTest extends TestBase {
                                     + "Oid:1.3.101.110]]]"),
                     // 42: OSSL_HPKE_CTX *receiver = OSSL_HPKE_CTX_new(OSSL_HPKE_MODE_BASE,
                     // explicit_suite, OSSL_HPKE_ROLE_RECEIVER, NULL, NULL);
+                    finding(
+                            "KeyAgreementContext{ValueAction:P-256,HKDF-SHA256,AES-256-GCM}",
+                            "PublicKeyEncryption:HPKE[AuthenticatedEncryption:AES-256-GCM[BlockSize:128, "
+                                    + "KeyLength:256, Mode:GCM, Oid:2.16.840.1.101.3.4.1.46], "
+                                    + "KeyDerivationFunction:HKDF-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]], "
+                                    + "KeyEncapsulationMechanism:DHKEM[KeyAgreement:ECDH[EllipticCurve:secp256r1, "
+                                    + "Oid:1.3.132.1.12]]]"),
+                    // 44: OSSL_HPKE_CTX *numeric = OSSL_HPKE_CTX_new(OSSL_HPKE_MODE_BASE,
+                    // numeric_suite, OSSL_HPKE_ROLE_SENDER, NULL, NULL);
                     finding(
                             "KeyAgreementContext{ValueAction:P-256,HKDF-SHA256,AES-256-GCM}",
                             "PublicKeyEncryption:HPKE[AuthenticatedEncryption:AES-256-GCM[BlockSize:128, "

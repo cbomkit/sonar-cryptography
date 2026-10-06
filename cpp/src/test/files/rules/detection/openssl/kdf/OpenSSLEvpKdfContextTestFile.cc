@@ -87,3 +87,13 @@ void hkdf_with_digest_set_by_param_macro() {
     };
     EVP_KDF_CTX_set_params(kctx, params);
 }
+
+void hkdf_with_key_length_and_digest_on_derive(unsigned char *out) {
+    EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL); // Noncompliant {{(KeyDerivationFunction) HKDF-SHA-256}}
+    EVP_KDF_CTX *kctx = EVP_KDF_CTX_new(kdf);
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0),
+        OSSL_PARAM_construct_end()
+    };
+    EVP_KDF_derive(kctx, out, 32, params);
+}

@@ -47,13 +47,15 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                             "KeyContext{ValueAction:DSA}[KeyContext{KeySize:2048}, "
                                     + "KeyContext{}[DigestContext{ValueAction:SHA-256}]]",
                             "Signature:DSA-2048-SHA-256[KeyLength:2048, "
-                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1], Oid:2.16.840.1.101.3.4.3.2]"),
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:2.16.840.1.101.3.4.3.2]"),
                     // 14: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_from_name(NULL, "DSA", NULL);
                     finding(
                             "KeyContext{Algorithm:DSA}[DigestContext{Algorithm:SHA-256}]",
-                            "Signature:DSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
-                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:2.16.840.1.101.3.4.3.2]"),
+                            "Signature:DSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:2.16.840.1.101.3.4.3.2]"),
                     // 19: EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
                     finding(
                             "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-prime256v1}]",
@@ -126,9 +128,8 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                     // 67: EVP_PKEY_Q_keygen(NULL, NULL, "MLKEM1024");
                     finding(
                             "PrivateKeyContext{Algorithm:ML-KEM-1024}",
-                            "PrivateKey:ML-KEM[KeyEncapsulationMechanism:ML-KEM-1024["
-                                    + "KeyGeneration:KEYGENERATION, Oid:2.16.840.1.101.3.4.4.3, "
-                                    + "ParameterSetIdentifier:1024]]"),
+                            "PrivateKey:ML-KEM[KeyEncapsulationMechanism:ML-KEM-1024[KeyGeneration:KEYGENERATION, "
+                                    + "Oid:2.16.840.1.101.3.4.4.3, ParameterSetIdentifier:1024]]"),
                     // 68: EVP_PKEY_Q_keygen(NULL, NULL, "MLDSA65");
                     finding(
                             "PrivateKeyContext{Algorithm:ML-DSA-65}",
@@ -155,7 +156,17 @@ class OpenSSLEvpKeyGenTest extends TestBase {
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}]",
                             "PrivateKey:RSA[KeyLength:2048, "
                                     + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
-                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"));
+                                    + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
+                    // 98: EVP_PKEY_CTX *prime = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-prime239v1}]",
+                            "PublicKeyEncryption:EC-prime239v1[EllipticCurve:prime239v1, "
+                                    + "Oid:1.2.840.10045.2.1]"),
+                    // 101: EVP_PKEY_CTX *binary = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+                    finding(
+                            "KeyContext{ValueAction:EC}[KeyContext{Curve:EC-c2pnb163v3}]",
+                            "PublicKeyEncryption:EC-c2pnb163v3[EllipticCurve:c2pnb163v3, "
+                                    + "Oid:1.2.840.10045.2.1]"));
 
     private int findings = 0;
 

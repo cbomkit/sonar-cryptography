@@ -47,26 +47,26 @@ class OpenSSLEvpSignatureTest extends TestBase {
 
     private static final List<ExpectedFinding> FINDINGS =
             List.of(
-                    // 11: const EVP_MD* sign_md = EVP_sha256();
+                    // 12: EVP_DigestSignInit(ctx, NULL, sign_md, NULL, NULL);
                     finding(
-                            "DigestContext{ValueAction:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
-                    // 13: const EVP_MD* verify_md = EVP_sha256();
+                            "SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-256}]",
+                            "Signature:unknown[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Sign:SIGN]"),
+                    // 14: EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL);
                     finding(
-                            "DigestContext{ValueAction:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                            "SignatureContext{SignatureAction:VERIFY}[DigestContext{ValueAction:SHA-256}]",
+                            "Signature:unknown[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Verify:VERIFY]"),
                     // 17: EVP_DigestSignInit_ex(ctx, NULL, "SHA2-256", NULL, NULL, NULL, NULL);
                     finding(
-                            "DigestContext{Algorithm:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                            "SignatureContext{SignatureAction:SIGN}[SignatureContext{Algorithm:SHA-256}]",
+                            "Signature:unknown[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Sign:SIGN]"),
                     // 18: EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL);
                     finding(
-                            "DigestContext{Algorithm:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                            "SignatureContext{SignatureAction:VERIFY}[SignatureContext{Algorithm:SHA-256}]",
+                            "Signature:unknown[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Verify:VERIFY]"),
                     // 48: EVP_SIGNATURE_fetch(NULL, "RSA", NULL);
                     finding(
                             "SignatureContext{Algorithm:RSA}",
@@ -79,8 +79,9 @@ class OpenSSLEvpSignatureTest extends TestBase {
                     // 53: EVP_PKEY_CTX_set_rsa_mgf1_md_name(pctx, "SHA256", NULL);
                     finding(
                             "DigestContext{Algorithm:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                            "MaskGenerationFunction:MGF1[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.8]"),
                     // 54: EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, 32);
                     finding(
                             "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}]",
@@ -91,16 +92,35 @@ class OpenSSLEvpSignatureTest extends TestBase {
                             "DigestContext{ValueAction:SHA-256}",
                             "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
                                     + "Oid:2.16.840.1.101.3.4.2.1]"),
-                    // 57: const EVP_MD* pss_keygen_md = EVP_sha256();
+                    // 58: EVP_PKEY_CTX_set_rsa_pss_keygen_md(pctx, pss_keygen_md);
                     finding(
-                            "DigestContext{ValueAction:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
-                    // 60: const EVP_MD* pss_keygen_mgf1_md = EVP_sha256();
+                            "SignatureContext{ValueAction:RSA-PSS}[DigestContext{ValueAction:SHA-256}]",
+                            "ProbabilisticSignatureScheme:RSA-PSS[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.10]"),
+                    // 59: EVP_PKEY_CTX_set_rsa_pss_keygen_md_name(pctx, "SHA256", NULL);
                     finding(
-                            "DigestContext{ValueAction:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"));
+                            "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{Algorithm:SHA-256}]",
+                            "ProbabilisticSignatureScheme:RSA-PSS[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.10]"),
+                    // 61: EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, pss_keygen_mgf1_md);
+                    finding(
+                            "SignatureContext{ValueAction:RSA-PSS}[DigestContext{ValueAction:SHA-256}]",
+                            "ProbabilisticSignatureScheme:RSA-PSS[MaskGenerationFunction:MGF1[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.8], Oid:1.2.840.113549.1.1.10]"),
+                    // 62: EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(pctx, "SHA256");
+                    finding(
+                            "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{Algorithm:SHA-256}]",
+                            "ProbabilisticSignatureScheme:RSA-PSS[MaskGenerationFunction:MGF1[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.8], Oid:1.2.840.113549.1.1.10]"),
+                    // 63: EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(pctx, 32);
+                    finding(
+                            "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}]",
+                            "ProbabilisticSignatureScheme:RSA-PSS[Oid:1.2.840.113549.1.1.10, "
+                                    + "SaltLength:256]"));
 
     private int findings = 0;
 

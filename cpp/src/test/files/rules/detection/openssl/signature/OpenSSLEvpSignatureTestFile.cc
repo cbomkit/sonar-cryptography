@@ -8,14 +8,14 @@ void test_evp_signature() {
 
     // DigestSign / DigestVerify init: the digest argument is traced back to its constructing
     // call, independent of the (unresolvable) key algorithm carried by the EVP_PKEY.
-    const EVP_MD* sign_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
-    EVP_DigestSignInit(ctx, NULL, sign_md, NULL, NULL);
-    const EVP_MD* verify_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
-    EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL);
+    const EVP_MD* sign_md = EVP_sha256();
+    EVP_DigestSignInit(ctx, NULL, sign_md, NULL, NULL); // Noncompliant {{(Signature) unknown}}
+    const EVP_MD* verify_md = EVP_sha256();
+    EVP_DigestVerifyInit(ctx, NULL, verify_md, NULL, NULL); // Noncompliant {{(Signature) unknown}}
     // *_ex's mdname is a digest name, reported as a digest. Given as the OpenSSL 3.x provider
     // fetch name here and the legacy alias below.
-    EVP_DigestSignInit_ex(ctx, NULL, "SHA2-256", NULL, NULL, NULL, NULL); // Noncompliant {{(MessageDigest) SHA-256}}
-    EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL); // Noncompliant {{(MessageDigest) SHA-256}}
+    EVP_DigestSignInit_ex(ctx, NULL, "SHA2-256", NULL, NULL, NULL, NULL); // Noncompliant {{(Signature) unknown}}
+    EVP_DigestVerifyInit_ex(ctx, NULL, "SHA256", NULL, NULL, NULL, NULL); // Noncompliant {{(Signature) unknown}}
     EVP_DigestSign(ctx, NULL, NULL, 0, NULL, 0);
     EVP_DigestVerify(ctx, NULL, 0, NULL, 0);
 
@@ -50,15 +50,15 @@ void test_evp_signature() {
     // RSA PSS / MGF1 CTX setters
     const EVP_MD* mgf1_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
     EVP_PKEY_CTX_set_rsa_mgf1_md(pctx, mgf1_md);
-    EVP_PKEY_CTX_set_rsa_mgf1_md_name(pctx, "SHA256", NULL); // Noncompliant {{(MessageDigest) SHA-256}}
+    EVP_PKEY_CTX_set_rsa_mgf1_md_name(pctx, "SHA256", NULL); // Noncompliant {{(MaskGenerationFunction) MGF1}}
     EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, 32); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
     const EVP_MD* signature_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
     EVP_PKEY_CTX_set_signature_md(pctx, signature_md);
-    const EVP_MD* pss_keygen_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
-    EVP_PKEY_CTX_set_rsa_pss_keygen_md(pctx, pss_keygen_md);
-    EVP_PKEY_CTX_set_rsa_pss_keygen_md_name(pctx, "SHA256", NULL);
-    const EVP_MD* pss_keygen_mgf1_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
-    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, pss_keygen_mgf1_md);
-    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(pctx, "SHA256", NULL);
-    EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(pctx, 32);
+    const EVP_MD* pss_keygen_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_pss_keygen_md(pctx, pss_keygen_md); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
+    EVP_PKEY_CTX_set_rsa_pss_keygen_md_name(pctx, "SHA256", NULL); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
+    const EVP_MD* pss_keygen_mgf1_md = EVP_sha256();
+    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(pctx, pss_keygen_mgf1_md); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
+    EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(pctx, "SHA256"); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
+    EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(pctx, 32); // Noncompliant {{(ProbabilisticSignatureScheme) RSA-PSS}}
 }

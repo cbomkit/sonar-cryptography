@@ -107,8 +107,12 @@ class OpenSSLLibsslContextTest extends TestBase {
                     // 33: SSL_CTX_set1_sigalgs_list(ctx, "ECDSA+SHA256:RSA-PSS+SHA256");
                     finding(
                             "ProtocolContext{Algorithm:ECDSA+SHA256:RSA-PSS+SHA256}",
-                            "MergeableCollection:[Signature:ECDSA, "
-                                    + "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]]"),
+                            "MergeableCollection:[Signature:ECDSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.10045.4.3.2], "
+                                    + "ProbabilisticSignatureScheme:RSA-PSS[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.10]]"),
                     // 34: SSL_set_min_proto_version(ssl, TLS1_3_VERSION);
                     finding("ProtocolContext{Protocol:TLSv1.3}", "TLS:TLSv1.3[Version:1.3]"),
                     // 35: SSL_set_ciphersuites(ssl, "TLS_AES_128_GCM_SHA256");

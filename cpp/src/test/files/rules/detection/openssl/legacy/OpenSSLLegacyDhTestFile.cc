@@ -1,6 +1,6 @@
 #include <openssl/dh.h>
 
-void test_legacy_dh() {
+void test_legacy_dh(DH *key) {
     DH* dh = NULL;
     unsigned char secret[256];
     BIGNUM* pub_key = NULL;
@@ -10,5 +10,5 @@ void test_legacy_dh() {
     DH_get_1024_160(); // Noncompliant {{(PublicKeyEncryption) FFDH-1024}}
     DH_get_2048_224(); // Noncompliant {{(PublicKeyEncryption) FFDH-2048}}
     DH_get_2048_256(); // Noncompliant {{(PublicKeyEncryption) FFDH-2048}}
-    DH_compute_key(secret, pub_key, dh); // Noncompliant {{(KeyAgreement) FFDH}}
+    DH_compute_key(secret, pub_key, key); // Noncompliant {{(KeyAgreement) FFDH}}
 }

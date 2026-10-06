@@ -179,8 +179,13 @@ class OpenSSLLibsslTest extends TestBase {
                     // "SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256");
                     finding(
                             "ProtocolContext{Algorithm:SLH-DSA-SHA2-256s:ECDSA+SHA256:RSA+SHA256}",
-                            "MergeableCollection:[Signature:SLH-DSA, Signature:ECDSA, "
-                                    + "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]]"),
+                            "MergeableCollection:[Signature:SLH-DSA-SHA2-256S[ParameterSetIdentifier:SHA2-256S], "
+                                    + "Signature:ECDSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.10045.4.3.2], "
+                                    + "Signature:RSA-PKCS1-1.5-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.11, Padding:PKCS1]]"),
                     // 82: SSL_CTX_set1_groups_list(ctx, "MLKEM768:X25519:secp256r1");
                     finding(
                             "ProtocolContext{Algorithm:MLKEM768:X25519:secp256r1}",
@@ -191,7 +196,9 @@ class OpenSSLLibsslTest extends TestBase {
                     // 84: SSL_CTX_set1_client_sigalgs_list(ctx, "ECDSA+SHA256");
                     finding(
                             "ProtocolContext{Algorithm:ECDSA+SHA256}",
-                            "MergeableCollection:[Signature:ECDSA]"),
+                            "MergeableCollection:[Signature:ECDSA-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.10045.4.3.2]]"),
                     // 85: SSL_set1_groups_list(s, "X25519");
                     finding(
                             "ProtocolContext{Algorithm:X25519}",
@@ -200,7 +207,9 @@ class OpenSSLLibsslTest extends TestBase {
                     // 86: SSL_set1_sigalgs_list(s, "ECDSA+SHA384");
                     finding(
                             "ProtocolContext{Algorithm:ECDSA+SHA384}",
-                            "MergeableCollection:[Signature:ECDSA]"),
+                            "MergeableCollection:[Signature:ECDSA-SHA-384[MessageDigest:SHA-384[BlockSize:1024, "
+                                    + "Digest:DIGEST, DigestSize:384, Oid:2.16.840.1.101.3.4.2.2], "
+                                    + "Oid:1.2.840.10045.4.3.3]]"),
                     // 90: SSL_CTX_set1_groups_list(ctx, "X25519:FRODOKEM976AES:secp256r1");
                     finding(
                             "ProtocolContext{Algorithm:X25519:FRODOKEM976AES:secp256r1}",

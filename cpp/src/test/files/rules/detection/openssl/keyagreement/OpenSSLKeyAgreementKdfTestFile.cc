@@ -40,4 +40,6 @@ void hpke_suites() {
     OSSL_HPKE_CTX *sender = OSSL_HPKE_CTX_new(OSSL_HPKE_MODE_BASE, default_suite, OSSL_HPKE_ROLE_SENDER, NULL, NULL); // Noncompliant {{(PublicKeyEncryption) HPKE}}
     OSSL_HPKE_SUITE explicit_suite = {OSSL_HPKE_KEM_ID_P256, OSSL_HPKE_KDF_ID_HKDF_SHA256, OSSL_HPKE_AEAD_ID_AES_GCM_256};
     OSSL_HPKE_CTX *receiver = OSSL_HPKE_CTX_new(OSSL_HPKE_MODE_BASE, explicit_suite, OSSL_HPKE_ROLE_RECEIVER, NULL, NULL); // Noncompliant {{(PublicKeyEncryption) HPKE}}
+    OSSL_HPKE_SUITE numeric_suite = {0x10, 0x1, 0x2};
+    OSSL_HPKE_CTX *numeric = OSSL_HPKE_CTX_new(OSSL_HPKE_MODE_BASE, numeric_suite, OSSL_HPKE_ROLE_SENDER, NULL, NULL); // Noncompliant {{(PublicKeyEncryption) HPKE}}
 }

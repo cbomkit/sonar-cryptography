@@ -54,8 +54,29 @@ void open_envelope(EVP_CIPHER_CTX *ctx, unsigned char *ek, int ekl, unsigned cha
     EVP_OpenInit(ctx, EVP_aes_256_cbc(), ek, ekl, iv, pkey); // Noncompliant {{(BlockCipher) AES-256-CBC}}
 }
 
+void decrypt_cms(CMS_ContentInfo *cms, X509 *cert, BIO *out) {
+    EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048); // Noncompliant {{(PrivateKey) RSA}}
+    CMS_decrypt(cms, pkey, cert, NULL, out, 0);
+}
+
+void decrypt_cms_with_key_set_first(CMS_ContentInfo *cms, X509 *cert, BIO *out) {
+    EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072); // Noncompliant {{(PrivateKey) RSA}}
+    CMS_decrypt_set1_pkey(cms, pkey, cert);
+    CMS_decrypt(cms, NULL, NULL, NULL, out, 0);
+}
+
+void decrypt_cms_with_peer(CMS_ContentInfo *cms, X509 *cert, X509 *peer) {
+    EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-256"); // Noncompliant {{(PrivateKey) EC}}
+    CMS_decrypt_set1_pkey_and_peer(cms, pkey, cert, peer);
+}
+
+void decrypt_pkcs7(PKCS7 *p7, X509 *cert, BIO *out) {
+    EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096); // Noncompliant {{(PrivateKey) RSA}}
+    PKCS7_decrypt(p7, pkey, cert, out, 0);
+}
+
 void key_not_generated_here(X509 *cert, EVP_PKEY *pkey) {
-    X509_sign(cert, pkey, EVP_sha256()); // Noncompliant {{(MessageDigest) SHA-256}}
+    X509_sign(cert, pkey, EVP_sha256()); // Noncompliant {{(Signature) unknown}}
 }
 
 void verify_request_and_crl(X509_REQ *req, X509_CRL *crl) {

@@ -105,65 +105,53 @@ class OpenSSLLegacyCipherTest extends TestBase {
                     finding(
                             "CipherContext{ValueAction:AES-ECB}",
                             "BlockCipher:AES-ECB[BlockSize:128, Mode:ECB, Oid:2.16.840.1.101.3.4.1]"),
-                    // 59: DES_set_key(&dc, &ds);
-                    finding(
-                            "CipherContext{ValueAction:DES}",
-                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
                     // 60: DES_ecb_encrypt(&dc, &dc, &ds, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-ECB}",
+                            "CipherContext{ValueAction:DES-ECB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-ECB[BlockSize:64, KeyLength:56, Mode:ECB]"),
                     // 61: DES_ede3_cbc_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:3DES-CBC}",
+                            "CipherContext{ValueAction:3DES-CBC}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESede168-CBC[BlockSize:64, KeyLength:168, Mode:CBC]"),
                     // 62: DES_ecb3_encrypt(&dc, &dc, &ds, &ds, &ds, 1);
                     finding(
-                            "CipherContext{ValueAction:3DES-ECB}",
+                            "CipherContext{ValueAction:3DES-ECB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESede168-ECB[BlockSize:64, KeyLength:168, Mode:ECB]"),
                     // 63: DES_ede3_cfb64_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, &num, 1);
                     finding(
-                            "CipherContext{ValueAction:3DES-CFB}",
+                            "CipherContext{ValueAction:3DES-CFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESede168-CFB[BlockSize:64, KeyLength:168, Mode:CFB]"),
                     // 64: DES_ofb64_encrypt(buf, buf, 64, &ds, &dc, &num);
                     finding(
-                            "CipherContext{ValueAction:DES-OFB}",
+                            "CipherContext{ValueAction:DES-OFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-OFB[BlockSize:64, KeyLength:56, Mode:OFB]"),
-                    // 65: DES_set_key_checked(&dc, &ds);
-                    finding(
-                            "CipherContext{ValueAction:DES}",
-                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
-                    // 66: DES_set_key_unchecked(&dc, &ds);
-                    finding(
-                            "CipherContext{ValueAction:DES}",
-                            "BlockCipher:DES-56[BlockSize:64, KeyLength:56]"),
                     // 67: DES_ncbc_encrypt(buf, buf, 64, &ds, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-CBC}",
+                            "CipherContext{ValueAction:DES-CBC}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-CBC[BlockSize:64, KeyLength:56, Mode:CBC]"),
                     // 68: DES_cbc_encrypt(buf, buf, 64, &ds, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-CBC}",
+                            "CipherContext{ValueAction:DES-CBC}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-CBC[BlockSize:64, KeyLength:56, Mode:CBC]"),
                     // 69: DES_cfb64_encrypt(buf, buf, 64, &ds, &dc, &num, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-CFB}",
+                            "CipherContext{ValueAction:DES-CFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-CFB[BlockSize:64, KeyLength:56, Mode:CFB]"),
                     // 70: DES_cfb_encrypt(buf, buf, 8, 64, &ds, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-CFB}",
+                            "CipherContext{ValueAction:DES-CFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DES-56-CFB[BlockSize:64, KeyLength:56, Mode:CFB]"),
                     // 71: DES_ede3_cfb_encrypt(buf, buf, 8, 64, &ds, &ds, &ds, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:3DES-CFB}",
+                            "CipherContext{ValueAction:3DES-CFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESede168-CFB[BlockSize:64, KeyLength:168, Mode:CFB]"),
                     // 72: DES_ede3_ofb64_encrypt(buf, buf, 64, &ds, &ds, &ds, &dc, &num);
                     finding(
-                            "CipherContext{ValueAction:3DES-OFB}",
+                            "CipherContext{ValueAction:3DES-OFB}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESede168-OFB[BlockSize:64, KeyLength:168, Mode:OFB]"),
                     // 73: DES_xcbc_encrypt(buf, buf, 64, &ds, &dc, &dc, &dc, 1);
                     finding(
-                            "CipherContext{ValueAction:DES-XCBC}",
+                            "CipherContext{ValueAction:DES-XCBC}[CipherContext{ValueAction:DES}]",
                             "BlockCipher:DESX-184-CBC[BlockSize:64, KeyLength:184, Mode:CBC]"),
                     // 82: BF_ecb_encrypt(buf, buf, &bk, 1);
                     finding(
@@ -233,25 +221,21 @@ class OpenSSLLegacyCipherTest extends TestBase {
                     finding(
                             "CipherContext{ValueAction:CAST5-OFB}[CipherContext{ValueAction:CAST5}[CipherContext{KeySize:80}]]",
                             "BlockCipher:CAST5-80-OFB[BlockSize:64, KeyLength:80, Mode:OFB]"),
-                    // 126: IDEA_set_encrypt_key(buf, &ik);
-                    finding("CipherContext{ValueAction:IDEA}", "BlockCipher:IDEA"),
-                    // 127: IDEA_set_decrypt_key(&ik, &ik);
-                    finding("CipherContext{ValueAction:IDEA}", "BlockCipher:IDEA"),
                     // 128: IDEA_ecb_encrypt(buf, buf, &ik);
                     finding(
-                            "CipherContext{ValueAction:IDEA-ECB}",
+                            "CipherContext{ValueAction:IDEA-ECB}[CipherContext{ValueAction:IDEA}, CipherContext{ValueAction:IDEA}]",
                             "BlockCipher:IDEA-ECB[Mode:ECB]"),
                     // 129: IDEA_cbc_encrypt(buf, buf, 64, &ik, iv, 1);
                     finding(
-                            "CipherContext{ValueAction:IDEA-CBC}",
+                            "CipherContext{ValueAction:IDEA-CBC}[CipherContext{ValueAction:IDEA}, CipherContext{ValueAction:IDEA}]",
                             "BlockCipher:IDEA-CBC[Mode:CBC]"),
                     // 130: IDEA_cfb64_encrypt(buf, buf, 64, &ik, iv, &num, 1);
                     finding(
-                            "CipherContext{ValueAction:IDEA-CFB}",
+                            "CipherContext{ValueAction:IDEA-CFB}[CipherContext{ValueAction:IDEA}, CipherContext{ValueAction:IDEA}]",
                             "BlockCipher:IDEA-CFB[Mode:CFB]"),
                     // 131: IDEA_ofb64_encrypt(buf, buf, 64, &ik, iv, &num);
                     finding(
-                            "CipherContext{ValueAction:IDEA-OFB}",
+                            "CipherContext{ValueAction:IDEA-OFB}[CipherContext{ValueAction:IDEA}, CipherContext{ValueAction:IDEA}]",
                             "BlockCipher:IDEA-OFB[Mode:OFB]"),
                     // 141: Camellia_ecb_encrypt(buf, buf, &cam, 1);
                     finding(
@@ -281,25 +265,21 @@ class OpenSSLLegacyCipherTest extends TestBase {
                     finding(
                             "CipherContext{ValueAction:CAMELLIA-CTR}[CipherContext{ValueAction:CAMELLIA}[CipherContext{KeySize:256}]]",
                             "BlockCipher:CAMELLIA-256-CTR[KeyLength:256, Mode:CTR]"),
-                    // 155: SEED_set_key(buf, &sk);
-                    finding(
-                            "CipherContext{ValueAction:SEED}",
-                            "BlockCipher:SEED-128[BlockSize:128, KeyLength:128]"),
                     // 156: SEED_ecb_encrypt(buf, buf, &sk, 1);
                     finding(
-                            "CipherContext{ValueAction:SEED-ECB}",
+                            "CipherContext{ValueAction:SEED-ECB}[CipherContext{ValueAction:SEED}]",
                             "BlockCipher:SEED-128-ECB[BlockSize:128, KeyLength:128, Mode:ECB]"),
                     // 157: SEED_cbc_encrypt(buf, buf, 64, &sk, iv, 1);
                     finding(
-                            "CipherContext{ValueAction:SEED-CBC}",
+                            "CipherContext{ValueAction:SEED-CBC}[CipherContext{ValueAction:SEED}]",
                             "BlockCipher:SEED-128-CBC[BlockSize:128, KeyLength:128, Mode:CBC]"),
                     // 158: SEED_cfb128_encrypt(buf, buf, 64, &sk, iv, &num, 1);
                     finding(
-                            "CipherContext{ValueAction:SEED-CFB}",
+                            "CipherContext{ValueAction:SEED-CFB}[CipherContext{ValueAction:SEED}]",
                             "BlockCipher:SEED-128-CFB[BlockSize:128, KeyLength:128, Mode:CFB]"),
                     // 159: SEED_ofb128_encrypt(buf, buf, 64, &sk, iv, &num);
                     finding(
-                            "CipherContext{ValueAction:SEED-OFB}",
+                            "CipherContext{ValueAction:SEED-OFB}[CipherContext{ValueAction:SEED}]",
                             "BlockCipher:SEED-128-OFB[BlockSize:128, KeyLength:128, Mode:OFB]"));
 
     private int findings = 0;

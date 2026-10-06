@@ -18,6 +18,8 @@ void rsa_pss_verify(const unsigned char *msg, size_t len, const unsigned char *s
     EVP_PKEY_CTX *pctx = NULL;
     EVP_DigestVerifyInit(mdctx, &pctx, EVP_sha384(), NULL, pkey);
     EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING);
+    EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, 32);
+    EVP_PKEY_CTX_set_rsa_mgf1_md_name(pctx, "SHA256", NULL);
     EVP_DigestVerify(mdctx, sig, siglen, msg, len);
 }
 
@@ -60,7 +62,7 @@ void ed25519_sign(const unsigned char *msg, size_t len, unsigned char *sig, size
 }
 
 EVP_PKEY *returned_key_next_to_signing_with_another_key(EVP_PKEY *other, EVP_MD_CTX *mdctx) {
-    EVP_DigestSignInit(mdctx, NULL, EVP_sha512(), NULL, other); // Noncompliant {{(MessageDigest) SHA-512}}
+    EVP_DigestSignInit(mdctx, NULL, EVP_sha512(), NULL, other); // Noncompliant {{(Signature) unknown}}
     return EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096); // Noncompliant {{(PrivateKey) RSA}}
 }
 

@@ -54,67 +54,70 @@ class OpenSSLLegacyRsaTest extends TestBase {
                             "PrivateKey:RSA[KeyLength:2048, "
                                     + "PublicKeyEncryption:RSA-2048[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.1.1]]"),
-                    // 20: RSA_public_encrypt(32, buf, buf, rsa, 1);
+                    // 20: RSA_public_encrypt(32, buf, buf, key, 1);
                     finding(
                             "CipherContext{CipherAction:ENCRYPT}[CipherContext{ValueAction:RSA-PKCS1-TYPE2}]",
                             "PublicKeyEncryption:RSA[Encrypt:ENCRYPT, Oid:1.2.840.113549.1.1.1, "
                                     + "Padding:PKCS1]"),
-                    // 21: RSA_private_decrypt(32, buf, buf, rsa, 1);
+                    // 21: RSA_private_decrypt(32, buf, buf, key, 1);
                     finding(
                             "CipherContext{CipherAction:DECRYPT}[CipherContext{ValueAction:RSA-PKCS1-TYPE2}]",
                             "PublicKeyEncryption:RSA[Decrypt:DECRYPT, Oid:1.2.840.113549.1.1.1, "
                                     + "Padding:PKCS1]"),
-                    // 23: RSA_sign(NID_sha256, buf, 32, buf, &len, rsa);
+                    // 23: RSA_sign(NID_sha256, buf, 32, buf, &len, key);
                     finding(
                             "SignatureContext{SignatureAction:SIGN}[SignatureContext{ValueAction:RSA-SHA256}]",
                             "Signature:RSA-PKCS1-1.5-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
                                     + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
                                     + "Oid:1.2.840.113549.1.1.11, Sign:SIGN]"),
-                    // 24: RSA_verify(NID_sha256, buf, 32, buf, 32, rsa);
+                    // 24: RSA_verify(NID_sha256, buf, 32, buf, 32, key);
                     finding(
                             "SignatureContext{SignatureAction:VERIFY}[SignatureContext{ValueAction:RSA-SHA256}]",
                             "Signature:RSA-PKCS1-1.5-SHA-256[MessageDigest:SHA-256[BlockSize:512, "
                                     + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
                                     + "Oid:1.2.840.113549.1.1.11, Verify:VERIFY]"),
-                    // 29: RSA_sign(md5_nid, buf, 32, buf, &len, rsa);
+                    // 29: RSA_sign(md5_nid, buf, 32, buf, &len, key);
                     finding(
                             "SignatureContext{SignatureAction:SIGN}[SignatureContext{ValueAction:RSA-MD5}]",
-                            "Signature:RSA-PKCS1-1.5-MD5[MessageDigest:MD5[BlockSize:512, Digest:DIGEST, "
-                                    + "DigestSize:128], Oid:1.2.840.113549.1.1.4, Sign:SIGN]"),
-                    // 30: RSA_verify(md5_nid, buf, 32, buf, 32, rsa);
+                            "Signature:RSA-PKCS1-1.5-MD5[MessageDigest:MD5[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:128], Oid:1.2.840.113549.1.1.4, "
+                                    + "Sign:SIGN]"),
+                    // 30: RSA_verify(md5_nid, buf, 32, buf, 32, key);
                     finding(
                             "SignatureContext{SignatureAction:VERIFY}[SignatureContext{ValueAction:RSA-MD5}]",
-                            "Signature:RSA-PKCS1-1.5-MD5[MessageDigest:MD5[BlockSize:512, Digest:DIGEST, "
-                                    + "DigestSize:128], Oid:1.2.840.113549.1.1.4, Verify:VERIFY]"),
-                    // 32: RSA_private_encrypt(32, buf, buf, rsa, 1);
+                            "Signature:RSA-PKCS1-1.5-MD5[MessageDigest:MD5[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:128], Oid:1.2.840.113549.1.1.4, "
+                                    + "Verify:VERIFY]"),
+                    // 32: RSA_private_encrypt(32, buf, buf, key, 1);
                     finding(
                             "SignatureContext{SignatureAction:SIGN}[SignatureContext{ValueAction:RSA-PKCS1}]",
-                            "Signature:RSA-PKCS1-1.5[Oid:1.2.840.113549.1.1.1, Padding:PKCS1, Sign:SIGN]"),
-                    // 33: RSA_public_decrypt(32, buf, buf, rsa, 1);
+                            "Signature:RSA-PKCS1-1.5[Oid:1.2.840.113549.1.1.1, Padding:PKCS1, "
+                                    + "Sign:SIGN]"),
+                    // 33: RSA_public_decrypt(32, buf, buf, key, 1);
                     finding(
                             "SignatureContext{SignatureAction:VERIFY}[SignatureContext{ValueAction:RSA-PKCS1}]",
                             "Signature:RSA-PKCS1-1.5[Oid:1.2.840.113549.1.1.1, Padding:PKCS1, "
                                     + "Verify:VERIFY]"),
-                    // 35: RSA_padding_add_PKCS1_PSS(rsa, em, mhash, EVP_sha256(), 32);
+                    // 35: RSA_padding_add_PKCS1_PSS(key, em, mhash, EVP_sha256(), 32);
                     finding(
                             "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}, "
                                     + "DigestContext{ValueAction:SHA-256}]",
                             "ProbabilisticSignatureScheme:RSA-PSS[MessageDigest:SHA-256[BlockSize:512, "
                                     + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
                                     + "Oid:1.2.840.113549.1.1.10, SaltLength:256]"),
-                    // 36: RSA_padding_add_PKCS1_PSS_mgf1(rsa, em, mhash, NULL, NULL, 32);
+                    // 36: RSA_padding_add_PKCS1_PSS_mgf1(key, em, mhash, NULL, NULL, 32);
                     finding(
                             "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}]",
                             "ProbabilisticSignatureScheme:RSA-PSS[Oid:1.2.840.113549.1.1.10, "
                                     + "SaltLength:256]"),
-                    // 37: RSA_verify_PKCS1_PSS(rsa, mhash, EVP_sha256(), em, 32);
+                    // 37: RSA_verify_PKCS1_PSS(key, mhash, EVP_sha256(), em, 32);
                     finding(
                             "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}, "
                                     + "DigestContext{ValueAction:SHA-256}]",
                             "ProbabilisticSignatureScheme:RSA-PSS[MessageDigest:SHA-256[BlockSize:512, "
                                     + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
                                     + "Oid:1.2.840.113549.1.1.10, SaltLength:256]"),
-                    // 38: RSA_verify_PKCS1_PSS_mgf1(rsa, mhash, NULL, NULL, em, 32);
+                    // 38: RSA_verify_PKCS1_PSS_mgf1(key, mhash, NULL, NULL, em, 32);
                     finding(
                             "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}]",
                             "ProbabilisticSignatureScheme:RSA-PSS[Oid:1.2.840.113549.1.1.10, "
@@ -127,9 +130,9 @@ class OpenSSLLegacyRsaTest extends TestBase {
                     // NULL);
                     finding(
                             "CipherContext{ValueAction:RSA-OAEP-MGF1}[DigestContext{ValueAction:SHA-384}]",
-                            "PublicKeyEncryption:RSA-OAEP[MessageDigest:SHA-384[BlockSize:1024, "
-                                    + "Digest:DIGEST, DigestSize:384, Oid:2.16.840.1.101.3.4.2.2], "
-                                    + "Oid:1.2.840.113549.1.1.7, Padding:OAEP]"),
+                            "PublicKeyEncryption:RSA-OAEP[Oid:1.2.840.113549.1.1.7, "
+                                    + "Padding:OAEP[MessageDigest:SHA-384[BlockSize:1024, "
+                                    + "Digest:DIGEST, DigestSize:384, Oid:2.16.840.1.101.3.4.2.2]]]"),
                     // 43: RSA_padding_add_PKCS1_type_1(buf, 256, buf, 32);
                     finding(
                             "CipherContext{ValueAction:RSA-PKCS1}",
@@ -162,11 +165,11 @@ class OpenSSLLegacyRsaTest extends TestBase {
                     // 51: RSA_padding_add_none(buf, 256, buf, 32);
                     finding(
                             "CipherContext{ValueAction:RSA-NO-PADDING}",
-                            "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]"),
+                            "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1, Padding:Raw]"),
                     // 52: RSA_padding_check_none(buf, 256, buf, 32, 256);
                     finding(
                             "CipherContext{ValueAction:RSA-NO-PADDING}",
-                            "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1]"),
+                            "PublicKeyEncryption:RSA[Oid:1.2.840.113549.1.1.1, Padding:Raw]"),
                     // 53: RSA_generate_key(2048, 65537, NULL, NULL);
                     finding(
                             "PrivateKeyContext{ValueAction:RSA}[PrivateKeyContext{KeySize:2048}]",

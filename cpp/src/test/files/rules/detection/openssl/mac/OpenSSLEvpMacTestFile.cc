@@ -15,7 +15,8 @@ void test_evp_mac() {
     EVP_MAC_fetch(lib, "BLAKE2BMAC", props); // Noncompliant {{(Mac) BLAKE2b-512}}
     EVP_MAC_fetch(lib, "BLAKE2SMAC", props); // Noncompliant {{(Mac) BLAKE2s-256}}
 
-    EVP_Q_mac(lib, "HMAC", props, "SHA256", NULL, NULL, 0, NULL, 0, NULL, 0, NULL); // Noncompliant {{(Mac) HMAC}}
+    EVP_Q_mac(lib, "HMAC", props, "SHA256", NULL, NULL, 0, NULL, 0, NULL, 0, NULL); // Noncompliant {{(Mac) HMAC-SHA-256}}
+    EVP_Q_mac(lib, OSSL_MAC_NAME_CMAC, props, "AES-128-CBC", NULL, NULL, 0, NULL, 0, NULL, 0, NULL); // Noncompliant {{(Mac) CMAC-AES}}
 
     // Legacy HMAC()/HMAC_Init_ex()/CMAC_Init(): the digest/cipher argument is traced back to
     // its EVP_sha256()/EVP_aes_128_cbc() constructing call

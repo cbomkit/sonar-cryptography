@@ -66,7 +66,8 @@ class OpenSSLSslContextTest extends TestBase {
                                     + "Oid:2.16.840.1.101.3.4.2.2]], IdentifierCollection:[Identifier:0x13, "
                                     + "Identifier:0x02]]], "
                                     + "MergeableCollection:[KeyAgreement:x25519[EllipticCurve:Curve25519, "
-                                    + "Oid:1.3.101.110], Signature:ECDSA], Version:1.2]"),
+                                    + "Oid:1.3.101.110], Signature:ECDSA-SHA-256[MessageDigest:SH"
+                                    + "A-256[BlockSize:512, Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.10045.4.3.2]], Version:1.2]"),
                     // 13: SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
                     finding(
                             "ProtocolContext{}[ProtocolContext{}[ProtocolContext{CipherSuite:TLS_AES_128_GCM_SHA256}, "

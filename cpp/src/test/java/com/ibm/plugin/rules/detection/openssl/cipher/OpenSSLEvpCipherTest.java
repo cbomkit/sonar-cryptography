@@ -62,8 +62,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 11: EVP_aes_128_gcm();
                     finding(
                             "CipherContext{ValueAction:AES-128-GCM}",
-                            "AuthenticatedEncryption:AES-128-GCM[BlockSize:128, KeyLength:128, Mode:GCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.6]"),
+                            "AuthenticatedEncryption:AES-128-GCM[BlockSize:128, KeyLength:128, "
+                                    + "Mode:GCM, Oid:2.16.840.1.101.3.4.1.6]"),
                     // 12: EVP_aes_128_ctr();
                     finding(
                             "CipherContext{ValueAction:AES-128-CTR}",
@@ -72,8 +72,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 13: EVP_aes_128_ccm();
                     finding(
                             "CipherContext{ValueAction:AES-128-CCM}",
-                            "AuthenticatedEncryption:AES-128-CCM[BlockSize:128, KeyLength:128, Mode:CCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.7]"),
+                            "AuthenticatedEncryption:AES-128-CCM[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CCM, Oid:2.16.840.1.101.3.4.1.7]"),
                     // 14: EVP_aes_128_cfb128();
                     finding(
                             "CipherContext{ValueAction:AES-128-CFB}",
@@ -112,8 +112,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 21: EVP_aes_128_wrap_pad();
                     finding(
                             "CipherContext{ValueAction:AES-128-WRAP-PAD}",
-                            "BlockCipher:AES-128-WRAP-PAD[BlockSize:128, KeyLength:128, Mode:WRAP-PAD, "
-                                    + "Oid:2.16.840.1.101.3.4.1.8]"),
+                            "BlockCipher:AES-128-WRAP-PAD[BlockSize:128, KeyLength:128, "
+                                    + "Mode:WRAP-PAD, Oid:2.16.840.1.101.3.4.1.8]"),
                     // 22: EVP_aes_192_cbc();
                     finding(
                             "CipherContext{ValueAction:AES-192-CBC}",
@@ -127,8 +127,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 24: EVP_aes_192_gcm();
                     finding(
                             "CipherContext{ValueAction:AES-192-GCM}",
-                            "AuthenticatedEncryption:AES-192-GCM[BlockSize:128, KeyLength:192, Mode:GCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.26]"),
+                            "AuthenticatedEncryption:AES-192-GCM[BlockSize:128, KeyLength:192, "
+                                    + "Mode:GCM, Oid:2.16.840.1.101.3.4.1.26]"),
                     // 25: EVP_aes_192_ctr();
                     finding(
                             "CipherContext{ValueAction:AES-192-CTR}",
@@ -137,8 +137,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 26: EVP_aes_192_ccm();
                     finding(
                             "CipherContext{ValueAction:AES-192-CCM}",
-                            "AuthenticatedEncryption:AES-192-CCM[BlockSize:128, KeyLength:192, Mode:CCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.27]"),
+                            "AuthenticatedEncryption:AES-192-CCM[BlockSize:128, KeyLength:192, "
+                                    + "Mode:CCM, Oid:2.16.840.1.101.3.4.1.27]"),
                     // 27: EVP_aes_192_cfb128();
                     finding(
                             "CipherContext{ValueAction:AES-192-CFB}",
@@ -172,8 +172,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 33: EVP_aes_192_wrap_pad();
                     finding(
                             "CipherContext{ValueAction:AES-192-WRAP-PAD}",
-                            "BlockCipher:AES-192-WRAP-PAD[BlockSize:128, KeyLength:192, Mode:WRAP-PAD, "
-                                    + "Oid:2.16.840.1.101.3.4.1.28]"),
+                            "BlockCipher:AES-192-WRAP-PAD[BlockSize:128, KeyLength:192, "
+                                    + "Mode:WRAP-PAD, Oid:2.16.840.1.101.3.4.1.28]"),
                     // 34: EVP_aes_256_cbc();
                     finding(
                             "CipherContext{ValueAction:AES-256-CBC}",
@@ -187,8 +187,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 36: EVP_aes_256_gcm();
                     finding(
                             "CipherContext{ValueAction:AES-256-GCM}",
-                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, Mode:GCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.46]"),
+                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:GCM, Oid:2.16.840.1.101.3.4.1.46]"),
                     // 37: EVP_aes_256_ctr();
                     finding(
                             "CipherContext{ValueAction:AES-256-CTR}",
@@ -197,8 +197,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 38: EVP_aes_256_ccm();
                     finding(
                             "CipherContext{ValueAction:AES-256-CCM}",
-                            "AuthenticatedEncryption:AES-256-CCM[BlockSize:128, KeyLength:256, Mode:CCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.47]"),
+                            "AuthenticatedEncryption:AES-256-CCM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:CCM, Oid:2.16.840.1.101.3.4.1.47]"),
                     // 39: EVP_aes_256_cfb128();
                     finding(
                             "CipherContext{ValueAction:AES-256-CFB}",
@@ -237,8 +237,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 46: EVP_aes_256_wrap_pad();
                     finding(
                             "CipherContext{ValueAction:AES-256-WRAP-PAD}",
-                            "BlockCipher:AES-256-WRAP-PAD[BlockSize:128, KeyLength:256, Mode:WRAP-PAD, "
-                                    + "Oid:2.16.840.1.101.3.4.1.48]"),
+                            "BlockCipher:AES-256-WRAP-PAD[BlockSize:128, KeyLength:256, "
+                                    + "Mode:WRAP-PAD, Oid:2.16.840.1.101.3.4.1.48]"),
                     // 47: EVP_camellia_128_ecb();
                     finding(
                             "CipherContext{ValueAction:CAMELLIA-128-ECB}",
@@ -667,8 +667,9 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 164: EVP_PKEY_CTX_set_rsa_oaep_md_name(ctx, "SHA2-256", NULL);
                     finding(
                             "DigestContext{Algorithm:SHA-256}",
-                            "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1]"),
+                            "PublicKeyEncryption:RSA-OAEP[Oid:1.2.840.113549.1.1.7, "
+                                    + "Padding:OAEP[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1]]]"),
                     // 175: EVP_ASYM_CIPHER_fetch(NULL, "RSA", NULL);
                     finding(
                             "CipherContext{Algorithm:RSA}",
@@ -676,8 +677,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 176: EVP_get_cipherbyname("AES-256-GCM");
                     finding(
                             "CipherContext{Algorithm:AES-256-GCM}",
-                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, Mode:GCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.46]"),
+                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:GCM, Oid:2.16.840.1.101.3.4.1.46]"),
                     // 177: EVP_des_ede3_wrap();
                     finding(
                             "CipherContext{ValueAction:DES-EDE3-WRAP}",
@@ -762,8 +763,8 @@ class OpenSSLEvpCipherTest extends TestBase {
                     // 216: EVP_get_cipherbynid(NID_aes_256_gcm);
                     finding(
                             "CipherContext{ValueAction:AES-256-GCM}",
-                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, Mode:GCM, "
-                                    + "Oid:2.16.840.1.101.3.4.1.46]"),
+                            "AuthenticatedEncryption:AES-256-GCM[BlockSize:128, KeyLength:256, "
+                                    + "Mode:GCM, Oid:2.16.840.1.101.3.4.1.46]"),
                     // 217: EVP_get_cipherbynid(1018);
                     finding(
                             "CipherContext{ValueAction:CHACHA20-POLY1305}",

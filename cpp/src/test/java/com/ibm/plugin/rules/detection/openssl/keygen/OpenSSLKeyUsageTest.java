@@ -52,80 +52,91 @@ class OpenSSLKeyUsageTest extends TestBase {
                                     + "PrivateKeyContext{Curve:EC-P-256}]",
                             "PrivateKey:EC[KeyGeneration:KEYGENERATION, "
                                     + "Signature:ECDSA-secp256r1-SHA-256[EllipticCurve:secp256r1, "
-                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
-                                    + "Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.10045.4.3.2, Sign:SIGN]]"),
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.10045.4.3.2, Sign:SIGN]]"),
                     // 13: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
                     finding(
                             "KeyContext{ValueAction:RSA}[KeyContext{KeySize:3072}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[SignatureContext{SignatureAction:VERIFY}[CipherContext{ValueAction:RSA-PSS}, "
+                                    + "SignatureContext{ValueAction:RSA-PSS}[SignatureContext{SaltSize:256}], "
+                                    + "DigestContext{Algorithm:SHA-256}, "
                                     + "DigestContext{ValueAction:SHA-384}]]]",
                             "PrivateKey:RSA[KeyGeneration:KEYGENERATION, KeyLength:3072, "
                                     + "ProbabilisticSignatureScheme:RSA-PSS[KeyLength:3072, "
-                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, DigestSize:384, "
-                                    + "Oid:2.16.840.1.101.3.4.2.2], Oid:1.2.840.113549.1.1.10, "
-                                    + "Verify:VERIFY]]"),
-                    // 25: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
+                                    + "MaskGenerationFunction:MGF1[MessageDigest:SHA-256[BlockSize:512, "
+                                    + "Digest:DIGEST, DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.1.1.8], "
+                                    + "MessageDigest:SHA-384[BlockSize:1024, Digest:DIGEST, "
+                                    + "DigestSize:384, Oid:2.16.840.1.101.3.4.2.2], "
+                                    + "Oid:1.2.840.113549.1.1.10, SaltLength:256, Verify:VERIFY]]"),
+                    // 27: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
                     finding(
                             "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:KDF}]]",
                             "PrivateKey:x25519[KeyAgreement:x25519[EllipticCurve:Curve25519, "
-                                    + "KeyDerivation:KEYDERIVATION, KeyGeneration:KEYGENERATION, Oid:1.3.101.110]]"),
-                    // 33: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
+                                    + "KeyDerivation:KEYDERIVATION, KeyGeneration:KEYGENERATION, "
+                                    + "Oid:1.3.101.110]]"),
+                    // 35: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "EC", "P-384");
                     finding(
                             "PrivateKeyContext{Algorithm:EC}[KeyContext{}[KeyContext{KeyAction:KDF}], "
                                     + "PrivateKeyContext{Curve:EC-P-384}]",
                             "PrivateKey:EC[KeyAgreement:ECDH[EllipticCurve:secp384r1, "
-                                    + "KeyDerivation:KEYDERIVATION, Oid:1.3.132.1.12], KeyGeneration:KEYGENERATION]"),
-                    // 41: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048);
+                                    + "KeyDerivation:KEYDERIVATION, Oid:1.3.132.1.12], "
+                                    + "KeyGeneration:KEYGENERATION]"),
+                    // 43: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 2048);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[CipherContext{CipherAction:ENCRYPT}, "
-                                    + "CipherContext{ValueAction:RSA-OAEP}], PrivateKeyContext{KeySize:2048}]",
+                                    + "CipherContext{ValueAction:RSA-OAEP}], "
+                                    + "PrivateKeyContext{KeySize:2048}]",
                             "PrivateKey:RSA[KeyLength:2048, "
                                     + "PublicKeyEncryption:RSA-OAEP[Encrypt:ENCRYPT, "
                                     + "KeyGeneration:KEYGENERATION, KeyLength:2048, "
                                     + "Oid:1.2.840.113549.1.1.7, Padding:OAEP]]"),
-                    // 49: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ML-KEM-768");
+                    // 51: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ML-KEM-768");
                     finding(
                             "PrivateKeyContext{Algorithm:ML-KEM-768}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",
                             "PrivateKey:ML-KEM[KeyEncapsulationMechanism:ML-KEM-768[Encapsulate:ENCAPSULATE, "
                                     + "KeyGeneration:KEYGENERATION, Oid:2.16.840.1.101.3.4.4.2, "
                                     + "ParameterSetIdentifier:768]]"),
-                    // 56: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ED25519");
+                    // 58: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "ED25519");
                     finding(
                             "PrivateKeyContext{Algorithm:ED25519}[SignatureContext{SignatureAction:SIGN}]",
                             "PrivateKey:Ed25519[Signature:Ed25519[EllipticCurve:Edwards25519, "
-                                    + "KeyGeneration:KEYGENERATION, MessageDigest:SHA-512[BlockSize:1024, "
-                                    + "Digest:DIGEST, DigestSize:512, Oid:2.16.840.1.101.3.4.2.3], "
-                                    + "Oid:1.3.101.112, Sign:SIGN]]"),
-                    // 63: EVP_DigestSignInit(mdctx, NULL, EVP_sha512(), NULL, other);
+                                    + "KeyGeneration:KEYGENERATION, "
+                                    + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, "
+                                    + "DigestSize:512, Oid:2.16.840.1.101.3.4.2.3], Oid:1.3.101.112, "
+                                    + "Sign:SIGN]]"),
+                    // 65: EVP_DigestSignInit(mdctx, NULL, EVP_sha512(), NULL, other);
                     finding(
-                            "DigestContext{ValueAction:SHA-512}",
-                            "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
-                                    + "Oid:2.16.840.1.101.3.4.2.3]"),
-                    // 64: return EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096);
+                            "SignatureContext{SignatureAction:SIGN}[DigestContext{ValueAction:SHA-512}]",
+                            "Signature:unknown[MessageDigest:SHA-512[BlockSize:1024, "
+                                    + "Digest:DIGEST, DigestSize:512, Oid:2.16.840.1.101.3.4.2.3], "
+                                    + "Sign:SIGN]"),
+                    // 66: return EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 4096);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[PrivateKeyContext{KeySize:4096}]",
                             "PrivateKey:RSA[KeyLength:4096, "
                                     + "PublicKeyEncryption:RSA-4096[KeyGeneration:KEYGENERATION, "
                                     + "KeyLength:4096, Oid:1.2.840.113549.1.1.1]]"),
-                    // 69: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
+                    // 71: EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
                     finding(
                             "KeyContext{ValueAction:DH}[KeyContext{KeySize:2048}, "
                                     + "KeyContext{KeyAction:PRIVATE_KEY_GENERATION}[KeyContext{}[KeyContext{KeyAction:KDF}]]]",
                             "PrivateKey:FFDH[KeyAgreement:FFDH[KeyDerivation:KEYDERIVATION, "
                                     + "KeyLength:2048, Oid:1.2.840.113549.1.3.1], "
                                     + "KeyGeneration:KEYGENERATION, KeyLength:2048]"),
-                    // 79: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072);
+                    // 81: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t) 3072);
                     finding(
                             "PrivateKeyContext{Algorithm:RSA}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}], "
                                     + "PrivateKeyContext{KeySize:3072}]",
                             "PrivateKey:RSA[KeyEncapsulationMechanism:RSASVE[Encapsulate:ENCAPSULATE, "
                                     + "KeyLength:3072], KeyGeneration:KEYGENERATION, KeyLength:3072]"),
-                    // 86: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
+                    // 88: EVP_PKEY *pkey = EVP_PKEY_Q_keygen(NULL, NULL, "X25519");
                     finding(
                             "PrivateKeyContext{Algorithm:X25519}[KeyContext{}[KeyContext{KeyAction:ENCAPSULATION}]]",
                             "PrivateKey:x25519[KeyEncapsulationMechanism:DHKEM[Encapsulate:ENCAPSULATE, "
-                                    + "KeyAgreement:x25519[EllipticCurve:Curve25519, Oid:1.3.101.110]], "
-                                    + "KeyGeneration:KEYGENERATION]"));
+                                    + "KeyAgreement:x25519[EllipticCurve:Curve25519, "
+                                    + "Oid:1.3.101.110]], KeyGeneration:KEYGENERATION]"));
 
     private int findings = 0;
 

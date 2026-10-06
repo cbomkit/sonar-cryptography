@@ -21,12 +21,19 @@ void pkcs7_envelope(struct stack_st_X509 *certs, BIO *in) {
     PKCS7_encrypt(certs, in, EVP_des_ede3_cbc(), PKCS7_BINARY); // Noncompliant {{(BlockCipher) DESede168-CBC}}
 }
 
+void decrypting_with_a_given_key(CMS_ContentInfo *cms, PKCS7 *p7, EVP_PKEY *pkey, X509 *cert,
+                                 BIO *out) {
+    CMS_decrypt(cms, pkey, cert, NULL, out, 0);
+    CMS_decrypt_set1_pkey(cms, pkey, cert);
+    PKCS7_decrypt(p7, pkey, cert, out, 0);
+}
+
 void signing(X509 *cert, EVP_PKEY *pkey, BIO *data, CMS_ContentInfo *cms, PKCS7 *p7,
              OCSP_BASICRESP *resp) {
-    CMS_sign(cert, pkey, NULL, data, CMS_PARTIAL);
-    CMS_add1_signer(cms, cert, pkey, EVP_sha384(), 0); // Noncompliant {{(MessageDigest) SHA-384}}
-    PKCS7_sign_add_signer(p7, cert, pkey, EVP_sha256(), 0); // Noncompliant {{(MessageDigest) SHA-256}}
-    OCSP_basic_sign(resp, cert, pkey, EVP_sha1(), NULL, 0); // Noncompliant {{(MessageDigest) SHA-1}}
+    CMS_sign(cert, pkey, NULL, data, CMS_PARTIAL); // Noncompliant {{(Signature) unknown}}
+    CMS_add1_signer(cms, cert, pkey, EVP_sha384(), 0); // Noncompliant {{(Signature) unknown}}
+    PKCS7_sign_add_signer(p7, cert, pkey, EVP_sha256(), 0); // Noncompliant {{(Signature) unknown}}
+    OCSP_basic_sign(resp, cert, pkey, EVP_sha1(), NULL, 0); // Noncompliant {{(Signature) unknown}}
 }
 
 void rsa_pss_signing(EVP_PKEY_CTX *pctx) {
@@ -40,5 +47,5 @@ void timestamping(CONF *conf, TS_RESP_CTX *ctx) {
 }
 
 void crmf_password_based_mac() {
-    OSSL_CRMF_PBMPARAMETER *pbm = OSSL_CRMF_pbmp_new(NULL, 16, NID_sha256, 500, NID_hmac_sha1); // Noncompliant {{(MessageDigest) SHA-256}} {{(Mac) HMAC-SHA-1}}
+    OSSL_CRMF_PBMPARAMETER *pbm = OSSL_CRMF_pbmp_new(NULL, 16, NID_sha256, 500, NID_hmac_sha1); // Noncompliant {{(Mac) HMAC-SHA-1}} {{(MessageDigest) SHA-256}}
 }

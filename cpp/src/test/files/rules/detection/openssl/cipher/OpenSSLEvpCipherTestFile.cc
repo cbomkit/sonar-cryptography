@@ -161,7 +161,7 @@ void test_evp_cipher() {
     const EVP_MD* oaep_md = EVP_sha256(); // Noncompliant {{(MessageDigest) SHA-256}}
     EVP_PKEY_CTX_set_rsa_oaep_md(ctx, oaep_md);
     // md_name given as the OpenSSL 3.x provider fetch name.
-    EVP_PKEY_CTX_set_rsa_oaep_md_name(ctx, "SHA2-256", NULL); // Noncompliant {{(MessageDigest) SHA-256}}
+    EVP_PKEY_CTX_set_rsa_oaep_md_name(ctx, "SHA2-256", NULL); // Noncompliant {{(PublicKeyEncryption) RSA-OAEP}}
     EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, buf, 16);
     EVP_EncryptInit(cctx, NULL, buf, buf);
     EVP_EncryptInit_ex(cctx, NULL, NULL, buf, buf);

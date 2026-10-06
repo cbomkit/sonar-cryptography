@@ -68,13 +68,15 @@ class OpenSSLEvpMacTest extends TestBase {
                             "MacContext{Algorithm:KMAC128}",
                             "Mac:KMAC128[DigestSize:256, "
                                     + "ExtendableOutputFunction:cSHAKE128[Digest:DIGEST, "
-                                    + "ParameterSetIdentifier:128], ParameterSetIdentifier:128, Tag:TAG]"),
+                                    + "ParameterSetIdentifier:128], ParameterSetIdentifier:128, "
+                                    + "Tag:TAG]"),
                     // 14: EVP_MAC_fetch(lib, "KMAC256", props);
                     finding(
                             "MacContext{Algorithm:KMAC256}",
                             "Mac:KMAC256[DigestSize:512, "
                                     + "ExtendableOutputFunction:cSHAKE256[Digest:DIGEST, "
-                                    + "ParameterSetIdentifier:256], ParameterSetIdentifier:256, Tag:TAG]"),
+                                    + "ParameterSetIdentifier:256], ParameterSetIdentifier:256, "
+                                    + "Tag:TAG]"),
                     // 15: EVP_MAC_fetch(lib, "BLAKE2BMAC", props);
                     finding(
                             "MacContext{Algorithm:BLAKE2BMAC}",
@@ -85,20 +87,30 @@ class OpenSSLEvpMacTest extends TestBase {
                             "Mac:BLAKE2s-256[DigestSize:256, SaltLength:64, Tag:TAG]"),
                     // 18: EVP_Q_mac(lib, "HMAC", props, "SHA256", NULL, NULL, 0, NULL, 0, NULL, 0,
                     // NULL);
-                    finding("MacContext{Algorithm:HMAC}", "Mac:HMAC[Tag:TAG]"),
-                    // 23: HMAC(legacy_hmac_md, NULL, 0, NULL, 0, NULL, NULL);
+                    finding(
+                            "MacContext{Algorithm:HMAC}[MacContext{AlgorithmParameter:SHA256}]",
+                            "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.2.9, Tag:TAG]"),
+                    // 19: EVP_Q_mac(lib, OSSL_MAC_NAME_CMAC, props, "AES-128-CBC", NULL, NULL, 0,
+                    // NULL, 0, NULL, 0, NULL);
+                    finding(
+                            "MacContext{Algorithm:CMAC}[MacContext{AlgorithmParameter:AES-128-CBC}]",
+                            "Mac:CMAC-AES[BlockCipher:AES-128-CBC[BlockSize:128, KeyLength:128, "
+                                    + "Mode:CBC, Oid:2.16.840.1.101.3.4.1.2], Tag:TAG]"),
+                    // 24: HMAC(legacy_hmac_md, NULL, 0, NULL, 0, NULL, NULL);
                     finding(
                             "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
                             "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
-                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
-                                    + "Tag:TAG]"),
-                    // 25: HMAC_Init_ex(NULL, NULL, 0, legacy_hmac_init_md, NULL);
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.2.9, Tag:TAG]"),
+                    // 26: HMAC_Init_ex(NULL, NULL, 0, legacy_hmac_init_md, NULL);
                     finding(
                             "MacContext{ValueAction:HMAC}[DigestContext{ValueAction:SHA-256}]",
                             "Mac:HMAC-SHA-256[MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, "
-                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], Oid:1.2.840.113549.2.9, "
-                                    + "Tag:TAG]"),
-                    // 27: CMAC_Init(NULL, NULL, 0, legacy_cmac_cipher, NULL);
+                                    + "DigestSize:256, Oid:2.16.840.1.101.3.4.2.1], "
+                                    + "Oid:1.2.840.113549.2.9, Tag:TAG]"),
+                    // 28: CMAC_Init(NULL, NULL, 0, legacy_cmac_cipher, NULL);
                     finding(
                             "MacContext{ValueAction:CMAC}[CipherContext{ValueAction:AES-128-CBC}]",
                             "Mac:CMAC-AES[BlockCipher:AES-128-CBC[BlockSize:128, KeyLength:128, "

@@ -93,3 +93,12 @@ void rsa_bits_by_named_cast(void) {
     EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, static_cast<int>(KeyBits::RSA));
     EVP_PKEY_generate(ctx, &pkey);
 }
+
+void curves_without_a_model_of_their_own(void) {
+    EVP_PKEY_CTX *prime = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL); // Noncompliant {{(PublicKeyEncryption) EC-prime239v1}}
+    EVP_PKEY_paramgen_init(prime);
+    EVP_PKEY_CTX_set_ec_paramgen_curve_nid(prime, NID_X9_62_prime239v1);
+    EVP_PKEY_CTX *binary = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL); // Noncompliant {{(PublicKeyEncryption) EC-c2pnb163v3}}
+    EVP_PKEY_paramgen_init(binary);
+    EVP_PKEY_CTX_set_ec_paramgen_curve_nid(binary, 686);
+}

@@ -104,7 +104,13 @@ class OpenSSLEvpKdfContextTest extends TestBase {
                             "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{}[DigestContext{Algorithm:SHA-512}]]]",
                             "KeyDerivationFunction:HKDF-SHA-512[KeyDerivation:KEYDERIVATION, "
                                     + "MessageDigest:SHA-512[BlockSize:1024, Digest:DIGEST, DigestSize:512, "
-                                    + "Oid:2.16.840.1.101.3.4.2.3]]"));
+                                    + "Oid:2.16.840.1.101.3.4.2.3]]"),
+                    // 92: EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+                    finding(
+                            "KeyDerivationFunctionContext{Algorithm:HKDF}[KeyDerivationFunctionContext{}[KeyDerivationFunctionContext{KeySize:256}[DigestContext{Algorithm:SHA-256}]]]",
+                            "KeyDerivationFunction:HKDF-SHA-256[KeyDerivation:KEYDERIVATION, KeyLength:256, "
+                                    + "MessageDigest:SHA-256[BlockSize:512, Digest:DIGEST, DigestSize:256, "
+                                    + "Oid:2.16.840.1.101.3.4.2.1]]"));
 
     private int findings = 0;
 
