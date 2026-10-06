@@ -50,7 +50,7 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes(ANY)
                     .forMethods("encrypt", "encrypt_and_digest")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withMethodParameter(ANY)
+                    .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "PyCrypto")
                     .withoutDependingDetectionRules();
@@ -61,7 +61,7 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes(ANY)
                     .forMethods("decrypt", "decrypt_and_verify")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withMethodParameter(ANY)
+                    .withAnyParameters()
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "PyCrypto")
                     .withoutDependingDetectionRules();
