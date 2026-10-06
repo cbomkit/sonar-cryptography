@@ -87,6 +87,15 @@
 
     <dependencyManagement>
       <dependencies>
+        <!-- one version for every jackson module, which come from several dependencies (the
+             CycloneDX library, the sonar analyzers and sonar-cxx) and must not be mixed -->
+        <dependency>
+          <groupId>com.fasterxml.jackson</groupId>
+          <artifactId>jackson-bom</artifactId>
+          <version>2.22.3</version>
+          <type>pom</type>
+          <scope>import</scope>
+        </dependency>
         <dependency>
           <groupId>org.junit</groupId>
           <artifactId>junit-bom</artifactId>
