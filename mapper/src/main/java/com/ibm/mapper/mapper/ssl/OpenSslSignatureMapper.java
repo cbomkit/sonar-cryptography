@@ -20,13 +20,11 @@
 package com.ibm.mapper.mapper.ssl;
 
 import com.ibm.mapper.mapper.IMapper;
+import com.ibm.mapper.mapper.openssl.OpenSslCurveMapper;
+import com.ibm.mapper.mapper.openssl.OpenSslMessageDigestMapper;
+import com.ibm.mapper.mapper.openssl.OpenSslSignatureAlgorithmMapper;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.algorithms.ECDSA;
-import com.ibm.mapper.model.algorithms.Ed25519;
-import com.ibm.mapper.model.algorithms.Ed448;
-import com.ibm.mapper.model.algorithms.MLDSA;
-import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.algorithms.SPHINCSPlus;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -34,11 +32,13 @@ import javax.annotation.Nullable;
 
 /**
  * Maps OpenSSL TLS signature-algorithm names (the {@code SSL_(CTX_)set1_sigalgs_list} argument) to
- * model classes. Handles the legacy {@code ALG+HASH} form (e.g. {@code ECDSA+SHA256}), PQC scheme
- * names (e.g. {@code SLH-DSA-SHA2-256s}, {@code mldsa65}), and the TLS 1.2/1.3 underscore
- * wire-format names (e.g. {@code rsa_pss_rsae_sha256}, {@code ecdsa_secp256r1_sha256}, {@code
- * rsa_pkcs1_sha256}). Unrecognized names return {@link Optional#empty()}; the caller emits them as
- * a raw asset so nothing is dropped.
+ * the signature scheme with its digest and, for ECDSA, its curve. Handles the legacy {@code
+ * ALG+HASH} form (e.g. {@code ECDSA+SHA256}, {@code RSA-PSS+SHA256}), the TLS 1.2/1.3 wire-format
+ * names (e.g. {@code rsa_pss_rsae_sha256}, {@code ecdsa_secp256r1_sha256}, {@code
+ * rsa_pkcs1_sha256}), and the scheme names without a digest (e.g. {@code ed25519}, {@code mldsa65},
+ * {@code SLH-DSA-SHA2-256s}). In TLS, an RSA signature that is not RSA-PSS uses PKCS#1 v1.5
+ * padding. Unrecognized names return {@link Optional#empty()}; the caller emits them as a raw asset
+ * so nothing is dropped.
  */
 public final class OpenSslSignatureMapper implements IMapper {
 
@@ -49,43 +49,73 @@ public final class OpenSslSignatureMapper implements IMapper {
         if (str == null) {
             return Optional.empty();
         }
+        final String name = str.trim().toUpperCase();
+        final int plus = name.indexOf('+');
+        if (plus >= 0) {
+            return scheme(name.substring(0, plus), name.substring(plus + 1), detectionLocation);
+        }
+        if (name.startsWith("RSA_PSS_RSAE_") || name.startsWith("RSA_PSS_PSS_")) {
+            return scheme("RSA-PSS", afterLastUnderscore(name), detectionLocation);
+        }
+        if (name.startsWith("RSA_PKCS1_")) {
+            return scheme("RSA", afterLastUnderscore(name), detectionLocation);
+        }
+        if (name.startsWith("ECDSA_")) {
+            return ecdsa(str.trim().substring("ECDSA_".length()), detectionLocation);
+        }
+        if (name.startsWith("MLDSA")) {
+            return signature("ML-DSA-" + name.substring("MLDSA".length()), detectionLocation);
+        }
+        return signature(name, detectionLocation);
+    }
 
-        // Legacy TLS sigalgs use the ALG+HASH spelling (e.g. "ECDSA+SHA256"); the signature
-        // algorithm is the part before '+'.
-        final String algorithm = str.contains("+") ? str.substring(0, str.indexOf('+')) : str;
-        final String normalized = algorithm.trim().toUpperCase();
+    /** A scheme with its digest: in TLS, an RSA scheme other than RSA-PSS is PKCS#1 v1.5. */
+    @Nonnull
+    private static Optional<? extends INode> scheme(
+            @Nonnull String scheme,
+            @Nonnull String digest,
+            @Nonnull DetectionLocation detectionLocation) {
+        final String algorithm = "RSA".equals(scheme.trim()) ? "RSA-PKCS1" : scheme.trim();
+        final Optional<? extends INode> signature = signature(algorithm, detectionLocation);
+        signature.ifPresent(
+                node ->
+                        new OpenSslMessageDigestMapper()
+                                .parse(digest.trim(), detectionLocation)
+                                .filter(MessageDigest.class::isInstance)
+                                .ifPresent(node::put));
+        return signature;
+    }
 
-        if (normalized.startsWith("SLH-DSA") || normalized.startsWith("SLHDSA")) {
-            return Optional.of(new SPHINCSPlus(detectionLocation));
+    /**
+     * An ECDSA wire-format name after its {@code ecdsa_} prefix: the curve, when named, and the
+     * digest, e.g. {@code secp256r1_sha256}, {@code brainpoolP256r1tls13_sha256} or {@code sha1}.
+     */
+    @Nonnull
+    private static Optional<? extends INode> ecdsa(
+            @Nonnull String curveAndDigest, @Nonnull DetectionLocation detectionLocation) {
+        final int underscore = curveAndDigest.lastIndexOf('_');
+        final Optional<? extends INode> ecdsa =
+                scheme("ECDSA", curveAndDigest.substring(underscore + 1), detectionLocation);
+        if (underscore > 0) {
+            final String curve =
+                    curveAndDigest.substring(0, underscore).replaceFirst("(?i)tls13$", "");
+            ecdsa.ifPresent(
+                    node ->
+                            new OpenSslCurveMapper()
+                                    .parse(curve, detectionLocation)
+                                    .ifPresent(node::put));
         }
-        if (normalized.startsWith("ML-DSA") || normalized.startsWith("MLDSA")) {
-            return Optional.of(new MLDSA(detectionLocation));
-        }
-        switch (normalized) {
-            case "ECDSA":
-                return Optional.of(new ECDSA(detectionLocation));
-            case "RSA", "RSA-PSS", "RSA_PSS_RSAE", "RSA_PSS_PSS":
-                return Optional.of(new RSA(detectionLocation));
-            case "ED25519":
-                return Optional.of(new Ed25519(detectionLocation));
-            case "ED448":
-                return Optional.of(new Ed448(detectionLocation));
-            default:
-                // fall through to the OpenSSL 1.1.1+/3.x wire-format names below
-        }
+        return ecdsa;
+    }
 
-        // TLS 1.2/1.3 wire-format sigalgs (RFC 8446 §4.2.3, e.g. "rsa_pss_rsae_sha256",
-        // "ecdsa_secp256r1_sha256", "rsa_pkcs1_sha256"): underscore-separated, ending in the
-        // digest name, with no '+' separator.
-        if (normalized.startsWith("RSA_PSS_RSAE_") || normalized.startsWith("RSA_PSS_PSS_")) {
-            return Optional.of(new RSA(detectionLocation));
-        }
-        if (normalized.startsWith("RSA_PKCS1_")) {
-            return Optional.of(new RSA(detectionLocation));
-        }
-        if (normalized.startsWith("ECDSA_")) {
-            return Optional.of(new ECDSA(detectionLocation));
-        }
-        return Optional.empty();
+    @Nonnull
+    private static Optional<? extends INode> signature(
+            @Nonnull String name, @Nonnull DetectionLocation detectionLocation) {
+        return new OpenSslSignatureAlgorithmMapper().parse(name, detectionLocation);
+    }
+
+    @Nonnull
+    private static String afterLastUnderscore(@Nonnull String name) {
+        return name.substring(name.lastIndexOf('_') + 1);
     }
 }

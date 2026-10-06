@@ -68,6 +68,10 @@ class ITranslatorTraverserTest {
     private final Map<DetectionStore<Object, Object, Object, Object>, INode> nodes =
             new IdentityHashMap<>();
 
+    /** The parameter a store's node is the value of; -1 (the call itself) when absent. */
+    private final Map<DetectionStore<Object, Object, Object, Object>, Integer> parameterIds =
+            new IdentityHashMap<>();
+
     @Test
     void rootWithoutNodeIsDescribedByTheArgumentsOfItsCall() {
         // SSL_CTX_new(TLS_method()); SSL_CTX_set_ciphersuites(ctx, "...")
@@ -174,6 +178,87 @@ class ITranslatorTraverserTest {
                         keyLength -> assertThat(keyLength.hasChildOfType(Oid.class)).isPresent());
     }
 
+    @Test
+    void aCallBringingAnotherAlgorithmToAnObjectCreatedWithoutArgumentsIsAnotherUse() {
+        // ctx = EVP_CIPHER_CTX_new(); EVP_EncryptInit_ex(ctx, cipher, ...);
+        // EVP_DecryptInit_ex(ctx, other_cipher, ...); EVP_CIPHER_CTX_set_key_length(ctx, 32)
+        final DetectionStore<Object, Object, Object, Object> context = store(null);
+        final AES first = new AES(new ECB(location), location);
+        final AES second = new AES(location);
+        context.attach(store(first));
+        context.attach(store(second));
+        context.attach(store(new KeyLength(256, location)));
+
+        final List<INode> roots = traverse(context);
+
+        assertThat(roots).containsExactly(first, second);
+        assertThat(first.hasChildOfType(KeyLength.class)).isEmpty();
+        assertThat(second.hasChildOfType(KeyLength.class).map(INode::asString)).contains("256");
+    }
+
+    @Test
+    void anObjectDescribedByTheArgumentsOfItsCreationHasOneUse() {
+        // ctx = EVP_MAC_CTX_new(mac); EVP_MAC_init(ctx, key, len, params with a cipher)
+        final DetectionStore<Object, Object, Object, Object> context = store(null);
+        final AES created = new AES(location);
+        context.attach(0, store(created));
+        context.attach(store(new AES(new ECB(location), location)));
+
+        final List<INode> roots = traverse(context);
+
+        assertThat(roots).containsExactly(created);
+    }
+
+    @Test
+    void anArgumentWithoutNodeConfiguresTheOperatedObjectWhereTheTranslatorSaysSo() {
+        // kdf = EVP_KDF_fetch(...); EVP_KDF_derive(ctx, out, 32, params with a mode)
+        final AES operated = new AES(location);
+        final DetectionStore<Object, Object, Object, Object> fetch = store(operated);
+        final KeyLength keyLength = new KeyLength(256, location);
+        final DetectionStore<Object, Object, Object, Object> derive = parameterStore(2, keyLength);
+        fetch.attach(derive);
+        derive.attach(3, store(new ECB(location)));
+
+        traverse(fetch, true);
+
+        assertThat(operated.hasChildOfType(Mode.class)).isPresent();
+        assertThat(keyLength.hasChildOfType(Mode.class)).isEmpty();
+    }
+
+    @Test
+    void anArgumentWithoutNodeAddsToTheFirstNodeOfTheCallByDefault() {
+        final AES operated = new AES(location);
+        final DetectionStore<Object, Object, Object, Object> fetch = store(operated);
+        final KeyLength keyLength = new KeyLength(256, location);
+        final DetectionStore<Object, Object, Object, Object> derive = parameterStore(2, keyLength);
+        fetch.attach(derive);
+        derive.attach(3, store(new ECB(location)));
+
+        traverse(fetch, false);
+
+        assertThat(keyLength.hasChildOfType(Mode.class)).isPresent();
+    }
+
+    @Test
+    void aValueFoundAgainAddsWhatIsFoundBelowItToTheFirst() {
+        // EVP_DigestSignInit(mdctx, &pctx, md, NULL, key);
+        // EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING);
+        // EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, 32)
+        final AES operation = new AES(location);
+        final DetectionStore<Object, Object, Object, Object> signing = store(operation);
+        final AES first = new AES(location);
+        signing.attach(store(first));
+        final DetectionStore<Object, Object, Object, Object> again = store(new AES(location));
+        signing.attach(again);
+        again.attach(store(new KeyLength(256, location)));
+
+        final List<INode> roots = traverse(signing);
+
+        assertThat(roots).containsExactly(operation);
+        assertThat(operation.hasChildOfType(BlockCipher.class)).containsSame(first);
+        assertThat(first.hasChildOfType(KeyLength.class).map(INode::asString)).contains("256");
+    }
+
     @Nonnull
     private static String keyLengthOfKeySetup(@Nonnull INode operation) {
         return operation
@@ -185,17 +270,35 @@ class ITranslatorTraverserTest {
 
     @Nonnull
     private List<INode> traverse(@Nonnull DetectionStore<Object, Object, Object, Object> root) {
+        return traverse(root, false);
+    }
+
+    @Nonnull
+    private List<INode> traverse(
+            @Nonnull DetectionStore<Object, Object, Object, Object> root,
+            boolean argumentsConfigureTheOperatedObject) {
         return new ITranslator.Traverser<>(
                         root,
                         store -> {
                             final Map<Integer, List<INode>> translated = new HashMap<>();
                             final INode node = nodes.get(store);
                             if (node != null) {
-                                translated.put(-1, new ArrayList<>(List.of(node)));
+                                translated.put(
+                                        parameterIds.getOrDefault(store, -1),
+                                        new ArrayList<>(List.of(node)));
                             }
                             return translated;
-                        })
+                        },
+                        argumentsConfigureTheOperatedObject)
                 .translate();
+    }
+
+    @Nonnull
+    private DetectionStore<Object, Object, Object, Object> parameterStore(
+            int parameterId, @Nonnull INode node) {
+        final DetectionStore<Object, Object, Object, Object> store = store(node);
+        parameterIds.put(store, parameterId);
+        return store;
     }
 
     @Nonnull

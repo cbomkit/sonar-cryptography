@@ -21,7 +21,11 @@ package com.ibm.mapper.mapper.ssl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ECDSA;
 import com.ibm.mapper.model.algorithms.Ed25519;
 import com.ibm.mapper.model.algorithms.RSA;
@@ -48,22 +52,24 @@ public class OpenSslSignatureMapperTest {
     public void bareUppercaseNameResolvesToTheAlgorithm() {
         final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
         assertThat(mapper.parse("ED25519", TEST_LOCATION).get()).isInstanceOf(Ed25519.class);
-        assertThat(mapper.parse("RSA-PSS", TEST_LOCATION).get()).isInstanceOf(RSA.class);
+        assertThat(mapper.parse("RSA-PSS", TEST_LOCATION).get())
+                .isInstanceOf(ProbabilisticSignatureScheme.class);
     }
 
     @Test
-    public void tls13RsaPssWireFormatNameResolvesToRsa() {
+    public void tls13RsaPssWireFormatNameResolvesToRsaPss() {
         final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
         final Optional<? extends INode> node = mapper.parse("rsa_pss_rsae_sha256", TEST_LOCATION);
 
         assertThat(node).isPresent();
-        assertThat(node.get()).isInstanceOf(RSA.class);
+        assertThat(node.get()).isInstanceOf(ProbabilisticSignatureScheme.class);
     }
 
     @Test
-    public void tls13RsaPssPssWireFormatNameResolvesToRsa() {
+    public void tls13RsaPssPssWireFormatNameResolvesToRsaPss() {
         final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
-        assertThat(mapper.parse("rsa_pss_pss_sha384", TEST_LOCATION).get()).isInstanceOf(RSA.class);
+        assertThat(mapper.parse("rsa_pss_pss_sha384", TEST_LOCATION).get())
+                .isInstanceOf(ProbabilisticSignatureScheme.class);
     }
 
     @Test
@@ -80,6 +86,56 @@ public class OpenSslSignatureMapperTest {
 
         assertThat(node).isPresent();
         assertThat(node.get()).isInstanceOf(ECDSA.class);
+    }
+
+    @Test
+    public void rsaWithAHashIsAPkcs1v15SignatureWithThatDigest() {
+        final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
+        assertThat(mapper.parse("RSA+SHA1", TEST_LOCATION).map(INode::asString))
+                .contains("RSA-PKCS1-1.5-SHA-1");
+        assertThat(mapper.parse("rsa_pkcs1_sha256", TEST_LOCATION).map(INode::asString))
+                .contains("RSA-PKCS1-1.5-SHA-256");
+    }
+
+    @Test
+    public void rsaPssWithAHashIsAnRsaPssSignatureWithThatDigest() {
+        final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
+        for (String name : List.of("RSA-PSS+SHA256", "rsa_pss_rsae_sha256", "rsa_pss_pss_sha256")) {
+            final INode node = mapper.parse(name, TEST_LOCATION).orElseThrow();
+            assertThat(node.is(ProbabilisticSignatureScheme.class)).as(name).isTrue();
+            assertThat(node.hasChildOfType(MessageDigest.class).map(INode::asString))
+                    .as(name)
+                    .contains("SHA-256");
+        }
+    }
+
+    @Test
+    public void ecdsaWireFormatNameHasItsCurveAndDigest() {
+        final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
+        final INode node = mapper.parse("ecdsa_secp384r1_sha384", TEST_LOCATION).orElseThrow();
+
+        assertThat(node).isInstanceOf(ECDSA.class);
+        assertThat(node.hasChildOfType(EllipticCurve.class).map(INode::asString))
+                .contains("secp384r1");
+        assertThat(node.hasChildOfType(MessageDigest.class).map(INode::asString))
+                .contains("SHA-384");
+    }
+
+    @Test
+    public void ecdsaAndDsaWithAHashHaveThatDigest() {
+        final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
+        for (String name : List.of("ECDSA+SHA256", "ecdsa_sha1", "DSA+SHA256")) {
+            final INode node = mapper.parse(name, TEST_LOCATION).orElseThrow();
+            assertThat(node.is(Signature.class)).as(name).isTrue();
+            assertThat(node.hasChildOfType(MessageDigest.class)).as(name).isPresent();
+        }
+    }
+
+    @Test
+    public void mlDsaNameHasItsParameterSet() {
+        final OpenSslSignatureMapper mapper = new OpenSslSignatureMapper();
+        assertThat(mapper.parse("mldsa65", TEST_LOCATION).map(INode::asString))
+                .contains("ML-DSA-65");
     }
 
     @Test

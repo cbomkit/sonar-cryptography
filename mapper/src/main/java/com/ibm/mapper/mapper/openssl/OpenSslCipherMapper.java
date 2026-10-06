@@ -58,6 +58,7 @@ import com.ibm.mapper.model.mode.SIV;
 import com.ibm.mapper.model.mode.XTS;
 import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.model.padding.PKCS1;
+import com.ibm.mapper.model.padding.Raw;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -680,8 +681,12 @@ public class OpenSslCipherMapper implements IMapper {
             case "CAMELLIA-OFB" -> Optional.of(camellia("OFB", detectionLocation));
 
             // Legacy RSA encryption and its paddings
-            case "RSA-ENCRYPT", "RSA-DECRYPT", "RSA-NO-PADDING" ->
-                    Optional.of(new RSA(detectionLocation));
+            case "RSA-ENCRYPT", "RSA-DECRYPT" -> Optional.of(new RSA(detectionLocation));
+            case "RSA-NO-PADDING" -> {
+                final RSA rsa = new RSA(detectionLocation);
+                rsa.put(new Raw(detectionLocation));
+                yield Optional.of(rsa);
+            }
             case "RSA-OAEP", "RSA-OAEP-MGF1" ->
                     Optional.of(rsaWithPadding(new OAEP(detectionLocation), detectionLocation));
             case "RSA-PKCS1-TYPE2" ->

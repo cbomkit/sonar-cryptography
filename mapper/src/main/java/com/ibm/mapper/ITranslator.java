@@ -23,6 +23,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.model.collections.AbstractAssetCollection;
@@ -30,6 +31,7 @@ import com.ibm.mapper.model.collections.IAssetCollection;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,7 +64,10 @@ public abstract class ITranslator<R, T, S, P> {
     @Nonnull
     public List<INode> translate(@Nonnull DetectionStore<R, T, S, P> rootDetectionStore) {
         final Traverser<R, T, S, P> traverser =
-                new Traverser<>(rootDetectionStore, this::translateStore);
+                new Traverser<>(
+                        rootDetectionStore,
+                        this::translateStore,
+                        argumentsConfigureTheOperatedObject());
         return traverser.translate();
     }
 
@@ -110,70 +115,143 @@ public abstract class ITranslator<R, T, S, P> {
     @Nullable protected abstract DetectionLocation getDetectionContextFrom(
             @Nonnull T location, @Nonnull final IBundle bundle, @Nonnull String filePath);
 
+    /**
+     * Whether an argument of a call that has no node of its own configures the object the call
+     * operates on. In C, a function operates on the object it is given, e.g. {@code
+     * EVP_KDF_derive(ctx, out, 32, params)} sets the key length and the parameters of the key
+     * derivation function of {@code ctx}. By default, such an argument adds to the first node of
+     * the call, as the arguments of a method add to what the method sets up.
+     */
+    protected boolean argumentsConfigureTheOperatedObject() {
+        return false;
+    }
+
     /*
      * private traverser
      */
     static class Traverser<R, T, S, P> {
         @Nonnull final DetectionStore<R, T, S, P> rootDetectionStore;
         @Nonnull final List<Alternative> alternatives = new ArrayList<>();
+
+        /** The nodes merged into an equal node they were appended to, see {@link #append}. */
+        @Nonnull final Map<INode, INode> mergedNodes = new IdentityHashMap<>();
+
         @Nonnull final Function<DetectionStore<R, T, S, P>, Map<Integer, List<INode>>> translator;
+        final boolean argumentsConfigureTheOperatedObject;
 
         public Traverser(
                 @Nonnull DetectionStore<R, T, S, P> rootDetectionStore,
-                @Nonnull
-                        Function<DetectionStore<R, T, S, P>, Map<Integer, List<INode>>>
-                                translator) {
+                @Nonnull Function<DetectionStore<R, T, S, P>, Map<Integer, List<INode>>> translator,
+                boolean argumentsConfigureTheOperatedObject) {
             this.rootDetectionStore = rootDetectionStore;
             this.translator = translator;
+            this.argumentsConfigureTheOperatedObject = argumentsConfigureTheOperatedObject;
         }
 
         @Nonnull
         public List<INode> translate() {
             final Map<Integer, List<INode>> rootNodes = translator.apply(rootDetectionStore);
+            final List<Map<Integer, List<INode>>> uses;
             if (rootNodes.isEmpty()) {
-                // a root without a node of its own, e.g. the creation of a context by a C function:
-                // the arguments of the call that created the object describe it, the calls made on
-                // it add to that description
-                traversParametersFirst(rootDetectionStore, rootNodes);
+                uses = traversUses(rootDetectionStore);
             } else {
-                travers(rootDetectionStore, rootNodes);
+                travers(rootDetectionStore, rootNodes, null);
+                uses = List.of(rootNodes);
             }
             final List<INode> translatedRootNodes =
-                    new ArrayList<>(rootNodes.values().stream().flatMap(List::stream).toList());
+                    new ArrayList<>(
+                            uses.stream()
+                                    .flatMap(use -> use.values().stream())
+                                    .flatMap(List::stream)
+                                    .toList());
             translatedRootNodes.addAll(alternativeRoots(translatedRootNodes));
             return translatedRootNodes;
         }
 
+        /**
+         * Appends the nodes of the children of a store to the nodes of the store ({@code
+         * parentNodes}), which were appended to {@code enclosingNodes}, or are roots when that is
+         * null.
+         */
         private void travers(
                 @Nonnull DetectionStore<R, T, S, P> store,
-                @Nonnull Map<Integer, List<INode>> parentNodes) {
+                @Nonnull Map<Integer, List<INode>> parentNodes,
+                @Nullable Map<Integer, List<INode>> enclosingNodes) {
             store.getChildrenForMethod()
-                    .forEach(child -> translateAndAppend(-1, child, parentNodes));
+                    .forEach(child -> translateAndAppend(-1, child, parentNodes, enclosingNodes));
             store.childrenForEachParameter(
                     (id, children) -> {
                         for (DetectionStore<R, T, S, P> child : children) {
-                            translateAndAppend(id, child, parentNodes);
+                            translateAndAppend(id, child, parentNodes, enclosingNodes);
                         }
                     });
         }
 
-        private void traversParametersFirst(
-                @Nonnull DetectionStore<R, T, S, P> store,
-                @Nonnull Map<Integer, List<INode>> parentNodes) {
+        /**
+         * The uses of an object created by a call without a node of its own, e.g. the creation of a
+         * context by a C function, each with the nodes describing it. The arguments of the call
+         * that created the object describe it, and the calls made on it add to that description. An
+         * object created without describing arguments, e.g. by {@code EVP_CIPHER_CTX_new()}, gets
+         * its algorithm from a call made on it: a call that brings another algorithm once the
+         * object has one, e.g. the context initialized again with another cipher, starts another
+         * use of the object, which the calls after it describe.
+         */
+        @Nonnull
+        private List<Map<Integer, List<INode>>> traversUses(
+                @Nonnull DetectionStore<R, T, S, P> store) {
+            final Map<Integer, List<INode>> describedByArguments = new HashMap<>();
             store.childrenForEachParameter(
                     (id, children) -> {
                         for (DetectionStore<R, T, S, P> child : children) {
-                            translateAndAppend(id, child, parentNodes);
+                            translateAndAppend(id, child, describedByArguments, null);
                         }
                     });
-            store.getChildrenForMethod()
-                    .forEach(child -> translateAndAppend(-1, child, parentNodes));
+            final boolean usedAsCreated = !describedByArguments.isEmpty();
+            final List<Map<Integer, List<INode>>> uses = new ArrayList<>();
+            Map<Integer, List<INode>> use = describedByArguments;
+            for (DetectionStore<R, T, S, P> child : store.getChildrenForMethod()) {
+                if (!usedAsCreated && hasAlgorithm(use) && bringsAlgorithm(child)) {
+                    uses.add(use);
+                    use = new HashMap<>();
+                }
+                translateAndAppend(-1, child, use, null);
+            }
+            uses.add(use);
+            return uses;
+        }
+
+        /**
+         * Whether the nodes of a call made on an object, and of the calls below it, hold an
+         * algorithm.
+         */
+        private boolean bringsAlgorithm(@Nonnull DetectionStore<R, T, S, P> call) {
+            // translated on its own, so that its values do not count as other values of this tree
+            final Map<Integer, List<INode>> nodes = new HashMap<>();
+            new Traverser<>(call, translator, argumentsConfigureTheOperatedObject)
+                    .translateAndAppend(-1, call, nodes, null);
+            return hasAlgorithm(nodes);
+        }
+
+        private static boolean hasAlgorithm(@Nonnull Map<Integer, List<INode>> nodes) {
+            return nodes.values().stream().flatMap(List::stream).anyMatch(Traverser::hasAlgorithm);
+        }
+
+        private static boolean hasAlgorithm(@Nonnull INode node) {
+            if (node instanceof IAlgorithm) {
+                return true;
+            }
+            if (node instanceof IAssetCollection<?> collection
+                    && collection.getCollection().stream().anyMatch(Traverser::hasAlgorithm)) {
+                return true;
+            }
+            return node.getChildren().values().stream().anyMatch(Traverser::hasAlgorithm);
         }
 
         private void translateAndAppend(
                 int id,
                 @Nonnull DetectionStore<R, T, S, P> child,
-                @Nonnull Map<Integer, List<INode>> mapOfParentNodes) {
+                @Nonnull Map<Integer, List<INode>> mapOfParentNodes,
+                @Nullable Map<Integer, List<INode>> enclosingNodes) {
 
             Map<Integer, List<INode>> nodes = translator.apply(child);
             // collect nodes and add to parent
@@ -190,22 +268,64 @@ public abstract class ITranslator<R, T, S, P> {
                                         mapOfParentNodes.put(
                                                 -1, newNodesCollection); // add node as main
                                     } else {
-                                        mapOfParentNodes.values().stream()
-                                                .findFirst()
-                                                .ifPresent(
-                                                        parentNodes ->
-                                                                this.append(
-                                                                        parentNodes,
-                                                                        newNodesCollection));
+                                        this.append(
+                                                nodesConfiguredBy(mapOfParentNodes, enclosingNodes),
+                                                newNodesCollection);
                                     }
                                 });
             }
 
-            if (nodes.isEmpty()) {
-                nodes = mapOfParentNodes;
-            }
             // next iteration
-            travers(child, nodes);
+            if (nodes.isEmpty()) {
+                travers(child, mapOfParentNodes, enclosingNodes);
+            } else {
+                travers(child, withMergedNodes(nodes), mapOfParentNodes);
+            }
+        }
+
+        /**
+         * The nodes, each merged node replaced by the node it was merged into, so that what is
+         * found below a node adds to the node that holds its value.
+         */
+        @Nonnull
+        private Map<Integer, List<INode>> withMergedNodes(
+                @Nonnull Map<Integer, List<INode>> nodes) {
+            final Map<Integer, List<INode>> result = new HashMap<>();
+            nodes.forEach(
+                    (id, list) ->
+                            result.put(
+                                    id,
+                                    new ArrayList<>(
+                                            list.stream()
+                                                    .map(
+                                                            node ->
+                                                                    mergedNodes.getOrDefault(
+                                                                            node, node))
+                                                    .toList())));
+            return result;
+        }
+
+        /**
+         * The nodes that an argument of a call configures when the call has no node for that
+         * argument: the first nodes of the call, or, where arguments configure the operated object
+         * (see {@link ITranslator#argumentsConfigureTheOperatedObject()}), the operation of the
+         * call, else what the nodes of the call describe, e.g. the key derivation function whose
+         * key length and parameters {@code EVP_KDF_derive(ctx, out, 32, params)} sets.
+         */
+        @Nonnull
+        private List<INode> nodesConfiguredBy(
+                @Nonnull Map<Integer, List<INode>> callNodes,
+                @Nullable Map<Integer, List<INode>> enclosingNodes) {
+            if (!argumentsConfigureTheOperatedObject) {
+                return callNodes.values().iterator().next();
+            }
+            if (callNodes.containsKey(-1)) {
+                return callNodes.get(-1);
+            }
+            if (enclosingNodes != null && !enclosingNodes.isEmpty()) {
+                return enclosingNodes.getOrDefault(-1, enclosingNodes.values().iterator().next());
+            }
+            return callNodes.values().iterator().next();
         }
 
         private void append(
@@ -257,7 +377,17 @@ public abstract class ITranslator<R, T, S, P> {
 
                                     parentNode.put(mergedCollectionNode);
                                 } else if (existingNode.is(childNode.getKind())
-                                        && !existingNode.asString().equals(childNode.asString())) {
+                                        && existingNode.asString().equals(childNode.asString())) {
+                                    // the same value again: what is found with it and below it
+                                    // adds to it, e.g. the salt length set for an RSA-PSS
+                                    // signature
+                                    if (existingNode != childNode) {
+                                        this.append(
+                                                List.of(existingNode),
+                                                List.copyOf(childNode.getChildren().values()));
+                                        mergedNodes.putIfAbsent(childNode, existingNode);
+                                    }
+                                } else if (existingNode.is(childNode.getKind())) {
                                     // Handle based on origin:
                                     // - DETECTED values override DEFAULT/ENRICHED values
                                     // - Only create new roots when both are DETECTED with different

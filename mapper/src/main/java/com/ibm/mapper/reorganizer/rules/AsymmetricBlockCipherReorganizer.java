@@ -23,11 +23,16 @@ import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.IPrimitive;
+import com.ibm.mapper.model.MaskGenerationFunction;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -71,6 +76,54 @@ public final class AsymmetricBlockCipherReorganizer {
                                         .orElse(false))
                 .perform(UsualPerformActions.performMergeParentAndChildOfSameKind(kind));
     }
+
+    /**
+     * An OAEP padding found with no algorithm holding it, e.g. the digest of RSA-OAEP set on a
+     * context whose key is not known in the analyzed code ({@code
+     * EVP_PKEY_CTX_set_rsa_oaep_md_name}): OAEP is an RSA encryption scheme, so the padding is that
+     * of an RSA encryption.
+     */
+    @Nonnull
+    public static final IReorganizerRule MAKE_RSA_ENCRYPTION_OF_AN_OAEP_PADDING =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(Padding.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) -> parent == null && node instanceof OAEP)
+                    .perform(
+                            (node, parent, roots) -> {
+                                final RSA rsa = new RSA(((OAEP) node).getDetectionContext());
+                                rsa.put(node);
+                                final List<INode> newRoots = new ArrayList<>(roots);
+                                newRoots.replaceAll(root -> root == node ? rsa : root);
+                                return newRoots;
+                            });
+
+    /**
+     * A mask generation function found next to an OAEP padding, e.g. the MGF1 digest set for an
+     * RSA-OAEP encryption with {@code EVP_PKEY_CTX_set_rsa_mgf1_md}, is the mask generation
+     * function of that padding.
+     */
+    @Nonnull
+    public static final IReorganizerRule MOVE_MASK_GENERATION_FUNCTION_UNDER_OAEP =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(PublicKeyEncryption.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) ->
+                                    node.hasChildOfType(MaskGenerationFunction.class).isPresent()
+                                            && node.hasChildOfType(Padding.class)
+                                                    .filter(OAEP.class::isInstance)
+                                                    .isPresent())
+                    .perform(
+                            (node, parent, roots) -> {
+                                final INode mgf =
+                                        node.hasChildOfType(MaskGenerationFunction.class)
+                                                .orElseThrow();
+                                node.removeChildOfType(MaskGenerationFunction.class);
+                                node.hasChildOfType(Padding.class).orElseThrow().put(mgf);
+                                return roots;
+                            });
 
     @Nonnull
     public static final IReorganizerRule INVERT_DIGEST_AND_ITS_SIZE =

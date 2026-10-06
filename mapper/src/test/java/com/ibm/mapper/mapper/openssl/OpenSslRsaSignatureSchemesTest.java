@@ -27,6 +27,7 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ANSIX931;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.padding.PKCS1;
+import com.ibm.mapper.model.padding.Raw;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ class OpenSslRsaSignatureSchemesTest {
         final INode scheme = OpenSslRsaSignatureSchemes.withoutPadding(location);
         assertThat(scheme).isInstanceOf(RSA.class);
         assertThat(scheme.getKind()).isEqualTo(Signature.class);
-        assertThat(scheme.hasChildOfType(Padding.class)).isEmpty();
+        assertThat(scheme.hasChildOfType(Padding.class)).get().isInstanceOf(Raw.class);
     }
 
     @Test

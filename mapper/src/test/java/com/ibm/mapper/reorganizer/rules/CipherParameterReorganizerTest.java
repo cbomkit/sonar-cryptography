@@ -23,7 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.algorithms.AES;
+import com.ibm.mapper.model.algorithms.Blowfish;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.reorganizer.Reorganizer;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -34,6 +36,40 @@ import org.junit.jupiter.api.Test;
 class CipherParameterReorganizerTest {
 
     private final DetectionLocation location = mock(DetectionLocation.class);
+
+    @Test
+    void aKeyLengthSetForACipherWithAFixedKeyLengthIsDropped() {
+        final AES cipher = new AES(128, location);
+        final Encrypt encrypt = new Encrypt(location);
+        encrypt.put(new KeyLength(256, location));
+        cipher.put(encrypt);
+
+        new Reorganizer(
+                        List.of(
+                                CipherParameterReorganizer
+                                        .KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_AN_ENCRYPTION,
+                                CipherParameterReorganizer.MOVE_NODES_UNDER_ENCRYPT_UP))
+                .reorganize(new ArrayList<>(List.of(cipher)));
+
+        assertThat(cipher.hasChildOfType(KeyLength.class).map(INode::asString)).contains("128");
+    }
+
+    @Test
+    void aKeyLengthSetForACipherWithAVariableKeyLengthIsItsKeyLength() {
+        final Blowfish cipher = new Blowfish(location);
+        final Encrypt encrypt = new Encrypt(location);
+        encrypt.put(new KeyLength(256, location));
+        cipher.put(encrypt);
+
+        new Reorganizer(
+                        List.of(
+                                CipherParameterReorganizer
+                                        .KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_AN_ENCRYPTION,
+                                CipherParameterReorganizer.MOVE_NODES_UNDER_ENCRYPT_UP))
+                .reorganize(new ArrayList<>(List.of(cipher)));
+
+        assertThat(cipher.hasChildOfType(KeyLength.class).map(INode::asString)).contains("256");
+    }
 
     @Test
     void anEncryptionIsMovedUnderItsCipher() {

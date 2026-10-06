@@ -50,6 +50,26 @@ public final class BlockCipherReorganizer {
                             UsualPerformActions.performMergeParentAndChildOfSameKind(
                                     BlockCipher.class));
 
+    /**
+     * A block cipher with a block cipher child, where the parent names the cipher and the child
+     * holds properties of it, e.g. a cipher operation of the OpenSSL legacy API with the key setup
+     * of its key schedule: {@code DES_ede3_cbc_encrypt} encrypts with 3DES using key schedules set
+     * up for single DES. The parent keeps its name and takes what the child holds.
+     */
+    public static final IReorganizerRule MERGE_BLOCK_CIPHER_CHILD_INTO_PARENT =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule()
+                    .forNodeKind(BlockCipher.class)
+                    .includingChildren(
+                            List.of(
+                                    new ReorganizerRuleBuilder()
+                                            .createReorganizerRule()
+                                            .forNodeKind(BlockCipher.class)
+                                            .noAction()))
+                    .perform(
+                            UsualPerformActions.performMergeChildIntoParentOfSameKind(
+                                    BlockCipher.class));
+
     public static final IReorganizerRule DEDUPLICATE_OVERLAPPING_ROOTS =
             new IReorganizerRule() {
                 @Override

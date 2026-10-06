@@ -34,6 +34,7 @@ import com.ibm.mapper.model.mode.CFB;
 import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.model.mode.OFB;
 import com.ibm.mapper.model.padding.OAEP;
+import com.ibm.mapper.model.padding.Raw;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -112,5 +113,19 @@ class OpenSslCipherMapperTest {
     void unknownAndNullNames() {
         assertThat(mapper.parse("XYZ", location)).isEmpty();
         assertThat(mapper.parse(null, location)).isEmpty();
+    }
+
+    @Test
+    void rsaWithoutPaddingHasRawPadding() {
+        final DetectionLocation location =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "OpenSSL");
+
+        assertThat(new OpenSslCipherMapper().parse("RSA-NO-PADDING", location))
+                .get()
+                .satisfies(
+                        rsa ->
+                                assertThat(rsa.hasChildOfType(Padding.class))
+                                        .get()
+                                        .isInstanceOf(Raw.class));
     }
 }

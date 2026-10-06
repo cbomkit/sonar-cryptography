@@ -22,10 +22,14 @@ package com.ibm.mapper.reorganizer.rules;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.algorithms.AES;
+import com.ibm.mapper.model.algorithms.DES;
+import com.ibm.mapper.model.algorithms.DESede;
+import com.ibm.mapper.model.mode.CBC;
 import com.ibm.mapper.model.mode.ECB;
 import com.ibm.mapper.reorganizer.Reorganizer;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -53,6 +57,29 @@ class BlockCipherReorganizerTest {
         assertThat(result)
                 .extracting(INode::asString)
                 .containsExactly("AES-128-ECB", "AES-256-ECB");
+    }
+
+    @Test
+    void theParentKeepsItsNameAndTakesWhatTheChildHolds() {
+        // DES_ede3_cbc_encrypt with key schedules set up by DES_set_key
+        final DESede operation = new DESede(location);
+        operation.put(new ECB(location));
+        final DES keySetup = new DES(location);
+        keySetup.put(new KeyLength(56, location));
+        keySetup.put(new CBC(location));
+        operation.put(keySetup);
+
+        final List<INode> result =
+                new Reorganizer(
+                                List.of(
+                                        BlockCipherReorganizer
+                                                .MERGE_BLOCK_CIPHER_CHILD_INTO_PARENT))
+                        .reorganize(new ArrayList<>(List.of(operation)));
+
+        assertThat(result).singleElement().isSameAs(operation);
+        assertThat(operation.hasChildOfType(BlockCipher.class)).isEmpty();
+        assertThat(operation.hasChildOfType(Mode.class)).get().isInstanceOf(ECB.class);
+        assertThat(operation.hasChildOfType(KeyLength.class).map(INode::asString)).contains("56");
     }
 
     @Test

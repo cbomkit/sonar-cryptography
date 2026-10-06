@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.ANSIX931;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.padding.PKCS1;
+import com.ibm.mapper.model.padding.Raw;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -54,6 +55,8 @@ final class OpenSslRsaSignatureSchemes {
     /** RSA signatures without padding. */
     @Nonnull
     static RSA withoutPadding(@Nonnull DetectionLocation detectionLocation) {
-        return new RSA(Signature.class, new RSA(detectionLocation));
+        final RSA rsa = new RSA(Signature.class, new RSA(detectionLocation));
+        rsa.put(new Raw(detectionLocation));
+        return rsa;
     }
 }

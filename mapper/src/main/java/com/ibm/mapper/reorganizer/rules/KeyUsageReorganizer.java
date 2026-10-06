@@ -25,6 +25,7 @@ import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyAgreement;
+import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.PrivateKey;
@@ -40,6 +41,7 @@ import com.ibm.mapper.model.algorithms.RSASVE;
 import com.ibm.mapper.model.algorithms.X25519;
 import com.ibm.mapper.model.algorithms.X448;
 import com.ibm.mapper.model.functionality.Decapsulate;
+import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Encapsulate;
 import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.mapper.model.functionality.KeyDerivation;
@@ -63,6 +65,52 @@ public final class KeyUsageReorganizer {
     private KeyUsageReorganizer() {
         // private
     }
+
+    /**
+     * A reorganizer rule for a decryption performed with an EC, DH, X25519 or X448 private key,
+     * which has no decryption operation of its own: the content encryption key of a CMS message is
+     * then agreed with the key of its originator (a key agreement recipient), so the decryption is
+     * reported as a key derivation, e.g. ECDH with an EC key.
+     */
+    @Nonnull
+    public static final IReorganizerRule
+            MAKE_KEY_DERIVATION_OF_A_DECRYPTION_WITH_A_KEY_AGREEMENT_KEY =
+                    new ReorganizerRuleBuilder()
+                            .createReorganizerRule(
+                                    "MAKE_KEY_DERIVATION_OF_A_DECRYPTION_WITH_A_KEY_AGREEMENT_KEY")
+                            .forNodeKind(PrivateKey.class)
+                            .withDetectionCondition(
+                                    (node, parent, roots) ->
+                                            keyAlgorithm(node)
+                                                    .filter(KeyUsageReorganizer::agreesKeysOnly)
+                                                    .flatMap(
+                                                            algorithm ->
+                                                                    algorithm.hasChildOfType(
+                                                                            Decrypt.class))
+                                                    .isPresent())
+                            .perform(
+                                    (node, parent, roots) -> {
+                                        final INode algorithm = keyAlgorithm(node).orElseThrow();
+                                        final Functionality decryption =
+                                                algorithm
+                                                        .hasChildOfType(Decrypt.class)
+                                                        .map(Functionality.class::cast)
+                                                        .orElseThrow();
+                                        algorithm.removeChildOfType(Decrypt.class);
+                                        if (algorithm
+                                                .hasChildOfType(KeyDerivation.class)
+                                                .isEmpty()) {
+                                            final KeyDerivation derivation =
+                                                    new KeyDerivation(
+                                                            decryption.getDetectionContext());
+                                            decryption
+                                                    .getChildren()
+                                                    .values()
+                                                    .forEach(derivation::put);
+                                            algorithm.put(derivation);
+                                        }
+                                        return roots;
+                                    });
 
     /**
      * A reorganizer rule that reports each operation performed with a private key as the algorithm
@@ -103,6 +151,63 @@ public final class KeyUsageReorganizer {
                                             operationAlgorithm(algorithm, operation);
                                     algorithm.removeChildOfType(operation.getKind());
                                     moveUnder(operationAlgorithm, operation);
+                                    final Optional<INode> sameAlgorithm =
+                                            node.hasChildOfType(operationAlgorithm.getKind())
+                                                    .filter(
+                                                            existing ->
+                                                                    existing.getClass()
+                                                                            .equals(
+                                                                                    operationAlgorithm
+                                                                                            .getClass()));
+                                    if (sameAlgorithm.isPresent()) {
+                                        operationAlgorithm
+                                                .getChildren()
+                                                .values()
+                                                .forEach(sameAlgorithm.get()::put);
+                                    } else {
+                                        node.put(operationAlgorithm);
+                                    }
+                                }
+                                if (operations(algorithm).isEmpty()) {
+                                    algorithm
+                                            .hasChildOfType(KeyGeneration.class)
+                                            .ifPresent(node::put);
+                                    node.removeChildOfType(algorithm.getKind());
+                                }
+                                return roots;
+                            });
+
+    /**
+     * A reorganizer rule for the operations performed with a private key that are found on the
+     * algorithm the key is named after as algorithms of their own, e.g. an ECDSA signature or an
+     * ECDH key agreement of the OpenSSL legacy API made with a generated EC key: each is held by
+     * the key, with the key's curve or key length, as {@link
+     * #MAKE_ALGORITHMS_OF_PRIVATE_KEY_OPERATIONS} reports the operations named by the key's
+     * algorithm.
+     *
+     * <p>The key's algorithm is removed from the key once all its operations are reported this way,
+     * as the key is then described by the algorithms of its operations.
+     */
+    @Nonnull
+    public static final IReorganizerRule MOVE_OPERATION_ALGORITHMS_OF_PRIVATE_KEY_TO_THE_KEY =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule("MOVE_OPERATION_ALGORITHMS_OF_PRIVATE_KEY_TO_THE_KEY")
+                    .forNodeKind(PrivateKey.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) ->
+                                    ownAlgorithm(node)
+                                            .map(
+                                                    algorithm ->
+                                                            !operationAlgorithms(algorithm)
+                                                                    .isEmpty())
+                                            .orElse(false))
+                    .perform(
+                            (node, parent, roots) -> {
+                                final INode algorithm = ownAlgorithm(node).orElseThrow();
+                                for (INode operationAlgorithm : operationAlgorithms(algorithm)) {
+                                    algorithm.removeChildOfType(operationAlgorithm.getKind());
+                                    withKeyLengthOf(
+                                            algorithm, withCurveOf(algorithm, operationAlgorithm));
                                     final Optional<INode> sameAlgorithm =
                                             node.hasChildOfType(operationAlgorithm.getKind())
                                                     .filter(
@@ -232,6 +337,23 @@ public final class KeyUsageReorganizer {
         return key.getChildren().values().stream().filter(IAlgorithm.class::isInstance).findFirst();
     }
 
+    /**
+     * The algorithms of the operations found on a key's algorithm, of another kind than the key's
+     * algorithm: its signatures, key agreements and key encapsulations.
+     */
+    @Nonnull
+    private static List<INode> operationAlgorithms(@Nonnull INode algorithm) {
+        return algorithm.getChildren().values().stream()
+                .filter(IAlgorithm.class::isInstance)
+                .filter(child -> !child.getKind().equals(algorithm.getKind()))
+                .filter(
+                        child ->
+                                child.is(Signature.class)
+                                        || child.is(KeyAgreement.class)
+                                        || child.is(KeyEncapsulationMechanism.class))
+                .toList();
+    }
+
     /** The operations found on an algorithm, other than the generation of the key. */
     @Nonnull
     private static List<Functionality> operations(@Nonnull INode algorithm) {
@@ -240,6 +362,14 @@ public final class KeyUsageReorganizer {
                 .filter(child -> !(child instanceof KeyGeneration))
                 .map(Functionality.class::cast)
                 .toList();
+    }
+
+    /** Whether a key of the given algorithm agrees keys, and neither decrypts nor encrypts. */
+    private static boolean agreesKeysOnly(@Nonnull INode algorithm) {
+        return algorithm instanceof EllipticCurveAlgorithm
+                || algorithm instanceof DH
+                || algorithm instanceof X25519
+                || algorithm instanceof X448;
     }
 
     /**

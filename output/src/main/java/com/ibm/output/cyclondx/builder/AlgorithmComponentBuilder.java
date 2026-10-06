@@ -60,6 +60,7 @@ import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.model.padding.PKCS5;
 import com.ibm.mapper.model.padding.PKCS7;
+import com.ibm.mapper.model.padding.Raw;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -272,6 +273,8 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
             cxPadding = Padding.PKCS7;
         } else if (padding instanceof PKCS1) {
             cxPadding = Padding.PKCS1V15;
+        } else if (padding instanceof Raw) {
+            cxPadding = Padding.RAW;
         } else {
             cxPadding = Padding.OTHER;
         }

@@ -47,6 +47,7 @@ import com.ibm.mapper.model.functionality.KeyDerivation;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.padding.OAEP;
+import com.ibm.mapper.model.padding.Raw;
 import java.util.List;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
@@ -78,6 +79,26 @@ class AlgorithmTest extends TestBase {
                     AlgorithmProperties algorithmProperties =
                             component.getCryptoProperties().getAlgorithmProperties();
                     assertThat(algorithmProperties.getParameterSetIdentifier()).isNull();
+                });
+    }
+
+    @Test
+    void rsaWithoutPaddingHasRawPadding() {
+        this.assertsNode(
+                () -> {
+                    final RSA rsa = new RSA(detectionLocation);
+                    rsa.put(new Raw(detectionLocation));
+                    return rsa;
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    assertThat(
+                                    bom.getComponents()
+                                            .get(0)
+                                            .getCryptoProperties()
+                                            .getAlgorithmProperties()
+                                            .getPadding())
+                            .isEqualTo(org.cyclonedx.model.component.crypto.enums.Padding.RAW);
                 });
     }
 

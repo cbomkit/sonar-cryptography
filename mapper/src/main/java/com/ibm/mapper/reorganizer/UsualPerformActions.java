@@ -106,6 +106,29 @@ public final class UsualPerformActions {
     }
 
     /**
+     * Merges the child of the given kind of a node into the node: the node keeps its name and takes
+     * the children of the child it does not have, e.g. the key length of the key set up for a
+     * cipher operation.
+     *
+     * @param kind - The kind of the node and of its child
+     * @return The {@code Function3} returning the updated list of root nodes
+     */
+    @Nonnull
+    public static IFunctionPerformReorganization performMergeChildIntoParentOfSameKind(
+            Class<? extends IPrimitive> kind) {
+        return (node, parent, roots) -> {
+            final INode child = node.getChildren().get(kind);
+            node.removeChildOfType(kind);
+            for (INode grandChild : child.getChildren().values()) {
+                if (!node.getChildren().containsKey(grandChild.getKind())) {
+                    node.put(grandChild);
+                }
+            }
+            return roots;
+        };
+    }
+
+    /**
      * This action is a helper function to replace a node: provide a {@code Function3} that returns
      * an updated node, and this action will replace the original node by this updated node.
      * Typically, it is useful to rename a node.
