@@ -23,6 +23,7 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.SignatureAction;
+import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyContext;
@@ -31,11 +32,15 @@ import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.IActionFactory;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLEvpSignature;
+import com.ibm.plugin.translation.translator.contexts.CxxAlgorithmParameterContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.CxxSignatureContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
@@ -62,9 +67,10 @@ import javax.annotation.Nonnull;
  * digest and the RSA padding they use; the signature of certificates, certificate requests and CRLs
  * ({@code X509_sign}, ...) and their verification, the CMS, PKCS#7 and OCSP signatures ({@code
  * CMS_sign}, {@code PKCS7_sign}, {@code OCSP_basic_sign}, ...), and the encryption and decryption
- * of the session key of an envelope ({@code EVP_SealInit} / {@code EVP_OpenInit}). The {@code
- * X509_sign_ctx} forms sign with a context initialized by {@code EVP_DigestSignInit}, which is
- * where the key and the digest are reported.
+ * of the session key of an envelope ({@code EVP_SealInit} / {@code EVP_OpenInit}) and of the
+ * content encryption key of a CMS or PKCS#7 message ({@code CMS_decrypt}, {@code PKCS7_decrypt},
+ * ...). The {@code X509_sign_ctx} forms sign with a context initialized by {@code
+ * EVP_DigestSignInit}, which is where the key and the digest are reported.
  */
 public final class OpenSSLEvpKeyUsage {
 
@@ -75,6 +81,59 @@ public final class OpenSSLEvpKeyUsage {
 
     /** The digest index of an operation given no digest. */
     private static final int NO_DIGEST = -1;
+
+    // Settings of the operation initialized on a context created for the key: the digest of a
+    // signature, and the digests of RSA-OAEP and of its MGF1 mask generation function, each given
+    // as the argument of the setter, e.g. EVP_PKEY_CTX_set_signature_md(ctx, md)
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_SIGNATURE_MD =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_PKEY_CTX_set_signature_md")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_OAEP_MD =
+            digestSetting(
+                    "EVP_PKEY_CTX_set_rsa_oaep_md",
+                    CxxAlgorithmParameterContextTranslator.OAEP_SETTING);
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_MGF1_MD =
+            digestSetting(
+                    "EVP_PKEY_CTX_set_rsa_mgf1_md",
+                    CxxAlgorithmParameterContextTranslator.MGF1_SETTING);
+
+    /** The setting {@code setting} of a digest given as the argument of {@code function}. */
+    @Nonnull
+    private static IDetectionRule<AstNode> digestSetting(
+            @Nonnull String function, @Nonnull String setting) {
+        return new DetectionRuleBuilder<AstNode>()
+                .createDetectionRule()
+                .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                .forMethods(function)
+                .shouldBeDetectedAs(new ValueActionFactory<>(setting))
+                .withMethodParameter("*")
+                .withMethodParameter("*")
+                .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                .buildForContext(new AlgorithmParameterContext())
+                .inBundle(() -> BUNDLE)
+                .withoutDependingDetectionRules();
+    }
+
+    private static final List<IDetectionRule<AstNode>> OPERATION_SETTINGS =
+            Stream.concat(
+                            Stream.of(
+                                    EVP_PKEY_CTX_SET_SIGNATURE_MD,
+                                    EVP_PKEY_CTX_SET_RSA_OAEP_MD,
+                                    EVP_PKEY_CTX_SET_RSA_MGF1_MD,
+                                    OpenSSLEvpCipher.rsaOaepDigestNameRule()),
+                            OpenSSLEvpSignature.signingContextRules().stream())
+                    .toList();
 
     // Operations on a context created for the key: the init function of each operation, one rule
     // per number of arguments, e.g. EVP_PKEY_sign_init(ctx), EVP_PKEY_sign_init_ex(ctx, params) and
@@ -165,7 +224,7 @@ public final class OpenSSLEvpKeyUsage {
                             return parameters
                                     .buildForContext(context.get())
                                     .inBundle(() -> BUNDLE)
-                                    .withoutDependingDetectionRules();
+                                    .withDependingDetectionRules(OPERATION_SETTINGS);
                         })
                 .toList();
     }
@@ -211,9 +270,17 @@ public final class OpenSSLEvpKeyUsage {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(KEY_CONTEXT_OPERATIONS);
 
-    /** The RSA padding set on the context a digest sign or verify operation returns in pctx. */
+    /**
+     * The RSA padding, the RSA-PSS settings and the MGF1 digest set on the context a digest sign or
+     * verify operation returns in pctx.
+     */
     private static final List<IDetectionRule<AstNode>> SIGNING_CONTEXT_SETTINGS =
-            List.of(OpenSSLEvpCipher.rsaPaddingRule());
+            Stream.concat(
+                            Stream.of(
+                                    OpenSSLEvpCipher.rsaPaddingRule(),
+                                    EVP_PKEY_CTX_SET_RSA_MGF1_MD),
+                            OpenSSLEvpSignature.signingContextRules().stream())
+                    .toList();
 
     // EVP_DigestSignInit(mdctx, pctx, md, e, pkey) / EVP_DigestVerifyInit(...)
     private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT =
@@ -268,7 +335,11 @@ public final class OpenSSLEvpKeyUsage {
                 .withMethodParameter("*")
                 .withMethodParameter("*")
                 .withMethodParameter("*")
-                .buildForContext(new SignatureContext(Map.of("kind", "DIGEST_NAME")))
+                .buildForContext(
+                        new SignatureContext(
+                                Map.of(
+                                        CxxSignatureContextTranslator.KIND,
+                                        CxxSignatureContextTranslator.DIGEST_NAME_KIND)))
                 .inBundle(() -> BUNDLE)
                 .withDependingDetectionRules(SIGNING_CONTEXT_SETTINGS);
     }
@@ -321,6 +392,31 @@ public final class OpenSSLEvpKeyUsage {
                     6,
                     NO_DIGEST,
                     "EVP_OpenInit");
+
+    // CMS_decrypt(cms, pkey, cert, dcont, out, flags), CMS_decrypt_set1_pkey(cms, pk, cert),
+    // CMS_decrypt_set1_pkey_and_peer(cms, pk, cert, peer), PKCS7_decrypt(p7, pkey, cert, data,
+    // flags): the content encryption key of the message is decrypted with the private key, or
+    // agreed with it for a key agreement recipient
+    private static final IDetectionRule<AstNode> CMS_DECRYPT = keyDecryption(6, "CMS_decrypt");
+
+    private static final IDetectionRule<AstNode> CMS_DECRYPT_SET1_PKEY =
+            keyDecryption(3, "CMS_decrypt_set1_pkey");
+
+    private static final IDetectionRule<AstNode> CMS_DECRYPT_SET1_PKEY_AND_PEER =
+            keyDecryption(4, "CMS_decrypt_set1_pkey_and_peer");
+
+    private static final IDetectionRule<AstNode> PKCS7_DECRYPT = keyDecryption(5, "PKCS7_decrypt");
+
+    @Nonnull
+    private static IDetectionRule<AstNode> keyDecryption(
+            int parameterCount, @Nonnull String function) {
+        return keyOperation(
+                new CipherActionFactory<>(CipherAction.Action.DECRYPT),
+                new CipherContext(),
+                parameterCount,
+                NO_DIGEST,
+                function);
+    }
 
     @Nonnull
     private static IDetectionRule<AstNode> keyOperation(
@@ -376,6 +472,27 @@ public final class OpenSSLEvpKeyUsage {
         // private
     }
 
+    /**
+     * The signatures and their verifications made with a key given as an argument: detection rules
+     * on their own as well, for a key that is not generated in the analyzed code, e.g. loaded from
+     * a file. A signature reported with the generation of its key is not reported again.
+     */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> signatureRules() {
+        return List.of(
+                EVP_DIGEST_SIGN_INIT,
+                EVP_DIGEST_VERIFY_INIT,
+                EVP_DIGEST_SIGN_INIT_EX,
+                EVP_DIGEST_VERIFY_INIT_EX,
+                X509_SIGN,
+                X509_VERIFY,
+                X509_REQ_VERIFY_EX,
+                CMS_SIGN,
+                CMS_SIGN_EX,
+                CMS_ADD_SIGNER,
+                OCSP_BASIC_SIGN);
+    }
+
     /** The uses of a key, followed from the variable holding it. */
     @Nonnull
     static List<IDetectionRule<AstNode>> rules() {
@@ -394,6 +511,10 @@ public final class OpenSSLEvpKeyUsage {
                 CMS_ADD_SIGNER,
                 OCSP_BASIC_SIGN,
                 EVP_SEAL_INIT,
-                EVP_OPEN_INIT);
+                EVP_OPEN_INIT,
+                CMS_DECRYPT,
+                CMS_DECRYPT_SET1_PKEY,
+                CMS_DECRYPT_SET1_PKEY_AND_PEER,
+                PKCS7_DECRYPT);
     }
 }

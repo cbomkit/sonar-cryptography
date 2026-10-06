@@ -22,17 +22,30 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.openssl.OpenSslMessageDigestMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.algorithms.MGF1;
+import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public final class CxxDigestContextTranslator implements IContextTranslation<AstNode> {
+
+    /** The property of a digest context that tells what the digest is used for. */
+    public static final String KIND = "kind";
+
+    /** The kind of the digest of a mask generation function. */
+    public static final String MGF1_KIND = "MGF1";
+
+    /** The kind of the digest of RSA-OAEP. */
+    public static final String OAEP_KIND = "OAEP";
 
     @Override
     public @Nonnull Optional<INode> translate(
@@ -42,9 +55,24 @@ public final class CxxDigestContextTranslator implements IContextTranslation<Ast
             @Nonnull DetectionLocation detectionLocation) {
 
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
-            return new OpenSslMessageDigestMapper()
-                    .parse(value.asString(), detectionLocation)
-                    .map(node -> node);
+            final Optional<INode> digest =
+                    new OpenSslMessageDigestMapper()
+                            .parse(value.asString(), detectionLocation)
+                            .map(node -> node);
+            // the digest of a mask generation function, e.g. the MGF1 digest of RSA-PSS or
+            // RSA-OAEP, is reported as that function
+            if (detectionContext instanceof DetectionContext context
+                    && context.get(KIND).filter(MGF1_KIND::equals).isPresent()) {
+                return digest.filter(MessageDigest.class::isInstance)
+                        .map(node -> new MGF1((MessageDigest) node));
+            }
+            // the digest of RSA-OAEP, given by name to EVP_PKEY_CTX_set_rsa_oaep_md_name
+            if (detectionContext instanceof DetectionContext context
+                    && context.get(KIND).filter(OAEP_KIND::equals).isPresent()) {
+                return digest.filter(MessageDigest.class::isInstance)
+                        .map(node -> new OAEP((MessageDigest) node, detectionLocation));
+            }
+            return digest;
         }
 
         return Optional.empty();

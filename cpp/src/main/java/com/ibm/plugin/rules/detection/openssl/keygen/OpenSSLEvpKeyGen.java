@@ -22,13 +22,16 @@ package com.ibm.plugin.rules.detection.openssl.keygen;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Curve;
 import com.ibm.engine.model.KeyAction;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -199,7 +202,8 @@ public final class OpenSSLEvpKeyGen {
                     .forMethods("EVP_RSA_gen")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new OpenSSLKeyParameterFactory())
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)

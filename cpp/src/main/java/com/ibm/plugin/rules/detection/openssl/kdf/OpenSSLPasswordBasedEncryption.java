@@ -28,6 +28,7 @@ import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLCipherOperationFactory;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
@@ -66,7 +67,8 @@ public final class OpenSSLPasswordBasedEncryption {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(0)
                     .withMethodParameter("*") // iter
                     .shouldBeDetectedAs(new IterationCountFactory<>())
@@ -90,7 +92,8 @@ public final class OpenSSLPasswordBasedEncryption {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(0)
                     .withMethodParameter("*") // iter
                     .shouldBeDetectedAs(new IterationCountFactory<>())

@@ -163,6 +163,12 @@ public final class CxxTranslator
         return Optional.empty();
     }
 
+    /** A C function operates on the object it is given, which its other arguments configure. */
+    @Override
+    protected boolean argumentsConfigureTheOperatedObject() {
+        return true;
+    }
+
     /**
      * Gets a detection location from the specified AstNode location and file path.
      *

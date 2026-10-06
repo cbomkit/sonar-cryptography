@@ -24,6 +24,7 @@ import com.ibm.engine.model.InitializationVectorSize;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Padding;
 import com.ibm.engine.model.TagSize;
+import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
@@ -31,6 +32,8 @@ import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.InitializationVectorLength;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.TagLength;
+import com.ibm.mapper.model.algorithms.MGF1;
+import com.ibm.mapper.model.padding.OAEP;
 import com.ibm.mapper.model.padding.PKCS7;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -38,6 +41,12 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public final class CxxAlgorithmParameterContextTranslator implements IContextTranslation<AstNode> {
+
+    /** The setting of the digest of RSA-OAEP. */
+    public static final String OAEP_SETTING = "OAEP";
+
+    /** The setting of the digest of the MGF1 mask generation function. */
+    public static final String MGF1_SETTING = "MGF1";
 
     @Override
     public @Nonnull Optional<INode> translate(
@@ -58,6 +67,14 @@ public final class CxxAlgorithmParameterContextTranslator implements IContextTra
                 && "PKCS7".equals(padding.asString())) {
             // the standard block padding (EVP_CIPHER_CTX_set_padding)
             return Optional.of(new PKCS7(detectionLocation));
+        } else if (value instanceof ValueAction<AstNode> setting) {
+            // the setting of an RSA padding whose digest is given as the argument of the setter,
+            // e.g. EVP_PKEY_CTX_set_rsa_oaep_md(ctx, md) and EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, md)
+            return switch (setting.asString()) {
+                case OAEP_SETTING -> Optional.of(new OAEP(detectionLocation));
+                case MGF1_SETTING -> Optional.of(new MGF1(detectionLocation));
+                default -> Optional.empty();
+            };
         }
         return Optional.empty();
     }

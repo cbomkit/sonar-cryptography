@@ -27,6 +27,8 @@ import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLEvpKdf;
 import com.ibm.plugin.rules.detection.openssl.keyagreement.OpenSSLEvpKeyAgreement;
 import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyGen;
+import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyGenRsa;
+import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyUsage;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyCipher;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDigest;
@@ -72,6 +74,9 @@ public final class OpenSSLDetectionRules {
                         OpenSSLEvpMac.rules().stream(),
                         OpenSSLEvpSignature.rules().stream(),
                         OpenSSLEvpKeyGen.rules().stream(),
+                        // signatures with a key given to them, e.g. loaded from a file
+                        OpenSSLEvpKeyUsage.signatureRules().stream(),
+                        OpenSSLEvpKeyGenRsa.keyGenerationSettingRules().stream(),
                         OpenSSLEvpKdf.rules().stream(),
                         OpenSSLEvpKeyAgreement.rules().stream(),
                         OpenSSLRand.rules().stream(),

@@ -29,6 +29,7 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,8 @@ public final class OpenSSLLegacyDh {
                     .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -101,8 +103,23 @@ public final class OpenSSLLegacyDh {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
+    // Key Agreement functions
+
+    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_compute_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
     // DH_generate_key(dh): a key is generated for the parameters of dh, a named group or generated
-    // parameters
+    // parameters, followed by the key agreement made with it
 
     private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
             new DetectionRuleBuilder<AstNode>()
@@ -119,22 +136,7 @@ public final class OpenSSLLegacyDh {
                                     DH_GENERATE_PARAMETERS_EX))
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // Key Agreement functions
-
-    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("DH_compute_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new KeyAgreementContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
+                    .withDependingDetectionRules(List.of(DH_COMPUTE_KEY));
 
     private OpenSSLLegacyDh() {
         // private

@@ -26,6 +26,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,11 +86,11 @@ public final class OpenSSLEvpCipherRuleFactory {
      * <ul>
      *   <li>for a key setup function, the argument that gives the key size and its unit (e.g. the
      *       {@code bits} of {@code AES_set_encrypt_key}, the {@code len} in bytes of {@code
-     *       BF_set_key}); {@code keySizeParameter} is -1 when there is none;
+     *       BF_set_key}); {@code keySizeParameter} is -1 when there is none, as for a cipher whose
+     *       key length is fixed, which is marked as a key setup by {@link #setsUpKey()};
      *   <li>for an encryption function, the argument that gives the key schedule set up by a key
      *       setup function of the same family (e.g. the {@code key} of {@code AES_cbc_encrypt});
-     *       {@code keyParameter} is -1 when the key is not followed, as for a cipher whose key
-     *       length is fixed.
+     *       {@code keyParameter} is -1 when the encryption takes no key schedule.
      * </ul>
      */
     public record LegacyEntry(
@@ -98,7 +99,8 @@ public final class OpenSSLEvpCipherRuleFactory {
             int parameterCount,
             int keySizeParameter,
             @Nullable Size.UnitType keySizeUnit,
-            int keyParameter) {
+            int keyParameter,
+            boolean keySetup) {
 
         public LegacyEntry(
                 @Nonnull String functionName, @Nonnull String label, int parameterCount) {
@@ -107,7 +109,7 @@ public final class OpenSSLEvpCipherRuleFactory {
 
         public LegacyEntry(
                 @Nonnull List<String> functionNames, @Nonnull String label, int parameterCount) {
-            this(functionNames, label, parameterCount, -1, null, -1);
+            this(functionNames, label, parameterCount, -1, null, -1, false);
         }
 
         public LegacyEntry(
@@ -116,18 +118,44 @@ public final class OpenSSLEvpCipherRuleFactory {
                 int parameterCount,
                 int keySizeParameter,
                 @Nonnull Size.UnitType keySizeUnit) {
-            this(List.of(functionName), label, parameterCount, keySizeParameter, keySizeUnit, -1);
+            this(
+                    List.of(functionName),
+                    label,
+                    parameterCount,
+                    keySizeParameter,
+                    keySizeUnit,
+                    -1,
+                    true);
         }
 
         /** The same entry, whose key schedule is the argument at the given index. */
         @Nonnull
         public LegacyEntry keyAt(int parameter) {
             return new LegacyEntry(
-                    functionNames, label, parameterCount, keySizeParameter, keySizeUnit, parameter);
+                    functionNames,
+                    label,
+                    parameterCount,
+                    keySizeParameter,
+                    keySizeUnit,
+                    parameter,
+                    keySetup);
+        }
+
+        /** The same entry, a key setup function that gives no key size. */
+        @Nonnull
+        public LegacyEntry setsUpKey() {
+            return new LegacyEntry(
+                    functionNames,
+                    label,
+                    parameterCount,
+                    keySizeParameter,
+                    keySizeUnit,
+                    keyParameter,
+                    true);
         }
 
         private boolean isKeySetup() {
-            return keySizeParameter >= 0;
+            return keySetup;
         }
     }
 
@@ -189,9 +217,10 @@ public final class OpenSSLEvpCipherRuleFactory {
                         Chain.of(
                                 chain.current()
                                         .shouldBeDetectedAs(
-                                                new KeySizeFactory<>(
-                                                        Objects.requireNonNull(
-                                                                entry.keySizeUnit())))
+                                                new OpenSSLSizeFactory(
+                                                        new KeySizeFactory<>(
+                                                                Objects.requireNonNull(
+                                                                        entry.keySizeUnit()))))
                                         .asChildOfParameterWithId(-1));
             } else if (i == entry.keyParameter() && !keySetups.isEmpty()) {
                 chain = Chain.of(chain.current().addDependingDetectionRules(keySetups));

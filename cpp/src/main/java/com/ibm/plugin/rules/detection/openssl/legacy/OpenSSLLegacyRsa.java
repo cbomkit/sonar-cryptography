@@ -33,6 +33,7 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLSaltLengthFactory;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -151,6 +152,7 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
                     .asChildOfParameterWithId(-1)
@@ -187,6 +189,7 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
@@ -254,57 +257,6 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new CipherContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    // Key Generation
-
-    private static final IDetectionRule<AstNode> RSA_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("RSA_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .asChildOfParameterWithId(-1)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new PrivateKeyContext(Map.of()))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RSA_GENERATE_KEY_EX =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("RSA_generate_key_ex")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .asChildOfParameterWithId(-1)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new PrivateKeyContext(Map.of()))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> RSA_GENERATE_MULTI_PRIME_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("RSA_generate_multi_prime_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
-                    .asChildOfParameterWithId(-1)
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -502,8 +454,9 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.oaepRules())
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -522,11 +475,81 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.oaepRules())
                     .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
+
+    // The operations made with a generated key, given as an argument of each of them: the
+    // signatures, the PSS encodings, and the raw RSA operations
+    private static final List<IDetectionRule<AstNode>> KEY_OPERATIONS =
+            List.of(
+                    RSA_SIGN,
+                    RSA_VERIFY,
+                    RSA_PADDING_ADD_PKCS1_PSS,
+                    RSA_PADDING_ADD_PKCS1_PSS_MGF1,
+                    RSA_VERIFY_PKCS1_PSS,
+                    RSA_VERIFY_PKCS1_PSS_MGF1,
+                    RSA_PUBLIC_ENCRYPT,
+                    RSA_PRIVATE_ENCRYPT,
+                    RSA_PUBLIC_DECRYPT,
+                    RSA_PRIVATE_DECRYPT);
+
+    // Key Generation, followed by the operations made with the key
+
+    private static final IDetectionRule<AstNode> RSA_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("RSA_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(KEY_OPERATIONS);
+
+    private static final IDetectionRule<AstNode> RSA_GENERATE_KEY_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("RSA_generate_key_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(KEY_OPERATIONS);
+
+    private static final IDetectionRule<AstNode> RSA_GENERATE_MULTI_PRIME_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("RSA_generate_multi_prime_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(KEY_OPERATIONS);
 
     private OpenSSLLegacyRsa() {
         // private

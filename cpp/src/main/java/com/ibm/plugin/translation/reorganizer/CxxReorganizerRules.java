@@ -63,12 +63,16 @@ public final class CxxReorganizerRules {
                 AeadBlockCipherReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,
                 AsymmetricBlockCipherReorganizer.INVERT_DIGEST_AND_ITS_SIZE,
                 AsymmetricBlockCipherReorganizer.MERGE_PKE_PARENT_AND_CHILD,
-                BlockCipherReorganizer.MERGE_BLOCK_CIPHER_PARENT_AND_CHILD,
+                AsymmetricBlockCipherReorganizer.MOVE_MASK_GENERATION_FUNCTION_UNDER_OAEP,
+                AsymmetricBlockCipherReorganizer.MAKE_RSA_ENCRYPTION_OF_AN_OAEP_PADDING,
+                BlockCipherReorganizer.MERGE_BLOCK_CIPHER_CHILD_INTO_PARENT,
                 // a legacy stream cipher operation on the key set up for it, e.g. RC4 on
                 // RC4_set_key
                 AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
                         StreamCipher.class),
                 CipherParameterReorganizer.MOVE_KEY_LENGTH_UNDER_TAG_LENGTH_UP,
+                CipherParameterReorganizer.KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_A_DECRYPTION,
+                CipherParameterReorganizer.KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_AN_ENCRYPTION,
                 CipherParameterReorganizer.MOVE_NODES_UNDER_DECRYPT_UP,
                 CipherParameterReorganizer.MOVE_ENCRYPT_UNDER_ITS_CIPHER,
                 CipherParameterReorganizer.MOVE_DECRYPT_UNDER_ITS_CIPHER,
@@ -115,10 +119,15 @@ public final class CxxReorganizerRules {
                 KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(PublicKey.class),
                 KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(SecretKey.class),
                 // the operations performed with a private key, e.g. ECDSA with an EC key
+                KeyUsageReorganizer.MAKE_KEY_DERIVATION_OF_A_DECRYPTION_WITH_A_KEY_AGREEMENT_KEY,
                 KeyUsageReorganizer.MAKE_ALGORITHMS_OF_PRIVATE_KEY_OPERATIONS,
+                KeyUsageReorganizer.MOVE_OPERATION_ALGORITHMS_OF_PRIVATE_KEY_TO_THE_KEY,
                 // the MAC computed with a MAC key
                 KeyUsageReorganizer.MAKE_TAGS_OF_SECRET_KEY_OPERATIONS,
                 KeyReorgenizer.MOVE_KEY_UNDER_ALGORITHM_AND_REPLACE_INNER_ALGORITHM,
-                KeyReorgenizer.PROPAGATE_KEY_LENGTH_TO_BLOCK_CIPHER);
+                KeyReorgenizer.PROPAGATE_KEY_LENGTH_TO_BLOCK_CIPHER,
+                // a signature made with a key whose type is not known in the analyzed code
+                SignatureReorganizer.MAKE_SIGNATURE_OF_A_SIGNING_OPERATION_WITHOUT_SCHEME,
+                SignatureReorganizer.MAKE_SIGNATURE_OF_A_VERIFYING_OPERATION_WITHOUT_SCHEME);
     }
 }

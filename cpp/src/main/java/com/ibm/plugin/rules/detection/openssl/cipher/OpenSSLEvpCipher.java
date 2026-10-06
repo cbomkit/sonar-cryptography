@@ -31,6 +31,7 @@ import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
+import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +168,11 @@ public final class OpenSSLEvpCipher {
                             new OpenSSLNameCanonicalizerFactory(
                                     OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
                     .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
+                    .buildForContext(
+                            new DigestContext(
+                                    Map.of(
+                                            CxxDigestContextTranslator.KIND,
+                                            CxxDigestContextTranslator.OAEP_KIND)))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -452,6 +457,15 @@ public final class OpenSSLEvpCipher {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return RULES.get();
+    }
+
+    /**
+     * The rule for the digest of RSA-OAEP given by name ({@code
+     * EVP_PKEY_CTX_set_rsa_oaep_md_name}), for the encryptions performed with an RSA key.
+     */
+    @Nonnull
+    public static IDetectionRule<AstNode> rsaOaepDigestNameRule() {
+        return EVP_PKEY_CTX_SET_RSA_OAEP_MD_NAME;
     }
 
     /**

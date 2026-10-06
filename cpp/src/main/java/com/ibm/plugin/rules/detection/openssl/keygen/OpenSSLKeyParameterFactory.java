@@ -30,7 +30,7 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
- * Resolves a key generation parameter: a key size in bits (e.g. the bits of {@code
+ * Resolves a key generation parameter: a positive key size in bits (e.g. the bits of {@code
  * EVP_PKEY_Q_keygen(NULL, NULL, "RSA", 2048)}) or a group name (e.g. {@code
  * EVP_PKEY_CTX_set_group_name(ctx, "P-256")}). A finite-field group name ({@code "ffdhe2048"})
  * resolves to the size of its prime; any other group name resolves to a {@link Curve} of that name
@@ -47,9 +47,11 @@ public final class OpenSSLKeyParameterFactory implements IValueFactory<AstNode> 
     @Nonnull
     public Optional<IValue<AstNode>> apply(@Nonnull ResolvedValue<Object, AstNode> resolvedValue) {
         final Object value = resolvedValue.value();
-        if (value instanceof Number bits) {
-            return Optional.of(
-                    new KeySize<>(bits.intValue(), Size.UnitType.BIT, resolvedValue.tree()));
+        if (value instanceof Number) {
+            // only a positive integer is a key size
+            return value instanceof Integer bits && bits > 0
+                    ? Optional.of(new KeySize<>(bits, Size.UnitType.BIT, resolvedValue.tree()))
+                    : Optional.empty();
         }
         if (!(value instanceof String name)) {
             return Optional.empty();

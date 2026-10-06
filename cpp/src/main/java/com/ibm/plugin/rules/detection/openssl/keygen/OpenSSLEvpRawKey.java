@@ -27,6 +27,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
@@ -64,7 +65,8 @@ public final class OpenSSLEvpRawKey {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(0)
                     .buildForContext(new KeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
@@ -84,7 +86,8 @@ public final class OpenSSLEvpRawKey {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(1)
                     .buildForContext(new KeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
@@ -101,7 +104,8 @@ public final class OpenSSLEvpRawKey {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(0)
                     .buildForContext(new PublicKeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
@@ -121,7 +125,8 @@ public final class OpenSSLEvpRawKey {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(1)
                     .buildForContext(new PublicKeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
@@ -137,7 +142,8 @@ public final class OpenSSLEvpRawKey {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())

@@ -24,10 +24,13 @@ import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.DerivedDetectionRules;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
+import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -224,5 +227,45 @@ public final class OpenSSLEvpMessageDigest {
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {
         return RULES.get();
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> MGF1_RULES =
+            Memoize.of(
+                    () ->
+                            DerivedDetectionRules.withContext(
+                                    rules(),
+                                    new DigestContext(
+                                            Map.of(
+                                                    CxxDigestContextTranslator.KIND,
+                                                    CxxDigestContextTranslator.MGF1_KIND))));
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> OAEP_RULES =
+            Memoize.of(
+                    () ->
+                            DerivedDetectionRules.withContext(
+                                    rules(),
+                                    new DigestContext(
+                                            Map.of(
+                                                    CxxDigestContextTranslator.KIND,
+                                                    CxxDigestContextTranslator.OAEP_KIND))));
+
+    /**
+     * The rules of {@link #rules()} for the digest of MGF1, the mask generation function of RSA-PSS
+     * and RSA-OAEP, e.g. the {@code mgf1Hash} argument of {@code RSA_padding_add_PKCS1_PSS_mgf1}:
+     * each digest is reported as MGF1 with that digest.
+     */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> mgf1Rules() {
+        return MGF1_RULES.get();
+    }
+
+    /**
+     * The rules of {@link #rules()} for the digest of RSA-OAEP, e.g. the {@code md} argument of
+     * {@code RSA_padding_add_PKCS1_OAEP_mgf1}: each digest is reported as the OAEP padding with
+     * that digest.
+     */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> oaepRules() {
+        return OAEP_RULES.get();
     }
 }

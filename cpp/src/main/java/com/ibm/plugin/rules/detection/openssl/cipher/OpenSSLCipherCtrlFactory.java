@@ -27,6 +27,7 @@ import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.InitializationVectorSizeFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.TagSizeFactory;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.LinkedList;
 import java.util.List;
@@ -105,10 +106,12 @@ public final class OpenSSLCipherCtrlFactory implements IValueFactory<AstNode> {
     @Nonnull
     private static IValueFactory<AstNode> factoryOf(@Nonnull Parameter parameter) {
         return switch (parameter) {
-            case KEY_LENGTH -> new KeySizeFactory<>(Size.UnitType.BYTE);
-            case RC2_KEY_BITS -> new KeySizeFactory<>(Size.UnitType.BIT);
-            case IV_LENGTH -> new InitializationVectorSizeFactory<>(Size.UnitType.BYTE);
-            case TAG_LENGTH -> new TagSizeFactory<>(Size.UnitType.BYTE);
+            case KEY_LENGTH -> new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE));
+            case RC2_KEY_BITS -> new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT));
+            case IV_LENGTH ->
+                    new OpenSSLSizeFactory(
+                            new InitializationVectorSizeFactory<>(Size.UnitType.BYTE));
+            case TAG_LENGTH -> new OpenSSLSizeFactory(new TagSizeFactory<>(Size.UnitType.BYTE));
         };
     }
 

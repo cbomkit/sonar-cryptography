@@ -19,12 +19,15 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.AlgorithmParameter;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.openssl.OpenSslCipherMapper;
 import com.ibm.mapper.mapper.openssl.OpenSslMacMapper;
+import com.ibm.mapper.mapper.openssl.OpenSslMessageDigestMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -51,6 +54,18 @@ public final class CxxMacContextTranslator implements IContextTranslation<AstNod
             return new OpenSslMacMapper()
                     .parse(value.asString(), detectionLocation)
                     .map(node -> node);
+        }
+        // the digest of an HMAC or the cipher of a CMAC or GMAC the MAC is computed with
+        if (value instanceof AlgorithmParameter<AstNode>) {
+            final Optional<INode> digest =
+                    new OpenSslMessageDigestMapper()
+                            .parse(value.asString(), detectionLocation)
+                            .map(node -> node);
+            return digest.isPresent()
+                    ? digest
+                    : new OpenSslCipherMapper()
+                            .parse(value.asString(), detectionLocation)
+                            .map(node -> node);
         }
 
         return Optional.empty();

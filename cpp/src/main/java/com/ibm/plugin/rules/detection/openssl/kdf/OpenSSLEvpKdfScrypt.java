@@ -28,6 +28,7 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -59,7 +60,8 @@ public final class OpenSSLEvpKdfScrypt {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // N
                     .withMethodParameter("*") // r
@@ -67,7 +69,8 @@ public final class OpenSSLEvpKdfScrypt {
                     .withMethodParameter("*") // maxmem
                     .withMethodParameter("*") // key
                     .withMethodParameter("*") // keylen
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
@@ -84,7 +87,8 @@ public final class OpenSSLEvpKdfScrypt {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // N
                     .withMethodParameter("*") // r
@@ -92,7 +96,8 @@ public final class OpenSSLEvpKdfScrypt {
                     .withMethodParameter("*") // maxmem
                     .withMethodParameter("*") // key
                     .withMethodParameter("*") // keylen
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // ctx
                     .withMethodParameter("*") // propq

@@ -28,6 +28,8 @@ import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.kdf.OpenSSLEvpKdf;
 import com.ibm.plugin.rules.detection.openssl.keyagreement.OpenSSLEvpKeyAgreement;
 import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyGen;
+import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyGenRsa;
+import com.ibm.plugin.rules.detection.openssl.keygen.OpenSSLEvpKeyUsage;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyCipher;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDigest;
@@ -55,12 +57,12 @@ class CxxDetectionRulesTest {
 
     /**
      * Asserts {@link CxxDetectionRules#rules()}'s size against the independently-computed sum of
-     * each of the 17 OpenSSL rule bundles' own {@code rules().size()}, rather than a hardcoded
+     * each of the 18 OpenSSL rule bundles' own {@code rules().size()}, rather than a hardcoded
      * total: the sum tracks itself when a rule is added to any one bundle, while still catching a
      * bundle removed from (or duplicated in) {@code OpenSSLDetectionRules#rules()}'s aggregation.
      */
     @Test
-    void testAllSeventeenOpenSslRuleBundlesAreAggregated() {
+    void testAllEighteenOpenSslRuleBundlesAreAggregated() {
         int expectedTotal =
                 OpenSSLEvpCipher.rules().size()
                         + OpenSSLEvpCipherFetch.rules().size()
@@ -68,6 +70,8 @@ class CxxDetectionRulesTest {
                         + OpenSSLEvpMac.rules().size()
                         + OpenSSLEvpSignature.rules().size()
                         + OpenSSLEvpKeyGen.rules().size()
+                        + OpenSSLEvpKeyUsage.signatureRules().size()
+                        + OpenSSLEvpKeyGenRsa.keyGenerationSettingRules().size()
                         + OpenSSLEvpKdf.rules().size()
                         + OpenSSLEvpKeyAgreement.rules().size()
                         + OpenSSLRand.rules().size()

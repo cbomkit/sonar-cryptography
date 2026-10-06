@@ -33,15 +33,16 @@ public final class OpenSSLLegacyCipherIdea {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // function(s), label, number of arguments[, argument giving the key size, its unit]
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
     private static final List<LegacyEntry> ENTRIES =
             List.of(
-                    new LegacyEntry("IDEA_set_encrypt_key", "IDEA", 2),
-                    new LegacyEntry("IDEA_set_decrypt_key", "IDEA", 2),
-                    new LegacyEntry("IDEA_ecb_encrypt", "IDEA-ECB", 3),
-                    new LegacyEntry("IDEA_cbc_encrypt", "IDEA-CBC", 6),
-                    new LegacyEntry("IDEA_cfb64_encrypt", "IDEA-CFB", 7),
-                    new LegacyEntry("IDEA_ofb64_encrypt", "IDEA-OFB", 6));
+                    new LegacyEntry("IDEA_set_encrypt_key", "IDEA", 2).setsUpKey(),
+                    new LegacyEntry("IDEA_set_decrypt_key", "IDEA", 2).setsUpKey(),
+                    new LegacyEntry("IDEA_ecb_encrypt", "IDEA-ECB", 3).keyAt(2),
+                    new LegacyEntry("IDEA_cbc_encrypt", "IDEA-CBC", 6).keyAt(3),
+                    new LegacyEntry("IDEA_cfb64_encrypt", "IDEA-CFB", 7).keyAt(3),
+                    new LegacyEntry("IDEA_ofb64_encrypt", "IDEA-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherIdea() {
         // private

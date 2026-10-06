@@ -23,15 +23,22 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.DerivedDetectionRules;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLSaltLengthFactory;
+import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.CxxSignatureContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
@@ -51,23 +58,35 @@ public final class OpenSSLEvpKeyGenRsa {
                     .forMethods("EVP_PKEY_CTX_set_rsa_keygen_bits")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // RSA-PSS keys: the digest, MGF1 digest and salt length the key is restricted to
+    // RSA-PSS keys: the digest, MGF1 digest and salt length the key is restricted to; the MGF1
+    // digest is reported as MGF1 with that digest
 
     private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods(
-                            "EVP_PKEY_CTX_set_rsa_pss_keygen_md",
-                            "EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md")
+                    .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -97,7 +116,11 @@ public final class OpenSSLEvpKeyGenRsa {
                     .shouldBeDetectedAs(
                             new OpenSSLNameCanonicalizerFactory(
                                     OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .buildForContext(new DigestContext())
+                    .buildForContext(
+                            new DigestContext(
+                                    Map.of(
+                                            CxxDigestContextTranslator.KIND,
+                                            CxxDigestContextTranslator.MGF1_KIND)))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -117,11 +140,51 @@ public final class OpenSSLEvpKeyGenRsa {
         // private
     }
 
+    /**
+     * The RSA-PSS key generation settings as detections of their own, for a key generation context
+     * created elsewhere: each setting is only accepted on an RSA-PSS key generation context, so it
+     * reports RSA-PSS with the digest, MGF1 digest or salt length it restricts the key to. A
+     * setting reported with the key generated in the analyzed code is not reported again (see
+     * {@link DerivedDetectionRules}).
+     */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> keyGenerationSettingRules() {
+        return KEY_GENERATION_SETTING_RULES.get();
+    }
+
+    private static final Supplier<List<IDetectionRule<AstNode>>> KEY_GENERATION_SETTING_RULES =
+            Memoize.of(
+                    () ->
+                            List.of(
+                                    rsaPss(EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD, Map.of()),
+                                    rsaPss(EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD, Map.of()),
+                                    rsaPss(
+                                            EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD_NAME,
+                                            Map.of(
+                                                    CxxSignatureContextTranslator.KIND,
+                                                    CxxSignatureContextTranslator
+                                                            .DIGEST_NAME_KIND)),
+                                    rsaPss(
+                                            EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD_NAME,
+                                            Map.of(
+                                                    CxxSignatureContextTranslator.KIND,
+                                                    CxxSignatureContextTranslator
+                                                            .MGF1_DIGEST_NAME_KIND)),
+                                    rsaPss(EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_SALTLEN, Map.of())));
+
+    @Nonnull
+    private static IDetectionRule<AstNode> rsaPss(
+            @Nonnull IDetectionRule<AstNode> setting, @Nonnull Map<String, String> properties) {
+        return DerivedDetectionRules.withAction(
+                setting, new ValueActionFactory<>("RSA-PSS"), new SignatureContext(properties));
+    }
+
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_RSA_KEYGEN_BITS,
                 EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD,
+                EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD,
                 EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MD_NAME,
                 EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_MGF1_MD_NAME,
                 EVP_PKEY_CTX_SET_RSA_PSS_KEYGEN_SALTLEN);

@@ -29,6 +29,7 @@ import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
@@ -61,7 +62,8 @@ public final class OpenSSLEvpKdfPbkdf2 {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // iter
                     .shouldBeDetectedAs(new IterationCountFactory<>())
@@ -69,7 +71,8 @@ public final class OpenSSLEvpKdfPbkdf2 {
                     .withMethodParameter("*") // digest
                     .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
                     .withMethodParameter("*") // keylen
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // out
                     .buildForContext(new KeyDerivationFunctionContext())
@@ -87,13 +90,15 @@ public final class OpenSSLEvpKdfPbkdf2 {
                     .withMethodParameter("*") // passlen
                     .withMethodParameter("*") // salt
                     .withMethodParameter("*") // saltlen
-                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new SaltSizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // iter
                     .shouldBeDetectedAs(new IterationCountFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // keylen
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // out
                     .buildForContext(new KeyDerivationFunctionContext())

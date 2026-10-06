@@ -213,24 +213,6 @@ public final class OpenSSLLegacyEc {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    // EC_KEY_generate_key(key): a key is generated on the curve of key, set when the key is
-    // created for a named curve or by EC_KEY_set_group
-    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EC_KEY_generate_key")
-                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
-                    .withMethodParameter("*")
-                    .addDependingDetectionRules(
-                            List.of(
-                                    EC_KEY_NEW_BY_CURVE_NAME,
-                                    EC_KEY_NEW_BY_CURVE_NAME_EX,
-                                    EC_KEY_SET_GROUP))
-                    .buildForContext(new PrivateKeyContext(Map.of()))
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
     // Key Agreement functions
 
     private static final IDetectionRule<AstNode> ECDH_COMPUTE_KEY =
@@ -247,6 +229,31 @@ public final class OpenSSLLegacyEc {
                     .buildForContext(new KeyAgreementContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
+
+    // EC_KEY_generate_key(key): a key is generated on the curve of key, set when the key is
+    // created for a named curve or by EC_KEY_set_group, followed by the signatures and the key
+    // agreement made with it
+    private static final IDetectionRule<AstNode> EC_KEY_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EC_KEY_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("EC"))
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(
+                            List.of(
+                                    EC_KEY_NEW_BY_CURVE_NAME,
+                                    EC_KEY_NEW_BY_CURVE_NAME_EX,
+                                    EC_KEY_SET_GROUP))
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(
+                            List.of(
+                                    ECDSA_SIGN,
+                                    ECDSA_DO_SIGN,
+                                    ECDSA_SIGN_EX,
+                                    ECDSA_DO_SIGN_EX,
+                                    ECDH_COMPUTE_KEY));
 
     private OpenSSLLegacyEc() {
         // private

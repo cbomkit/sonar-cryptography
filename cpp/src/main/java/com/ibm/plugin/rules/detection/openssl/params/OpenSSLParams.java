@@ -31,6 +31,7 @@ import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -48,6 +49,18 @@ import javax.annotation.Nonnull;
  *     OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, "SHA256", 0),
  *     OSSL_PARAM_construct_end()
  * };
+ * EVP_KDF_CTX_set_params(kctx, params);
+ * }</pre>
+ *
+ * <p>The parameters can also be built with an {@code OSSL_PARAM_BLD} (param_build.h), whose entries
+ * are pushed by {@code OSSL_PARAM_BLD_push_utf8_string(bld, key, value, size)} or {@code
+ * OSSL_PARAM_BLD_push_utf8_ptr(bld, key, value, size)} and turned into the array by {@code
+ * OSSL_PARAM_BLD_to_param(bld)}:
+ *
+ * <pre>{@code
+ * OSSL_PARAM_BLD *bld = OSSL_PARAM_BLD_new();
+ * OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_KDF_PARAM_DIGEST, "SHA256", 0);
+ * OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(bld);
  * EVP_KDF_CTX_set_params(kctx, params);
  * }</pre>
  *
@@ -81,6 +94,11 @@ public final class OpenSSLParams {
                     "OSSL_MAC_PARAM_CIPHER",
                     "OSSL_DRBG_PARAM_CIPHER");
 
+    /** The functions that push a UTF-8 string entry from a key, value and size to a builder. */
+    private static final String[] BUILDER_UTF8_STRING_ENTRIES = {
+        "OSSL_PARAM_BLD_push_utf8_string", "OSSL_PARAM_BLD_push_utf8_ptr"
+    };
+
     private OpenSSLParams() {
         // private
     }
@@ -108,10 +126,61 @@ public final class OpenSSLParams {
                 .toList();
     }
 
+    /**
+     * The rules for the entries pushed to a builder, {@code OSSL_PARAM_BLD_push_utf8_string(bld,
+     * key, value, size)}, matched by their key.
+     */
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> builderEntryRules(
+            @Nonnull List<String> keys,
+            @Nonnull Map<String, String> names,
+            @Nonnull IDetectionContext context) {
+        return keys.stream()
+                .map(
+                        key ->
+                                new DetectionRuleBuilder<AstNode>()
+                                        .createDetectionRule()
+                                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                                        .forMethods(BUILDER_UTF8_STRING_ENTRIES)
+                                        .withMethodParameter("*")
+                                        .withMethodParameter(key)
+                                        .withMethodParameter("*")
+                                        .shouldBeDetectedAs(
+                                                new OpenSSLNameCanonicalizerFactory(names))
+                                        .withMethodParameter("*")
+                                        .buildForContext(context)
+                                        .inBundle(() -> BUNDLE)
+                                        .withoutDependingDetectionRules())
+                .toList();
+    }
+
+    /**
+     * The entry rules of an {@code OSSL_PARAM} array, and the rule for the array built by {@code
+     * OSSL_PARAM_BLD_to_param(bld)}, which follows the builder to the entries pushed to it.
+     */
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> rules(
+            @Nonnull List<String> keys,
+            @Nonnull Map<String, String> names,
+            @Nonnull IDetectionContext context) {
+        final IDetectionRule<AstNode> toParam =
+                new DetectionRuleBuilder<AstNode>()
+                        .createDetectionRule()
+                        .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                        .forMethods("OSSL_PARAM_BLD_to_param")
+                        .withMethodParameter("*")
+                        .addDependingDetectionRules(builderEntryRules(keys, names, context))
+                        .buildForContext(context)
+                        .inBundle(() -> BUNDLE)
+                        .withoutDependingDetectionRules();
+        return Stream.concat(entryRules(keys, names, context).stream(), Stream.of(toParam))
+                .toList();
+    }
+
     private static final Supplier<List<IDetectionRule<AstNode>>> DIGEST_RULES =
             Memoize.of(
                     () ->
-                            entryRules(
+                            rules(
                                     DIGEST_KEYS,
                                     OpenSSLNameCanonicalizerFactory.DIGEST_NAMES,
                                     new DigestContext()));
@@ -119,7 +188,7 @@ public final class OpenSSLParams {
     private static final Supplier<List<IDetectionRule<AstNode>>> CIPHER_RULES =
             Memoize.of(
                     () ->
-                            entryRules(
+                            rules(
                                     CIPHER_KEYS,
                                     OpenSSLNameCanonicalizerFactory.CIPHER_NAMES,
                                     new CipherContext()));

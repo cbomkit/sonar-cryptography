@@ -33,14 +33,15 @@ public final class OpenSSLLegacyCipherSeed {
 
     private static final String BUNDLE = "OpenSSL";
 
-    // function(s), label, number of arguments[, argument giving the key size, its unit]
+    // function(s), label, number of arguments[, argument giving the key size, its unit];
+    // keyAt: the argument giving the key schedule, followed to its key setup
     private static final List<LegacyEntry> ENTRIES =
             List.of(
-                    new LegacyEntry("SEED_set_key", "SEED", 2),
-                    new LegacyEntry("SEED_ecb_encrypt", "SEED-ECB", 4),
-                    new LegacyEntry("SEED_cbc_encrypt", "SEED-CBC", 6),
-                    new LegacyEntry("SEED_cfb128_encrypt", "SEED-CFB", 7),
-                    new LegacyEntry("SEED_ofb128_encrypt", "SEED-OFB", 6));
+                    new LegacyEntry("SEED_set_key", "SEED", 2).setsUpKey(),
+                    new LegacyEntry("SEED_ecb_encrypt", "SEED-ECB", 4).keyAt(2),
+                    new LegacyEntry("SEED_cbc_encrypt", "SEED-CBC", 6).keyAt(3),
+                    new LegacyEntry("SEED_cfb128_encrypt", "SEED-CFB", 7).keyAt(3),
+                    new LegacyEntry("SEED_ofb128_encrypt", "SEED-OFB", 6).keyAt(3));
 
     private OpenSSLLegacyCipherSeed() {
         // private

@@ -28,8 +28,10 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
+import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
@@ -37,58 +39,15 @@ import javax.annotation.Nonnull;
  * Detection rules for OpenSSL signature operations.
  *
  * <p>These rules detect the signature algorithm fetched by name ({@code EVP_SIGNATURE_fetch}), the
- * digest named for a digest sign/verify operation, the RSA-PSS and MGF1 settings of a signing
- * context, and the time-stamping signer digest given by name. The signature algorithm of {@code
- * EVP_DigestSign}/{@code EVP_PKEY_sign} and of the CMS, PKCS#7 and OCSP signing functions is the
- * type of the key given to them; the digest passed to those functions is reported by the digest
- * rules.
+ * RSA-PSS and MGF1 settings of a signing context, and the time-stamping signer digest given by
+ * name. The signature algorithm of {@code EVP_DigestSign}/{@code EVP_PKEY_sign} and of the CMS,
+ * PKCS#7 and OCSP signing functions is the type of the key given to them; those operations and the
+ * digest they use are detected by {@code OpenSSLEvpKeyUsage}.
  */
 @SuppressWarnings("java:S1192")
 public final class OpenSSLEvpSignature {
 
     private static final String BUNDLE = "OpenSSL";
-
-    // The digest of a sign/verify operation is named by EVP_DigestSignInit_ex /
-    // EVP_DigestVerifyInit_ex (index 2); the key, and so the signature algorithm, comes from the
-    // EVP_PKEY given to them.
-
-    private static final IDetectionRule<AstNode> EVP_DIGEST_SIGN_INIT_EX_MDNAME =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_DigestSignInit_ex")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLNameCanonicalizerFactory(
-                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
-
-    private static final IDetectionRule<AstNode> EVP_DIGEST_VERIFY_INIT_EX_MDNAME =
-            new DetectionRuleBuilder<AstNode>()
-                    .createDetectionRule()
-                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
-                    .forMethods("EVP_DigestVerifyInit_ex")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .shouldBeDetectedAs(
-                            new OpenSSLNameCanonicalizerFactory(
-                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
-                    .inBundle(() -> BUNDLE)
-                    .withoutDependingDetectionRules();
 
     // Signature algorithm fetched by name
 
@@ -118,7 +77,11 @@ public final class OpenSSLEvpSignature {
                             new OpenSSLNameCanonicalizerFactory(
                                     OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
                     .withMethodParameter("*")
-                    .buildForContext(new DigestContext())
+                    .buildForContext(
+                            new DigestContext(
+                                    Map.of(
+                                            CxxDigestContextTranslator.KIND,
+                                            CxxDigestContextTranslator.MGF1_KIND)))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -165,9 +128,6 @@ public final class OpenSSLEvpSignature {
     @Nonnull
     private static List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
-                // digest named when a digest sign/verify operation is initialized
-                EVP_DIGEST_SIGN_INIT_EX_MDNAME,
-                EVP_DIGEST_VERIFY_INIT_EX_MDNAME,
                 // Fetch
                 EVP_SIGNATURE_FETCH,
                 // RSA setters
@@ -179,6 +139,16 @@ public final class OpenSSLEvpSignature {
 
     private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
             Memoize.of(OpenSSLEvpSignature::buildRules);
+
+    /**
+     * The rules for the RSA-PSS settings of a signing context: its salt length and the digest of
+     * its mask generation function, set on the context a digest sign or verify operation returns in
+     * {@code pctx}.
+     */
+    @Nonnull
+    public static List<IDetectionRule<AstNode>> signingContextRules() {
+        return List.of(EVP_PKEY_CTX_SET_RSA_PSS_SALTLEN, EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME);
+    }
 
     @Nonnull
     public static List<IDetectionRule<AstNode>> rules() {

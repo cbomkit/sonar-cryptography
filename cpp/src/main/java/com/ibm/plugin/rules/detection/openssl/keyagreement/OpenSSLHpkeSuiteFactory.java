@@ -24,15 +24,12 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.sonar.cxx.sslr.api.AstNode;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.sonar.cxx.parser.CxxGrammarImpl;
-import org.sonar.cxx.parser.CxxPunctuator;
 
 /**
  * Resolves an HPKE suite (RFC 9180) to the identifier {@code "<KEM>,<KDF>,<AEAD>"}, e.g. {@code
@@ -107,9 +104,9 @@ public final class OpenSSLHpkeSuiteFactory implements IValueFactory<AstNode> {
     @Nonnull
     public Optional<IValue<AstNode>> apply(@Nonnull ResolvedValue<Object, AstNode> resolvedValue) {
         final List<String> parts;
-        if (resolvedValue.value() instanceof AstNode node
-                && node.is(CxxGrammarImpl.bracedInitList)) {
-            parts = initializerElements(node);
+        if (resolvedValue.value() instanceof List<?> elements) {
+            // a brace initializer, resolved to the source text of each of its elements
+            parts = elements.stream().map(String::valueOf).toList();
         } else if (resolvedValue.value() instanceof String str) {
             if ("OSSL_HPKE_SUITE_DEFAULT".equals(str.trim())) {
                 return Optional.of(new ValueAction<>(DEFAULT_SUITE, resolvedValue.tree()));
@@ -129,23 +126,6 @@ public final class OpenSSLHpkeSuiteFactory implements IValueFactory<AstNode> {
         }
         return Optional.of(
                 new ValueAction<>(String.join(",", kem, kdf, aead), resolvedValue.tree()));
-    }
-
-    /** The source text of each element of a brace initializer. */
-    @Nonnull
-    private static List<String> initializerElements(@Nonnull AstNode bracedInitList) {
-        final AstNode initializerList =
-                bracedInitList.getFirstChild(CxxGrammarImpl.initializerList);
-        final List<String> elements = new ArrayList<>();
-        if (initializerList == null) {
-            return elements;
-        }
-        for (AstNode element : initializerList.getChildren()) {
-            if (!element.is(CxxPunctuator.COMMA)) {
-                elements.add(element.getTokenValue());
-            }
-        }
-        return elements;
     }
 
     @Nullable private static String lookup(

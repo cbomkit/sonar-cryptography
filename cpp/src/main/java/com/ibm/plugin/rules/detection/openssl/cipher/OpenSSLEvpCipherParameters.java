@@ -26,6 +26,7 @@ import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.function.Supplier;
@@ -50,7 +51,8 @@ public final class OpenSSLEvpCipherParameters {
                     .forMethods("EVP_CIPHER_CTX_set_key_length")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .buildForContext(new AlgorithmParameterContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();

@@ -22,7 +22,6 @@ package com.ibm.plugin.rules.detection.openssl.mac;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
-import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -114,6 +113,8 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(List.of(EVP_MAC_CTX_NEW));
 
+    // EVP_Q_mac(libctx, name, propq, subalg, params, key, keylen, data, datalen, out, outsize,
+    // outlen): the MAC, and the digest of an HMAC or the cipher of a CMAC or GMAC
     private static final IDetectionRule<AstNode> EVP_Q_MAC =
             new DetectionRuleBuilder<AstNode>()
                     .createDetectionRule()
@@ -121,9 +122,13 @@ public final class OpenSSLEvpMac {
                     .forMethods("EVP_Q_mac")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.MAC_NAMES))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
+                    .shouldBeDetectedAs(new OpenSSLMacSubAlgorithmFactory())
+                    .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")

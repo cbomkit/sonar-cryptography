@@ -24,12 +24,16 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.openssl.OpenSslMessageDigestMapper;
 import com.ibm.mapper.mapper.openssl.OpenSslSignatureAlgorithmMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.algorithms.MGF1;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -44,6 +48,18 @@ import javax.annotation.Nonnull;
  * model nodes. Supports RSA, DSA, ECDSA, EdDSA, post-quantum, and SM2 signatures.
  */
 public final class CxxSignatureContextTranslator implements IContextTranslation<AstNode> {
+
+    /** The property of a signature context that tells what its values are. */
+    public static final String KIND = "kind";
+
+    /** The kind of a signature context whose algorithm values are the digest names it uses. */
+    public static final String DIGEST_NAME_KIND = "DIGEST_NAME";
+
+    /**
+     * The kind of a signature context whose algorithm values are the names of the digests of the
+     * MGF1 mask generation function it uses.
+     */
+    public static final String MGF1_DIGEST_NAME_KIND = "MGF1_DIGEST_NAME";
 
     @Override
     public @Nonnull Optional<INode> translate(
@@ -64,6 +80,27 @@ public final class CxxSignatureContextTranslator implements IContextTranslation<
             return saltSize.getValue() > 0
                     ? Optional.of(new SaltLength(saltSize.getValue(), detectionLocation))
                     : Optional.empty();
+        }
+
+        // the digest of a digest sign or verify operation given by name, e.g. the mdname of
+        // EVP_DigestSignInit_ex
+        if (value instanceof Algorithm<AstNode>
+                && detectionContext instanceof DetectionContext context
+                && context.get(KIND).filter(DIGEST_NAME_KIND::equals).isPresent()) {
+            return new OpenSslMessageDigestMapper()
+                    .parse(value.asString(), detectionLocation)
+                    .map(node -> node);
+        }
+
+        // the digest of the MGF1 mask generation function given by name, e.g. the mdname of
+        // EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name
+        if (value instanceof Algorithm<AstNode>
+                && detectionContext instanceof DetectionContext context
+                && context.get(KIND).filter(MGF1_DIGEST_NAME_KIND::equals).isPresent()) {
+            return new OpenSslMessageDigestMapper()
+                    .parse(value.asString(), detectionLocation)
+                    .filter(MessageDigest.class::isInstance)
+                    .map(digest -> new MGF1((MessageDigest) digest));
         }
 
         if (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>) {
