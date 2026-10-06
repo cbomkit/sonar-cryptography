@@ -134,7 +134,7 @@ public final class PythonCryptoSignature extends DetectionRuleSet<Tree> {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "PyCrypto")
-                    .withDependingDetectionRules(List.of(SIGN, VERIFY));
+                    .withoutDependingDetectionRules();
 
     // DSS signature scheme - sign and verify methods (called on the result of .new())
     private static final IDetectionRule<Tree> DSS =
@@ -208,6 +208,29 @@ public final class PythonCryptoSignature extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "PyCrypto")
                     .withDependingDetectionRules(List.of(SIGN, VERIFY));
 
+    private static final IDetectionRule<Tree> EDDSA_SIGN =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(ANY)
+                    .forMethods("sign")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
+                    .withNamedMethodParameter("msg_or_hash", ANY)
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> "PyCrypto")
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<Tree> EDDSA_VERIFY =
+            new DetectionRuleBuilder<Tree>()
+                    .createDetectionRule()
+                    .forObjectTypes(ANY)
+                    .forMethods("verify")
+                    .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
+                    .withNamedMethodParameter("msg_or_hash", ANY)
+                    .withNamedMethodParameter("signature", ANY)
+                    .buildForContext(new SignatureContext())
+                    .inBundle(() -> "PyCrypto")
+                    .withoutDependingDetectionRules();
+
     // EdDSA import private key
     private static final IDetectionRule<Tree> EDDSA_IMPORT_PRIVATE_KEY =
             new DetectionRuleBuilder<Tree>()
@@ -256,7 +279,7 @@ public final class PythonCryptoSignature extends DetectionRuleSet<Tree> {
                     .withOptionalNamedMethodParameter("context", ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "PyCrypto")
-                    .withDependingDetectionRules(List.of(SIGN, VERIFY));
+                    .withDependingDetectionRules(List.of(EDDSA_SIGN, EDDSA_VERIFY));
 
     @Nonnull
     @Override
