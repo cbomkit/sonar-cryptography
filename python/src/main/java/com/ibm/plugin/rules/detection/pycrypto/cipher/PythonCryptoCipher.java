@@ -73,7 +73,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.AES.* or Cryptodome.Cipher.AES.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.AES.* or Cryptodome.Cipher.AES.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -96,7 +97,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DES"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.DES.* or Cryptodome.Cipher.DES.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.DES.* or Cryptodome.Cipher.DES.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -115,7 +117,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("3DES"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.DES3.* or Cryptodome.Cipher.DES3.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.DES3.* or Cryptodome.Cipher.DES3.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -134,7 +137,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("Blowfish"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.Blowfish.* or Cryptodome.Cipher.Blowfish.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.Blowfish.* or Cryptodome.Cipher.Blowfish.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -153,7 +157,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAST5"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.CAST.* or Cryptodome.Cipher.CAST.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.CAST.* or Cryptodome.Cipher.CAST.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -172,7 +177,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2"))
                     .withNamedMethodParameter("key", ANY)
-                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.ARC2.* or Cryptodome.Cipher.ARC2.*
+                    .withNamedMethodParameter(
+                            "mode", ANY) // Crypto.Cipher.ARC2.* or Cryptodome.Cipher.ARC2.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
