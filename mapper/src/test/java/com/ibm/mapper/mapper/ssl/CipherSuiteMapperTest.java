@@ -37,8 +37,41 @@ import com.ibm.mapper.utils.Utils;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class CipherSuiteMapperTest {
+
+    @ParameterizedTest
+    @CsvSource({
+        "RC4-MD5, TLS_RSA_WITH_RC4_128_MD5",
+        "EXP-RC4-MD5, TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+        "EDH-RSA-DES-CBC-SHA, TLS_DHE_RSA_WITH_DES_CBC_SHA",
+        "DHE-RSA-DES-CBC-SHA, TLS_DHE_RSA_WITH_DES_CBC_SHA",
+        "KRB5-DES-CBC-SHA, TLS_KRB5_WITH_DES_CBC_SHA",
+        "ECDH-RSA-AES128-GCM-SHA256, TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256"
+    })
+    void anOpenSslNameMissingFromTheDataNamesItsSuite(String opensslName, String ianaName) {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final Optional<? extends INode> node =
+                new CipherSuiteMapper().parse(opensslName, testDetectionLocation);
+
+        assertThat(node).get().extracting(INode::asString).isEqualTo(ianaName);
+        assertThat(((CipherSuite) node.get()).getAssetCollection()).isPresent();
+    }
+
+    @Test
+    void theFortezzaNameOfACodeAssignedToAnotherSuiteNamesNoSuite() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        assertThat(new CipherSuiteMapper().parse("FZA-RC4-SHA", testDetectionLocation))
+                .get()
+                .extracting(INode::asString)
+                .isEqualTo("FZA-RC4-SHA");
+    }
 
     @Test
     void test1() {

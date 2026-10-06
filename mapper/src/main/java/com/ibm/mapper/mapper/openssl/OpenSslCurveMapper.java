@@ -41,7 +41,11 @@ import com.ibm.mapper.model.curves.Sect409r1;
 import com.ibm.mapper.model.curves.Sect571k1;
 import com.ibm.mapper.model.curves.Sect571r1;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -49,9 +53,106 @@ import javax.annotation.Nullable;
  * Maps the OpenSSL names of a named elliptic curve to the corresponding elliptic curve model
  * classes. A curve has an SEC 2 short name (e.g. {@code secp256r1}), for some curves an X9.62 name
  * (e.g. {@code prime256v1}) and a NIST name (e.g. {@code P-256}, {@code K-283}, {@code B-283});
- * OpenSSL accepts all of them as the group of an EC key (obj_mac.h, crypto/evp/ec_support.c).
+ * OpenSSL accepts all of them as the group of an EC key (obj_mac.h, crypto/evp/ec_support.c). Every
+ * other named curve of OpenSSL, e.g. {@code prime239v1}, is mapped by its short name.
  */
 public final class OpenSslCurveMapper implements IMapper {
+
+    /**
+     * The short names of the named curves of OpenSSL 3 ({@code openssl ecparam -list_curves},
+     * obj_mac.h). A curve without a model of its own is mapped to an elliptic curve with its short
+     * name.
+     */
+    public static final List<String> NAMED_CURVES =
+            List.of(
+                    "prime192v1",
+                    "prime192v2",
+                    "prime192v3",
+                    "prime239v1",
+                    "prime239v2",
+                    "prime239v3",
+                    "prime256v1",
+                    "c2pnb163v1",
+                    "c2pnb163v2",
+                    "c2pnb163v3",
+                    "c2pnb176v1",
+                    "c2tnb191v1",
+                    "c2tnb191v2",
+                    "c2tnb191v3",
+                    "c2pnb208w1",
+                    "c2tnb239v1",
+                    "c2tnb239v2",
+                    "c2tnb239v3",
+                    "c2pnb272w1",
+                    "c2pnb304w1",
+                    "c2tnb359v1",
+                    "c2pnb368w1",
+                    "c2tnb431r1",
+                    "secp112r1",
+                    "secp112r2",
+                    "secp128r1",
+                    "secp128r2",
+                    "secp160k1",
+                    "secp160r1",
+                    "secp160r2",
+                    "secp192k1",
+                    "secp224k1",
+                    "secp224r1",
+                    "secp256k1",
+                    "secp384r1",
+                    "secp521r1",
+                    "sect113r1",
+                    "sect113r2",
+                    "sect131r1",
+                    "sect131r2",
+                    "sect163k1",
+                    "sect163r1",
+                    "sect163r2",
+                    "sect193r1",
+                    "sect193r2",
+                    "sect233k1",
+                    "sect233r1",
+                    "sect239k1",
+                    "sect283k1",
+                    "sect283r1",
+                    "sect409k1",
+                    "sect409r1",
+                    "sect571k1",
+                    "sect571r1",
+                    "wap-wsg-idm-ecid-wtls1",
+                    "wap-wsg-idm-ecid-wtls3",
+                    "wap-wsg-idm-ecid-wtls4",
+                    "wap-wsg-idm-ecid-wtls5",
+                    "wap-wsg-idm-ecid-wtls6",
+                    "wap-wsg-idm-ecid-wtls7",
+                    "wap-wsg-idm-ecid-wtls8",
+                    "wap-wsg-idm-ecid-wtls9",
+                    "wap-wsg-idm-ecid-wtls10",
+                    "wap-wsg-idm-ecid-wtls11",
+                    "wap-wsg-idm-ecid-wtls12",
+                    "Oakley-EC2N-3",
+                    "Oakley-EC2N-4",
+                    "brainpoolP160r1",
+                    "brainpoolP160t1",
+                    "brainpoolP192r1",
+                    "brainpoolP192t1",
+                    "brainpoolP224r1",
+                    "brainpoolP224t1",
+                    "brainpoolP256r1",
+                    "brainpoolP256t1",
+                    "brainpoolP320r1",
+                    "brainpoolP320t1",
+                    "brainpoolP384r1",
+                    "brainpoolP384t1",
+                    "brainpoolP512r1",
+                    "brainpoolP512t1",
+                    "SM2");
+
+    private static final Map<String, String> SHORT_NAMES =
+            NAMED_CURVES.stream()
+                    .collect(
+                            Collectors.toUnmodifiableMap(
+                                    name -> name.toUpperCase(Locale.ROOT), name -> name));
 
     @Nonnull
     @Override
@@ -83,7 +184,9 @@ public final class OpenSslCurveMapper implements IMapper {
             case "B-409", "SECT409R1" -> Optional.of(new Sect409r1(detectionLocation));
             case "K-571", "SECT571K1" -> Optional.of(new Sect571k1(detectionLocation));
             case "B-571", "SECT571R1" -> Optional.of(new Sect571r1(detectionLocation));
-            default -> Optional.empty();
+            default ->
+                    Optional.ofNullable(SHORT_NAMES.get(str.toUpperCase(Locale.ROOT).trim()))
+                            .map(name -> new EllipticCurve(name, detectionLocation));
         };
     }
 }

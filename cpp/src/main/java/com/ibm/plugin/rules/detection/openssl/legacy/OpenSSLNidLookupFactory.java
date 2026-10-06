@@ -42,64 +42,189 @@ import org.slf4j.LoggerFactory;
  * corresponding {@code Cxx*ContextTranslator} switches on, using caller-supplied lookup tables.
  *
  * <p>The engine hands this factory a numeric code (e.g. {@code 415}) when the argument is a numeric
- * literal, or when it is an unscoped enum constant with an explicit {@code = constantExpression}
- * value. An unscoped enum constant with no explicit value instead resolves to its own declared name
- * (e.g. {@code "NID_X9_62_prime256v1"}), looked up in {@code byName}, as does an OpenSSL macro
- * constant that is not expanded because no include directories are configured (see {@code
- * CxxSemantic}). A code or name outside both tables resolves to nothing.
+ * literal or an enum constant of the analyzed code, and a name (e.g. {@code
+ * "NID_X9_62_prime256v1"}), looked up in {@code byName}, for an OpenSSL macro constant that is not
+ * expanded because no include directories are configured (see {@code CxxSemantic}). A code or name
+ * outside both tables resolves to nothing.
  */
 public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSSLNidLookupFactory.class);
 
     /**
-     * Curve NIDs (obj_mac.h) → {@code "EC-"} and the curve's short name, for the named curves the
-     * mapper models (see {@code OpenSslCurveMapper}).
+     * Curve NIDs (obj_mac.h) → {@code "EC-"} and the curve's short name, for every named curve of
+     * OpenSSL (see {@code OpenSslCurveMapper#NAMED_CURVES}).
      */
     public static final Map<Integer, String> CURVE_BY_CODE =
             Map.ofEntries(
                     Map.entry(409, "EC-prime192v1"),
+                    Map.entry(410, "EC-prime192v2"),
+                    Map.entry(411, "EC-prime192v3"),
+                    Map.entry(412, "EC-prime239v1"),
+                    Map.entry(413, "EC-prime239v2"),
+                    Map.entry(414, "EC-prime239v3"),
                     Map.entry(415, "EC-prime256v1"),
+                    Map.entry(684, "EC-c2pnb163v1"),
+                    Map.entry(685, "EC-c2pnb163v2"),
+                    Map.entry(686, "EC-c2pnb163v3"),
+                    Map.entry(687, "EC-c2pnb176v1"),
+                    Map.entry(688, "EC-c2tnb191v1"),
+                    Map.entry(689, "EC-c2tnb191v2"),
+                    Map.entry(690, "EC-c2tnb191v3"),
+                    Map.entry(693, "EC-c2pnb208w1"),
+                    Map.entry(694, "EC-c2tnb239v1"),
+                    Map.entry(695, "EC-c2tnb239v2"),
+                    Map.entry(696, "EC-c2tnb239v3"),
+                    Map.entry(699, "EC-c2pnb272w1"),
+                    Map.entry(700, "EC-c2pnb304w1"),
+                    Map.entry(701, "EC-c2tnb359v1"),
+                    Map.entry(702, "EC-c2pnb368w1"),
+                    Map.entry(703, "EC-c2tnb431r1"),
+                    Map.entry(704, "EC-secp112r1"),
+                    Map.entry(705, "EC-secp112r2"),
+                    Map.entry(706, "EC-secp128r1"),
+                    Map.entry(707, "EC-secp128r2"),
+                    Map.entry(708, "EC-secp160k1"),
+                    Map.entry(709, "EC-secp160r1"),
+                    Map.entry(710, "EC-secp160r2"),
+                    Map.entry(711, "EC-secp192k1"),
+                    Map.entry(712, "EC-secp224k1"),
                     Map.entry(713, "EC-secp224r1"),
                     Map.entry(714, "EC-secp256k1"),
                     Map.entry(715, "EC-secp384r1"),
                     Map.entry(716, "EC-secp521r1"),
+                    Map.entry(717, "EC-sect113r1"),
+                    Map.entry(718, "EC-sect113r2"),
+                    Map.entry(719, "EC-sect131r1"),
+                    Map.entry(720, "EC-sect131r2"),
                     Map.entry(721, "EC-sect163k1"),
+                    Map.entry(722, "EC-sect163r1"),
                     Map.entry(723, "EC-sect163r2"),
+                    Map.entry(724, "EC-sect193r1"),
+                    Map.entry(725, "EC-sect193r2"),
                     Map.entry(726, "EC-sect233k1"),
                     Map.entry(727, "EC-sect233r1"),
+                    Map.entry(728, "EC-sect239k1"),
                     Map.entry(729, "EC-sect283k1"),
                     Map.entry(730, "EC-sect283r1"),
                     Map.entry(731, "EC-sect409k1"),
                     Map.entry(732, "EC-sect409r1"),
                     Map.entry(733, "EC-sect571k1"),
                     Map.entry(734, "EC-sect571r1"),
+                    Map.entry(735, "EC-wap-wsg-idm-ecid-wtls1"),
+                    Map.entry(736, "EC-wap-wsg-idm-ecid-wtls3"),
+                    Map.entry(737, "EC-wap-wsg-idm-ecid-wtls4"),
+                    Map.entry(738, "EC-wap-wsg-idm-ecid-wtls5"),
+                    Map.entry(739, "EC-wap-wsg-idm-ecid-wtls6"),
+                    Map.entry(740, "EC-wap-wsg-idm-ecid-wtls7"),
+                    Map.entry(741, "EC-wap-wsg-idm-ecid-wtls8"),
+                    Map.entry(742, "EC-wap-wsg-idm-ecid-wtls9"),
+                    Map.entry(743, "EC-wap-wsg-idm-ecid-wtls10"),
+                    Map.entry(744, "EC-wap-wsg-idm-ecid-wtls11"),
+                    Map.entry(745, "EC-wap-wsg-idm-ecid-wtls12"),
+                    Map.entry(749, "EC-Oakley-EC2N-3"),
+                    Map.entry(750, "EC-Oakley-EC2N-4"),
+                    Map.entry(921, "EC-brainpoolP160r1"),
+                    Map.entry(922, "EC-brainpoolP160t1"),
+                    Map.entry(923, "EC-brainpoolP192r1"),
+                    Map.entry(924, "EC-brainpoolP192t1"),
+                    Map.entry(925, "EC-brainpoolP224r1"),
+                    Map.entry(926, "EC-brainpoolP224t1"),
                     Map.entry(927, "EC-brainpoolP256r1"),
+                    Map.entry(928, "EC-brainpoolP256t1"),
+                    Map.entry(929, "EC-brainpoolP320r1"),
+                    Map.entry(930, "EC-brainpoolP320t1"),
                     Map.entry(931, "EC-brainpoolP384r1"),
-                    Map.entry(933, "EC-brainpoolP512r1"));
+                    Map.entry(932, "EC-brainpoolP384t1"),
+                    Map.entry(933, "EC-brainpoolP512r1"),
+                    Map.entry(934, "EC-brainpoolP512t1"),
+                    Map.entry(1172, "EC-SM2"));
 
     /** Curve NID constant names → {@code "EC-"} and the curve's short name. */
     public static final Map<String, String> CURVE_BY_NAME =
             Map.ofEntries(
                     Map.entry("NID_X9_62_prime192v1", "EC-prime192v1"),
-                    Map.entry("NID_secp224r1", "EC-secp224r1"),
+                    Map.entry("NID_X9_62_prime192v2", "EC-prime192v2"),
+                    Map.entry("NID_X9_62_prime192v3", "EC-prime192v3"),
+                    Map.entry("NID_X9_62_prime239v1", "EC-prime239v1"),
+                    Map.entry("NID_X9_62_prime239v2", "EC-prime239v2"),
+                    Map.entry("NID_X9_62_prime239v3", "EC-prime239v3"),
                     Map.entry("NID_X9_62_prime256v1", "EC-prime256v1"),
+                    Map.entry("NID_X9_62_c2pnb163v1", "EC-c2pnb163v1"),
+                    Map.entry("NID_X9_62_c2pnb163v2", "EC-c2pnb163v2"),
+                    Map.entry("NID_X9_62_c2pnb163v3", "EC-c2pnb163v3"),
+                    Map.entry("NID_X9_62_c2pnb176v1", "EC-c2pnb176v1"),
+                    Map.entry("NID_X9_62_c2tnb191v1", "EC-c2tnb191v1"),
+                    Map.entry("NID_X9_62_c2tnb191v2", "EC-c2tnb191v2"),
+                    Map.entry("NID_X9_62_c2tnb191v3", "EC-c2tnb191v3"),
+                    Map.entry("NID_X9_62_c2pnb208w1", "EC-c2pnb208w1"),
+                    Map.entry("NID_X9_62_c2tnb239v1", "EC-c2tnb239v1"),
+                    Map.entry("NID_X9_62_c2tnb239v2", "EC-c2tnb239v2"),
+                    Map.entry("NID_X9_62_c2tnb239v3", "EC-c2tnb239v3"),
+                    Map.entry("NID_X9_62_c2pnb272w1", "EC-c2pnb272w1"),
+                    Map.entry("NID_X9_62_c2pnb304w1", "EC-c2pnb304w1"),
+                    Map.entry("NID_X9_62_c2tnb359v1", "EC-c2tnb359v1"),
+                    Map.entry("NID_X9_62_c2pnb368w1", "EC-c2pnb368w1"),
+                    Map.entry("NID_X9_62_c2tnb431r1", "EC-c2tnb431r1"),
+                    Map.entry("NID_secp112r1", "EC-secp112r1"),
+                    Map.entry("NID_secp112r2", "EC-secp112r2"),
+                    Map.entry("NID_secp128r1", "EC-secp128r1"),
+                    Map.entry("NID_secp128r2", "EC-secp128r2"),
+                    Map.entry("NID_secp160k1", "EC-secp160k1"),
+                    Map.entry("NID_secp160r1", "EC-secp160r1"),
+                    Map.entry("NID_secp160r2", "EC-secp160r2"),
+                    Map.entry("NID_secp192k1", "EC-secp192k1"),
+                    Map.entry("NID_secp224k1", "EC-secp224k1"),
+                    Map.entry("NID_secp224r1", "EC-secp224r1"),
                     Map.entry("NID_secp256k1", "EC-secp256k1"),
                     Map.entry("NID_secp384r1", "EC-secp384r1"),
                     Map.entry("NID_secp521r1", "EC-secp521r1"),
-                    Map.entry("NID_brainpoolP256r1", "EC-brainpoolP256r1"),
-                    Map.entry("NID_brainpoolP384r1", "EC-brainpoolP384r1"),
-                    Map.entry("NID_brainpoolP512r1", "EC-brainpoolP512r1"),
+                    Map.entry("NID_sect113r1", "EC-sect113r1"),
+                    Map.entry("NID_sect113r2", "EC-sect113r2"),
+                    Map.entry("NID_sect131r1", "EC-sect131r1"),
+                    Map.entry("NID_sect131r2", "EC-sect131r2"),
                     Map.entry("NID_sect163k1", "EC-sect163k1"),
+                    Map.entry("NID_sect163r1", "EC-sect163r1"),
                     Map.entry("NID_sect163r2", "EC-sect163r2"),
+                    Map.entry("NID_sect193r1", "EC-sect193r1"),
+                    Map.entry("NID_sect193r2", "EC-sect193r2"),
                     Map.entry("NID_sect233k1", "EC-sect233k1"),
                     Map.entry("NID_sect233r1", "EC-sect233r1"),
+                    Map.entry("NID_sect239k1", "EC-sect239k1"),
                     Map.entry("NID_sect283k1", "EC-sect283k1"),
                     Map.entry("NID_sect283r1", "EC-sect283r1"),
                     Map.entry("NID_sect409k1", "EC-sect409k1"),
                     Map.entry("NID_sect409r1", "EC-sect409r1"),
                     Map.entry("NID_sect571k1", "EC-sect571k1"),
-                    Map.entry("NID_sect571r1", "EC-sect571r1"));
+                    Map.entry("NID_sect571r1", "EC-sect571r1"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls1", "EC-wap-wsg-idm-ecid-wtls1"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls3", "EC-wap-wsg-idm-ecid-wtls3"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls4", "EC-wap-wsg-idm-ecid-wtls4"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls5", "EC-wap-wsg-idm-ecid-wtls5"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls6", "EC-wap-wsg-idm-ecid-wtls6"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls7", "EC-wap-wsg-idm-ecid-wtls7"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls8", "EC-wap-wsg-idm-ecid-wtls8"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls9", "EC-wap-wsg-idm-ecid-wtls9"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls10", "EC-wap-wsg-idm-ecid-wtls10"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls11", "EC-wap-wsg-idm-ecid-wtls11"),
+                    Map.entry("NID_wap_wsg_idm_ecid_wtls12", "EC-wap-wsg-idm-ecid-wtls12"),
+                    Map.entry("NID_ipsec3", "EC-Oakley-EC2N-3"),
+                    Map.entry("NID_ipsec4", "EC-Oakley-EC2N-4"),
+                    Map.entry("NID_brainpoolP160r1", "EC-brainpoolP160r1"),
+                    Map.entry("NID_brainpoolP160t1", "EC-brainpoolP160t1"),
+                    Map.entry("NID_brainpoolP192r1", "EC-brainpoolP192r1"),
+                    Map.entry("NID_brainpoolP192t1", "EC-brainpoolP192t1"),
+                    Map.entry("NID_brainpoolP224r1", "EC-brainpoolP224r1"),
+                    Map.entry("NID_brainpoolP224t1", "EC-brainpoolP224t1"),
+                    Map.entry("NID_brainpoolP256r1", "EC-brainpoolP256r1"),
+                    Map.entry("NID_brainpoolP256t1", "EC-brainpoolP256t1"),
+                    Map.entry("NID_brainpoolP320r1", "EC-brainpoolP320r1"),
+                    Map.entry("NID_brainpoolP320t1", "EC-brainpoolP320t1"),
+                    Map.entry("NID_brainpoolP384r1", "EC-brainpoolP384r1"),
+                    Map.entry("NID_brainpoolP384t1", "EC-brainpoolP384t1"),
+                    Map.entry("NID_brainpoolP512r1", "EC-brainpoolP512r1"),
+                    Map.entry("NID_brainpoolP512t1", "EC-brainpoolP512t1"),
+                    Map.entry("NID_sm2", "EC-SM2"));
 
     /**
      * OpenSSL key type identifiers of the KDFs available through the EVP_PKEY interface (evp.h /
@@ -495,8 +620,8 @@ public final class OpenSSLNidLookupFactory implements IValueFactory<AstNode> {
                     Map.entry(0x0100, "DTLSv1.0")); // DTLS1_BAD_VER
 
     /**
-     * OpenSSL version constant names → version strings, used when an unscoped enum constant with no
-     * explicit value resolves to its own declared name instead of a numeric code.
+     * OpenSSL version constant names → version strings, for a version macro that is not expanded
+     * and resolves to its own name instead of a numeric code.
      */
     public static final Map<String, String> PROTO_VERSION_BY_NAME =
             Map.ofEntries(

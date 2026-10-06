@@ -139,7 +139,8 @@ public final class CipherSuiteMapper implements IMapper {
                                     return Optional.of(suite);
                                 }
                             }
-                            return Optional.empty();
+                            return OpenSslCipherSuiteNames.ianaName(identifier)
+                                    .map(JsonCipherSuites.CIPHER_SUITES::get);
                         });
     }
 }
