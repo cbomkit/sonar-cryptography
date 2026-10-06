@@ -30,6 +30,10 @@ public final class PublicKey extends Key {
         super(signature, PublicKey.class);
     }
 
+    public PublicKey(@Nonnull KeyAgreement keyAgreement) {
+        super(keyAgreement, PublicKey.class);
+    }
+
     public PublicKey(@Nonnull Key key) {
         super(key, key.detectionLocation, PublicKey.class);
     }

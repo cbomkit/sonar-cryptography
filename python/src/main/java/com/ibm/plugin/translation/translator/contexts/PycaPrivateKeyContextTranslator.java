@@ -30,9 +30,11 @@ import com.ibm.mapper.mapper.pyca.PycaCurveMapper;
 import com.ibm.mapper.mapper.pyca.PycaKeyBasedAlgorithmMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
+import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -65,11 +67,16 @@ public final class PycaPrivateKeyContextTranslator implements IContextTranslatio
             return mapper.parse(curve.asString(), detectionLocation)
                     .map(
                             ec -> {
-                                PrivateKey privateKey = new PrivateKey((PublicKeyEncryption) ec);
+                                // currently only GENERATE is used as key action in this context
+                                PrivateKey privateKey;
+                                if (ec instanceof Signature sig) {
+                                    privateKey = new PrivateKey(sig);
+                                } else if (ec instanceof KeyAgreement ka) {
+                                    privateKey = new PrivateKey(ka);
+                                } else {
+                                    privateKey = new PrivateKey((PublicKeyEncryption) ec);
+                                }
                                 privateKey.put(new KeyGeneration(detectionLocation));
-                                // currently only GENERATE is
-                                // used as key action is this
-                                // context
                                 return privateKey;
                             });
         }

@@ -29,8 +29,10 @@ import com.ibm.mapper.mapper.pyca.PycaCurveMapper;
 import com.ibm.mapper.mapper.pyca.PycaKeyBasedAlgorithmMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
+import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -62,10 +64,15 @@ public final class PycaPublicKeyContextTranslator implements IContextTranslation
             return mapper.parse(value.asString(), detectionLocation)
                     .map(
                             algo -> {
-                                PublicKey publicKey = new PublicKey((PublicKeyEncryption) algo);
-                                // currently only GENERATE is
-                                // used as key action is this
-                                // context
+                                // currently only GENERATE is used as key action in this context
+                                PublicKey publicKey;
+                                if (algo instanceof Signature sig) {
+                                    publicKey = new PublicKey(sig);
+                                } else if (algo instanceof KeyAgreement ka) {
+                                    publicKey = new PublicKey(ka);
+                                } else {
+                                    publicKey = new PublicKey((PublicKeyEncryption) algo);
+                                }
                                 publicKey.put(new KeyGeneration(detectionLocation));
                                 return publicKey;
                             });

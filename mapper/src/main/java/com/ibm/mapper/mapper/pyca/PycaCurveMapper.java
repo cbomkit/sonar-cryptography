@@ -20,14 +20,15 @@
 package com.ibm.mapper.mapper.pyca;
 
 import com.ibm.mapper.mapper.IMapper;
+import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
+import com.ibm.mapper.model.algorithms.Ed25519;
+import com.ibm.mapper.model.algorithms.Ed448;
+import com.ibm.mapper.model.algorithms.X25519;
+import com.ibm.mapper.model.algorithms.X448;
 import com.ibm.mapper.model.curves.Brainpoolp256r1;
 import com.ibm.mapper.model.curves.Brainpoolp384r1;
 import com.ibm.mapper.model.curves.Brainpoolp512r1;
-import com.ibm.mapper.model.curves.Curve25519;
-import com.ibm.mapper.model.curves.Curve448;
-import com.ibm.mapper.model.curves.Edwards25519;
-import com.ibm.mapper.model.curves.Edwards448;
 import com.ibm.mapper.model.curves.Secp192r1;
 import com.ibm.mapper.model.curves.Secp224r1;
 import com.ibm.mapper.model.curves.Secp256k1;
@@ -53,14 +54,13 @@ public final class PycaCurveMapper implements IMapper {
 
     @Nonnull
     @Override
-    public Optional<EllipticCurveAlgorithm> parse(
+    public Optional<? extends Algorithm> parse(
             @Nullable String str, @Nonnull DetectionLocation detectionLocation) {
         if (str == null) {
             return Optional.empty();
         }
 
-        @Nonnull String curve = str;
-        return switch (curve.toUpperCase().trim()) {
+        return switch (str.toUpperCase().trim()) {
             case "SECP192R1", "PRIME192V1", "P-192", "P192", "NIST P-192" ->
                     Optional.of(new EllipticCurveAlgorithm(new Secp192r1(detectionLocation)));
             case "SECP224R1", "PRIME224V1", "P-224", "P224", "NIST P-224" ->
@@ -73,14 +73,10 @@ public final class PycaCurveMapper implements IMapper {
                     Optional.of(new EllipticCurveAlgorithm(new Secp521r1(detectionLocation)));
             case "SECP256K1" ->
                     Optional.of(new EllipticCurveAlgorithm(new Secp256k1(detectionLocation)));
-            case "CURVE25519" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Curve25519(detectionLocation)));
-            case "ED25519" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Edwards25519(detectionLocation)));
-            case "CURVE448" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Curve448(detectionLocation)));
-            case "ED448" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Edwards448(detectionLocation)));
+            case "CURVE25519" -> Optional.of(new X25519(detectionLocation));
+            case "ED25519" -> Optional.of(new Ed25519(detectionLocation));
+            case "CURVE448" -> Optional.of(new X448(detectionLocation));
+            case "ED448" -> Optional.of(new Ed448(detectionLocation));
             case "BRAINPOOLP256R1" ->
                     Optional.of(new EllipticCurveAlgorithm(new Brainpoolp256r1(detectionLocation)));
             case "BRAINPOOLP384R1" ->

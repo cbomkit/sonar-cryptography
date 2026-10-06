@@ -28,12 +28,13 @@ import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.rule.RuleSets;
-import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Key;
+import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -76,17 +77,12 @@ public class ECCTest extends TestBase {
                 INode root = nodes.get(0);
                 assertThat(root.getKind()).isEqualTo(PrivateKey.class);
                 assertThat(root.getChildren()).hasSize(2);
-                assertThat(root.asString()).isEqualTo("EC-Edwards25519");
+                assertThat(root.asString()).isEqualTo("Ed25519");
                 assertThat(root.getChildren().get(KeyGeneration.class)).isNotNull();
 
-                INode pke = root.getChildren().get(PublicKeyEncryption.class);
-                assertThat(pke).isNotNull();
-                assertThat(pke.getChildren()).hasSize(2);
-                assertThat(pke.asString()).isEqualTo("EC-Edwards25519");
-                assertThat(pke.getChildren().get(EllipticCurve.class).asString())
-                        .isEqualTo("Edwards25519");
-                assertThat(pke.getChildren().get(Oid.class).asString())
-                        .isEqualTo("1.2.840.10045.2.1");
+                INode sig = root.getChildren().get(Signature.class);
+                assertThat(sig).isNotNull();
+                assertThat(sig.getChildren().get(Oid.class).asString()).isEqualTo("1.3.101.112");
             }
             case 1 -> {
                 // ECC.construct(curve="Curve448", seed=b"A" * 56)
@@ -101,17 +97,12 @@ public class ECCTest extends TestBase {
                 INode root = nodes.get(0);
                 assertThat(root.getKind()).isEqualTo(Key.class);
                 assertThat(root.getChildren()).hasSize(2);
-                assertThat(root.asString()).isEqualTo("EC-Curve448");
+                assertThat(root.asString()).isEqualTo("x448");
                 assertThat(root.getChildren().get(KeyGeneration.class)).isNotNull();
 
-                INode pke = root.getChildren().get(PublicKeyEncryption.class);
-                assertThat(pke).isNotNull();
-                assertThat(pke.getChildren()).hasSize(2);
-                assertThat(pke.asString()).isEqualTo("EC-Curve448");
-                assertThat(pke.getChildren().get(EllipticCurve.class).asString())
-                        .isEqualTo("Curve448");
-                assertThat(pke.getChildren().get(Oid.class).asString())
-                        .isEqualTo("1.2.840.10045.2.1");
+                INode ka = root.getChildren().get(KeyAgreement.class);
+                assertThat(ka).isNotNull();
+                assertThat(ka.getChildren().get(Oid.class).asString()).isEqualTo("1.3.101.111");
             }
             case 2 -> {
                 // ECC.import_key(...)
