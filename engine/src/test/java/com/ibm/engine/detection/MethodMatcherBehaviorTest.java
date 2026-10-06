@@ -211,6 +211,7 @@ class MethodMatcherBehaviorTest {
         when(translation.getInvokedObjectTypeString(context, this))
                 .thenReturn(Optional.of(type("Cipher")));
         when(translation.getMethodName(context, this)).thenReturn(Optional.of(name));
+        when(translation.getMethodNames(context, this)).thenCallRealMethod();
         when(translation.getMethodParameterTypes(context, this)).thenReturn(parameters);
         when(translation.supportsSubsetParameterMatching()).thenReturn(subset);
         return translation;

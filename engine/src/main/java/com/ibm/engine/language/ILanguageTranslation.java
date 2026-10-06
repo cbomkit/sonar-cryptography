@@ -44,6 +44,34 @@ public interface ILanguageTranslation<T> {
     Optional<String> getMethodName(@Nonnull MatchContext matchContext, @Nonnull T methodInvocation);
 
     /**
+     * Returns the names of the methods a method invocation may call. An invocation through a
+     * function pointer may call any of the functions the pointer is assigned; any other invocation
+     * calls the one method {@link #getMethodName} names.
+     *
+     * @param matchContext provides context the matching procedure
+     * @param methodInvocation to resolve the method names of.
+     * @return names of the methods the invocation may call.
+     */
+    @Nonnull
+    default List<String> getMethodNames(
+            @Nonnull MatchContext matchContext, @Nonnull T methodInvocation) {
+        return getMethodName(matchContext, methodInvocation).stream().toList();
+    }
+
+    /**
+     * Returns the key the calls of a method are recorded under: the calls a method matcher can
+     * match, of the method names {@link #getMethodNames} gives and of the name of the method a
+     * definition defines, have the same key. By default it is the method name.
+     *
+     * @param methodName a method name.
+     * @return the key of the method name.
+     */
+    @Nonnull
+    default String getMethodNameKey(@Nonnull String methodName) {
+        return methodName;
+    }
+
+    /**
      * Returns the invoked object type from a method invocation.
      *
      * @param matchContext provides context the matching procedure

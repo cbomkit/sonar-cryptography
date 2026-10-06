@@ -487,7 +487,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
         IDetectionEngine<T, S> detectionEngine =
                 handler.getLanguageSupport().createDetectionEngineInstance(this);
         return detectionEngine
-                .getAssignedSymbol(expression)
+                .getObjectSymbol(expression)
                 .orElse(TraceSymbol.createWithStateNoSymbol());
     }
 

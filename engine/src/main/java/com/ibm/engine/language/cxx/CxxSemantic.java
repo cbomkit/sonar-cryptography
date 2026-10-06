@@ -24,10 +24,14 @@ import com.ibm.engine.model.factory.IValueFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.AstNodeType;
 import com.sonar.cxx.sslr.api.GenericTokenType;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -53,6 +57,9 @@ public final class CxxSemantic {
      * e.g. {@code TLS1_2_VERSION}, {@code NID_sha256} or {@code OSSL_KDF_NAME_HKDF}.
      */
     private static final Pattern MACRO_NAME = Pattern.compile("[A-Z][A-Z0-9]*(_[A-Za-z0-9]+)+");
+
+    /** A name a function can have. */
+    private static final Pattern FUNCTION_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
     /** Arithmetic, shift, bitwise and unary operator expressions. */
     private static final AstNodeType[] OPERATOR_EXPRESSIONS = {
@@ -96,7 +103,7 @@ public final class CxxSemantic {
                 returnEnclosingParam,
                 detectionEngine,
                 0,
-                new HashSet<>());
+                new Resolution());
     }
 
     @Nonnull
@@ -108,8 +115,9 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         if (depth > 15) {
+            resolution.cutOffs++;
             return Collections.emptyList();
         }
 
@@ -128,7 +136,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.primaryExpression)) {
             return resolvePrimaryExpression(
                     clazz,
@@ -138,7 +146,11 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
+        } else if (tree.is(CxxGrammarImpl.BOOL)) {
+            return castValue(clazz, "true".equals(tree.getTokenValue()))
+                    .map(value -> List.of(new ResolvedValue<>(value, tree)))
+                    .orElse(Collections.emptyList());
         } else if (tree.is(CxxGrammarImpl.LITERAL)) {
             return resolveLiteral(
                     clazz,
@@ -148,7 +160,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.assignmentExpression)) {
             return resolveAssignmentExpression(
                     clazz,
@@ -158,7 +170,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.initializerClause)) {
             return resolveInitializerClause(
                     clazz,
@@ -168,7 +180,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.expression)) {
             return resolveExpression(
                     clazz,
@@ -178,7 +190,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.bracedInitList)) {
             return resolveBracedInitList(clazz, tree);
         } else if (tree.is(CxxGrammarImpl.qualifiedId)) {
@@ -196,7 +208,7 @@ public final class CxxSemantic {
                         returnEnclosingParam,
                         detectionEngine,
                         depth + 1,
-                        resolvingVariables);
+                        resolution);
             }
         } else if (tree.is(CxxGrammarImpl.postfixExpression)
                 && tree.getFirstChild().is(NAMED_CASTS)) {
@@ -212,8 +224,20 @@ public final class CxxSemantic {
                         returnEnclosingParam,
                         detectionEngine,
                         depth + 1,
-                        resolvingVariables);
+                        resolution);
             }
+        } else if (isArrayElement(tree)) {
+            return resolveArrayElement(
+                    clazz,
+                    tree.getFirstChild(),
+                    indicesOf(tree.getChildren()),
+                    tree,
+                    selections,
+                    valueFactory,
+                    returnEnclosingParam,
+                    detectionEngine,
+                    depth,
+                    resolution);
         } else if (CxxAstNodeHelper.isFunctionCall(tree)) {
             return resolveFunctionCall(clazz, tree, returnEnclosingParam, detectionEngine, depth);
         } else if (tree.is(CxxGrammarImpl.conditionalExpression)) {
@@ -225,7 +249,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         } else if (tree.is(CxxGrammarImpl.castExpression)) {
             // "(type) operand": the value of the operand
             return resolveValuesInternal(
@@ -236,10 +260,25 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
+        } else if (isAddressOfAFunction(tree)) {
+            // "&f" designates the function f, as "f" does
+            return resolveValuesInternal(
+                    clazz,
+                    tree.getLastChild(),
+                    selections,
+                    valueFactory,
+                    returnEnclosingParam,
+                    detectionEngine,
+                    depth + 1,
+                    resolution);
         } else if (tree.is(OPERATOR_EXPRESSIONS)) {
-            // an operator expression has a value only when it is a compile-time constant
-            return castValue(clazz, CxxConstantUtils.resolveAsConstant(tree))
+            // an operator expression has a value only when it is a compile-time constant, or when
+            // it combines flags named by macros of a header that is not part of the analyzed code,
+            // e.g. SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1, whose value is the flags it combines, as a
+            // macro's name is its value
+            final Object constant = CxxConstantUtils.resolveAsConstant(tree);
+            return castValue(clazz, constant != null ? constant : combinedFlags(tree))
                     .map(value -> List.of(new ResolvedValue<>(value, tree)))
                     .orElse(Collections.emptyList());
         } else {
@@ -253,11 +292,354 @@ public final class CxxSemantic {
                         returnEnclosingParam,
                         detectionEngine,
                         depth + 1,
-                        resolvingVariables);
+                        resolution);
             }
         }
 
         return Collections.emptyList();
+    }
+
+    /**
+     * Whether an expression takes the address of a function, {@code &f}: of a function of the
+     * analyzed code or of an undeclared name written in constant style, as a library function such
+     * as {@code EVP_sha256} is, rather than of a variable.
+     */
+    private static boolean isAddressOfAFunction(@Nonnull AstNode tree) {
+        if (!tree.is(CxxGrammarImpl.unaryExpression)
+                || tree.getNumberOfChildren() != 2
+                || !"&".equals(tree.getFirstChild().getTokenValue())
+                || !tree.getLastChild().is(GenericTokenType.IDENTIFIER)) {
+            return false;
+        }
+        final Symbol symbol = AstNodeSymbolExtension.getSymbol(tree.getLastChild());
+        return symbol == null
+                ? MACRO_NAME.matcher(tree.getLastChild().getTokenValue()).matches()
+                : symbol instanceof Symbol.FunctionSymbol;
+    }
+
+    /**
+     * The names of the functions a call through a function pointer calls: the functions the pointer
+     * is assigned, by name or by address, for a call of a pointer variable ({@code get()} or {@code
+     * (*get)()}) or of an element of an array of pointers ({@code getters[i]()}). Empty for a call
+     * that is not made through a pointer of the analyzed code.
+     */
+    @Nonnull
+    public static List<String> resolveCalledFunctions(@Nonnull AstNode call) {
+        if (!CxxAstNodeHelper.isFunctionCall(call)) {
+            return List.of();
+        }
+        final List<AstNode> children = call.getChildren();
+        int open = children.size() - 1;
+        while (open >= 0 && !children.get(open).is(CxxPunctuator.BR_LEFT)) {
+            open--;
+        }
+        if (open < 1) {
+            return List.of();
+        }
+        List<AstNode> callee = children.subList(0, open);
+        // (*get)() and (*getters[i])() call the function the pointer points to
+        if (callee.size() == 1
+                && callee.get(0).is(CxxGrammarImpl.primaryExpression)
+                && callee.get(0).getNumberOfChildren() == 3) {
+            AstNode dereference = callee.get(0).getChildren().get(1);
+            if (dereference.is(CxxGrammarImpl.expression)
+                    && dereference.getNumberOfChildren() == 1) {
+                dereference = dereference.getFirstChild();
+            }
+            if (dereference.is(CxxGrammarImpl.unaryExpression)
+                    && dereference.getNumberOfChildren() == 2
+                    && "*".equals(dereference.getFirstChild().getTokenValue())) {
+                final AstNode pointer = dereference.getLastChild();
+                callee =
+                        pointer.is(CxxGrammarImpl.postfixExpression)
+                                ? pointer.getChildren()
+                                : List.of(pointer);
+            }
+        }
+        // a name alone may be read as a type name, as in "get()"
+        final AstNode first = callee.get(0);
+        final AstNode name =
+                first.getToken() == first.getLastToken() && !first.is(GenericTokenType.IDENTIFIER)
+                        ? first.getFirstDescendant(GenericTokenType.IDENTIFIER)
+                        : first;
+        if (name == null
+                || !name.is(GenericTokenType.IDENTIFIER)
+                || !(AstNodeSymbolExtension.getSymbol(name) instanceof Symbol.VariableSymbol)) {
+            return List.of();
+        }
+        final List<ResolvedValue<Object, AstNode>> values;
+        if (callee.size() == 1) {
+            values =
+                    resolveValuesInternal(
+                            Object.class,
+                            name,
+                            new LinkedList<>(),
+                            null,
+                            false,
+                            null,
+                            0,
+                            new Resolution());
+        } else if (isArrayElement(callee)) {
+            values =
+                    resolveArrayElement(
+                            Object.class,
+                            name,
+                            indicesOf(callee),
+                            call,
+                            new LinkedList<>(),
+                            null,
+                            false,
+                            null,
+                            0,
+                            new Resolution());
+        } else {
+            return List.of();
+        }
+        return values.stream()
+                .map(ResolvedValue::value)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .filter(function -> FUNCTION_NAME.matcher(function).matches())
+                .distinct()
+                .toList();
+    }
+
+    /**
+     * Whether a postfix expression is an element of an array variable, a name followed by
+     * subscripts only: {@code names[i]} or {@code names[i][1]}.
+     */
+    private static boolean isArrayElement(@Nonnull AstNode tree) {
+        return tree.is(CxxGrammarImpl.postfixExpression) && isArrayElement(tree.getChildren());
+    }
+
+    /** Whether nodes are a name followed by subscripts only, see {@link #isArrayElement}. */
+    private static boolean isArrayElement(@Nonnull List<AstNode> children) {
+        if (children.size() < 4
+                || (children.size() - 1) % 3 != 0
+                || !children.get(0).is(GenericTokenType.IDENTIFIER)) {
+            return false;
+        }
+        for (int i = 1; i < children.size(); i += 3) {
+            if (!children.get(i).is(CxxPunctuator.SQBR_LEFT)
+                    || !children.get(i + 2).is(CxxPunctuator.SQBR_RIGHT)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** The index expressions of an {@link #isArrayElement array element}, in order. */
+    @Nonnull
+    private static List<AstNode> indicesOf(@Nonnull List<AstNode> children) {
+        final List<AstNode> indices = new ArrayList<>();
+        for (int i = 2; i < children.size(); i += 3) {
+            indices.add(children.get(i));
+        }
+        return indices;
+    }
+
+    /** The value of a constant index, or null when the index is not a compile-time constant. */
+    @Nullable private static Long constantIndex(@Nonnull AstNode index) {
+        AstNode expression = index;
+        while (expression.is(CxxGrammarImpl.expressionList, CxxGrammarImpl.initializerList)
+                && expression.getNumberOfChildren() == 1) {
+            expression = expression.getFirstChild();
+        }
+        return CxxConstantUtils.resolveAsConstant(expression) instanceof Number number
+                ? number.longValue()
+                : null;
+    }
+
+    /**
+     * Resolves an element of an array variable to the elements of the array's initializer and the
+     * values assigned to its elements: at a constant index, the element at that index, counting a
+     * designated element ({@code [2] = "SM3"}) at its index; at an index that is not constant,
+     * every element. An element assigned with a constant index ({@code names[1] = v}) gives its
+     * value to the elements at that index, one assigned with an index that is not constant to every
+     * element. The array is guarded against cycles as a variable is.
+     */
+    @Nonnull
+    private static <O> List<ResolvedValue<O, AstNode>> resolveArrayElement(
+            @Nonnull Class<O> clazz,
+            @Nonnull AstNode arrayName,
+            @Nonnull List<AstNode> indices,
+            @Nonnull AstNode element,
+            @Nonnull LinkedList<AstNode> selections,
+            @Nullable IValueFactory<AstNode> valueFactory,
+            boolean returnEnclosingParam,
+            @Nullable CxxDetectionEngine detectionEngine,
+            int depth,
+            @Nonnull Resolution resolution) {
+        if (!(AstNodeSymbolExtension.getSymbol(arrayName) instanceof Symbol.VariableSymbol array)) {
+            return Collections.emptyList();
+        }
+        if (!resolution.inProgress.add(array)) {
+            resolution.cutOffs++;
+            return Collections.emptyList();
+        }
+        try {
+            final List<AstNode> values = new ArrayList<>();
+            final AstNode initializer = array.initializer();
+            final AstNode list = initializer == null ? null : initializer.getLastChild();
+            if (list != null && list.is(CxxGrammarImpl.bracedInitList)) {
+                List<AstNode> level = List.of(list);
+                for (int i = 0; i < indices.size(); i++) {
+                    final Long index = constantIndex(indices.get(i));
+                    final List<AstNode> next = new ArrayList<>();
+                    for (AstNode levelList : level) {
+                        for (AstNode value : elementsAt(levelList, index)) {
+                            if (i == indices.size() - 1) {
+                                next.add(value);
+                            } else if (value.is(CxxGrammarImpl.bracedInitList)) {
+                                next.add(value);
+                            }
+                        }
+                    }
+                    level = next;
+                }
+                values.addAll(level);
+            }
+            for (Symbol.Usage usage : array.usages()) {
+                final AstNode assignedElement = usage.node().getParent();
+                if (assignedElement == null
+                        || assignedElement == element
+                        || assignedElement.getFirstChild() != usage.node()
+                        || !isArrayElement(assignedElement)) {
+                    continue;
+                }
+                final AstNode assignment = assignedElement.getParent();
+                if (assignment == null
+                        || !assignment.is(CxxGrammarImpl.assignmentExpression)
+                        || assignment.getFirstChild() != assignedElement
+                        || !"=".equals(assignment.getChildren().get(1).getTokenValue())
+                        || !sameElement(indicesOf(assignedElement.getChildren()), indices)) {
+                    continue;
+                }
+                values.add(assignment.getLastChild());
+            }
+            final List<ResolvedValue<O, AstNode>> result = new LinkedList<>();
+            for (AstNode value : values) {
+                result.addAll(
+                        resolveValuesInternal(
+                                clazz,
+                                value,
+                                selections,
+                                valueFactory,
+                                returnEnclosingParam,
+                                detectionEngine,
+                                depth + 1,
+                                resolution));
+            }
+            return List.copyOf(new LinkedHashSet<>(result));
+        } finally {
+            resolution.inProgress.remove(array);
+        }
+    }
+
+    /**
+     * Whether an element assigned with the given indices may be the element read with the other
+     * indices: of the same number of indices, each pair is equal or not constant.
+     */
+    private static boolean sameElement(
+            @Nonnull List<AstNode> assigned, @Nonnull List<AstNode> read) {
+        if (assigned.size() != read.size()) {
+            return false;
+        }
+        for (int i = 0; i < assigned.size(); i++) {
+            final Long assignedIndex = constantIndex(assigned.get(i));
+            final Long readIndex = constantIndex(read.get(i));
+            if (assignedIndex != null && readIndex != null && !assignedIndex.equals(readIndex)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The values of the elements of a brace-enclosed initializer list at an index, or of every
+     * element for a null index. A designated element, {@code [2] = "SM3"}, is at the index it
+     * names, and the elements after it follow from there.
+     */
+    @Nonnull
+    private static List<AstNode> elementsAt(@Nonnull AstNode list, @Nullable Long index) {
+        final List<AstNode> values = new ArrayList<>();
+        long position = 0;
+        for (AstNode element : elementsOf(list)) {
+            AstNode value = element;
+            if (element.is(CxxGrammarImpl.designatedInitializerClause)) {
+                final AstNode designator = element.getFirstChild(CxxGrammarImpl.designator);
+                final AstNode at =
+                        designator == null
+                                ? null
+                                : designator.getFirstChild(CxxGrammarImpl.constantExpression);
+                if (at != null && CxxConstantUtils.resolveAsConstant(at) instanceof Number number) {
+                    position = number.longValue();
+                }
+                value = element.getLastChild();
+            }
+            if (index == null || index == position) {
+                values.add(value);
+            }
+            position++;
+        }
+        return values;
+    }
+
+    /**
+     * The elements of a brace-enclosed initializer list, without the braces and commas: the
+     * initializer clauses, or the designated initializer clauses of a designated list.
+     */
+    @Nonnull
+    static List<AstNode> elementsOf(@Nonnull AstNode bracedInitList) {
+        final List<AstNode> elements = new ArrayList<>();
+        for (AstNode child : bracedInitList.getChildren()) {
+            if (child.is(
+                    CxxGrammarImpl.initializerList, CxxGrammarImpl.designatedInitializerList)) {
+                child.getChildren().stream()
+                        .filter(element -> !element.is(CxxPunctuator.COMMA))
+                        .forEach(elements::add);
+            } else if (!child.is(
+                    CxxPunctuator.CURLBR_LEFT, CxxPunctuator.CURLBR_RIGHT, CxxPunctuator.COMMA)) {
+                elements.add(child);
+            }
+        }
+        return elements;
+    }
+
+    /**
+     * The flags a bitwise or of macro names combines, written {@code
+     * SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1} in the order they are written, or null when an operand is
+     * not the name of a macro that is not declared in the analyzed code.
+     */
+    @Nullable private static String combinedFlags(@Nonnull AstNode tree) {
+        final List<String> flags = new ArrayList<>();
+        return collectFlags(tree, flags) && flags.size() > 1 ? String.join("|", flags) : null;
+    }
+
+    private static boolean collectFlags(@Nonnull AstNode operand, @Nonnull List<String> flags) {
+        if (operand.is(CxxGrammarImpl.inclusiveOrExpression)) {
+            for (AstNode child : operand.getChildren()) {
+                if (!child.is(CxxPunctuator.BW_OR) && !collectFlags(child, flags)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (operand.is(CxxGrammarImpl.primaryExpression)
+                && operand.getNumberOfChildren() == 3
+                && operand.getFirstChild().is(CxxPunctuator.BR_LEFT)) {
+            return collectFlags(operand.getChildren().get(1), flags);
+        }
+        if (operand.is(CxxGrammarImpl.expression) && operand.getNumberOfChildren() == 1) {
+            return collectFlags(operand.getFirstChild(), flags);
+        }
+        if (operand.is(GenericTokenType.IDENTIFIER)
+                && AstNodeSymbolExtension.getSymbol(operand) == null
+                && MACRO_NAME.matcher(operand.getTokenValue()).matches()) {
+            flags.add(operand.getTokenValue());
+            return true;
+        }
+        return false;
     }
 
     /** True for the member name of a member access, e.g. {@code field} in {@code s.field}. */
@@ -280,7 +662,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         List<AstNode> children = tree.getChildren();
         if (children.size() != 5) {
             return Collections.emptyList();
@@ -305,7 +687,7 @@ public final class CxxSemantic {
                             returnEnclosingParam,
                             detectionEngine,
                             depth + 1,
-                            resolvingVariables));
+                            resolution));
         }
         return result;
     }
@@ -340,6 +722,12 @@ public final class CxxSemantic {
     private static <O> List<ResolvedValue<O, AstNode>> resolveNumberLiteral(
             @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
         String value = tree.getTokenValue();
+        if ("nullptr".equals(value)) {
+            // the lexer reads the null pointer literal as a number
+            return castValue(clazz, "nullptr")
+                    .map(v -> List.of(new ResolvedValue<>(v, tree)))
+                    .orElse(Collections.emptyList());
+        }
         value = value.replace("'", "");
         boolean isHex = value.startsWith("0x") || value.startsWith("0X");
         // Hex literals never carry an f/F suffix (f/F there are hex digits), so only strip the
@@ -353,36 +741,22 @@ public final class CxxSemantic {
 
         Object result;
         try {
+            // an integer literal is an int when its value fits, a long otherwise, e.g. 0x80000000
             if (isHex) {
-                String digits = value.substring(2);
-                // Use unsigned parsing to handle values > 0x7FFFFFFF (e.g. SSL_OP_* flags)
-                result =
-                        digits.length() <= 8
-                                ? (Object) Integer.parseUnsignedInt(digits, 16)
-                                : (Object) Long.parseUnsignedLong(digits, 16);
+                result = integerValue(Long.parseUnsignedLong(value.substring(2), 16));
             } else if (value.startsWith("0b") || value.startsWith("0B")) {
-                String digits = value.substring(2);
-                result =
-                        digits.length() <= 31
-                                ? (Object) Integer.parseUnsignedInt(digits, 2)
-                                : (Object) Long.parseUnsignedLong(digits, 2);
-            } else if (value.startsWith("0") && value.length() > 1 && !value.contains(".")) {
-                String digits = value.substring(1);
-                result =
-                        digits.length() <= 10
-                                ? (Object) Integer.parseUnsignedInt(digits, 8)
-                                : (Object) Long.parseUnsignedLong(digits, 8);
+                result = integerValue(Long.parseUnsignedLong(value.substring(2), 2));
             } else if (value.contains(".") || value.contains("e") || value.contains("E")) {
                 result = Double.parseDouble(value);
+            } else if (value.startsWith("0") && value.length() > 1) {
+                result = integerValue(Long.parseUnsignedLong(value.substring(1), 8));
             } else {
-                long v = Long.parseLong(value);
-                result =
-                        v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE
-                                ? (Object) (int) v
-                                : (Object) v;
+                result = integerValue(Long.parseLong(value));
             }
         } catch (NumberFormatException e) {
-            result = value;
+            // a literal out of the range of the integer types, or not a valid number (e.g. the
+            // octal 0999), has no value the compiler would accept
+            return Collections.emptyList();
         }
         Optional<O> castResult = castValue(clazz, result);
         return castResult
@@ -390,16 +764,27 @@ public final class CxxSemantic {
                 .orElse(Collections.emptyList());
     }
 
+    /** The value of an integer literal: an {@code int} when it fits, a {@code long} otherwise. */
+    @Nonnull
+    private static Object integerValue(long value) {
+        return value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE
+                ? (Object) (int) value
+                : value;
+    }
+
     /**
-     * A brace-enclosed initializer list (e.g. an {@code OSSL_PARAM params[] = {...}} array) has no
-     * single scalar value to resolve; the {@code bracedInitList} node itself is resolved as-is, so
-     * a value factory that understands the specific struct-array shape (via {@link
-     * ResolvedValue#value()}) can scan its elements when applied downstream.
+     * A brace-enclosed initializer list, e.g. an {@code OSSL_HPKE_SUITE} given as {@code
+     * {OSSL_HPKE_KEM_ID_P256, OSSL_HPKE_KDF_ID_HKDF_SHA256, OSSL_HPKE_AEAD_ID_AES_GCM_256}}, has no
+     * single scalar value: its value is the list of the source texts of its elements, which a value
+     * factory that understands the structure it initializes reads. The value holds no syntax tree,
+     * so that a call given such an argument can be kept without its file's tree.
      */
     @Nonnull
     private static <O> List<ResolvedValue<O, AstNode>> resolveBracedInitList(
             @Nonnull Class<O> clazz, @Nonnull AstNode tree) {
-        return castValue(clazz, tree)
+        final List<String> elements =
+                elementsOf(tree).stream().map(CxxConstructorCalls::textOf).toList();
+        return castValue(clazz, elements)
                 .map(v -> List.of(new ResolvedValue<>(v, tree)))
                 .orElse(Collections.emptyList());
     }
@@ -425,7 +810,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         String name = tree.getTokenValue();
         if ("true".equals(name)) {
             Optional<O> result = castValue(clazz, Boolean.TRUE);
@@ -483,7 +868,7 @@ public final class CxxSemantic {
                             returnEnclosingParam,
                             detectionEngine,
                             depth,
-                            resolvingVariables);
+                            resolution);
             if (!chased.isEmpty()) {
                 return chased;
             }
@@ -502,6 +887,14 @@ public final class CxxSemantic {
             if (!resolved.isEmpty()) {
                 return resolved;
             }
+        }
+
+        // the name of a function used as a value designates the function, e.g. the function a
+        // function pointer is assigned
+        if (symbol instanceof Symbol.FunctionSymbol && !symbol.isUnknown()) {
+            return castValue(clazz, name)
+                    .map(value -> List.of(new ResolvedValue<>(value, tree)))
+                    .orElse(Collections.emptyList());
         }
 
         // An undeclared name written in constant style (e.g. TLS1_2_VERSION, NID_sha256) is a macro
@@ -523,12 +916,19 @@ public final class CxxSemantic {
      * Resolves a variable to its declaration-time initializer value and every subsequent
      * reassignment's value, matching how the Java engine chases {@code VariableTree.initializer()}
      * and assignment-site usages. The initializer's result (if any) comes first, followed by
-     * reassignments in source order; an empty list means neither yielded a resolved value.
+     * reassignments in source order; an empty list means neither yielded a resolved value. A value
+     * reached through several assignments is listed once.
      *
      * <p>The assignment graph can contain cycles (e.g. {@code a = b;} together with {@code b =
      * a;}): a variable that is already being resolved further up the call chain is not followed
      * again, since it cannot contribute a new value and following it would recurse forever,
      * matching the guard the Java engine carries for the same reason (issue #525).
+     *
+     * <p>A variable reached again through another assignment of the same resolution, e.g. {@code
+     * v1} in {@code v2 = v1; if (c) v2 = v1;}, takes the values it was resolved to the first time,
+     * so that a chain of such variables is resolved once per variable rather than once per path.
+     * Only complete values are reused: values from which the depth limit or the cycle guard left
+     * something out depend on where the variable was reached from.
      */
     @Nonnull
     private static <O> List<ResolvedValue<O, AstNode>> chaseVariableValues(
@@ -540,11 +940,22 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
-        if (!resolvingVariables.add(variableSymbol)) {
+            @Nonnull Resolution resolution) {
+        // the values of a variable do not include the assignment being resolved, so they can only
+        // be reused when the occurrence is not one of the variable's own assignments
+        final boolean reusable = !isWrittenAt(variableSymbol, currentOccurrence);
+        if (reusable) {
+            final List<ResolvedValue<O, AstNode>> known = resolution.valuesOf(variableSymbol);
+            if (known != null) {
+                return known;
+            }
+        }
+        if (!resolution.inProgress.add(variableSymbol)) {
             // cycle: this variable is already being resolved further up the call chain
+            resolution.cutOffs++;
             return Collections.emptyList();
         }
+        final int cutOffsBefore = resolution.cutOffs;
         try {
             LinkedList<ResolvedValue<O, AstNode>> result = new LinkedList<>();
 
@@ -552,8 +963,10 @@ public final class CxxSemantic {
                 if (usage.node() == currentOccurrence) {
                     continue;
                 }
-                if (usage.kind() != Symbol.Usage.UsageKind.WRITE
-                        && usage.kind() != Symbol.Usage.UsageKind.READ_WRITE) {
+                // a compound assignment (x += 16) combines the variable's value with another one,
+                // so only a plain assignment of the variable itself gives it a value, as for Java's
+                // Tree.Kind.ASSIGNMENT
+                if (usage.kind() != Symbol.Usage.UsageKind.WRITE) {
                     continue;
                 }
                 AstNode assignmentExpr =
@@ -574,7 +987,7 @@ public final class CxxSemantic {
                                 returnEnclosingParam,
                                 detectionEngine,
                                 depth + 1,
-                                resolvingVariables));
+                                resolution));
             }
 
             AstNode initializer = variableSymbol.initializer();
@@ -598,20 +1011,36 @@ public final class CxxSemantic {
                                 returnEnclosingParam,
                                 detectionEngine,
                                 depth + 1,
-                                resolvingVariables);
+                                resolution);
                 result.addAll(0, initializerResults);
             }
 
-            return result;
+            final List<ResolvedValue<O, AstNode>> values = List.copyOf(new LinkedHashSet<>(result));
+            if (reusable && resolution.cutOffs == cutOffsBefore) {
+                resolution.resolvedValues.put(variableSymbol, values);
+            }
+            return values;
         } finally {
-            resolvingVariables.remove(variableSymbol);
+            resolution.inProgress.remove(variableSymbol);
         }
+    }
+
+    /** Whether {@code occurrence} is one of the places where {@code variableSymbol} is assigned. */
+    private static boolean isWrittenAt(
+            @Nonnull Symbol.VariableSymbol variableSymbol, @Nonnull AstNode occurrence) {
+        for (Symbol.Usage usage : variableSymbol.usages()) {
+            if (usage.node() == occurrence && usage.kind() != Symbol.Usage.UsageKind.READ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Resolves an enum constant to its explicit {@code = constantExpression} value when present,
-     * falling back to the constant's own declared name otherwise. A bare enum-constant reference
-     * with no explicit value is still a real, useful resolved value: the constant's own name.
+     * and otherwise to its implicit value: the value of the enumerator before it plus one, or 0 for
+     * the first enumerator. When that value is not known, e.g. an enumerator before it is given an
+     * undeclared macro, the constant resolves to its own declared name.
      */
     @Nonnull
     private static <O> List<ResolvedValue<O, AstNode>> resolveEnumConstant(
@@ -639,9 +1068,16 @@ public final class CxxSemantic {
                                 false,
                                 null,
                                 0,
-                                new HashSet<>());
+                                new Resolution());
                 if (!explicitValue.isEmpty()) {
                     return explicitValue;
+                }
+            } else {
+                final Long implicitValue = implicitEnumeratorValue(enumeratorDefinition);
+                if (implicitValue != null) {
+                    return castValue(clazz, integerValue(implicitValue))
+                            .map(v -> List.of(new ResolvedValue<>(v, enumeratorNode)))
+                            .orElse(Collections.emptyList());
                 }
             }
         }
@@ -649,6 +1085,46 @@ public final class CxxSemantic {
         return nameValue
                 .map(v -> List.of(new ResolvedValue<>(v, enumeratorNode)))
                 .orElse(Collections.emptyList());
+    }
+
+    /**
+     * The value of an enumerator without a constant expression: the value of the enumerator before
+     * it plus one, or 0 for the first enumerator, or null when the value of an enumerator before it
+     * is not a known integer.
+     */
+    @Nullable private static Long implicitEnumeratorValue(@Nonnull AstNode enumeratorDefinition) {
+        final AstNode list = enumeratorDefinition.getParent();
+        if (list == null) {
+            return null;
+        }
+        long value = -1;
+        for (AstNode definition : list.getChildren(CxxGrammarImpl.enumeratorDefinition)) {
+            final AstNode constantExpr =
+                    definition.getFirstChild(CxxGrammarImpl.constantExpression);
+            if (constantExpr == null) {
+                value++;
+            } else {
+                final List<ResolvedValue<Object, AstNode>> explicitValue =
+                        resolveValuesInternal(
+                                Object.class,
+                                constantExpr,
+                                new LinkedList<>(),
+                                null,
+                                false,
+                                null,
+                                0,
+                                new Resolution());
+                if (explicitValue.size() != 1
+                        || !(explicitValue.get(0).value() instanceof Number number)) {
+                    return null;
+                }
+                value = number.longValue();
+            }
+            if (definition == enumeratorDefinition) {
+                return value;
+            }
+        }
+        return null;
     }
 
     /**
@@ -692,7 +1168,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         // "( expression )": the value of the expression
         if (tree.getNumberOfChildren() == 3 && tree.getFirstChild().is(CxxPunctuator.BR_LEFT)) {
             return resolveValuesInternal(
@@ -703,7 +1179,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
 
         AstNode literal = tree.getFirstChild(CxxGrammarImpl.LITERAL);
@@ -716,7 +1192,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         }
 
         AstNode firstChild = tree.getFirstChild();
@@ -729,7 +1205,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
 
         return Collections.emptyList();
@@ -744,7 +1220,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         AstNode stringLiteral = tree.getFirstChild(CxxTokenType.STRING);
         if (stringLiteral != null) {
             return resolveStringLiteral(clazz, stringLiteral);
@@ -786,7 +1262,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
 
         return Collections.emptyList();
@@ -801,7 +1277,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         List<AstNode> children = tree.getChildren();
         if (!children.isEmpty()) {
             AstNode lastChild = children.get(children.size() - 1);
@@ -813,7 +1289,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
         return Collections.emptyList();
     }
@@ -827,7 +1303,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         AstNode assignmentExpression = tree.getFirstChild(CxxGrammarImpl.assignmentExpression);
         if (assignmentExpression != null) {
             return resolveAssignmentExpression(
@@ -838,7 +1314,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth,
-                    resolvingVariables);
+                    resolution);
         }
         AstNode firstChild = tree.getFirstChild();
         if (firstChild != null) {
@@ -850,7 +1326,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
         return Collections.emptyList();
     }
@@ -864,7 +1340,7 @@ public final class CxxSemantic {
             boolean returnEnclosingParam,
             @Nullable CxxDetectionEngine detectionEngine,
             int depth,
-            @Nonnull Set<Symbol.VariableSymbol> resolvingVariables) {
+            @Nonnull Resolution resolution) {
         AstNode firstChild = tree.getFirstChild();
         if (firstChild != null) {
             return resolveValuesInternal(
@@ -875,7 +1351,7 @@ public final class CxxSemantic {
                     returnEnclosingParam,
                     detectionEngine,
                     depth + 1,
-                    resolvingVariables);
+                    resolution);
         }
         return Collections.emptyList();
     }
@@ -907,6 +1383,31 @@ public final class CxxSemantic {
                 return Optional.of(stringValue);
             }
             return Optional.empty();
+        }
+    }
+
+    /**
+     * The state of resolving one expression: the variables being resolved, the values of the
+     * variables resolved completely, and how often the depth limit or the cycle guard left a value
+     * out.
+     */
+    private static final class Resolution {
+        @Nonnull private final Set<Symbol.VariableSymbol> inProgress = new HashSet<>();
+
+        @Nonnull
+        private final Map<Symbol.VariableSymbol, List<? extends ResolvedValue<?, AstNode>>>
+                resolvedValues = new HashMap<>();
+
+        private int cutOffs;
+
+        /**
+         * The values {@code variableSymbol} was resolved to, or null if it was not resolved
+         * completely yet. All values of a resolution are of the class it was started with.
+         */
+        @SuppressWarnings("unchecked")
+        @Nullable private <O> List<ResolvedValue<O, AstNode>> valuesOf(
+                @Nonnull Symbol.VariableSymbol variableSymbol) {
+            return (List<ResolvedValue<O, AstNode>>) resolvedValues.get(variableSymbol);
         }
     }
 }

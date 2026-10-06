@@ -134,7 +134,11 @@ public class CallStackAgent<R, T, S, P>
     @Nonnull
     private Optional<Integer> keyOf(@Nonnull CallContext<R, T> callContext) {
         if (callContext instanceof DetachedCall<R, T> detached) {
-            return Optional.of(detached.methodName().hashCode());
+            return Optional.of(
+                    languageSupport
+                            .translation()
+                            .getMethodNameKey(detached.methodName())
+                            .hashCode());
         }
         final T tree = callContext.tree();
         return tree == null ? Optional.empty() : getKeyFormT(tree);
@@ -197,9 +201,10 @@ public class CallStackAgent<R, T, S, P>
     }
 
     /**
-     * The call-stack buckets a hook's matcher could match. Recorded calls are keyed by their
-     * invoked method name's hash, so a single-name matcher only needs that one bucket; {@code
-     * ANY}/multi-name matchers fall back to scanning every bucket.
+     * The call-stack buckets a hook's matcher could match. Recorded calls are keyed by the hash of
+     * the key of their invoked method name (see {@code ILanguageTranslation#getMethodNameKey}), so
+     * a single-name matcher only needs that one bucket; {@code ANY}/multi-name matchers fall back
+     * to scanning every bucket.
      */
     @Nonnull
     private Collection<List<CallContext<R, T>>> bucketsToScan(
@@ -207,7 +212,11 @@ public class CallStackAgent<R, T, S, P>
         final List<String> methodNames = methodMatcher.getMethodNamesSerializable();
         if (methodNames.size() == 1 && !MethodMatcher.ANY.equals(methodNames.get(0))) {
             final List<CallContext<R, T>> bucket =
-                    invokedCallStack.get(methodNames.get(0).hashCode());
+                    invokedCallStack.get(
+                            languageSupport
+                                    .translation()
+                                    .getMethodNameKey(methodNames.get(0))
+                                    .hashCode());
             return bucket == null ? List.of() : List.of(bucket);
         }
         return invokedCallStack.values();
@@ -218,8 +227,7 @@ public class CallStackAgent<R, T, S, P>
             @Nonnull CallContext<R, T> callContext,
             @Nonnull IHook<R, T, S, P> hook) {
         if (callContext instanceof DetachedCall<R, T> detached) {
-            return methodMatcher.matchKeys(
-                    detached.invokedObjectType(), detached.methodName(), detached.parameterTypes());
+            return detached.isMatchedBy(methodMatcher);
         }
         final T tree = callContext.tree();
         return tree != null
@@ -265,6 +273,7 @@ public class CallStackAgent<R, T, S, P>
                 languageSupport
                         .translation()
                         .getMethodName(MatchContext.createForHookContext(), tree)
+                        .map(name -> languageSupport.translation().getMethodNameKey(name))
                         .orElse(
                                 languageSupport
                                         .translation()

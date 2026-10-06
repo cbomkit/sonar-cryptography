@@ -56,22 +56,92 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
     @Override
     public Optional<String> getMethodName(
             @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
-        if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            return Optional.of("<init>");
+        } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
             String name = CxxAstNodeHelper.getFunctionCallName(methodInvocation);
             if (name != null) {
-                return Optional.of(name);
+                // a static member function is named in its class, Hasher::make(...) calls make
+                final String qualifyingClass = qualifyingClassOf(methodInvocation, name);
+                return Optional.of(
+                        qualifyingClass == null
+                                ? name
+                                : name.substring(qualifyingClass.length() + 2));
             }
-        } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
-            return Optional.of("<init>");
         }
         return Optional.empty();
+    }
+
+    /**
+     * The functions a call through a function pointer calls (see {@link
+     * CxxSemantic#resolveCalledFunctions}), or the one function any other call names.
+     */
+    @Nonnull
+    @Override
+    public List<String> getMethodNames(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        final List<String> calledFunctions = CxxSemantic.resolveCalledFunctions(methodInvocation);
+        if (!calledFunctions.isEmpty()) {
+            return calledFunctions;
+        }
+        final Optional<String> name = getMethodName(matchContext, methodInvocation);
+        if (name.isEmpty() || !callsAFreeFunction(methodInvocation, name.get())) {
+            return name.stream().toList();
+        }
+        // a free function is named with the namespaces it is declared in, which a call inside
+        // them may leave out
+        return CxxScopes.lookupNames(methodInvocation, name.get());
+    }
+
+    /** The key of a method name: its last component, {@code digest} of {@code util::digest}. */
+    @Nonnull
+    @Override
+    public String getMethodNameKey(@Nonnull String methodName) {
+        return methodName.substring(methodName.lastIndexOf(':') + 1);
+    }
+
+    /**
+     * Whether a call calls a free function: it is neither a constructor call, a member access, a
+     * call of a static member function, nor a call of a member function of the class of the
+     * function it is in.
+     */
+    private static boolean callsAFreeFunction(@Nonnull AstNode call, @Nonnull String name) {
+        if (!CxxAstNodeHelper.isFunctionCall(call)
+                || CxxConstructorCalls.isConstructorCall(call)
+                || CxxAstNodeHelper.isMemberAccess(call)) {
+            return false;
+        }
+        final String writtenName = CxxAstNodeHelper.getFunctionCallName(call);
+        return writtenName != null
+                && qualifyingClassOf(call, writtenName) == null
+                && memberClassOf(call, name) == null;
+    }
+
+    /**
+     * The class of the member function a call without an object is made in, when the class declares
+     * a member of the name called, e.g. {@code Hasher} for {@code reset(name)} in {@code
+     * Hasher::start}, or null.
+     */
+    @Nullable private static String memberClassOf(@Nonnull AstNode call, @Nonnull String name) {
+        if (name.contains("::")) {
+            return null;
+        }
+        final String className = CxxScopes.classOfEnclosingFunction(call);
+        return className != null && CxxScopes.declaresMember(call, className, name)
+                ? className
+                : null;
     }
 
     @Nonnull
     @Override
     public Optional<IType> getInvokedObjectTypeString(
             @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
-        if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            final String className = CxxConstructorCalls.getClassName(methodInvocation);
+            return className == null
+                    ? Optional.empty()
+                    : Optional.of(createTypeFromClassName(className));
+        } else if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
             final Optional<IType> qualifierType = getQualifierType(matchContext, methodInvocation);
             if (callsMemberFunction(methodInvocation)) {
                 return qualifierType;
@@ -87,26 +157,44 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
                                                     type.is(typeString)
                                                             || globalScope.is(typeString))
                             .orElse(globalScope));
-        } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
-            AstNode newTypeId = methodInvocation.getFirstChild(CxxGrammarImpl.newTypeId);
-            if (newTypeId != null) {
-                Type cxxType = AstNodeTypeExtension.getType(newTypeId);
-                if (cxxType != null && !cxxType.isUnknown()) {
-                    return Optional.of(createTypeFromCxxType(cxxType, matchContext));
-                }
-
-                String typeName = extractTypeName(newTypeId);
-                if (typeName != null) {
-                    return Optional.of(createTypeFromFqn(typeName, matchContext));
-                }
-            }
         } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            final String name = CxxAstNodeHelper.getFunctionCallName(methodInvocation);
+            final String qualifyingClass =
+                    name == null ? null : qualifyingClassOf(methodInvocation, name);
+            if (qualifyingClass != null) {
+                return Optional.of(createTypeFromClassName(qualifyingClass));
+            }
+            // a member function called without an object in another member function of its class
+            final String memberClass = name == null ? null : memberClassOf(methodInvocation, name);
+            if (memberClass != null) {
+                return Optional.of(createTypeFromClassName(memberClass));
+            }
             // Standalone C/C++ function call (no member access qualifier).
             // Return a synthetic global scope type so MethodMatcher.match() doesn't
             // short-circuit on empty. Detection rules match it with forObjectTypes(GLOBAL_SCOPE).
             return Optional.of(createTypeFromFqn(GLOBAL_SCOPE, matchContext));
         }
         return Optional.empty();
+    }
+
+    /**
+     * The class a call of a static member function names it in, {@code Hasher} of {@code
+     * Hasher::make(...)}, or null when the function is not named in a class.
+     */
+    @Nullable private static String qualifyingClassOf(@Nonnull AstNode call, @Nonnull String name) {
+        final int separator = name.lastIndexOf("::");
+        if (separator <= 0 || CxxAstNodeHelper.isMemberAccess(call)) {
+            return null;
+        }
+        final List<AstNode> identifiers =
+                call.getFirstChild().getDescendants(GenericTokenType.IDENTIFIER);
+        if (identifiers.size() < 2) {
+            return null;
+        }
+        final String qualifier = name.substring(0, separator);
+        return CxxConstructorCalls.namesAClass(identifiers.get(identifiers.size() - 2), qualifier)
+                ? qualifier
+                : null;
     }
 
     /** The type of the object a member is accessed on, e.g. of {@code obj} in {@code obj.f()}. */
@@ -116,6 +204,21 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         AstNode qualifier = CxxAstNodeHelper.getMemberAccessQualifier(memberAccess);
         if (qualifier == null) {
             return Optional.empty();
+        }
+        // this is a pointer to the object of the member function it is used in
+        if ("this".equals(qualifier.getTokenValue()) && qualifier.getNumberOfChildren() <= 1) {
+            final String className = CxxScopes.classOfEnclosingFunction(memberAccess);
+            if (className != null) {
+                return Optional.of(createTypeFromClassName(className));
+            }
+        }
+        // an object, a pointer or a reference is of the class it is declared with
+        if (AstNodeSymbolExtension.getSymbol(qualifier) instanceof Symbol.VariableSymbol variable
+                && !variable.isUnknown()) {
+            final String className = CxxConstructorCalls.getDeclaredClassName(variable);
+            if (className != null) {
+                return Optional.of(createTypeFromClassName(className));
+            }
         }
         Type cxxType = AstNodeTypeExtension.getType(qualifier);
         if (cxxType != null && !cxxType.isUnknown()) {
@@ -190,21 +293,10 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
             @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
         List<AstNode> arguments;
 
-        if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            arguments = CxxConstructorCalls.getArguments(methodInvocation);
+        } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
             arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
-        } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
-            AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
-            if (newInitializer != null) {
-                AstNode expressionList =
-                        newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                if (expressionList != null) {
-                    arguments = flattenInitializerList(expressionList);
-                } else {
-                    arguments = Collections.emptyList();
-                }
-            } else {
-                arguments = Collections.emptyList();
-            }
         } else {
             return Collections.emptyList();
         }
@@ -312,22 +404,6 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         return Optional.empty();
     }
 
-    @Nonnull
-    private List<AstNode> flattenInitializerList(@Nonnull AstNode expressionList) {
-        AstNode initList = expressionList.getFirstChild(CxxGrammarImpl.initializerList);
-        if (initList == null) {
-            return expressionList.getChildren();
-        }
-        List<AstNode> out = new ArrayList<>();
-        for (AstNode child : initList.getChildren()) {
-            if (",".equals(child.getTokenValue())) {
-                continue;
-            }
-            out.add(child);
-        }
-        return out;
-    }
-
     /**
      * The source text of an argument that is a literal or an identifier, e.g. {@code "digest"}
      * (with its quotes), {@code 32} or {@code OSSL_KDF_PARAM_DIGEST}, or null for any other
@@ -395,26 +471,16 @@ public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
         };
     }
 
-    private IType createUnknownType() {
-        return typeString -> false;
+    /**
+     * The type of an object of a class named as it is written, which may leave out the namespaces
+     * and classes the code naming it is in (see {@link CxxConstructorCalls#isSameClass}).
+     */
+    @Nonnull
+    private static IType createTypeFromClassName(@Nonnull String className) {
+        return typeString -> CxxConstructorCalls.isSameClass(className, typeString);
     }
 
-    private String extractTypeName(AstNode typeNode) {
-        if (typeNode == null) {
-            return null;
-        }
-        AstNode typeSpecifierSeq = typeNode.getFirstDescendant(CxxGrammarImpl.typeSpecifierSeq);
-        if (typeSpecifierSeq != null) {
-            AstNode simpleTypeSpecifier =
-                    typeSpecifierSeq.getFirstDescendant(CxxGrammarImpl.simpleTypeSpecifier);
-            if (simpleTypeSpecifier != null) {
-                StringBuilder sb = new StringBuilder();
-                for (var token : simpleTypeSpecifier.getTokens()) {
-                    sb.append(token.getValue());
-                }
-                return sb.toString().trim();
-            }
-        }
-        return CxxAstNodeHelper.getIdentifierName(typeNode);
+    private IType createUnknownType() {
+        return typeString -> false;
     }
 }

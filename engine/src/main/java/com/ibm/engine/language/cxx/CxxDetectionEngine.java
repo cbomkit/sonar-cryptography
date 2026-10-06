@@ -30,6 +30,7 @@ import com.ibm.engine.detection.IDetectionEngine;
 import com.ibm.engine.detection.IType;
 import com.ibm.engine.detection.MatchContext;
 import com.ibm.engine.detection.MethodDetection;
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.detection.ResolvedValue;
 import com.ibm.engine.detection.TraceSymbol;
 import com.ibm.engine.detection.ValueDetection;
@@ -46,7 +47,6 @@ import com.sonar.cxx.sslr.api.AstNode;
 import com.sonar.cxx.sslr.api.GenericTokenType;
 import com.sonar.cxx.sslr.api.Grammar;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -97,14 +97,8 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
 
     @Override
     public void run(@Nonnull TraceSymbol<Symbol> traceSymbol, @Nonnull AstNode tree) {
-        if (CxxAstNodeHelper.isFunctionCall(tree)) {
+        if (CxxAstNodeHelper.isFunctionCall(tree) || CxxConstructorCalls.isConstructorCall(tree)) {
             recordCall(tree);
-            if (detectionStore
-                    .getDetectionRule()
-                    .match(tree, handler.getLanguageSupport().translation())) {
-                this.analyseExpression(traceSymbol, tree);
-            }
-        } else if (CxxAstNodeHelper.isConstructorCall(tree)) {
             if (detectionStore
                     .getDetectionRule()
                     .match(tree, handler.getLanguageSupport().translation())) {
@@ -116,10 +110,10 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     }
 
     /**
-     * Records a function call for later cross-file hook matching, detaching it from the AST when
-     * possible (its arguments are pre-resolved here while the file is live). Falls back to
-     * retaining the tree when the call is not detachable or an argument cannot be faithfully
-     * snapshotted.
+     * Records a call of a function or a constructor for later cross-file hook matching, detaching
+     * it from the AST when possible (its arguments are pre-resolved here while the file is live).
+     * Falls back to retaining the tree when the call is not detachable or an argument cannot be
+     * faithfully snapshotted.
      *
      * <p>{@code run} is invoked once per detection rule for the same call node, so this same {@code
      * invocation} reaches here once per rule too; only the first such call actually needs
@@ -159,7 +153,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 translation.getMethodParameterTypes(matchContext, invocation);
 
         final List<ArgSnapshot<AstNode>> arguments = new ArrayList<>();
-        final List<AstNode> actualArguments = CxxAstNodeHelper.getFunctionCallArguments(invocation);
+        final List<AstNode> actualArguments = argumentsOf(invocation);
         for (int i = 0; i < actualArguments.size(); i++) {
             final List<ResolvedValue<Object, AstNode>> resolved =
                     resolveValuesInInnerScope(Object.class, actualArguments.get(i), null);
@@ -188,7 +182,12 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 new DetachedScanContext<>(
                         scanContext.getInputFile(), scanContext.getFilePath(), issueReporter);
         return new DetachedCall<>(
-                invokedType.get(), name.get(), parameterTypes, arguments, detachedScanContext);
+                invokedType.get(),
+                name.get(),
+                translation.getMethodNames(matchContext, invocation),
+                parameterTypes,
+                arguments,
+                detachedScanContext);
     }
 
     /**
@@ -236,22 +235,11 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
 
         List<AstNode> defParams =
                 CxxAstNodeHelper.getFunctionDefinitionParameters(methodDefinition);
-        List<AstNode> callArgs;
-
-        if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
-            callArgs = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
-        } else if (CxxAstNodeHelper.isConstructorCall(methodInvocation)) {
-            AstNode newInitializer = methodInvocation.getFirstChild(CxxGrammarImpl.newInitializer);
-            if (newInitializer != null) {
-                AstNode expressionList =
-                        newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                callArgs = flattenConstructorArgs(expressionList);
-            } else {
-                callArgs = Collections.emptyList();
-            }
-        } else {
+        if (!CxxAstNodeHelper.isFunctionCall(methodInvocation)
+                && !CxxConstructorCalls.isConstructorCall(methodInvocation)) {
             return null;
         }
+        final List<AstNode> callArgs = argumentsOf(methodInvocation);
 
         if (defParams.size() != callArgs.size()) {
             return null;
@@ -292,6 +280,15 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     @Override
     public void resolveValuesInOuterScope(
             @Nonnull AstNode expression, @Nonnull Parameter<AstNode> parameter) {
+        // a value returned by a function of the analyzed code, e.g. digest_name() in
+        // EVP_get_digestbyname(digest_name()), is resolved from the function's return statements
+        for (AstNode call : callsGivingTheValueOf(expression)) {
+            final AstNode definition = definitionOf(call);
+            if (definition != null) {
+                createAMethodHook(definition, null, parameter);
+            }
+        }
+
         Optional<AstNode> optionalMethodNode =
                 handler.getLanguageSupport().getEnclosingMethod(expression);
         if (optionalMethodNode.isEmpty()) {
@@ -309,6 +306,64 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         final AstNode resolvedParameter = resolvedValues.get(0).tree();
 
         createAMethodHook(methodNode, resolvedParameter, parameter);
+    }
+
+    /**
+     * The calls whose returned value an expression has: the expression itself when it is a call of
+     * a function, or the calls a variable is initialized with or assigned.
+     */
+    @Nonnull
+    private static List<AstNode> callsGivingTheValueOf(@Nonnull AstNode expression) {
+        AstNode value = expression;
+        while (value.getNumberOfChildren() == 1 && !CxxAstNodeHelper.isFunctionCall(value)) {
+            value = value.getFirstChild();
+        }
+        if (CxxAstNodeHelper.isFunctionCall(value)) {
+            return List.of(value);
+        }
+        if (!(AstNodeSymbolExtension.getSymbol(value) instanceof Symbol.VariableSymbol variable)
+                || variable.isParameter()
+                || variable.isField()) {
+            return List.of();
+        }
+        final List<AstNode> calls = new ArrayList<>();
+        final AstNode initializer = variable.initializer();
+        if (initializer != null && CxxAstNodeHelper.isFunctionCall(initializer.getLastChild())) {
+            calls.add(initializer.getLastChild());
+        }
+        for (Symbol.Usage usage : variable.usages()) {
+            if (usage.kind() != Symbol.Usage.UsageKind.WRITE) {
+                continue;
+            }
+            final AstNode assignment =
+                    usage.node().getFirstAncestor(CxxGrammarImpl.assignmentExpression);
+            if (assignment != null && CxxAstNodeHelper.isFunctionCall(assignment.getLastChild())) {
+                calls.add(assignment.getLastChild());
+            }
+        }
+        return calls;
+    }
+
+    /**
+     * The definition, in the translation unit of the call, of the function a call calls, or null
+     * when the function is not defined there.
+     */
+    @Nullable private AstNode definitionOf(@Nonnull AstNode call) {
+        AstNode root = call;
+        while (root.getParent() != null) {
+            root = root.getParent();
+        }
+        final MatchContext matchContext = MatchContext.createForHookContext();
+        for (AstNode definition : root.getDescendants(CxxGrammarImpl.functionDefinition)) {
+            final MethodMatcher<AstNode> matcher =
+                    handler.getLanguageSupport().createMethodMatcherBasedOn(definition);
+            if (matcher != null
+                    && matcher.match(
+                            call, handler.getLanguageSupport().translation(), matchContext)) {
+                return definition;
+            }
+        }
+        return null;
     }
 
     private void createAMethodHook(
@@ -431,6 +486,29 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         return Optional.empty();
     }
 
+    /**
+     * A C function that returns no object operates on the object it is given first, e.g. {@code
+     * RSA_generate_key_ex(rsa, bits, e, cb)} generates the key {@code rsa} and {@code
+     * EC_KEY_generate_key(key)} the key {@code key}: the rules depending on such a call follow that
+     * object, as they follow the variable a call returning an object is assigned to.
+     */
+    @Nonnull
+    @Override
+    public Optional<TraceSymbol<Symbol>> getObjectSymbol(@Nonnull AstNode expression) {
+        final Optional<TraceSymbol<Symbol>> assigned = getAssignedSymbol(expression);
+        if (assigned.isPresent()
+                && assigned.get().is(TraceSymbol.State.DIFFERENT)
+                && CxxAstNodeHelper.isFunctionCall(expression)
+                && !CxxAstNodeHelper.isMemberAccess(expression)) {
+            final List<AstNode> arguments = CxxAstNodeHelper.getFunctionCallArguments(expression);
+            final Symbol object = arguments.isEmpty() ? null : handleSymbol(arguments.get(0));
+            if (object != null && !object.isUnknown()) {
+                return Optional.of(TraceSymbol.createFrom(object));
+            }
+        }
+        return assigned;
+    }
+
     /** Whether a call is written as an argument of another call. */
     private static boolean isCallArgument(@Nonnull AstNode call) {
         for (AstNode node = call.getParent(); node != null; node = node.getParent()) {
@@ -506,13 +584,8 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
     @Override
     public Optional<TraceSymbol<Symbol>> getNewClassParameterSymbol(
             @Nonnull AstNode newClass, @Nonnull Parameter<AstNode> parameter) {
-        if (CxxAstNodeHelper.isConstructorCall(newClass)) {
-            AstNode newInitializer = newClass.getFirstChild(CxxGrammarImpl.newInitializer);
-            if (newInitializer != null) {
-                AstNode expressionList =
-                        newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                return getTraceSymbol(parameter, flattenConstructorArgs(expressionList));
-            }
+        if (CxxConstructorCalls.isConstructorCall(newClass)) {
+            return getTraceSymbol(parameter, CxxConstructorCalls.getArguments(newClass));
         }
         return Optional.empty();
     }
@@ -539,7 +612,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         // matching unassigned call. A bare literal/macro argument (e.g. foo(NULL)) is neither a
         // symbol nor a call, so it must map to DIFFERENT instead - otherwise the re-scan would
         // match any unassigned call in the method, not just ones related to this argument.
-        if (CxxAstNodeHelper.isFunctionCall(arg) || CxxAstNodeHelper.isConstructorCall(arg)) {
+        if (CxxAstNodeHelper.isFunctionCall(arg) || CxxConstructorCalls.isConstructorCall(arg)) {
             return Optional.of(TraceSymbol.createWithStateNoSymbol());
         }
         return Optional.of(TraceSymbol.createWithStateDifferent());
@@ -638,21 +711,11 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         DetectionRule<AstNode> detectionRule =
                 (DetectionRule<AstNode>) detectionStore.getDetectionRule();
 
-        List<AstNode> arguments;
-        if (CxxAstNodeHelper.isFunctionCall(expressionNode)) {
-            arguments = CxxAstNodeHelper.getFunctionCallArguments(expressionNode);
-        } else if (CxxAstNodeHelper.isConstructorCall(expressionNode)) {
-            AstNode newInitializer = expressionNode.getFirstChild(CxxGrammarImpl.newInitializer);
-            if (newInitializer != null) {
-                AstNode expressionList =
-                        newInitializer.getFirstDescendant(CxxGrammarImpl.expressionList);
-                arguments = flattenConstructorArgs(expressionList);
-            } else {
-                arguments = Collections.emptyList();
-            }
-        } else {
+        if (!CxxAstNodeHelper.isFunctionCall(expressionNode)
+                && !CxxConstructorCalls.isConstructorCall(expressionNode)) {
             return;
         }
+        final List<AstNode> arguments = argumentsOf(expressionNode);
 
         // A chained/builder-pattern call (foo().goo()) has no variable to trace back to - its
         // qualifier is itself a call - so it must not be rejected by the NO_SYMBOL branch in
@@ -717,7 +780,7 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
                 }
             } else if (!parameter.getDetectionRules().isEmpty()) {
                 if (CxxAstNodeHelper.isFunctionCall(expression)
-                        || CxxAstNodeHelper.isConstructorCall(expression)) {
+                        || CxxConstructorCalls.isConstructorCall(expression)) {
                     // the argument is itself a call/constructor expression - analyse it directly,
                     // no variable to trace back to an assignment.
                     detectionStore.onDetectedDependingParameter(
@@ -777,27 +840,11 @@ public class CxxDetectionEngine implements IDetectionEngine<AstNode, Symbol> {
         return true;
     }
 
-    /**
-     * Extracts constructor arguments from an {@code expressionList} node, descending through the
-     * {@code initializerList} wrapper that sonar-cxx inserts between {@code expressionList} and the
-     * actual {@code initializerClause} children. Without this descent, {@code getChildren()}
-     * returns the single {@code initializerList} node instead of the argument nodes themselves.
-     */
+    /** The arguments of a call of a function or a constructor. */
     @Nonnull
-    private List<AstNode> flattenConstructorArgs(@Nullable AstNode expressionList) {
-        if (expressionList == null) {
-            return Collections.emptyList();
-        }
-        AstNode initList = expressionList.getFirstChild(CxxGrammarImpl.initializerList);
-        if (initList == null) {
-            return expressionList.getChildren();
-        }
-        List<AstNode> out = new LinkedList<>();
-        for (AstNode child : initList.getChildren()) {
-            if (!",".equals(child.getTokenValue())) {
-                out.add(child);
-            }
-        }
-        return out;
+    private static List<AstNode> argumentsOf(@Nonnull AstNode call) {
+        return CxxConstructorCalls.isConstructorCall(call)
+                ? CxxConstructorCalls.getArguments(call)
+                : CxxAstNodeHelper.getFunctionCallArguments(call);
     }
 }

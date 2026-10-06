@@ -63,11 +63,7 @@ public record MethodInvocationHookWithParameterResolvement<R, T, S, P>(
         if (callContext instanceof DetachedCall<R, T> detached) {
             final MethodMatcher<T> methodMatcher =
                     languageSupport.createMethodMatcherBasedOn(methodDefinition);
-            return methodMatcher != null
-                    && methodMatcher.matchKeys(
-                            detached.invokedObjectType(),
-                            detached.methodName(),
-                            detached.parameterTypes());
+            return methodMatcher != null && detached.isMatchedBy(methodMatcher);
         }
         final T tree = callContext.tree();
         return tree != null && isInvocationOn(tree, languageSupport);

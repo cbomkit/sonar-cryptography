@@ -119,15 +119,28 @@ public final class CxxLanguageSupport
                 return null;
             }
 
-            AstNode enclosingClass = CxxAstNodeHelper.getEnclosingClass(methodDefinition);
+            // A member function is defined in its class, or outside it with a name qualified by
+            // the class, e.g. Hasher::reset; the class is named with the namespaces and classes
+            // it is declared in. A constructor is called as <init> of its class, see
+            // CxxLanguageTranslation#getMethodName.
+            final String className = CxxScopes.classOfFunction(methodDefinition);
             String invocationObjectName;
-            if (enclosingClass != null) {
-                String className = CxxAstNodeHelper.getIdentifierName(enclosingClass);
-                invocationObjectName = className != null ? className : "";
+            if (className != null) {
+                invocationObjectName = className;
+                functionName = unqualified(functionName);
+                if (functionName.equals(unqualified(className))) {
+                    functionName = "<init>";
+                }
             } else {
                 // Standalone functions use the same synthetic scope name as
-                // CxxLanguageTranslation#getInvokedObjectTypeString for a call site.
+                // CxxLanguageTranslation#getInvokedObjectTypeString for a call site, and are
+                // named with the namespaces they are declared in, as a call names them (see
+                // CxxScopes#lookupNames)
                 invocationObjectName = CxxLanguageTranslation.GLOBAL_SCOPE;
+                final List<String> namespaces = CxxScopes.enclosingNamespaces(methodDefinition);
+                if (!namespaces.isEmpty()) {
+                    functionName = String.join("::", namespaces) + "::" + functionName;
+                }
             }
 
             // Parameter types are wildcards: CxxLanguageTranslation#getMethodParameterTypes
@@ -145,6 +158,13 @@ public final class CxxLanguageSupport
             LOGGER.error(e.getLocalizedMessage(), e);
             return null;
         }
+    }
+
+    /** The last component of a qualified name, {@code reset} of {@code Hasher::reset}. */
+    @Nonnull
+    private static String unqualified(@Nonnull String name) {
+        final int separator = name.lastIndexOf("::");
+        return separator < 0 ? name : name.substring(separator + 2);
     }
 
     @Nullable @Override
@@ -168,19 +188,9 @@ public final class CxxLanguageSupport
 
     @Override
     public boolean isDetachableCall(@Nonnull AstNode tree) {
-        if (!CxxAstNodeHelper.isFunctionCall(tree)) {
-            // Constructor calls and other kinds stay retained in this iteration.
-            return false;
-        }
-        for (AstNode argument : CxxAstNodeHelper.getFunctionCallArguments(tree)) {
-            if (containsBracedInitList(argument)) {
-                // A braced-init-list argument (e.g. an array/aggregate literal) resolves to the
-                // list node itself (see CxxSemantic#resolveValues), which a detached call cannot
-                // hold, so such calls stay on the retained-tree path.
-                return false;
-            }
-        }
-        return true;
+        // the values of the arguments of a call of a function or a constructor hold no syntax
+        // tree, a braced-init-list included (see CxxSemantic#resolveValues)
+        return CxxAstNodeHelper.isFunctionCall(tree) || CxxConstructorCalls.isConstructorCall(tree);
     }
 
     @Override
@@ -205,10 +215,5 @@ public final class CxxLanguageSupport
             }
         }
         return -1;
-    }
-
-    private static boolean containsBracedInitList(@Nonnull AstNode argument) {
-        return argument.is(CxxGrammarImpl.bracedInitList)
-                || argument.hasDescendant(CxxGrammarImpl.bracedInitList);
     }
 }
