@@ -72,8 +72,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.AES", "Cryptodome.Cipher.AES")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(ANY) // Crypto.Cipher.AES.* or Cryptodome.Cipher.AES.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.AES.* or Cryptodome.Cipher.AES.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -95,8 +95,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.DES", "Cryptodome.Cipher.DES")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DES"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(ANY) // Crypto.Cipher.DES.* or Cryptodome.Cipher.DES.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.DES.* or Cryptodome.Cipher.DES.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -114,8 +114,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.DES3", "Cryptodome.Cipher.DES3")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("3DES"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(ANY) // Crypto.Cipher.DES3.* or Cryptodome.Cipher.DES3.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.DES3.* or Cryptodome.Cipher.DES3.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -133,9 +133,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.Blowfish", "Cryptodome.Cipher.Blowfish")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("Blowfish"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(
-                            ANY) // Crypto.Cipher.Blowfish.* or Cryptodome.Cipher.Blowfish.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.Blowfish.* or Cryptodome.Cipher.Blowfish.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -153,8 +152,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.CAST", "Cryptodome.Cipher.CAST")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CAST5"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(ANY) // Crypto.Cipher.CAST.* or Cryptodome.Cipher.CAST.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.CAST.* or Cryptodome.Cipher.CAST.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
@@ -172,8 +171,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectTypes("Crypto.Cipher.ARC2", "Cryptodome.Cipher.ARC2")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RC2"))
-                    .withMethodParameter(ANY)
-                    .withMethodParameter(ANY) // Crypto.Cipher.ARC2.* or Cryptodome.Cipher.ARC2.*
+                    .withNamedMethodParameter("key", ANY)
+                    .withNamedMethodParameter("mode", ANY) // Crypto.Cipher.ARC2.* or Cryptodome.Cipher.ARC2.*
                     .shouldBeDetectedAs(new ModeFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withOptionalNamedMethodParameter("iv", ANY)
