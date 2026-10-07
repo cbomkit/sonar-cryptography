@@ -30,6 +30,13 @@ public class ProtocolContext extends DetectionContext {
         TLS_SIGNATURE_ALGORITHMS,
         // TLS supported-groups (key-exchange) list configuration (e.g. SSL_CTX_set1_groups_list).
         TLS_GROUPS,
+        // TLS protocol versions disabled by options (e.g. SSL_CTX_set_options with
+        // SSL_OP_NO_TLSv1), the minimum version (e.g. SSL_CTX_set_min_proto_version) and the
+        // maximum version (e.g. SSL_CTX_set_max_proto_version): the settings made on a context
+        // together bound the range of versions it uses.
+        TLS_DISABLED_VERSIONS,
+        TLS_MINIMUM_VERSION,
+        TLS_MAXIMUM_VERSION,
         // SRTP protection profile list configuration (e.g. SSL_CTX_set_tlsext_use_srtp).
         SRTP,
         NONE,
