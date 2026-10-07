@@ -239,6 +239,33 @@
                     <release>21</release>
                 </configuration>
             </plugin>
+            <!-- removes the plugin JARs of earlier builds from the SonarQube plugins directory, so
+                 that SonarQube loads only the JAR copied below -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>clean-sonarqube-plugins</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>../.SonarQube/plugins</directory>
+                                    <includes>
+                                        <include>sonar-cryptography-plugin-*.jar</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
