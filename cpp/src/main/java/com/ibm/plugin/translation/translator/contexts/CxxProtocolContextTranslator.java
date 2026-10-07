@@ -40,6 +40,7 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.Unknown;
 import com.ibm.mapper.model.Version;
 import com.ibm.mapper.model.collections.MergeableCollection;
+import com.ibm.mapper.model.collections.ProtocolVersionSettings;
 import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.sonar.cxx.sslr.api.AstNode;
@@ -71,6 +72,15 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
 
         if (value instanceof com.ibm.engine.model.Protocol<AstNode> protocol) {
             return switch (kind) {
+                case TLS_DISABLED_VERSIONS ->
+                        versions(protocol.asString(), detectionLocation)
+                                .<INode>map(ProtocolVersionSettings.Disabled::new);
+                case TLS_MINIMUM_VERSION ->
+                        versions(protocol.asString(), detectionLocation)
+                                .<INode>map(ProtocolVersionSettings.Minimum::new);
+                case TLS_MAXIMUM_VERSION ->
+                        versions(protocol.asString(), detectionLocation)
+                                .<INode>map(ProtocolVersionSettings.Maximum::new);
                 case TLS ->
                         Optional.of(protocol)
                                 .map(
@@ -140,6 +150,28 @@ public final class CxxProtocolContextTranslator implements IContextTranslation<A
         }
 
         return Optional.of(new Unknown(detectionLocation));
+    }
+
+    /**
+     * The colon-separated protocol versions set on a context, e.g. {@code TLSv1.0:TLSv1.1} disabled
+     * by options or the {@code TLSv1.2} minimum version, as a {@link TLS} node for each version:
+     * the settings made on a context are merged into the context, which uses the range of versions
+     * they leave (see {@link ProtocolVersionSettings}).
+     */
+    @Nonnull
+    private static Optional<List<INode>> versions(
+            @Nonnull String versions, @Nonnull DetectionLocation detectionLocation) {
+        final SSLVersionMapper sslVersionMapper = new SSLVersionMapper();
+        final List<INode> nodes = new ArrayList<>();
+        for (String name : versions.split(":")) {
+            sslVersionMapper
+                    .parse(name, detectionLocation)
+                    .ifPresent(version -> nodes.add(new TLS(name, version)));
+        }
+        if (nodes.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(nodes);
     }
 
     /**

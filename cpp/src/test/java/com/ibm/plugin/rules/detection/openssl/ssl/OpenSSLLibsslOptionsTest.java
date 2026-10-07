@@ -62,15 +62,17 @@ class OpenSSLLibsslOptionsTest extends TestBase {
                                     + "Oid:1.3.101.110]]"),
                     // 9: SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 |
                     // SSL_OP_NO_TLSv1_1);
-                    finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    finding(
+                            "ProtocolContext{Protocol:TLSv1.0:TLSv1.1}",
+                            "TLS:TLSv1.2[Version:1.2]"),
                     // 13: SSL_set_options(ssl, SSL_OP_NO_TLSv1_3);
-                    finding("ProtocolContext{Protocol:TLSv1.2}", "TLS:TLSv1.2[Version:1.2]"),
+                    finding("ProtocolContext{Protocol:TLSv1.3}", "TLS:TLSv1.2[Version:1.2]"),
                     // 18: SSL_CTX_set_options(ctx, options);
-                    finding("ProtocolContext{Protocol:TLSv1.1}", "TLS:TLSv1.1[Version:1.1]"),
+                    finding("ProtocolContext{Protocol:TLSv1.0}", "TLS:TLSv1.1[Version:1.1]"),
                     // 22: SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_1);
-                    finding("ProtocolContext{Protocol:TLSv1.0}", "TLS:TLSv1.0[Version:1.0]"),
+                    finding("ProtocolContext{Protocol:TLSv1.1}", "TLS:TLSv1.0[Version:1.0]"),
                     // 26: SSL_CTX_set_options(ctx, SSL_OP_NO_DTLSv1);
-                    finding("ProtocolContext{Protocol:DTLSv1.2}", "TLS:DTLSv1.2[Version:1.2]"));
+                    finding("ProtocolContext{Protocol:DTLSv1.0}", "TLS:DTLSv1.2[Version:1.2]"));
 
     private int findings = 0;
 

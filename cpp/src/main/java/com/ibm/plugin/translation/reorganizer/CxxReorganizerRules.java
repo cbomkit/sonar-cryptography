@@ -23,6 +23,7 @@ import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SecretKey;
@@ -31,6 +32,7 @@ import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
+import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.rules.AeadBlockCipherReorganizer;
 import com.ibm.mapper.reorganizer.rules.AsymmetricBlockCipherReorganizer;
@@ -40,8 +42,10 @@ import com.ibm.mapper.reorganizer.rules.CipherSuiteReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyReorgenizer;
 import com.ibm.mapper.reorganizer.rules.KeyUsageReorganizer;
 import com.ibm.mapper.reorganizer.rules.MacReorganizer;
+import com.ibm.mapper.reorganizer.rules.ProtocolVersionReorganizer;
 import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
@@ -58,6 +62,21 @@ public final class CxxReorganizerRules {
 
     @Nonnull
     public static List<IReorganizerRule> rules() {
+        return Stream.concat(
+                        // the range of versions of a TLS context, from the versions set on it,
+                        // before the context takes the place of its version
+                        Stream.concat(
+                                Stream.of(
+                                        ProtocolVersionReorganizer.resolveVersionsSetOn(TLS.class),
+                                        ProtocolVersionReorganizer.resolveVersionsSetOn(
+                                                Protocol.class)),
+                                ProtocolVersionReorganizer.resolveVersionsSetOnTheirOwn().stream()),
+                        otherRules().stream())
+                .toList();
+    }
+
+    @Nonnull
+    private static List<IReorganizerRule> otherRules() {
         return List.of(
                 AeadBlockCipherReorganizer.MERGE_AE_PARENT_AND_CHILD,
                 AeadBlockCipherReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,

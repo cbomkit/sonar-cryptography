@@ -454,7 +454,7 @@ public final class OpenSSLLibssl {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_MINIMUM_VERSION))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -466,7 +466,7 @@ public final class OpenSSLLibssl {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_MAXIMUM_VERSION))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -478,7 +478,7 @@ public final class OpenSSLLibssl {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_MINIMUM_VERSION))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
@@ -490,37 +490,30 @@ public final class OpenSSLLibssl {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(PROTO_VERSION_FACTORY)
-                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                    .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_MAXIMUM_VERSION))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
     // SSL_CTX_set_options(ctx, op) / SSL_set_options(ssl, op): the protocol versions disabled by
-    // the SSL_OP_NO_* options bound the range of versions used, reported as the minimum or the
-    // maximum version they set
+    // the SSL_OP_NO_* options; the options set on a context add up, and the versions disabled by
+    // all of them bound the range of versions the context uses
 
-    private static final IDetectionRule<AstNode> SSL_CTX_SET_OPTIONS_MINIMUM =
-            protocolOptions("SSL_CTX_set_options", OpenSSLProtocolOptionsFactory.Bound.MINIMUM);
+    private static final IDetectionRule<AstNode> SSL_CTX_SET_OPTIONS =
+            protocolOptions("SSL_CTX_set_options");
 
-    private static final IDetectionRule<AstNode> SSL_CTX_SET_OPTIONS_MAXIMUM =
-            protocolOptions("SSL_CTX_set_options", OpenSSLProtocolOptionsFactory.Bound.MAXIMUM);
-
-    private static final IDetectionRule<AstNode> SSL_SET_OPTIONS_MINIMUM =
-            protocolOptions("SSL_set_options", OpenSSLProtocolOptionsFactory.Bound.MINIMUM);
-
-    private static final IDetectionRule<AstNode> SSL_SET_OPTIONS_MAXIMUM =
-            protocolOptions("SSL_set_options", OpenSSLProtocolOptionsFactory.Bound.MAXIMUM);
+    private static final IDetectionRule<AstNode> SSL_SET_OPTIONS =
+            protocolOptions("SSL_set_options");
 
     @Nonnull
-    private static IDetectionRule<AstNode> protocolOptions(
-            @Nonnull String function, @Nonnull OpenSSLProtocolOptionsFactory.Bound bound) {
+    private static IDetectionRule<AstNode> protocolOptions(@Nonnull String function) {
         return new DetectionRuleBuilder<AstNode>()
                 .createDetectionRule()
                 .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                 .forMethods(function)
                 .withMethodParameter("*")
                 .withMethodParameter("*")
-                .shouldBeDetectedAs(new OpenSSLProtocolOptionsFactory(bound))
-                .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
+                .shouldBeDetectedAs(new OpenSSLProtocolOptionsFactory())
+                .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS_DISABLED_VERSIONS))
                 .inBundle(() -> BUNDLE)
                 .withoutDependingDetectionRules();
     }
@@ -606,12 +599,19 @@ public final class OpenSSLLibssl {
 
     // SSL_CONF_cmd(cctx, cmd, value): the value is read according to the command it sets
 
-    private static final IDetectionRule<AstNode> SSL_CONF_CMD_PROTOCOL_VERSION =
+    private static final IDetectionRule<AstNode> SSL_CONF_CMD_MINIMUM_PROTOCOL_VERSION =
             sslConfCmd(
-                    Set.of("MinProtocol", "MaxProtocol", "-min_protocol", "-max_protocol"),
+                    Set.of("MinProtocol", "-min_protocol"),
                     new OpenSSLNidLookupFactory(
                             Map.of(), CONF_PROTOCOL_VERSIONS, code -> code, Protocol::new),
-                    ProtocolContext.Kind.TLS);
+                    ProtocolContext.Kind.TLS_MINIMUM_VERSION);
+
+    private static final IDetectionRule<AstNode> SSL_CONF_CMD_MAXIMUM_PROTOCOL_VERSION =
+            sslConfCmd(
+                    Set.of("MaxProtocol", "-max_protocol"),
+                    new OpenSSLNidLookupFactory(
+                            Map.of(), CONF_PROTOCOL_VERSIONS, code -> code, Protocol::new),
+                    ProtocolContext.Kind.TLS_MAXIMUM_VERSION);
 
     private static final IDetectionRule<AstNode> SSL_CONF_CMD_CIPHERS =
             sslConfCmd(
@@ -789,8 +789,7 @@ public final class OpenSSLLibssl {
                 SSL_CTX_SET_CIPHERSUITES,
                 SSL_CTX_SET_MIN_PROTO_VERSION,
                 SSL_CTX_SET_MAX_PROTO_VERSION,
-                SSL_CTX_SET_OPTIONS_MINIMUM,
-                SSL_CTX_SET_OPTIONS_MAXIMUM,
+                SSL_CTX_SET_OPTIONS,
                 SSL_CTX_SET1_GROUPS_LIST,
                 SSL_CTX_SET1_SIGALGS_LIST,
                 SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
@@ -808,8 +807,7 @@ public final class OpenSSLLibssl {
                 SSL_SET_CIPHERSUITES,
                 SSL_SET_MIN_PROTO_VERSION,
                 SSL_SET_MAX_PROTO_VERSION,
-                SSL_SET_OPTIONS_MINIMUM,
-                SSL_SET_OPTIONS_MAXIMUM,
+                SSL_SET_OPTIONS,
                 SSL_SET1_GROUPS_LIST,
                 SSL_SET1_SIGALGS_LIST,
                 SSL_SET_TMP_DH,
@@ -827,7 +825,8 @@ public final class OpenSSLLibssl {
                         connectionRules().stream(),
                         // SSL_CONF (string-driven config)
                         Stream.of(
-                                SSL_CONF_CMD_PROTOCOL_VERSION,
+                                SSL_CONF_CMD_MINIMUM_PROTOCOL_VERSION,
+                                SSL_CONF_CMD_MAXIMUM_PROTOCOL_VERSION,
                                 SSL_CONF_CMD_CIPHERS,
                                 SSL_CONF_CMD_GROUPS,
                                 SSL_CONF_CMD_SIGNATURE_ALGORITHMS))
