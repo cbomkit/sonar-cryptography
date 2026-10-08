@@ -68,6 +68,7 @@
         <sonar.cxx.version>symbol-resol-SNAPSHOT</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
+        <logback.version>1.6.3</logback.version>
     </properties>
 
     <repositories>
@@ -106,14 +107,21 @@
         <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
-          <version>1.5.35</version>
+          <version>${logback.version}</version>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
-          <version>1.6.3</version>
+          <version>${logback.version}</version>
           <scope>test</scope>
+        </dependency>
+        <!-- staxmate 2.0.1 (from the sonar-python plugin) asks for stax2-api as a version range,
+             whose resolution queries the plain-http repositories its POM declares -->
+        <dependency>
+          <groupId>org.codehaus.woodstox</groupId>
+          <artifactId>stax2-api</artifactId>
+          <version>3.1.4</version>
         </dependency>
         <dependency>
           <groupId>org.slf4j</groupId>
