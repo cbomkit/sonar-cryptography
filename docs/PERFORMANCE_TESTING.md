@@ -7,10 +7,10 @@ AST-detach fix (see `docs/superpowers/plans/2026-07-05-callstack-hooks-heap-redu
 
 There are two levels of testing:
 
-| Level | What it is | When to use |
-|---|---|---|
-| **A. Self-contained JUnit harness** | `CallStackHeapPerfTest` — generates a synthetic cross-file corpus, scans it in-process, asserts detach invariants. No Docker, no network. | Quick, deterministic regression check. Runs in seconds–minutes. |
-| **B. Keycloak end-to-end scan** | Full `mvn sonar:sonar` of Keycloak against a local SonarQube with the plugin installed. | Realistic heap/time numbers on a large project. Manual, ~10–15 min + setup. |
+| Level                               | What it is                                                                                                                                                                | When to use                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **A. Self-contained JUnit harness** | `CallStackHeapPerfTest` (Java) and `CxxCallStackHeapPerfTest` (C/C++) — generate a synthetic corpus, scan it in-process, assert detach invariants. No Docker, no network. | Quick, deterministic regression check. Runs in seconds–minutes.             |
+| **B. Keycloak end-to-end scan**     | Full `mvn sonar:sonar` of Keycloak against a local SonarQube with the plugin installed.                                                                                   | Realistic heap/time numbers on a large project. Manual, ~10–15 min + setup. |
 
 Start with **A** for a fast signal; use **B** to get true, large-project numbers.
 
@@ -41,7 +41,7 @@ It prints a line like:
 - **`retainedWithTree`** — recorded calls still pinning a live AST. Must stay ~0.
 - **`detached` / `ratio`** — calls converted to tree-free records. Ratio must stay high.
 - **`heapDeltaMB`** — reported only, **never asserted** (a coarse whole-JVM number; at this
-  synthetic scale it is *not* a reliable proxy for AST-pinning savings — the generated files
+  synthetic scale it is _not_ a reliable proxy for AST-pinning savings — the generated files
   are tiny, so pinned ASTs cost little in bytes). Use Keycloak (Part B) for real byte numbers.
 
 The assertions (`ratio >= 0.9`, `retainedWithTree <= 10`) fail hard if AST-detaching regresses.
@@ -128,7 +128,7 @@ cp sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar .SonarQube/p
 (Do **not** copy the `*-sources.jar` or `original-*.jar`.)
 
 **3c. Start SonarQube + PostgreSQL.** `docker-compose.yaml` uses `user: "${UID}"`, and in
-zsh `UID` is a read-only variable that is *not* exported — if it is blank the container runs
+zsh `UID` is a read-only variable that is _not_ exported — if it is blank the container runs
 as root and Elasticsearch/temp dirs get root-owned, causing permission crashes. Provide `UID`
 explicitly via a `.env` file (Compose reads it automatically):
 
@@ -147,7 +147,7 @@ curl -s http://localhost:9000/api/system/status    # {"status":"UP", ...}
 > `docker compose down -v && echo "UID=$(id -u)" > .env && docker compose up -d`.
 
 **3d. Verify the running instance loaded YOUR plugin** (the deployed JAR must contain your
-changes, and SonarQube must have started *after* you copied it):
+changes, and SonarQube must have started _after_ you copied it):
 
 ```bash
 # the plugin's registered timestamp should be AFTER your JAR's build time
@@ -165,7 +165,7 @@ If you rebuild the plugin later, repeat 3a–3b then `docker compose restart son
 ### Step 4 — Create an analysis token
 
 In the SonarQube UI (`http://localhost:9000`, default login `admin`/`admin`, change on first
-login): **My Account → Security → Generate Token** (type: *Global Analysis Token*). Copy it.
+login): **My Account → Security → Generate Token** (type: _Global Analysis Token_). Copy it.
 
 ```bash
 export TOKEN=sqp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -181,7 +181,7 @@ this repo).
 **Important — the scanner forks a separate JVM.** `sonar-maven-plugin` downloads and runs the
 **SonarScanner Engine** in a child JVM under `~/.sonar/cache/...` — this is where the plugin,
 `CallStackAgent`, and the heap actually live. It does **not** inherit `MAVEN_OPTS`. To cap and
-instrument the *right* JVM, pass `-Dsonar.scanner.javaOpts`.
+instrument the _right_ JVM, pass `-Dsonar.scanner.javaOpts`.
 
 ```bash
 cd ~/Downloads/keycloak-main
@@ -206,7 +206,7 @@ mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
 ### Step 6 — Sample the engine heap during the scan
 
 While the scan runs, sample the **engine** JVM's heap with `jcmd` (from a full JDK — the
-scanner's bundled JRE has no `jcmd`). Run this in a second terminal *after* the scan reaches
+scanner's bundled JRE has no `jcmd`). Run this in a second terminal _after_ the scan reaches
 its analysis phase:
 
 ```bash
@@ -247,11 +247,11 @@ exercised.
 **What good looks like (with the AST-detach fix, measured on Keycloak `main`, SonarQube 26.1,
 93 modules / ~8200 files):**
 
-| Metric | Pre-fix (old) | With AST-detach fix |
-|---|---|---|
-| Outcome | ~7 GB **and climbing, did not finish** | **ANALYSIS SUCCESSFUL** in ~11 min |
-| Under `-Xmx6g` | would OOM | completed, no OOM |
-| Peak heap used | 7 GB+ (linear, no plateau) | ~4.6 GB (oscillating, GC reclaims) |
+| Metric         | Pre-fix (old)                          | With AST-detach fix                |
+| -------------- | -------------------------------------- | ---------------------------------- |
+| Outcome        | ~7 GB **and climbing, did not finish** | **ANALYSIS SUCCESSFUL** in ~11 min |
+| Under `-Xmx6g` | would OOM                              | completed, no OOM                  |
+| Peak heap used | 7 GB+ (linear, no plateau)             | ~4.6 GB (oscillating, GC reclaims) |
 
 - **Healthy:** `heap_used` **oscillates** — rises then drops as G1 reclaims — and the scan
   completes. The post-GC floor may grow modestly but the run finishes under the cap.
@@ -259,10 +259,10 @@ exercised.
   `/tmp`), or the scan never finishes. That signals AST pinning (or another unbounded term)
   has returned.
 
-Note the residual ~4.6 GB is *not* the call-stack AST term (that is eliminated — see the
+Note the residual ~4.6 GB is _not_ the call-stack AST term (that is eliminated — see the
 synthetic harness's `retainedWithTree=0`); it is SonarQube's baseline analysis cost plus the
 CBOM nodes accumulated for the whole scan (`JavaAggregator.detectedNodes`). `jcmd`'s
-`heap_used` includes uncollected garbage, so the true retained set sits at the GC *floors*,
+`heap_used` includes uncollected garbage, so the true retained set sits at the GC _floors_,
 below the sampled peak.
 
 ---
@@ -301,7 +301,7 @@ Enable DEBUG for the plugin (e.g. `-Dsonar.log.level=DEBUG` on the scanner, or t
 harness — it runs with `isInventory=false`, so CBOM nodes are not aggregated there; the count is
 meaningful only on a real inventory scan).
 
-Counts size the *populations*, not their bytes — a small count of heavy objects can still
+Counts size the _populations_, not their bytes — a small count of heavy objects can still
 dominate. Use them to spot which population grows, then confirm bytes with the histogram below.
 
 **2. Byte attribution via `jmap` (decisive).** During a constrained-heap Keycloak scan (see
@@ -316,13 +316,13 @@ jmap -histo:live <pid> > histo.txt
 
 Bucket the top entries of `histo.txt` into the three sources:
 
-| Bucket | Classes to sum in `histo.txt` |
-|---|---|
-| Retained CBOM nodes | `com.ibm.mapper.model.**` (e.g. `Algorithm`, `Key`, `Property`, `MessageDigest`, …) and their child `HashMap`/`HashMap$Node` share |
-| Detached call-stack | `com.ibm.engine.callstack.DetachedCall`, `...callstack.ArgSnapshot`, `...callstack.ResolvedSnapshotValue` |
-| Residual Tree / hooks | `org.sonar.**Tree*` still live + `com.ibm.engine.hooks.**` |
+| Bucket                | Classes to sum in `histo.txt`                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Retained CBOM nodes   | `com.ibm.mapper.model.**` (e.g. `Algorithm`, `Key`, `Property`, `MessageDigest`, …) and their child `HashMap`/`HashMap$Node` share |
+| Detached call-stack   | `com.ibm.engine.callstack.DetachedCall`, `...callstack.ArgSnapshot`, `...callstack.ResolvedSnapshotValue`                          |
+| Residual Tree / hooks | `org.sonar.**Tree*` still live + `com.ibm.engine.hooks.**`                                                                         |
 
-Sample two or three histograms as the scan progresses to see which bucket *grows* (the floor is
+Sample two or three histograms as the scan progresses to see which bucket _grows_ (the floor is
 about accumulation, not a one-time cost).
 
 ### Decision — measured 2026-07-06 (Keycloak `main`, 94 compiled modules, SonarQube 26.1, `-Xmx6g`)
@@ -332,20 +332,20 @@ components), no OOM; post-GC heap floor oscillated and ended ~2.9–3.4 GB (heal
 no monotonic climb). Attribution from live `GC.class_histogram` (post-full-GC) sampled early /
 mid / late in the run:
 
-| Population | early | mid | late (near end) |
-|---|---|---|---|
-| Retained CBOM nodes (`com.ibm.mapper.**`) | ~0 | 0.01 MB (484) | **0.02 MB (824 inst)** |
-| Detached call-stack (`com.ibm.engine.callstack.**`) | ~0 | 7.6 MB (291k) | **15.6 MB (594k inst)** |
-| Hooks (`com.ibm.engine.hooks.**`) | ~0 | 0.001 MB | **~1 KB (1376 inst)** |
-| **Plugin total (`com.ibm.**`)** | ~0 | 14.2 MB | **28.4 MB** |
-| **Whole heap floor** | 0.05 GB | 1.55 GB | **2.90 GB** |
+| Population                                          | early   | mid           | late (near end)         |
+| --------------------------------------------------- | ------- | ------------- | ----------------------- |
+| Retained CBOM nodes (`com.ibm.mapper.**`)           | ~0      | 0.01 MB (484) | **0.02 MB (824 inst)**  |
+| Detached call-stack (`com.ibm.engine.callstack.**`) | ~0      | 7.6 MB (291k) | **15.6 MB (594k inst)** |
+| Hooks (`com.ibm.engine.hooks.**`)                   | ~0      | 0.001 MB      | **~1 KB (1376 inst)**   |
+| **Plugin total (`com.ibm.**`)\*\*                   | ~0      | 14.2 MB       | **28.4 MB**             |
+| **Whole heap floor**                                | 0.05 GB | 1.55 GB       | **2.90 GB**             |
 
 The ~2.9 GB floor is overwhelmingly **SonarQube / ECJ baseline**, not plugin state — the top
 retained classes are `byte[]` (332 MB), `HashMap$Node` (251 MB), `Object[]` (219 MB), `char[]`
 (210 MB), `ArrayList` (176 MB), and sonar-java/ECJ semantic objects (`InternalPosition` 152 MB,
 `InternalSyntaxToken` 122 MB, `MethodBinding` 95 MB, `InternalRange` 76 MB).
 
-**Outcome — the original hypothesis is disproven.** The floor growth (~1.6 → ~3.4 GB) is *not*
+**Outcome — the original hypothesis is disproven.** The floor growth (~1.6 → ~3.4 GB) is _not_
 `JavaAggregator.detectedNodes`: retained CBOM nodes are **negligible (~25 KB, 824 instances)**.
 The entire plugin footprint is **~28 MB (~1 % of the floor)**, and the floor growth tracks
 SonarQube's own accumulating semantic model / AST of the module under analysis — which the plugin
@@ -354,6 +354,7 @@ linearly/unbounded (291k → 594k records mid→late), but AST-detach keeps each
 absolute heap cost is small.
 
 **H2 routing (revised by this measurement):**
+
 - **No `detectedNodes` spec.** CBOM-node retention is not a heap problem — drop that candidate.
 - **No heap-motivated retention cap.** 594k detached records ≈ 15.6 MB is not a memory risk; the
   cap (old Task 5) is unjustified on heap grounds — defer/drop it.
@@ -367,7 +368,7 @@ absolute heap cost is small.
 > is the reliable attribution path; use it directly.
 
 > Note on H2's eligibility filter: the predicate cannot be derived from `methodSymbol().declaration()`
-> — cross-file *user* calls resolve via `sonar.java.binaries` and have a null declaration, exactly
+> — cross-file _user_ calls resolve via `sonar.java.binaries` and have a null declaration, exactly
 > like library calls (see the comment in `JavaLanguageSupport.isDetachableCall`). The discriminator
 > must be pinned empirically against the `crossfile/` fixtures before the filter is written.
 
