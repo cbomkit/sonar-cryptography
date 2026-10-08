@@ -25,12 +25,15 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateKeys;
 import com.ibm.plugin.rules.detection.dotnet.DotNetChaCha20Poly1305;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCngKey;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDsa;
 import com.ibm.plugin.rules.detection.dotnet.DotNetHMAC;
+import com.ibm.plugin.rules.detection.dotnet.DotNetIncrementalHash;
 import com.ibm.plugin.rules.detection.dotnet.DotNetKMAC;
 import com.ibm.plugin.rules.detection.dotnet.DotNetKeyDerivation;
 import com.ibm.plugin.rules.detection.dotnet.DotNetLegacyFormatters;
@@ -79,7 +82,10 @@ public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
                         RuleSets.rulesOf(DotNetKeyDerivation.class).stream(),
                         RuleSets.rulesOf(DotNetRandomNumberGenerator.class).stream(),
                         RuleSets.rulesOf(DotNetProtectedData.class).stream(),
-                        RuleSets.rulesOf(DotNetAlgorithmFactory.class).stream())
+                        RuleSets.rulesOf(DotNetAlgorithmFactory.class).stream(),
+                        RuleSets.rulesOf(DotNetCertificateKeys.class).stream(),
+                        RuleSets.rulesOf(DotNetIncrementalHash.class).stream(),
+                        RuleSets.rulesOf(DotNetCngKey.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

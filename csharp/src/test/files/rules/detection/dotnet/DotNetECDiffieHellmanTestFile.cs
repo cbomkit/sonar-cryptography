@@ -120,4 +120,64 @@ public class DotNetECDiffieHellmanTest
         ECDiffieHellmanPublicKey otherPartyKey = null;
         byte[] keyMaterial = ecdh.DeriveKeyFromHash(otherPartyKey, HashAlgorithmName.SHA256);
     }
+
+    // -------------------------------------------------------------------------
+    // Parameter forms: curves, key sizes, hashes and values that stay unresolved
+    // -------------------------------------------------------------------------
+
+    public void TestEcdhCreateWithCurve()
+    {
+        var ecdh = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP384);
+    }
+
+    public void TestEcdhCreateWithKeySize()
+    {
+        var ecdh = new ECDiffieHellmanCng(521);
+    }
+
+    public void TestEcdhCreateFromFriendlyName()
+    {
+        var ecdh = ECDiffieHellman.Create(ECCurve.CreateFromFriendlyName("secp384r1"));
+    }
+
+    // ECParameters is neither a curve nor a key size: both must stay absent.
+    public void TestEcdhCreateFromParameters()
+    {
+        ECParameters parameters = default;
+        var ecdh = ECDiffieHellman.Create(parameters);
+    }
+
+    // DeriveKeyFromHash with the four-parameter form: the hash is still at index one.
+    public void TestEcdhDeriveKeyFromHashWithPrependAppend()
+    {
+        var ecdh = ECDiffieHellman.Create();
+        ECDiffieHellmanPublicKey other = null;
+        byte[] key = ecdh.DeriveKeyFromHash(other, HashAlgorithmName.SHA512, new byte[4], new byte[4]);
+    }
+
+    // DeriveKeyFromHmac, hash written as a keyword argument out of order.
+    public void TestEcdhDeriveKeyFromHmacNamed()
+    {
+        var ecdh = ECDiffieHellman.Create();
+        ECDiffieHellmanPublicKey other = null;
+        byte[] key = ecdh.DeriveKeyFromHmac(other, hmacKey: new byte[32], hashAlgorithm: HashAlgorithmName.SHA384);
+    }
+
+    // The hash arrives as a method parameter whose callers disagree: no digest may be reported.
+    public void TestEcdhDeriveKeyFromHashUnknown(HashAlgorithmName algorithm)
+    {
+        var ecdh = ECDiffieHellman.Create();
+        ECDiffieHellmanPublicKey other = null;
+        byte[] key = ecdh.DeriveKeyFromHash(other, algorithm);
+    }
+
+    public void CallEcdhUnknownSha256()
+    {
+        TestEcdhDeriveKeyFromHashUnknown(HashAlgorithmName.SHA256);
+    }
+
+    public void CallEcdhUnknownSha512()
+    {
+        TestEcdhDeriveKeyFromHashUnknown(HashAlgorithmName.SHA512);
+    }
 }

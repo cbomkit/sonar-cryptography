@@ -22,8 +22,12 @@ package com.ibm.plugin.rules.detection.dotnet;
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.CipherAction;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
+import com.ibm.engine.model.factory.InitializationVectorSizeFactory;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.TagSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -40,7 +44,15 @@ public final class DotNetChaCha20Poly1305 extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withAnyParameters() // Byte[] or ReadOnlySpan<Byte> overloads
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -52,7 +64,15 @@ public final class DotNetChaCha20Poly1305 extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withAnyParameters() // Byte[] or ReadOnlySpan<Byte> overloads
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -67,7 +87,9 @@ public final class DotNetChaCha20Poly1305 extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ChaCha20Poly1305")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CHACHA20POLY1305"))
-                    .withAnyParameters() // Byte[] or ReadOnlySpan<Byte>, 1 parameter
+                    .withNamedMethodParameter("key", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(CHACHA20POLY1305_OP_RULES);

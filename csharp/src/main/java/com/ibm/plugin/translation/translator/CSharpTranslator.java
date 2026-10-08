@@ -33,7 +33,10 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.model.context.PublicKeyContext;
+import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.ITranslator;
@@ -86,7 +89,17 @@ public class CSharpTranslator
                     .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 
-        if (detectionValueContext.is(KeyContext.class)) {
+        // All four key contexts share one translator. PrivateKeyContext, PublicKeyContext and
+        // SecretKeyContext carry the same "kind" property as KeyContext — they only additionally
+        // state which kind of key the detected expression yields, which
+        // CSharpKeyContextTranslator turns into a PrivateKey/PublicKey/SecretKey wrapper. They
+        // must be listed explicitly: DetectionContext#is compares the exact class, so a
+        // SecretKeyContext does not satisfy is(KeyContext.class) despite extending it, and
+        // leaving it out drops the finding entirely rather than merely losing the key kind.
+        if (detectionValueContext.is(KeyContext.class)
+                || detectionValueContext.is(PrivateKeyContext.class)
+                || detectionValueContext.is(PublicKeyContext.class)
+                || detectionValueContext.is(SecretKeyContext.class)) {
             return new CSharpKeyContextTranslator()
                     .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }

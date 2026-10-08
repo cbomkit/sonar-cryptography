@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.sonar.api.batch.fs.InputFile;
@@ -56,6 +57,32 @@ public final class CSharpVerifier {
         // utility
     }
 
+    /** Parses {@code source}, returning {@code null} when the parse reported any syntax error. */
+    @Nullable private static CSharpParser.Compilation_unitContext parse(
+            @Nonnull String source, @Nonnull Path filePath) {
+        CSharpLexer lexer = new CSharpLexer(CharStreams.fromString(source, filePath.toString()));
+        lexer.removeErrorListeners();
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        CSharpParser parser = new CSharpParser(tokens);
+        parser.removeErrorListeners();
+        final int[] errors = {0};
+        parser.addErrorListener(
+                new org.antlr.v4.runtime.BaseErrorListener() {
+                    @Override
+                    public void syntaxError(
+                            org.antlr.v4.runtime.Recognizer<?, ?> recognizer,
+                            Object offendingSymbol,
+                            int line,
+                            int charPositionInLine,
+                            String msg,
+                            org.antlr.v4.runtime.RecognitionException e) {
+                        errors[0]++;
+                    }
+                });
+        CSharpParser.Compilation_unitContext tree = parser.compilation_unit();
+        return errors[0] == 0 ? tree : null;
+    }
+
     /**
      * Parses the given test file and runs the check against all discovered method bodies.
      *
@@ -67,12 +94,13 @@ public final class CSharpVerifier {
         Path filePath = Paths.get(TEST_FILES_ROOT + relativeTestFilePath);
         String content = Files.readString(filePath, StandardCharsets.UTF_8);
 
-        CSharpLexer lexer = new CSharpLexer(CharStreams.fromString(content, filePath.toString()));
-        lexer.removeErrorListeners();
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        CSharpParser parser = new CSharpParser(tokens);
-        parser.removeErrorListeners();
-        CSharpParser.Compilation_unitContext parseTree = parser.compilation_unit();
+        // Same two-attempt conditional handling as CryptoCSharpSensor, so tests exercise the
+        // production parse path: every branch active first, one branch per chain on a parse error.
+        CSharpParser.Compilation_unitContext parseTree =
+                parse(CSharpConditionalDirectives.neutralize(content), filePath);
+        if (parseTree == null) {
+            parseTree = parse(CSharpConditionalDirectives.selectFirstBranch(content), filePath);
+        }
 
         CSharpTreeConverter converter = new CSharpTreeConverter();
         List<CSharpBlockTree> methodBodies = converter.extractMethodBodies(parseTree);

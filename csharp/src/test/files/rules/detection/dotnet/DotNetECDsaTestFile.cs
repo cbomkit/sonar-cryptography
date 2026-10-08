@@ -10,8 +10,10 @@
  * The detection engine tracks the variable and fires the same depending rules for every
  * concrete ECDsa subclass. Unlike RSA, ECDSA has no Encrypt/Decrypt operations.
  *
- * The ECDsaCng constructor rule uses withAnyParameters() and therefore matches all four
- * constructor overloads: ECDsaCng(), ECDsaCng(CngKey), ECDsaCng(ECCurve), ECDsaCng(int).
+ * One rule covers all four ECDsaCng constructor overloads: ECDsaCng(), ECDsaCng(CngKey),
+ * ECDsaCng(ECCurve), ECDsaCng(int). The single argument position holds unrelated things in each,
+ * so it is read by value: an int is a key size, an ECCurve.NamedCurves member is a curve, and a
+ * CngKey variable is neither and must leave both absent.
  */
 
 using System.Security.Cryptography;
@@ -149,5 +151,82 @@ public class DotNetECDsaTest
         byte[] data = new byte[64];
         byte[] signature = new byte[256];
         bool valid = ecdsa.VerifyData(data, signature, HashAlgorithmName.SHA256);
+    }
+
+    // -------------------------------------------------------------------------
+    // Section 6: parameter forms — offsets, keywords, curves by friendly name,
+    // and values that must stay unresolved
+    // -------------------------------------------------------------------------
+
+    // SignData(data, offset, count, hashAlgorithm): the hash sits at index three here, not one.
+    public void TestSignDataWithOffset()
+    {
+        var ecdsa = ECDsa.Create();
+        byte[] data = new byte[64];
+        byte[] signature = ecdsa.SignData(data, 0, 32, HashAlgorithmName.SHA512);
+    }
+
+    // VerifyData(data, offset, count, signature, hashAlgorithm)
+    public void TestVerifyDataWithOffset()
+    {
+        var ecdsa = ECDsa.Create();
+        byte[] data = new byte[64];
+        byte[] signature = new byte[256];
+        bool valid = ecdsa.VerifyData(data, 0, 32, signature, HashAlgorithmName.SHA384);
+    }
+
+    // The hash written as a keyword argument, before the positional ones it follows in the
+    // signature would allow.
+    public void TestSignDataNamedHash()
+    {
+        var ecdsa = ECDsa.Create();
+        byte[] data = new byte[64];
+        byte[] signature = ecdsa.SignData(data, hashAlgorithm: HashAlgorithmName.SHA384);
+    }
+
+    // A curve given by friendly name rather than as an ECCurve.NamedCurves member.
+    public void TestECDsaCreateFromFriendlyName()
+    {
+        var ecdsa = ECDsa.Create(ECCurve.CreateFromFriendlyName("secp256k1"));
+    }
+
+    // A named curve reached through a local variable.
+    public void TestECDsaCreateCurveFromLocal()
+    {
+        var curve = ECCurve.NamedCurves.nistP384;
+        var ecdsa = ECDsa.Create(curve);
+    }
+
+    // ECDsaOpenSsl(int) — the key size overload of the OpenSSL-backed class.
+    public void TestECDsaOpenSslWithKeySize()
+    {
+        var ecdsa = new ECDsaOpenSsl(384);
+    }
+
+    // ECParameters is neither a key size nor a named curve: both must stay absent while ECDSA
+    // itself is still reported.
+    public void TestECDsaCreateFromParameters()
+    {
+        ECParameters parameters = default;
+        var ecdsa = ECDsa.Create(parameters);
+    }
+
+    // The hash algorithm arrives as a method parameter whose callers disagree, so no digest may
+    // be attached to the signing operation.
+    public void TestSignDataUnknownHash(HashAlgorithmName algorithm)
+    {
+        var ecdsa = ECDsa.Create();
+        byte[] data = new byte[64];
+        byte[] signature = ecdsa.SignData(data, algorithm);
+    }
+
+    public void CallSignDataUnknownHashSha256()
+    {
+        TestSignDataUnknownHash(HashAlgorithmName.SHA256);
+    }
+
+    public void CallSignDataUnknownHashSha384()
+    {
+        TestSignDataUnknownHash(HashAlgorithmName.SHA384);
     }
 }

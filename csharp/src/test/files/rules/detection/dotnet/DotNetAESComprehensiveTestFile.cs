@@ -498,4 +498,31 @@ public class DotNetAESComprehensiveTest
         int bytesWritten;
         aes.TryDecryptKeyWrapPadded(ciphertext, destination, out bytesWritten);
     }
+
+    // -------------------------------------------------------------------------
+    // Section 12: the AesGcm tag-size constructor, keyword arguments, and a key
+    // the engine cannot measure
+    // -------------------------------------------------------------------------
+
+    // new AesGcm(key, tagSizeInBytes) — the tag length stated at construction rather than through
+    // the length of a tag buffer at the call site.
+    public void TestAesGcmWithTagSize()
+    {
+        byte[] key = new byte[16];
+        var aesGcm = new AesGcm(key, 12);
+    }
+
+    // Both constructor arguments written as keywords, in the reverse of the declared order.
+    public void TestAesGcmNamedReordered()
+    {
+        var aesGcm = new AesGcm(tagSizeInBytes: 16, key: new byte[24]);
+    }
+
+    // A key read from the environment: AES must still be reported, the key length must not.
+    public void TestAesGcmUnknownKey()
+    {
+        byte[] key = System.Convert.FromBase64String(
+            System.Environment.GetEnvironmentVariable("AES_KEY"));
+        var aesGcm = new AesGcm(key);
+    }
 }

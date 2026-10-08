@@ -19,8 +19,11 @@
  */
 package com.ibm.plugin.rules.detection.dotnet;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -88,7 +91,9 @@ public final class DotNetHMAC extends DetectionRuleSet<CSharpTree> {
                 .forObjectTypes(className)
                 .forMethods("<init>")
                 .shouldBeDetectedAs(new ValueActionFactory<>(className.toUpperCase()))
-                .withAnyParameters()
+                .withOptionalNamedMethodParameter("key", MethodMatcher.ANY)
+                .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                .asChildOfParameterWithId(-1)
                 .buildForContext(new MacContext())
                 .inBundle(() -> "DotNet")
                 .withDependingDetectionRules(List.of());
@@ -104,10 +109,37 @@ public final class DotNetHMAC extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("MACTripleDES")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("MACTRIPLEDES"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("rgbKey", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("strAlgName", "string")
                     .buildForContext(new MacContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(List.of());
+
+    /**
+     * {@code HMACSHA256.HashData(key, source)} and its {@code TryHashData} sibling — the static
+     * one-shot helpers. Like the hash one-shots in {@link DotNetSHA} these have no creation step,
+     * so without a rule the MAC is invisible in a file that only uses them. The key length is read
+     * where the call states it as an array.
+     */
+    @Nonnull
+    private static IDetectionRule<CSharpTree> oneShotRule(@Nonnull String className) {
+        return new DetectionRuleBuilder<CSharpTree>()
+                .createDetectionRule()
+                .forObjectTypes(className)
+                .forMethods("HashData", "TryHashData")
+                .shouldBeDetectedAs(new ValueActionFactory<>(className.toUpperCase()))
+                .withNamedMethodParameter("key", MethodMatcher.ANY)
+                .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                .asChildOfParameterWithId(-1)
+                .withOptionalNamedMethodParameter("source", MethodMatcher.ANY)
+                .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
+                .buildForContext(new MacContext())
+                .inBundle(() -> "DotNet")
+                .withoutDependingDetectionRules();
+    }
 
     @Nonnull
     @Override
@@ -122,6 +154,14 @@ public final class DotNetHMAC extends DetectionRuleSet<CSharpTree> {
                 hmacRule("HMACSHA3_256"),
                 hmacRule("HMACSHA3_384"),
                 hmacRule("HMACSHA3_512"),
-                MAC_TRIPLE_DES);
+                MAC_TRIPLE_DES,
+                oneShotRule("HMACMD5"),
+                oneShotRule("HMACSHA1"),
+                oneShotRule("HMACSHA256"),
+                oneShotRule("HMACSHA384"),
+                oneShotRule("HMACSHA512"),
+                oneShotRule("HMACSHA3_256"),
+                oneShotRule("HMACSHA3_384"),
+                oneShotRule("HMACSHA3_512"));
     }
 }

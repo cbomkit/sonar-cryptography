@@ -22,11 +22,13 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.HMAC;
@@ -76,6 +78,10 @@ public final class CSharpMacContextTranslator implements IContextTranslation<CSh
                         Optional.of(new DESede(Mac.class, new DESede(detectionLocation)));
                 default -> Optional.empty();
             };
+        } else if (value instanceof KeySize<?> keySize) {
+            // The key length of an HMAC, KMAC or MACTripleDES constructed from a byte array whose
+            // length the engine can read (see DotNetHMAC and DotNetKMAC).
+            return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
         } else if (value instanceof Algorithm<?>) {
             // KeyedHashAlgorithm.Create(string) / HMAC.Create(string) — both methods document the
             // identical string table, verified against the official API reference
@@ -101,6 +107,17 @@ public final class CSharpMacContextTranslator implements IContextTranslation<CSh
                 // Same DESede-as-Mac idiom as the ValueAction branch above.
                 case "MACTRIPLEDES", "SYSTEM.SECURITY.CRYPTOGRAPHY.MACTRIPLEDES" ->
                         Optional.of(new DESede(Mac.class, new DESede(detectionLocation)));
+                // A bare HashAlgorithmName, as passed to IncrementalHash.CreateHMAC(name, key):
+                // there the string names only the *digest* — the HMAC construction comes from the
+                // factory method, and the MacContext this value arrives in is what says so.
+                case "MD5" -> Optional.of(new HMAC(new MD5(detectionLocation)));
+                case "SHA1" -> Optional.of(new HMAC(new SHA(detectionLocation)));
+                case "SHA256" -> Optional.of(new HMAC(new SHA2(256, detectionLocation)));
+                case "SHA384" -> Optional.of(new HMAC(new SHA2(384, detectionLocation)));
+                case "SHA512" -> Optional.of(new HMAC(new SHA2(512, detectionLocation)));
+                case "SHA3_256" -> Optional.of(new HMAC(new SHA3(256, detectionLocation)));
+                case "SHA3_384" -> Optional.of(new HMAC(new SHA3(384, detectionLocation)));
+                case "SHA3_512" -> Optional.of(new HMAC(new SHA3(512, detectionLocation)));
                 default -> Optional.empty();
             };
         }

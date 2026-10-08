@@ -39,8 +39,12 @@ import javax.annotation.Nonnull;
  * Language translation implementation for C#.
  *
  * <p>Extracts method names, object type strings, and parameter information from the CSharpTree
- * hierarchy produced by the ANTLR4-based tree converter. Since ANTLR4 provides only syntactic
- * information (no type inference), all parameter types match any expected type.
+ * hierarchy produced by the ANTLR4-based tree converter. There is no semantic type checker behind
+ * this — {@link #getMethodParameterTypes} and {@link #getInvokedObjectTypeString} do the best that
+ * is syntactically possible (see {@link CSharpTypeInference}), rejecting a match only when a type
+ * is both known and clearly incompatible, and always allowing it through when the type cannot be
+ * determined. This is guard G3 from {@code CSharpDetectionEngine}'s class javadoc: an unknown type
+ * must never cause a missed detection, only a known-wrong type may block one.
  */
 public final class CSharpLanguageTranslation implements ILanguageTranslation<CSharpTree> {
 
@@ -57,6 +61,19 @@ public final class CSharpLanguageTranslation implements ILanguageTranslation<CSh
         return Optional.empty();
     }
 
+    /**
+     * Deliberately matches only the literal receiver text, never a variable's resolved declared
+     * type. Every existing rule that targets a <em>specific</em> concrete type (as opposed to
+     * {@code MethodMatcher.ANY}) does so for a static factory call ({@code RSA.Create()}, {@code
+     * RandomNumberGenerator.GetBytes(count)}, ...) where the receiver text already <em>is</em> the
+     * type name — resolving a variable's declared type here was tried and reverted: it made an
+     * <em>instance</em> call like {@code rng.GetBytes(data)} additionally match the unrelated
+     * <em>static</em>-only rule {@code RandomNumberGenerator.GetBytes(int)} (since {@code rng} is
+     * declared as type {@code RandomNumberGenerator}), producing a spurious duplicate top-level
+     * finding. Every rule that legitimately needs to match an instance call on an arbitrary
+     * receiver variable already uses {@code forObjectTypes(MethodMatcher.ANY)}, which does not go
+     * through this predicate at all (see {@code MethodMatcher#substituteAny}).
+     */
     @Nonnull
     @Override
     public Optional<IType> getInvokedObjectTypeString(
@@ -92,10 +109,13 @@ public final class CSharpLanguageTranslation implements ILanguageTranslation<CSh
         if (args == null || args.isEmpty()) {
             return Collections.emptyList();
         }
-        // No semantic type info; every argument matches any expected type
         List<IType> types = new ArrayList<>(args.size());
-        for (int i = 0; i < args.size(); i++) {
-            types.add(expectedType -> true);
+        for (CSharpArgument arg : args) {
+            String inferred = CSharpTypeInference.infer(arg.value());
+            types.add(
+                    expectedType ->
+                            inferred == null
+                                    || CSharpTypeInference.isAssignable(inferred, expectedType));
         }
         return types;
     }

@@ -26,14 +26,14 @@ import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpScanContext;
 import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
-import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Encrypt;
@@ -43,53 +43,33 @@ import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive test for all RSA-related detection rules (DotNetRSA.java).
+ * Comprehensive test for the RSA detection rules, covering {@code RSA}, {@code
+ * RSACryptoServiceProvider}, {@code RSACng} and {@code RSAOpenSsl}.
  *
- * <p>Covers all four RSA-related classes and their complete operational API surface:
+ * <p>Every RSA operation in .NET names its padding, and every signing operation also names its
+ * hash, so an RSA component that records neither is an incomplete one. The cases below assert both
+ * on each operation: the encryption padding of {@code Encrypt} and {@code Decrypt}, and the digest
+ * together with the signature padding of the six signing and verification methods.
  *
- * <ul>
- *   <li>RSA (abstract base)
- *   <li>RSACng, RSACryptoServiceProvider, RSAOpenSsl (derived from RSA)
- * </ul>
+ * <p>Padding is worth asserting precisely rather than by presence. {@code
+ * RSAEncryptionPadding.OaepSHA256} and {@code OaepSHA512} are the same scheme with different
+ * digests, and the digest is kept on the OAEP node, so the cases distinguish them. {@code
+ * RSASignaturePadding.Pkcs1} and {@code Pss} are different schemes with very different standing.
  *
- * <p>Finding mapping (one finding per test method in DotNetRSATestFile.cs):
+ * <p>Three cases prove the values are placed by type rather than by position, which matters because
+ * .NET moves the hash and padding from indices one and two in {@code SignData(data, hashAlgorithm,
+ * padding)} to indices three and four in {@code SignData(data, offset, count, hashAlgorithm,
+ * padding)}, and to four and five in the six-parameter {@code VerifyData}. A fourth writes both as
+ * keyword arguments in reverse order.
  *
- * <pre>
- * Section 1 – factory methods / constructors (findings 0–4):
- *   0 TestRsaCreate              → RSA
- *   1 TestRsaCreateWithKeySize   → RSA
- *   2 TestRsaCsp                 → RSA
- *   3 TestRsaCng                 → RSA
- *   4 TestRsaOpenSsl             → RSA
- *
- * Section 2 – property KeySize setters (findings 5–6):
- *   5 TestPropertyKeySize2048    → RSA-2048
- *   6 TestPropertyKeySize4096    → RSA-4096
- *
- * Section 3 – Encrypt / Decrypt (findings 7–10):
- *   7  TestEncrypt      → RSA + Encrypt
- *   8  TestDecrypt      → RSA + Decrypt
- *   9  TestTryEncrypt   → RSA + Encrypt
- *   10 TestTryDecrypt   → RSA + Decrypt
- *
- * Section 4 – SignData / TrySignData / VerifyData (findings 11–13):
- *   11 TestSignData     → RSA + Sign
- *   12 TestTrySignData  → RSA + Sign
- *   13 TestVerifyData   → RSA + Verify
- *
- * Section 5 – SignHash / TrySignHash / VerifyHash (findings 14–16):
- *   14 TestSignHash     → RSA + Sign
- *   15 TestTrySignHash  → RSA + Sign
- *   16 TestVerifyHash   → RSA + Verify
- *
- * Section 6 – combined usage patterns (findings 17–19):
- *   17 TestRsaCngFullFlow        → RSA-3072 + Encrypt
- *   18 TestRsaCspSignFlow        → RSA + Sign
- *   19 TestRsaOpenSslVerifyFlow  → RSA + Verify
- * </pre>
+ * <p>Two cases must resolve to nothing: a padding returned by a helper method, and a hash arriving
+ * as a method parameter whose two callers pass different values. In the latter the padding is a
+ * literal and must still be reported, which shows that one unresolvable parameter does not take the
+ * resolvable ones down with it.
  */
 class DotNetRSATest extends TestBase {
 
@@ -105,136 +85,104 @@ class DotNetRSATest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-
-        // Every top-level finding must be RSA
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
-        IValue<CSharpTree> primary = detectionStore.getDetectionValues().get(0);
-        assertThat(primary).isInstanceOf(ValueAction.class);
+        IValue<CSharpTree> primary =
+                detectionStore.getDetectionValues().stream()
+                        .filter(ValueAction.class::isInstance)
+                        .findFirst()
+                        .orElseThrow();
         assertThat(primary.asString()).isEqualTo("RSA");
 
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node.getKind()).isEqualTo(PublicKeyEncryption.class);
 
-        // RSA always carries its OID as a child node
         INode oid = node.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
         assertThat(oid.asString()).isEqualTo("1.2.840.113549.1.1.1");
 
         switch (findingId) {
-
-            // -----------------------------------------------------------------
-            // Section 1: simple constructors — only RSA, no children fired
-            // -----------------------------------------------------------------
-            case 0, 1, 2, 3, 4 -> assertThat(node.asString()).isEqualTo("RSA");
-
-            // -----------------------------------------------------------------
-            // Section 2: property KeySize setters
-            // -----------------------------------------------------------------
-            case 5 -> assertKeySize(detectionStore, node, "2048");
-            case 6 -> assertKeySize(detectionStore, node, "4096");
-
-            // -----------------------------------------------------------------
-            // Section 3: Encrypt / Decrypt / TryEncrypt / TryDecrypt
-            // -----------------------------------------------------------------
-            case 7, 9 -> assertEncrypt(detectionStore, node, "RSA");
-            case 8, 10 -> assertDecrypt(detectionStore, node, "RSA");
-
-            // -----------------------------------------------------------------
-            // Section 4: SignData / TrySignData / VerifyData
-            // -----------------------------------------------------------------
-            case 11, 12 -> assertSign(detectionStore, node, "RSA");
-            case 13 -> assertVerify(detectionStore, node, "RSA");
-
-            // -----------------------------------------------------------------
-            // Section 5: SignHash / TrySignHash / VerifyHash
-            // -----------------------------------------------------------------
-            case 14, 15 -> assertSign(detectionStore, node, "RSA");
-            case 16 -> assertVerify(detectionStore, node, "RSA");
-
-            // -----------------------------------------------------------------
-            // Section 6: combined usage patterns
-            // -----------------------------------------------------------------
-            case 17 -> assertEncrypt(detectionStore, node, "RSA-3072");
-            case 18 -> assertSign(detectionStore, node, "RSA");
-            case 19 -> assertVerify(detectionStore, node, "RSA");
-
+            // RSA.Create() and the three parameterless constructors
+            case 0, 2, 3, 4 -> assertKeySize(node, null);
+            // RSA.Create(2048)
+            case 1 -> assertKeySize(node, 2048);
+            // rsa.KeySize = 2048 / = 4096
+            case 5 -> assertKeySize(node, 2048);
+            case 6 -> assertKeySize(node, 4096);
+            // Encrypt / Decrypt with RSAEncryptionPadding.OaepSHA256
+            case 7 -> assertOperation(node, Encrypt.class, "OAEP", "SHA-256");
+            case 8 -> assertOperation(node, Decrypt.class, "OAEP", "SHA-256");
+            // TryEncrypt / TryDecrypt with RSAEncryptionPadding.Pkcs1
+            case 9 -> assertOperation(node, Encrypt.class, "PKCS1", null);
+            case 10 -> assertOperation(node, Decrypt.class, "PKCS1", null);
+            // SignData / TrySignData / VerifyData with SHA256 and Pkcs1
+            case 11, 12 -> assertOperation(node, Sign.class, "PKCS1", "SHA-256");
+            case 13 -> assertOperation(node, Verify.class, "PKCS1", "SHA-256");
+            // SignHash / TrySignHash / VerifyHash: these name the hash too
+            case 14, 15 -> assertOperation(node, Sign.class, "PKCS1", "SHA-256");
+            case 16 -> assertOperation(node, Verify.class, "PKCS1", "SHA-256");
+            // new RSACng(3072) followed by Encrypt with OaepSHA256
+            case 17 -> {
+                assertKeySize(node, 3072);
+                assertOperation(node, Encrypt.class, "OAEP", "SHA-256");
+            }
+            case 18 -> assertOperation(node, Sign.class, "PKCS1", "SHA-256");
+            case 19 -> assertOperation(node, Verify.class, "PKCS1", "SHA-256");
+            // single-argument constructor overloads carrying a key size
+            case 20 -> assertKeySize(node, 3072);
+            case 21 -> assertKeySize(node, 4096);
+            case 22 -> assertKeySize(node, 2048);
+            // RSA.Create(keySize) inside a for loop with a using declaration, the real
+            // Bitwarden pattern
+            case 23 -> assertKeySize(node, 2048);
+            // SignData(data, 0, 32, SHA384, Pss): hash and padding at indices three and four
+            case 24 -> assertOperation(node, Sign.class, "PSS", "SHA-384");
+            // VerifyData(data, 0, 32, signature, SHA384, Pkcs1): the six-parameter form
+            case 25 -> assertOperation(node, Verify.class, "PKCS1", "SHA-384");
+            // SignData(data, padding: Pss, hashAlgorithm: SHA512): keywords in reverse order
+            case 26 -> assertOperation(node, Sign.class, "PSS", "SHA-512");
+            // Encrypt(data, RSAEncryptionPadding.OaepSHA512)
+            case 27 -> assertOperation(node, Encrypt.class, "OAEP", "SHA-512");
+            // RSA.Create(ConfiguredKeySize) with a const field
+            case 28 -> assertKeySize(node, 3072);
+            // RSA.Create(parameters): an RSAParameters value is not a key size
+            case 29 -> assertKeySize(node, null);
+            // Encrypt(data, padding) where padding comes from a helper: no padding may be reported
+            case 30 -> assertOperation(node, Encrypt.class, null, null);
+            // SignData(data, algorithm, Pkcs1) with disagreeing callers: padding yes, digest no
+            case 31 -> assertOperation(node, Sign.class, "PKCS1", null);
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Assertion helpers
-    // -------------------------------------------------------------------------
-
-    private void assertKeySize(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node,
-            @Nonnull String expectedKeySize) {
-
-        assertThat(node.asString()).isEqualTo("RSA-" + expectedKeySize);
-        assertThat(node.getChildren().get(KeyLength.class)).isNotNull();
-        assertThat(node.getChildren().get(KeyLength.class).asString()).isEqualTo(expectedKeySize);
+    /** A {@code null} expectation asserts absence, not a default. */
+    private static void assertKeySize(@Nonnull INode node, @Nullable Integer expectedBits) {
+        assertThat(node.asString()).isEqualTo(expectedBits == null ? "RSA" : "RSA-" + expectedBits);
+        assertChild(node, KeyLength.class, expectedBits);
     }
 
-    private void assertEncrypt(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
+    /**
+     * Asserts that the RSA node carries the given operation and that the operation carries, or
+     * deliberately lacks, a padding and a digest. For an OAEP padding the digest is asserted on the
+     * padding node, where .NET puts it; for a signing operation it is asserted on the operation.
+     */
+    private static void assertOperation(
             @Nonnull INode node,
-            @Nonnull String expectedNodeString) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> encryptStore =
-                getStoreOfValueType(CipherAction.class, store.getChildren());
-        assertThat(encryptStore).isNotNull();
-        assertThat(encryptStore.getDetectionValues()).hasSize(1);
-        assertThat(encryptStore.getDetectionValues().get(0).asString()).isEqualTo("ENCRYPT");
-
-        assertThat(node.asString()).isEqualTo(expectedNodeString);
-        assertThat(node.getChildren().get(Encrypt.class)).isNotNull();
-    }
-
-    private void assertDecrypt(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node,
-            @Nonnull String expectedNodeString) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> decryptStore =
-                getStoreOfValueType(CipherAction.class, store.getChildren());
-        assertThat(decryptStore).isNotNull();
-        assertThat(decryptStore.getDetectionValues()).hasSize(1);
-        assertThat(decryptStore.getDetectionValues().get(0).asString()).isEqualTo("DECRYPT");
-
-        assertThat(node.asString()).isEqualTo(expectedNodeString);
-        assertThat(node.getChildren().get(Decrypt.class)).isNotNull();
-    }
-
-    private void assertSign(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node,
-            @Nonnull String expectedNodeString) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> signStore =
-                getStoreOfValueType(SignatureAction.class, store.getChildren());
-        assertThat(signStore).isNotNull();
-        assertThat(signStore.getDetectionValues()).hasSize(1);
-        assertThat(signStore.getDetectionValues().get(0).asString()).isEqualTo("SIGN");
-
-        assertThat(node.asString()).isEqualTo(expectedNodeString);
-        assertThat(node.getChildren().get(Sign.class)).isNotNull();
-    }
-
-    private void assertVerify(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node,
-            @Nonnull String expectedNodeString) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> verifyStore =
-                getStoreOfValueType(SignatureAction.class, store.getChildren());
-        assertThat(verifyStore).isNotNull();
-        assertThat(verifyStore.getDetectionValues()).hasSize(1);
-        assertThat(verifyStore.getDetectionValues().get(0).asString()).isEqualTo("VERIFY");
-
-        assertThat(node.asString()).isEqualTo(expectedNodeString);
-        assertThat(node.getChildren().get(Verify.class)).isNotNull();
+            @Nonnull Class<? extends INode> operation,
+            @Nullable String expectedPadding,
+            @Nullable String expectedDigest) {
+        INode operationNode = node.getChildren().get(operation);
+        assertThat(operationNode)
+                .as("expected an %s operation", operation.getSimpleName())
+                .isNotNull();
+        assertChild(operationNode, Padding.class, expectedPadding);
+        if ("OAEP".equals(expectedPadding)) {
+            assertChild(
+                    operationNode.getChildren().get(Padding.class),
+                    MessageDigest.class,
+                    expectedDigest);
+        } else {
+            assertChild(operationNode, MessageDigest.class, expectedDigest);
+        }
     }
 }

@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2026 PQCA
+ * Copyright (C) 2024 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.csharp;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.IArgumentBinder;
 import com.ibm.engine.language.csharp.tree.CSharpArgument;
 import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
@@ -34,14 +35,52 @@ import javax.annotation.Nonnull;
 
 /**
  * Binds the arguments of a C# method invocation or object creation to the parameters declared by a
- * {@link DetectionRule}.
+ * {@link DetectionRule}, performing the overload resolution that the C# frontend has no semantic
+ * model for.
  *
- * <p>Named parameters are matched by keyword first, falling back to the positional index only when
- * the argument at that index has no keyword of its own, so that a keyword argument is never
- * attributed to the wrong parameter. Positional parameters are matched by index. The call is
- * rejected if it has fewer arguments than there are mandatory parameters (positional + required
- * named), or if a required named parameter cannot be resolved. C# has no semantic type resolution
- * here, so parameter types are not checked.
+ * <p>A rule that declares any named parameter is built with a {@link MethodMatcher} that carries no
+ * parameter type list, so the matcher accepts a call to the method at <em>any</em> arity and all
+ * structural matching happens here. That makes this class, not the matcher, responsible for
+ * deciding which .NET overload a call site is and therefore which argument belongs to which
+ * declared parameter.
+ *
+ * <h2>Arity</h2>
+ *
+ * <p>A call is accepted only when its argument count lies in the band {@code [required, declared]},
+ * where {@code required} counts the positional and non-optional named parameters. Because C#
+ * overloads are distinguished by arity, this is what keeps one rule per overload from also matching
+ * a sibling overload: a rule whose parameters are all required matches exactly one arity, so a set
+ * of such rules for one method has pairwise disjoint bands and a call can never be detected twice.
+ * A call whose arity no rule covers yields no detection at all, which is why each rule set
+ * enumerates every overload arity of the methods it covers.
+ *
+ * <h2>Which argument fills a parameter</h2>
+ *
+ * <p>Three steps, in order, first match wins:
+ *
+ * <ol>
+ *   <li><b>Keyword.</b> An argument written {@code name: value} fills the parameter declared with
+ *       that name, wherever it sits in the call. This is what makes reordered keyword arguments
+ *       resolve correctly.
+ *   <li><b>Position.</b> The argument at the parameter's index fills it, but only when that
+ *       argument carries no keyword of its own and its inferred type is not definitely incompatible
+ *       with the declared type. Requiring the slot to be unnamed is what stops a keyword argument
+ *       from being attributed to a parameter it was not written for.
+ *   <li><b>Type.</b> Failing both, the parameter is filled from the call's arguments by type, but
+ *       only when <em>exactly one</em> unnamed argument has a type assignable to the declared type.
+ *       Uniqueness is the whole safeguard: it resolves the case of two .NET overloads that share an
+ *       arity but order their parameters differently, and declines as soon as the choice would be a
+ *       guess.
+ * </ol>
+ *
+ * <p>The call is rejected outright if a required parameter cannot be filled by any of the three. An
+ * optional parameter that cannot be filled is simply left unbound, and the rest of the call is
+ * still detected.
+ *
+ * <p>Type comparison uses {@link CSharpTypeInference#isDefinitelyIncompatible}, which is stricter
+ * than the predicate behind the matcher: an argument of unknown type still fills a parameter, but a
+ * recognized primitive never fills a parameter declared as a known cryptography type, nor the other
+ * way round. A parameter declared {@link MethodMatcher#ANY} accepts anything.
  */
 final class CSharpNamedArgumentBinder implements IArgumentBinder<CSharpTree> {
 
@@ -58,56 +97,105 @@ final class CSharpNamedArgumentBinder implements IArgumentBinder<CSharpTree> {
             return Optional.empty();
         }
 
-        List<Parameter<CSharpTree>> parameters = rule.parameters();
-        long mandatory =
+        final List<Parameter<CSharpTree>> parameters = rule.parameters();
+        final long required =
                 parameters.stream()
                         .filter(p -> p.getKeywordName().isEmpty() || !p.isKeywordOptional())
                         .count();
-        if (arguments.size() < mandatory) {
+        if (arguments.size() < required || arguments.size() > parameters.size()) {
             return Optional.empty();
         }
 
-        Map<Integer, CSharpTree> bindings = new HashMap<>();
+        final Map<Integer, CSharpTree> bindings = new HashMap<>();
+        final boolean[] consumed = new boolean[arguments.size()];
         for (Parameter<CSharpTree> parameter : parameters) {
-            Optional<CSharpArgument> argument;
-            if (parameter.getKeywordName().isPresent()) {
-                argument =
-                        findArgumentByKeyword(
-                                parameter.getKeywordName().get(), parameter.getIndex(), arguments);
-                if (argument.isEmpty() && !parameter.isKeywordOptional()) {
+            final int slot = findArgument(parameter, arguments, consumed);
+            if (slot < 0) {
+                if (isRequired(parameter)) {
                     return Optional.empty();
                 }
-            } else if (parameter.getIndex() < arguments.size()) {
-                argument = Optional.of(arguments.get(parameter.getIndex()));
-            } else {
-                argument = Optional.empty();
+                continue;
             }
-            argument.ifPresent(arg -> bindings.put(parameter.getIndex(), arg.value()));
+            consumed[slot] = true;
+            bindings.put(parameter.getIndex(), arguments.get(slot).value());
         }
         return Optional.of(Map.copyOf(bindings));
     }
 
+    private static boolean isRequired(@Nonnull Parameter<CSharpTree> parameter) {
+        return parameter.getKeywordName().isEmpty() || !parameter.isKeywordOptional();
+    }
+
     /**
-     * Tries to find an argument matching the given keyword name. Falls back to the positional index
-     * if no keyword-named argument is found and the argument at that index is itself positional
-     * (i.e. has no keyword name).
+     * Returns the index of the argument that fills {@code parameter}, or {@code -1} if none does.
+     * An argument already taken by an earlier parameter is never offered again, so one argument can
+     * never supply two different values.
      */
-    @Nonnull
-    private static Optional<CSharpArgument> findArgumentByKeyword(
-            @Nonnull String keywordName,
-            int positionalIndex,
-            @Nonnull List<CSharpArgument> arguments) {
-        for (CSharpArgument arg : arguments) {
-            if (keywordName.equals(arg.name())) {
-                return Optional.of(arg);
+    private static int findArgument(
+            @Nonnull Parameter<CSharpTree> parameter,
+            @Nonnull List<CSharpArgument> arguments,
+            @Nonnull boolean[] consumed) {
+        final String expectedType = parameter.getParameterType();
+
+        final Optional<String> keyword = parameter.getKeywordName();
+        if (keyword.isPresent()) {
+            for (int i = 0; i < arguments.size(); i++) {
+                if (!consumed[i] && keyword.get().equals(arguments.get(i).name())) {
+                    return i;
+                }
             }
         }
-        if (positionalIndex < arguments.size()) {
-            CSharpArgument arg = arguments.get(positionalIndex);
-            if (!arg.isNamed()) {
-                return Optional.of(arg);
+
+        final int index = parameter.getIndex();
+        if (index < arguments.size() && !consumed[index]) {
+            CSharpArgument candidate = arguments.get(index);
+            if (!candidate.isNamed() && !incompatible(candidate, expectedType)) {
+                return index;
             }
         }
-        return Optional.empty();
+
+        return findUniqueByType(arguments, expectedType, consumed);
+    }
+
+    /**
+     * Returns the index of the single unclaimed, unnamed argument whose inferred type is assignable
+     * to {@code expectedType}, or {@code -1} if there is none or more than one. Arguments of
+     * unknown type are not candidates here: allowing them would make "unique" meaningless, since an
+     * unknown type is assignable to everything.
+     */
+    private static int findUniqueByType(
+            @Nonnull List<CSharpArgument> arguments,
+            @Nonnull String expectedType,
+            @Nonnull boolean[] consumed) {
+        if (MethodMatcher.ANY.equals(expectedType)) {
+            return -1;
+        }
+        int found = -1;
+        for (int i = 0; i < arguments.size(); i++) {
+            CSharpArgument argument = arguments.get(i);
+            if (consumed[i] || argument.isNamed()) {
+                continue;
+            }
+            String inferred = CSharpTypeInference.infer(argument.value());
+            if (inferred == null
+                    || !CSharpTypeInference.isDefinitelyAssignable(inferred, expectedType)) {
+                continue;
+            }
+            if (found >= 0) {
+                return -1;
+            }
+            found = i;
+        }
+        return found;
+    }
+
+    private static boolean incompatible(
+            @Nonnull CSharpArgument argument, @Nonnull String expectedType) {
+        if (MethodMatcher.ANY.equals(expectedType)) {
+            return false;
+        }
+        String inferred = CSharpTypeInference.infer(argument.value());
+        return inferred != null
+                && CSharpTypeInference.isDefinitelyIncompatible(inferred, expectedType);
     }
 }
