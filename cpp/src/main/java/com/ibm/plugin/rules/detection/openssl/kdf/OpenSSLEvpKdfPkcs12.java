@@ -23,15 +23,15 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -42,7 +42,7 @@ import javax.annotation.Nonnull;
  * certificates of a container created by PKCS12_create.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpKdfPkcs12 {
+public final class OpenSSLEvpKdfPkcs12 extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -139,7 +139,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -158,9 +158,10 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
@@ -177,9 +178,10 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -198,9 +200,10 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
@@ -217,9 +220,10 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -244,7 +248,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -264,7 +268,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
@@ -286,7 +290,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -306,7 +310,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
@@ -328,7 +332,7 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -348,19 +352,16 @@ public final class OpenSSLEvpKdfPkcs12 {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKdfPkcs12() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // PKCS#12 containers
                 PKCS12_CREATE,
@@ -379,13 +380,5 @@ public final class OpenSSLEvpKdfPkcs12 {
                 PKCS12_KEY_GEN_UNI_EX,
                 PKCS12_KEY_GEN_UTF8,
                 PKCS12_KEY_GEN_UTF8_EX);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKdfPkcs12::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

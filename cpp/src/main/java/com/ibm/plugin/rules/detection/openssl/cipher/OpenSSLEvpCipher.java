@@ -26,16 +26,16 @@ import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -50,11 +50,11 @@ import javax.annotation.Nonnull;
  * Camellia, ARIA, SM4, DES/3DES, Blowfish, CAST5, RC2, RC4, RC5, IDEA, SEED, ChaCha20); this class
  * holds the generic EVP cipher infrastructure (fetch, RSA padding and OAEP setters, and the CMS and
  * PKCS#7 functions that take a content encryption cipher or a key wrap algorithm) and aggregates
- * every family's rules in {@link #rules()}. A cipher context and the operations on it are in {@link
- * OpenSSLEvpCipherContext}.
+ * every family's rules in {@link #buildRules()}. A cipher context and the operations on it are in
+ * {@link OpenSSLEvpCipherContext}.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpCipher {
+public final class OpenSSLEvpCipher extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -105,7 +105,7 @@ public final class OpenSSLEvpCipher {
     private static final List<IDetectionRule<AstNode>> CIPHER_SELECTION =
             Stream.of(
                             cipherFamilyRules().stream(),
-                            OpenSSLEvpCipherFetch.rules().stream(),
+                            RuleSets.rulesOf(OpenSSLEvpCipherFetch.class).stream(),
                             Stream.of(EVP_ENC_NULL, EVP_GET_CIPHERBYNAME, EVP_GET_CIPHERBYNID))
                     .flatMap(i -> i)
                     .toList();
@@ -382,21 +382,18 @@ public final class OpenSSLEvpCipher {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpCipher() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
                         cipherFamilyRules().stream(),
                         directRules().stream(),
                         // the operations on a context, detected with the creation of the context
                         // when it is created in the scanned code and on their own otherwise
-                        OpenSSLEvpCipherContext.rules().stream(),
-                        OpenSSLEvpCipherInit.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherContext.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherInit.class).stream(),
                         // private keys written encrypted
-                        OpenSSLPrivateKeyEncryption.rules().stream())
+                        RuleSets.rulesOf(OpenSSLPrivateKeyEncryption.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }
@@ -404,19 +401,19 @@ public final class OpenSSLEvpCipher {
     @Nonnull
     private static List<IDetectionRule<AstNode>> cipherFamilyRules() {
         return Stream.of(
-                        OpenSSLEvpCipherAes.rules().stream(),
-                        OpenSSLEvpCipherCamellia.rules().stream(),
-                        OpenSSLEvpCipherAria.rules().stream(),
-                        OpenSSLEvpCipherSm4.rules().stream(),
-                        OpenSSLEvpCipherDes.rules().stream(),
-                        OpenSSLEvpCipherBlowfish.rules().stream(),
-                        OpenSSLEvpCipherCast5.rules().stream(),
-                        OpenSSLEvpCipherRc2.rules().stream(),
-                        OpenSSLEvpCipherRc4.rules().stream(),
-                        OpenSSLEvpCipherRc5.rules().stream(),
-                        OpenSSLEvpCipherIdea.rules().stream(),
-                        OpenSSLEvpCipherSeed.rules().stream(),
-                        OpenSSLEvpCipherChacha20.rules().stream())
+                        RuleSets.rulesOf(OpenSSLEvpCipherAes.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherCamellia.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherAria.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherSm4.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherDes.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherBlowfish.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherCast5.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherRc2.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherRc4.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherRc5.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherIdea.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherSeed.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherChacha20.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }
@@ -451,14 +448,6 @@ public final class OpenSSLEvpCipher {
                 PKCS7_SET_CIPHER);
     }
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipher::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
     /**
      * The rule for the digest of RSA-OAEP given by name ({@code
      * EVP_PKEY_CTX_set_rsa_oaep_md_name}), for the encryptions performed with an RSA key.
@@ -481,8 +470,11 @@ public final class OpenSSLEvpCipher {
      * The rules for the calls that select a cipher, for functions that take the cipher as an
      * argument.
      */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> cipherSelectionRules() {
-        return CIPHER_SELECTION;
+    public static final class CipherSelection extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return CIPHER_SELECTION;
+        }
     }
 }

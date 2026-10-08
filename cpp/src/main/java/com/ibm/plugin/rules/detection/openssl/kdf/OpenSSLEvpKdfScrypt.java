@@ -25,13 +25,12 @@ import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -41,13 +40,9 @@ import javax.annotation.Nonnull;
  * through {@code EVP_PKEY_CTX_new_id} is covered by {@link OpenSSLEvpKdf}.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpKdfScrypt {
+public final class OpenSSLEvpKdfScrypt extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private OpenSSLEvpKdfScrypt() {
-        // private
-    }
 
     // EVP_PBE_scrypt(pass, passlen, salt, saltlen, N, r, p, maxmem, key, keylen)
     private static final IDetectionRule<AstNode> EVP_PBE_SCRYPT =
@@ -105,16 +100,9 @@ public final class OpenSSLEvpKdfScrypt {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKdfScrypt::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(EVP_PBE_SCRYPT, EVP_PBE_SCRYPT_EX);
     }
 }

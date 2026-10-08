@@ -21,12 +21,12 @@ package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
  * EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv);
  * }</pre>
  */
-public final class OpenSSLEvpCipherContext {
+public final class OpenSSLEvpCipherContext extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -58,19 +58,14 @@ public final class OpenSSLEvpCipherContext {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(
                             Stream.concat(
-                                            OpenSSLEvpCipherInit.rules().stream(),
-                                            OpenSSLEvpCipherParameters.rules().stream())
+                                            RuleSets.rulesOf(OpenSSLEvpCipherInit.class).stream(),
+                                            RuleSets.rulesOf(OpenSSLEvpCipherParameters.class)
+                                                    .stream())
                                     .toList());
 
-    private OpenSSLEvpCipherContext() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(() -> List.of(EVP_CIPHER_CTX_NEW));
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return List.of(EVP_CIPHER_CTX_NEW);
     }
 }

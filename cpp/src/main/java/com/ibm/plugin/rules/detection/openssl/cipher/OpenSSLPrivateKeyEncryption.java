@@ -23,12 +23,12 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -38,7 +38,7 @@ import javax.annotation.Nonnull;
  * cipher given to them ({@code enc}) under a key derived from a password. A key written without a
  * cipher is not encrypted, and not reported.
  */
-public final class OpenSSLPrivateKeyEncryption {
+public final class OpenSSLPrivateKeyEncryption extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -73,7 +73,8 @@ public final class OpenSSLPrivateKeyEncryption {
                         .withMethodParameter("*")
                         .withMethodParameter("*")
                         .withMethodParameter("*")
-                        .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                        .addDependingDetectionRules(
+                                RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                         .withMethodParameter("*");
         for (int i = 4; i < parameterCount; i++) {
             parameters = parameters.withMethodParameter("*");
@@ -84,15 +85,9 @@ public final class OpenSSLPrivateKeyEncryption {
                 .withoutDependingDetectionRules();
     }
 
-    private OpenSSLPrivateKeyEncryption() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(() -> Stream.of(WRITE_ENCRYPTED, WRITE_ENCRYPTED_EX).toList());
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return Stream.of(WRITE_ENCRYPTED, WRITE_ENCRYPTED_EX).toList();
     }
 }

@@ -20,6 +20,7 @@
 package com.ibm.plugin.rules;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.detection.CxxBaseDetectionRule;
 import com.ibm.plugin.rules.detection.CxxDetectionRules;
@@ -43,7 +44,7 @@ import org.sonar.java.annotations.VisibleForTesting;
 public class CxxInventoryRule extends CxxBaseDetectionRule {
 
     public CxxInventoryRule() {
-        super(true, CxxDetectionRules.rules(), CxxReorganizerRules.rules());
+        super(true, RuleSets.rulesOf(CxxDetectionRules.class), CxxReorganizerRules.rules());
     }
 
     @VisibleForTesting

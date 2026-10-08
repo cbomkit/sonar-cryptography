@@ -26,9 +26,10 @@ import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.CipherSuiteFactory;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyDh;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLLegacyEc;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
@@ -36,7 +37,6 @@ import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -46,13 +46,13 @@ import javax.annotation.Nonnull;
  * <p>These rules detect the protocol selected by the {@code *_method()} functions (TLS 1.0-1.3,
  * DTLS 1.0-1.2, QUIC and SSLv3), and the protocol versions, cipher suites, key exchange groups,
  * signature algorithms, ephemeral DH groups and EC curves and SRTP protection profiles configured
- * on a context ({@link #contextRules()}) or a connection ({@link #connectionRules()}), directly or
+ * on a context ({@link ContextSettings}) or a connection ({@link ConnectionSettings}), directly or
  * through {@code SSL_CONF_cmd}. A context created in the scanned code is reported with its method
  * and its configuration ({@link OpenSSLSslContext}); the rules are detection rules on their own as
  * well, for a context or connection created elsewhere.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLibssl {
+public final class OpenSSLLibssl extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -688,7 +688,7 @@ public final class OpenSSLLibssl {
                     .forMethods("SSL_CTX_set_ssl_version")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(methodRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLLibssl.Methods.class))
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -700,7 +700,7 @@ public final class OpenSSLLibssl {
                     .forMethods("SSL_set_ssl_method")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(methodRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLLibssl.Methods.class))
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -708,16 +708,16 @@ public final class OpenSSLLibssl {
     // Ephemeral key exchange parameters: the DH group or the EC curve of the given key
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_DH =
-            ephemeralKeyExchange("SSL_CTX_set_tmp_dh", OpenSSLLegacyDh.rules());
+            ephemeralKeyExchange("SSL_CTX_set_tmp_dh", RuleSets.rulesOf(OpenSSLLegacyDh.class));
 
     private static final IDetectionRule<AstNode> SSL_SET_TMP_DH =
-            ephemeralKeyExchange("SSL_set_tmp_dh", OpenSSLLegacyDh.rules());
+            ephemeralKeyExchange("SSL_set_tmp_dh", RuleSets.rulesOf(OpenSSLLegacyDh.class));
 
     private static final IDetectionRule<AstNode> SSL_CTX_SET_TMP_ECDH =
-            ephemeralKeyExchange("SSL_CTX_set_tmp_ecdh", OpenSSLLegacyEc.rules());
+            ephemeralKeyExchange("SSL_CTX_set_tmp_ecdh", RuleSets.rulesOf(OpenSSLLegacyEc.class));
 
     private static final IDetectionRule<AstNode> SSL_SET_TMP_ECDH =
-            ephemeralKeyExchange("SSL_set_tmp_ecdh", OpenSSLLegacyEc.rules());
+            ephemeralKeyExchange("SSL_set_tmp_ecdh", RuleSets.rulesOf(OpenSSLLegacyEc.class));
 
     @Nonnull
     private static IDetectionRule<AstNode> ephemeralKeyExchange(
@@ -734,95 +734,101 @@ public final class OpenSSLLibssl {
                 .withoutDependingDetectionRules();
     }
 
-    private OpenSSLLibssl() {
-        // private
-    }
-
     /** The {@code *_method()} functions, each selecting a protocol. */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> methodRules() {
-        return List.of(
-                // TLS Generic
-                TLS_METHOD,
-                TLS_CLIENT_METHOD,
-                TLS_SERVER_METHOD,
-                // TLS 1.2
-                TLSV1_2_METHOD,
-                TLSV1_2_CLIENT_METHOD,
-                TLSV1_2_SERVER_METHOD,
-                // TLS 1.1 (Deprecated)
-                TLSV1_1_METHOD,
-                TLSV1_1_CLIENT_METHOD,
-                TLSV1_1_SERVER_METHOD,
-                // TLS 1.0 (Deprecated)
-                TLSV1_METHOD,
-                TLSV1_CLIENT_METHOD,
-                TLSV1_SERVER_METHOD,
-                // SSL 3.0 (Insecure)
-                SSLV3_METHOD,
-                SSLV3_CLIENT_METHOD,
-                SSLV3_SERVER_METHOD,
-                // DTLS Generic
-                DTLS_METHOD,
-                DTLS_CLIENT_METHOD,
-                DTLS_SERVER_METHOD,
-                // DTLS 1.2
-                DTLSV1_2_METHOD,
-                DTLSV1_2_CLIENT_METHOD,
-                DTLSV1_2_SERVER_METHOD,
-                // DTLS 1.0 (Deprecated)
-                DTLSV1_METHOD,
-                DTLSV1_CLIENT_METHOD,
-                DTLSV1_SERVER_METHOD,
-                // QUIC
-                OSSL_QUIC_CLIENT_METHOD,
-                OSSL_QUIC_CLIENT_THREAD_METHOD,
-                OSSL_QUIC_SERVER_METHOD);
+    public static final class Methods extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return List.of(
+                    // TLS Generic
+                    TLS_METHOD,
+                    TLS_CLIENT_METHOD,
+                    TLS_SERVER_METHOD,
+                    // TLS 1.2
+                    TLSV1_2_METHOD,
+                    TLSV1_2_CLIENT_METHOD,
+                    TLSV1_2_SERVER_METHOD,
+                    // TLS 1.1 (Deprecated)
+                    TLSV1_1_METHOD,
+                    TLSV1_1_CLIENT_METHOD,
+                    TLSV1_1_SERVER_METHOD,
+                    // TLS 1.0 (Deprecated)
+                    TLSV1_METHOD,
+                    TLSV1_CLIENT_METHOD,
+                    TLSV1_SERVER_METHOD,
+                    // SSL 3.0 (Insecure)
+                    SSLV3_METHOD,
+                    SSLV3_CLIENT_METHOD,
+                    SSLV3_SERVER_METHOD,
+                    // DTLS Generic
+                    DTLS_METHOD,
+                    DTLS_CLIENT_METHOD,
+                    DTLS_SERVER_METHOD,
+                    // DTLS 1.2
+                    DTLSV1_2_METHOD,
+                    DTLSV1_2_CLIENT_METHOD,
+                    DTLSV1_2_SERVER_METHOD,
+                    // DTLS 1.0 (Deprecated)
+                    DTLSV1_METHOD,
+                    DTLSV1_CLIENT_METHOD,
+                    DTLSV1_SERVER_METHOD,
+                    // QUIC
+                    OSSL_QUIC_CLIENT_METHOD,
+                    OSSL_QUIC_CLIENT_THREAD_METHOD,
+                    OSSL_QUIC_SERVER_METHOD);
+        }
     }
 
     /** The configuration of a context, {@code SSL_CTX_*(ctx, ...)}. */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> contextRules() {
-        return List.of(
-                SSL_CTX_SET_SSL_VERSION,
-                SSL_CTX_SET_CIPHER_LIST,
-                SSL_CTX_SET_CIPHERSUITES,
-                SSL_CTX_SET_MIN_PROTO_VERSION,
-                SSL_CTX_SET_MAX_PROTO_VERSION,
-                SSL_CTX_SET_OPTIONS,
-                SSL_CTX_SET1_GROUPS_LIST,
-                SSL_CTX_SET1_SIGALGS_LIST,
-                SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
-                SSL_CTX_SET_TMP_DH,
-                SSL_CTX_SET_TMP_ECDH,
-                SSL_CTX_SET_TLSEXT_USE_SRTP);
+    public static final class ContextSettings extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return List.of(
+                    SSL_CTX_SET_SSL_VERSION,
+                    SSL_CTX_SET_CIPHER_LIST,
+                    SSL_CTX_SET_CIPHERSUITES,
+                    SSL_CTX_SET_MIN_PROTO_VERSION,
+                    SSL_CTX_SET_MAX_PROTO_VERSION,
+                    SSL_CTX_SET_OPTIONS,
+                    SSL_CTX_SET1_GROUPS_LIST,
+                    SSL_CTX_SET1_SIGALGS_LIST,
+                    SSL_CTX_SET1_CLIENT_SIGALGS_LIST,
+                    SSL_CTX_SET_TMP_DH,
+                    SSL_CTX_SET_TMP_ECDH,
+                    SSL_CTX_SET_TLSEXT_USE_SRTP);
+        }
     }
 
     /** The configuration of a connection, {@code SSL_*(ssl, ...)}. */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> connectionRules() {
-        return List.of(
-                SSL_SET_SSL_METHOD,
-                SSL_SET_CIPHER_LIST,
-                SSL_SET_CIPHERSUITES,
-                SSL_SET_MIN_PROTO_VERSION,
-                SSL_SET_MAX_PROTO_VERSION,
-                SSL_SET_OPTIONS,
-                SSL_SET1_GROUPS_LIST,
-                SSL_SET1_SIGALGS_LIST,
-                SSL_SET_TMP_DH,
-                SSL_SET_TMP_ECDH,
-                SSL_SET_TLSEXT_USE_SRTP);
+    public static final class ConnectionSettings extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return List.of(
+                    SSL_SET_SSL_METHOD,
+                    SSL_SET_CIPHER_LIST,
+                    SSL_SET_CIPHERSUITES,
+                    SSL_SET_MIN_PROTO_VERSION,
+                    SSL_SET_MAX_PROTO_VERSION,
+                    SSL_SET_OPTIONS,
+                    SSL_SET1_GROUPS_LIST,
+                    SSL_SET1_SIGALGS_LIST,
+                    SSL_SET_TMP_DH,
+                    SSL_SET_TMP_ECDH,
+                    SSL_SET_TLSEXT_USE_SRTP);
+        }
     }
 
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        methodRules().stream(),
+                        RuleSets.rulesOf(OpenSSLLibssl.Methods.class).stream(),
                         // contexts, reported with their method and configuration
-                        OpenSSLSslContext.rules().stream(),
-                        contextRules().stream(),
-                        connectionRules().stream(),
+                        RuleSets.rulesOf(OpenSSLSslContext.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLibssl.ContextSettings.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLibssl.ConnectionSettings.class).stream(),
                         // SSL_CONF (string-driven config)
                         Stream.of(
                                 SSL_CONF_CMD_MINIMUM_PROTOCOL_VERSION,
@@ -832,13 +838,5 @@ public final class OpenSSLLibssl {
                                 SSL_CONF_CMD_SIGNATURE_ALGORITHMS))
                 .flatMap(rules -> rules)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLibssl::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

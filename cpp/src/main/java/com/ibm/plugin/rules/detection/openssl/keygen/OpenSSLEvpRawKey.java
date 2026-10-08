@@ -25,7 +25,9 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
@@ -42,7 +44,7 @@ import javax.annotation.Nonnull;
  * reported, and the operations performed with the key are followed as for a generated key (see
  * {@link OpenSSLEvpKeyUsage}), e.g. the HMAC computed with {@code EVP_DigestSign}.
  */
-public final class OpenSSLEvpRawKey {
+public final class OpenSSLEvpRawKey extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -70,7 +72,7 @@ public final class OpenSSLEvpRawKey {
                     .asChildOfParameterWithId(0)
                     .buildForContext(new KeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     // EVP_PKEY_new_raw_private_key_ex(libctx, keytype, propq, priv, len)
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PRIVATE_KEY_EX =
@@ -91,7 +93,7 @@ public final class OpenSSLEvpRawKey {
                     .asChildOfParameterWithId(1)
                     .buildForContext(new KeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     // EVP_PKEY_new_raw_public_key(type, e, pub, len)
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PUBLIC_KEY =
@@ -109,7 +111,7 @@ public final class OpenSSLEvpRawKey {
                     .asChildOfParameterWithId(0)
                     .buildForContext(new PublicKeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     // EVP_PKEY_new_raw_public_key_ex(libctx, keytype, propq, pub, len)
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_RAW_PUBLIC_KEY_EX =
@@ -130,7 +132,7 @@ public final class OpenSSLEvpRawKey {
                     .asChildOfParameterWithId(1)
                     .buildForContext(new PublicKeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     // EVP_PKEY_new_CMAC_key(e, priv, len, cipher)
     private static final IDetectionRule<AstNode> EVP_PKEY_NEW_CMAC_KEY =
@@ -146,17 +148,15 @@ public final class OpenSSLEvpRawKey {
                             new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .buildForContext(new KeyContext(RAW_KEY))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
-
-    private OpenSSLEvpRawKey() {
-        // private
-    }
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     @Nonnull
-    static List<IDetectionRule<AstNode>> rules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_PKEY_NEW_RAW_KEY,
                 EVP_PKEY_NEW_RAW_PRIVATE_KEY_EX,

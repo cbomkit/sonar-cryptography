@@ -21,13 +21,13 @@ package com.ibm.plugin.rules.detection.openssl.kdf;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -37,7 +37,7 @@ import javax.annotation.Nonnull;
  * OpenSSLEvpKdf}, which also covers HKDF fetched by name through {@code EVP_KDF_fetch}.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpKdfHkdf {
+public final class OpenSSLEvpKdfHkdf extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -48,27 +48,16 @@ public final class OpenSSLEvpKdfHkdf {
                     .forMethods("EVP_PKEY_CTX_set_hkdf_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKdfHkdf() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // HKDF setters
                 EVP_PKEY_CTX_SET_HKDF_MD);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKdfHkdf::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

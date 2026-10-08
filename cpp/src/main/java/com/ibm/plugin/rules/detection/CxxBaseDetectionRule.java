@@ -26,6 +26,7 @@ import com.ibm.engine.executive.DetectionExecutive;
 import com.ibm.engine.language.cxx.CxxConstructorCalls;
 import com.ibm.engine.language.cxx.CxxScanContext;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.IAsset;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.collections.IAssetCollection;
@@ -112,7 +113,7 @@ public abstract class CxxBaseDetectionRule extends SquidCheck<Grammar>
 
     protected CxxBaseDetectionRule() {
         this.isInventory = false;
-        this.detectionRules = CxxDetectionRules.rules();
+        this.detectionRules = RuleSets.rulesOf(CxxDetectionRules.class);
         this.cxxTranslationProcess = new CxxTranslationProcess(CxxReorganizerRules.rules());
     }
 

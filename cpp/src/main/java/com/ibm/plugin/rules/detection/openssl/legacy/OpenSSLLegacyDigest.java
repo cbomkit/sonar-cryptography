@@ -22,12 +22,12 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -39,10 +39,11 @@ import javax.annotation.Nonnull;
  *
  * <p>The MD (MD2/MD4/MD5/MDC2) and SHA-2 (SHA-224/256/384/512) families live in their own {@code
  * OpenSSLLegacyDigest<Family>} classes; this class holds the remaining single-algorithm legacy
- * digests (SHA-1, RIPEMD-160, WHIRLPOOL) and aggregates every family's rules in {@link #rules()}.
+ * digests (SHA-1, RIPEMD-160, WHIRLPOOL) and aggregates every family's rules in {@link
+ * #buildRules()}.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDigest {
+public final class OpenSSLLegacyDigest extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -118,15 +119,12 @@ public final class OpenSSLLegacyDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDigest() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLLegacyDigestMd.rules().stream(),
-                        OpenSSLLegacyDigestSha2.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyDigestMd.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyDigestSha2.class).stream(),
                         directRules().stream())
                 .flatMap(i -> i)
                 .toList();
@@ -144,13 +142,5 @@ public final class OpenSSLLegacyDigest {
                 // WHIRLPOOL (deprecated, legacy provider)
                 WHIRLPOOL,
                 WHIRLPOOL_INIT);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDigest::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

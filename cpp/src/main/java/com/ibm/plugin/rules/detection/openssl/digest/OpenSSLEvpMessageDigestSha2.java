@@ -22,12 +22,11 @@ package com.ibm.plugin.rules.detection.openssl.digest;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -36,7 +35,7 @@ import javax.annotation.Nonnull;
  * <p>Covers SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, and SHA-512/256.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpMessageDigestSha2 {
+public final class OpenSSLEvpMessageDigestSha2 extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -106,21 +105,10 @@ public final class OpenSSLEvpMessageDigestSha2 {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpMessageDigestSha2() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_SHA224, EVP_SHA256, EVP_SHA384, EVP_SHA512, EVP_SHA512_224, EVP_SHA512_256);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpMessageDigestSha2::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

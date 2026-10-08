@@ -25,16 +25,15 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -42,7 +41,7 @@ import javax.annotation.Nonnull;
  * the prime, given directly or through a named group. They apply to the calls made on a context
  * created by one of the rules of {@link OpenSSLEvpKeyGen}.
  */
-public final class OpenSSLEvpKeyGenDh {
+public final class OpenSSLEvpKeyGenDh extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -108,23 +107,12 @@ public final class OpenSSLEvpKeyGenDh {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKeyGenDh() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_PKEY_CTX_SET_DH_PARAMGEN_PRIME_LEN,
                 EVP_PKEY_CTX_SET_DH_NID,
                 EVP_PKEY_CTX_SET_DH_RFC5114);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKeyGenDh::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

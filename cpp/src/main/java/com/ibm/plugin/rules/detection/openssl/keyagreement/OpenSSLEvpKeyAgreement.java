@@ -23,15 +23,15 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -57,7 +57,7 @@ import javax.annotation.Nonnull;
  * key created elsewhere, so the derivation and encapsulation calls themselves are not reported.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpKeyAgreement {
+public final class OpenSSLEvpKeyAgreement extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -99,7 +99,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .forMethods("EVP_PKEY_CTX_set_ecdh_kdf_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -127,7 +127,7 @@ public final class OpenSSLEvpKeyAgreement {
                     .forMethods("EVP_PKEY_CTX_set_dh_kdf_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -197,12 +197,9 @@ public final class OpenSSLEvpKeyAgreement {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKeyAgreement() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Key exchange and KEM fetch
                 EVP_KEYEXCH_FETCH,
@@ -214,13 +211,5 @@ public final class OpenSSLEvpKeyAgreement {
                 OSSL_HPKE_STR2SUITE,
                 OSSL_HPKE_CTX_NEW,
                 OSSL_HPKE_KEYGEN);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKeyAgreement::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

@@ -20,11 +20,8 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.Entry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -33,7 +30,7 @@ import javax.annotation.Nonnull;
  * <p>Covers AES-128/192/256 across all EVP modes (CBC, ECB, GCM, CTR, CCM, CFB variants, OFB, XTS,
  * OCB, key wrap) plus the AES-CBC-HMAC combined TLS Encrypt-then-MAC ciphers.
  */
-public final class OpenSSLEvpCipherAes {
+public final class OpenSSLEvpCipherAes extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -89,20 +86,9 @@ public final class OpenSSLEvpCipherAes {
                     new Entry("EVP_aes_128_cbc_hmac_sha256", "AES-128-CBC-HMAC-SHA256"),
                     new Entry("EVP_aes_256_cbc_hmac_sha256", "AES-256-CBC-HMAC-SHA256"));
 
-    private OpenSSLEvpCipherAes() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.build(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherAes::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

@@ -19,8 +19,9 @@
  */
 package com.ibm.plugin.rules.detection.openssl;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherFetch;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
@@ -42,7 +43,6 @@ import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLEvpSignature;
 import com.ibm.plugin.rules.detection.openssl.ssl.OpenSSLLibssl;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -58,47 +58,36 @@ import javax.annotation.Nonnull;
  *   <li>SSL/TLS protocol functions ({@code TLS_method}, {@code SSL_CTX_new}, etc.)
  * </ul>
  */
-public final class OpenSSLDetectionRules {
-
-    private OpenSSLDetectionRules() {
-        // private
-    }
+public final class OpenSSLDetectionRules extends DetectionRuleSet<AstNode> {
 
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
                         // EVP API - Modern OpenSSL 3.x functions
-                        OpenSSLEvpCipher.rules().stream(),
-                        OpenSSLEvpCipherFetch.rules().stream(),
-                        OpenSSLEvpMessageDigest.rules().stream(),
-                        OpenSSLEvpMac.rules().stream(),
-                        OpenSSLEvpSignature.rules().stream(),
-                        OpenSSLEvpKeyGen.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipher.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpCipherFetch.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigest.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMac.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpSignature.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKeyGen.class).stream(),
                         // signatures with a key given to them, e.g. loaded from a file
-                        OpenSSLEvpKeyUsage.signatureRules().stream(),
-                        OpenSSLEvpKeyGenRsa.keyGenerationSettingRules().stream(),
-                        OpenSSLEvpKdf.rules().stream(),
-                        OpenSSLEvpKeyAgreement.rules().stream(),
-                        OpenSSLRand.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKeyUsage.Signatures.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKeyGenRsa.KeyGenerationSettings.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKdf.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKeyAgreement.class).stream(),
+                        RuleSets.rulesOf(OpenSSLRand.class).stream(),
                         // Legacy API - Deprecated but widely used
-                        OpenSSLLegacyCipher.rules().stream(),
-                        OpenSSLLegacyDigest.rules().stream(),
-                        OpenSSLLegacyMac.rules().stream(),
-                        OpenSSLLegacyRsa.rules().stream(),
-                        OpenSSLLegacyDsa.rules().stream(),
-                        OpenSSLLegacyEc.rules().stream(),
-                        OpenSSLLegacyDh.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipher.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyDigest.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyMac.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyRsa.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyDsa.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyEc.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyDh.class).stream(),
                         // SSL/TLS Protocol API
-                        OpenSSLLibssl.rules().stream())
+                        RuleSets.rulesOf(OpenSSLLibssl.class).stream())
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLDetectionRules::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

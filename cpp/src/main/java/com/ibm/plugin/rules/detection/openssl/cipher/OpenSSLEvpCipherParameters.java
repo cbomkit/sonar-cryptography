@@ -23,13 +23,12 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -39,7 +38,7 @@ import javax.annotation.Nonnull;
  * of the creation of the context ({@link OpenSSLEvpCipherContext}), as the JCA parameter
  * specifications are given to {@code Cipher.init}.
  */
-public final class OpenSSLEvpCipherParameters {
+public final class OpenSSLEvpCipherParameters extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -85,20 +84,9 @@ public final class OpenSSLEvpCipherParameters {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpCipherParameters() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherParameters::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_CIPHER_CTX_SET_KEY_LENGTH, EVP_CIPHER_CTX_SET_PADDING, EVP_CIPHER_CTX_CTRL);
     }

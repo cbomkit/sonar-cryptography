@@ -23,13 +23,13 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -41,7 +41,7 @@ import javax.annotation.Nonnull;
  * HMAC modes.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLRand {
+public final class OpenSSLRand extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -75,7 +75,9 @@ public final class OpenSSLRand {
     // HMAC-DRBG) is set through OSSL_PARAMs of the context created from it
 
     private static final List<IDetectionRule<AstNode>> PARAMS_RULES =
-            Stream.of(OpenSSLParams.cipherRules().stream(), OpenSSLParams.digestRules().stream())
+            Stream.of(
+                            RuleSets.rulesOf(OpenSSLParams.Ciphers.class).stream(),
+                            RuleSets.rulesOf(OpenSSLParams.Digests.class).stream())
                     .flatMap(i -> i)
                     .toList();
 
@@ -193,12 +195,9 @@ public final class OpenSSLRand {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLRand() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Legacy RAND API
                 RAND_BYTES,
@@ -211,13 +210,5 @@ public final class OpenSSLRand {
                 RAND_BYTES_EX,
                 RAND_PRIV_BYTES_EX,
                 RAND_SET_DRBG_TYPE);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLRand::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

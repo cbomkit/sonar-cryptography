@@ -21,16 +21,13 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) RC2 cipher APIs. */
-public final class OpenSSLLegacyCipherRc2 {
+public final class OpenSSLLegacyCipherRc2 extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -44,20 +41,9 @@ public final class OpenSSLLegacyCipherRc2 {
                     new LegacyEntry("RC2_cfb64_encrypt", "RC2-CFB", 7).keyAt(3),
                     new LegacyEntry("RC2_ofb64_encrypt", "RC2-OFB", 6).keyAt(3));
 
-    private OpenSSLLegacyCipherRc2() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipherRc2::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

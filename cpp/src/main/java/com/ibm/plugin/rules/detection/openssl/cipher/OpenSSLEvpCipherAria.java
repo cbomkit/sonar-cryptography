@@ -20,11 +20,8 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.Entry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -33,7 +30,7 @@ import javax.annotation.Nonnull;
  * <p>Covers ARIA-128/192/256 (the Korean national standard cipher, RFC 5794) across all EVP modes
  * (ECB, CBC, CFB variants, OFB, CTR, GCM, CCM).
  */
-public final class OpenSSLEvpCipherAria {
+public final class OpenSSLEvpCipherAria extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -73,20 +70,9 @@ public final class OpenSSLEvpCipherAria {
                     new Entry("EVP_aria_256_gcm", "ARIA-256-GCM"),
                     new Entry("EVP_aria_256_ccm", "ARIA-256-CCM"));
 
-    private OpenSSLEvpCipherAria() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.build(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherAria::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

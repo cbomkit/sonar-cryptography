@@ -25,6 +25,7 @@ import com.ibm.engine.language.ILanguageTranslation;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxAggregator;
 import com.ibm.plugin.CxxVerifier;
@@ -52,7 +53,7 @@ class CxxBaseDetectionRuleFailureIsolationTest {
     void aFailureInOneFileDoesNotStopTheNextFile() {
         final List<IDetectionRule<AstNode>> rules = new ArrayList<>();
         rules.add(new FailingDetectionRule());
-        rules.addAll(CxxDetectionRules.rules());
+        rules.addAll(RuleSets.rulesOf(CxxDetectionRules.class));
 
         CxxVerifier.verifyFiles(
                 List.of(
@@ -71,7 +72,7 @@ class CxxBaseDetectionRuleFailureIsolationTest {
                 List.of(
                         "rules/detection/isolation/CxxUnparsableFileTestFile.cc",
                         "rules/detection/isolation/CxxFileAfterFailingFileTestFile.cc"),
-                new InventoryRule(CxxDetectionRules.rules()));
+                new InventoryRule(RuleSets.rulesOf(CxxDetectionRules.class)));
 
         assertThat(CxxAggregator.getDetectedNodes())
                 .extracting(INode::asString)

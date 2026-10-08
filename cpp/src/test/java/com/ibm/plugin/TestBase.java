@@ -23,6 +23,7 @@ import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.detection.Finding;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.utils.DetectionStoreLogger;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.rules.CxxInventoryRule;
@@ -56,7 +57,7 @@ public abstract class TestBase extends CxxInventoryRule {
     }
 
     public TestBase() {
-        super(CxxDetectionRules.rules());
+        super(RuleSets.rulesOf(CxxDetectionRules.class));
     }
 
     @BeforeEach

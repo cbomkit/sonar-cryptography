@@ -28,16 +28,16 @@ import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -62,7 +62,7 @@ import javax.annotation.Nonnull;
  * The settings specific to RSA, DSA and Diffie-Hellman are in their own {@code
  * OpenSSLEvpKeyGen<Family>} classes.
  */
-public final class OpenSSLEvpKeyGen {
+public final class OpenSSLEvpKeyGen extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -110,13 +110,13 @@ public final class OpenSSLEvpKeyGen {
                     .withMethodParameter("*")
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     private static final List<IDetectionRule<AstNode>> KEY_GENERATION_CONTEXT_RULES =
             Stream.of(
-                            OpenSSLEvpKeyGenRsa.rules().stream(),
-                            OpenSSLEvpKeyGenDsa.rules().stream(),
-                            OpenSSLEvpKeyGenDh.rules().stream(),
+                            RuleSets.rulesOf(OpenSSLEvpKeyGenRsa.class).stream(),
+                            RuleSets.rulesOf(OpenSSLEvpKeyGenDsa.class).stream(),
+                            RuleSets.rulesOf(OpenSSLEvpKeyGenDh.class).stream(),
                             Stream.of(
                                     EVP_PKEY_CTX_SET_GROUP_NAME,
                                     EVP_PKEY_CTX_SET_EC_PARAMGEN_CURVE_NID,
@@ -172,7 +172,7 @@ public final class OpenSSLEvpKeyGen {
                                     OpenSSLNameCanonicalizerFactory.KEY_TYPE_NAMES, true))
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     private static final IDetectionRule<AstNode> EVP_PKEY_Q_KEYGEN_WITH_PARAMETER =
             new DetectionRuleBuilder<AstNode>()
@@ -190,7 +190,7 @@ public final class OpenSSLEvpKeyGen {
                     .asChildOfParameterWithId(2)
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     // EVP_RSA_gen(bits) and EVP_EC_gen(curve) (rsa.h, ec.h): EVP_PKEY_Q_keygen for an RSA key of
     // the given size and an EC key on the given curve
@@ -207,7 +207,7 @@ public final class OpenSSLEvpKeyGen {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     private static final IDetectionRule<AstNode> EVP_EC_GEN =
             new DetectionRuleBuilder<AstNode>()
@@ -220,7 +220,7 @@ public final class OpenSSLEvpKeyGen {
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new PrivateKeyContext(Map.of()))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLEvpKeyUsage.rules());
+                    .withDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpKeyUsage.class));
 
     private static final IDetectionRule<AstNode> EVP_KEYMGMT_FETCH =
             new DetectionRuleBuilder<AstNode>()
@@ -237,12 +237,9 @@ public final class OpenSSLEvpKeyGen {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKeyGen() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
                         Stream.of(
                                 EVP_PKEY_CTX_NEW_ID,
@@ -253,16 +250,8 @@ public final class OpenSSLEvpKeyGen {
                                 EVP_EC_GEN,
                                 EVP_KEYMGMT_FETCH),
                         // keys created from raw bytes
-                        OpenSSLEvpRawKey.rules().stream())
+                        RuleSets.rulesOf(OpenSSLEvpRawKey.class).stream())
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKeyGen::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

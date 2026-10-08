@@ -24,15 +24,15 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -40,7 +40,7 @@ import javax.annotation.Nonnull;
  * parameters and the digest used to generate them. They apply to the calls made on a context
  * created by one of the rules of {@link OpenSSLEvpKeyGen}.
  */
-public final class OpenSSLEvpKeyGenDsa {
+public final class OpenSSLEvpKeyGenDsa extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -64,7 +64,7 @@ public final class OpenSSLEvpKeyGenDsa {
                     .forMethods("EVP_PKEY_CTX_set_dsa_paramgen_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new KeyContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -84,23 +84,12 @@ public final class OpenSSLEvpKeyGenDsa {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpKeyGenDsa() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_DSA_PARAMGEN_BITS,
                 EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD,
                 EVP_PKEY_CTX_SET_DSA_PARAMGEN_MD_PROPS);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKeyGenDsa::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

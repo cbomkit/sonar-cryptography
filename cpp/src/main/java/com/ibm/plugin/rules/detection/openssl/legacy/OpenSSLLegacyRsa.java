@@ -30,16 +30,16 @@ import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.ibm.plugin.rules.detection.openssl.signature.OpenSSLSaltLengthFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -51,7 +51,7 @@ import javax.annotation.Nonnull;
  * <p>Covers: RSA key management, encryption/decryption, signing/verification, PSS, OAEP
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyRsa {
+public final class OpenSSLLegacyRsa extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -132,7 +132,7 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
                     .asChildOfParameterWithId(-1)
@@ -150,9 +150,10 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Mgf1.class))
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
                     .asChildOfParameterWithId(-1)
@@ -169,7 +170,7 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
@@ -187,9 +188,10 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Mgf1.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .shouldBeDetectedAs(new OpenSSLSaltLengthFactory())
@@ -454,9 +456,11 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.oaepRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Oaep.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Mgf1.class))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -475,9 +479,11 @@ public final class OpenSSLLegacyRsa {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.oaepRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Oaep.class))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.mgf1Rules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpMessageDigest.Mgf1.class))
                     .buildForContext(new CipherContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -551,12 +557,9 @@ public final class OpenSSLLegacyRsa {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(KEY_OPERATIONS);
 
-    private OpenSSLLegacyRsa() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Signatures
                 RSA_SIGN,
@@ -592,13 +595,5 @@ public final class OpenSSLLegacyRsa {
                 RSA_PADDING_CHECK_PKCS1_OAEP,
                 RSA_PADDING_ADD_PKCS1_OAEP_MGF1,
                 RSA_PADDING_CHECK_PKCS1_OAEP_MGF1);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyRsa::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

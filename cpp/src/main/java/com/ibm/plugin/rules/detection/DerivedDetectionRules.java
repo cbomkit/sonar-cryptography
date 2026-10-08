@@ -49,17 +49,11 @@ public final class DerivedDetectionRules {
     }
 
     /**
-     * The rules reporting their values in the given context, each derived from one of the given
-     * rules. A rule that is not a {@link DetectionRule} is kept as it is.
+     * The rule reporting its values in the given context, derived from the given rule. A rule that
+     * is not a {@link DetectionRule} is kept as it is.
      */
     @Nonnull
-    public static List<IDetectionRule<AstNode>> withContext(
-            @Nonnull List<IDetectionRule<AstNode>> rules, @Nonnull DetectionContext context) {
-        return rules.stream().map(rule -> withContext(rule, context)).toList();
-    }
-
-    @Nonnull
-    private static IDetectionRule<AstNode> withContext(
+    public static IDetectionRule<AstNode> withContext(
             @Nonnull IDetectionRule<AstNode> rule, @Nonnull DetectionContext context) {
         if (!(rule instanceof DetectionRule<AstNode> detectionRule)) {
             return rule;

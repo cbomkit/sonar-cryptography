@@ -19,11 +19,12 @@
  */
 package com.ibm.plugin.rules.detection;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLDetectionRules;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -39,29 +40,16 @@ import javax.annotation.Nonnull;
  *   <li>Create a new package under {@code rules.detection} for the library
  *   <li>Create detection rule classes following the pattern in Java module
  *   <li>Create a {@code *DetectionRules} class that returns all rules for the library
- *   <li>Add the rules to the stream in {@link #rules()}
+ *   <li>Add the rules to the stream in {@link #buildRules()}
  * </ol>
  */
-public final class CxxDetectionRules {
-    private CxxDetectionRules() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(CxxDetectionRules::buildRules);
-
-    /**
-     * Returns all C++ cryptography detection rules.
-     *
-     * @return List of all detection rules
-     */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
+public final class CxxDetectionRules extends DetectionRuleSet<AstNode> {
 
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
-        return Stream.of(OpenSSLDetectionRules.rules().stream()).flatMap(i -> i).toList();
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return Stream.of(RuleSets.rulesOf(OpenSSLDetectionRules.class).stream())
+                .flatMap(i -> i)
+                .toList();
     }
 }

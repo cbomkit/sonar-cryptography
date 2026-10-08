@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherFetch;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
@@ -49,41 +50,41 @@ class CxxDetectionRulesTest {
 
     @Test
     void testRulesRegistered() {
-        List<IDetectionRule<AstNode>> rules = CxxDetectionRules.rules();
+        List<IDetectionRule<AstNode>> rules = RuleSets.rulesOf(CxxDetectionRules.class);
 
         assertThat(rules).isNotEmpty();
         assertThat(rules).doesNotContainNull();
     }
 
     /**
-     * Asserts {@link CxxDetectionRules#rules()}'s size against the independently-computed sum of
-     * each of the 18 OpenSSL rule bundles' own {@code rules().size()}, rather than a hardcoded
-     * total: the sum tracks itself when a rule is added to any one bundle, while still catching a
-     * bundle removed from (or duplicated in) {@code OpenSSLDetectionRules#rules()}'s aggregation.
+     * Asserts {@link CxxDetectionRules}'s size against the independently-computed sum of each of
+     * the 18 OpenSSL rule bundles' own {@code rules().size()}, rather than a hardcoded total: the
+     * sum tracks itself when a rule is added to any one bundle, while still catching a bundle
+     * removed from (or duplicated in) {@code OpenSSLDetectionRules}'s aggregation.
      */
     @Test
     void testAllEighteenOpenSslRuleBundlesAreAggregated() {
         int expectedTotal =
-                OpenSSLEvpCipher.rules().size()
-                        + OpenSSLEvpCipherFetch.rules().size()
-                        + OpenSSLEvpMessageDigest.rules().size()
-                        + OpenSSLEvpMac.rules().size()
-                        + OpenSSLEvpSignature.rules().size()
-                        + OpenSSLEvpKeyGen.rules().size()
-                        + OpenSSLEvpKeyUsage.signatureRules().size()
-                        + OpenSSLEvpKeyGenRsa.keyGenerationSettingRules().size()
-                        + OpenSSLEvpKdf.rules().size()
-                        + OpenSSLEvpKeyAgreement.rules().size()
-                        + OpenSSLRand.rules().size()
-                        + OpenSSLLegacyCipher.rules().size()
-                        + OpenSSLLegacyDigest.rules().size()
-                        + OpenSSLLegacyMac.rules().size()
-                        + OpenSSLLegacyRsa.rules().size()
-                        + OpenSSLLegacyDsa.rules().size()
-                        + OpenSSLLegacyEc.rules().size()
-                        + OpenSSLLegacyDh.rules().size()
-                        + OpenSSLLibssl.rules().size();
+                RuleSets.rulesOf(OpenSSLEvpCipher.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpCipherFetch.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpMessageDigest.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpMac.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpSignature.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpKeyGen.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpKeyUsage.Signatures.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpKeyGenRsa.KeyGenerationSettings.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpKdf.class).size()
+                        + RuleSets.rulesOf(OpenSSLEvpKeyAgreement.class).size()
+                        + RuleSets.rulesOf(OpenSSLRand.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyCipher.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyDigest.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyMac.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyRsa.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyDsa.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyEc.class).size()
+                        + RuleSets.rulesOf(OpenSSLLegacyDh.class).size()
+                        + RuleSets.rulesOf(OpenSSLLibssl.class).size();
 
-        assertThat(CxxDetectionRules.rules()).hasSize(expectedTotal);
+        assertThat(RuleSets.rulesOf(CxxDetectionRules.class)).hasSize(expectedTotal);
     }
 }

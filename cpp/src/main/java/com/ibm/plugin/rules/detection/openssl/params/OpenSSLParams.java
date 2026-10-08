@@ -23,14 +23,13 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -64,8 +63,8 @@ import javax.annotation.Nonnull;
  * EVP_KDF_CTX_set_params(kctx, params);
  * }</pre>
  *
- * <p>The calls that take the parameters list {@link #digestRules()} or {@link #cipherRules()} as
- * the depending rules of their {@code OSSL_PARAM} argument.
+ * <p>The calls that take the parameters list {@link Digests} or {@link Ciphers} as the depending
+ * rules of their {@code OSSL_PARAM} argument.
  */
 public final class OpenSSLParams {
 
@@ -177,31 +176,23 @@ public final class OpenSSLParams {
                 .toList();
     }
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> DIGEST_RULES =
-            Memoize.of(
-                    () ->
-                            rules(
-                                    DIGEST_KEYS,
-                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES,
-                                    new DigestContext()));
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> CIPHER_RULES =
-            Memoize.of(
-                    () ->
-                            rules(
-                                    CIPHER_KEYS,
-                                    OpenSSLNameCanonicalizerFactory.CIPHER_NAMES,
-                                    new CipherContext()));
-
     /** The rules for the {@code "digest"} entry, detecting the digest it names. */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> digestRules() {
-        return DIGEST_RULES.get();
+    public static final class Digests extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return rules(
+                    DIGEST_KEYS, OpenSSLNameCanonicalizerFactory.DIGEST_NAMES, new DigestContext());
+        }
     }
 
     /** The rules for the {@code "cipher"} entry, detecting the cipher it names. */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> cipherRules() {
-        return CIPHER_RULES.get();
+    public static final class Ciphers extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return rules(
+                    CIPHER_KEYS, OpenSSLNameCanonicalizerFactory.CIPHER_NAMES, new CipherContext());
+        }
     }
 }

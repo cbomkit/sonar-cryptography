@@ -20,11 +20,8 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.Entry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -32,7 +29,7 @@ import javax.annotation.Nonnull;
  *
  * <p>Covers Camellia-128/192/256 across all EVP modes (ECB, CBC, CFB variants, OFB, CTR).
  */
-public final class OpenSSLEvpCipherCamellia {
+public final class OpenSSLEvpCipherCamellia extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -66,20 +63,9 @@ public final class OpenSSLEvpCipherCamellia {
                     new Entry("EVP_camellia_256_ofb", "CAMELLIA-256-OFB"),
                     new Entry("EVP_camellia_256_ctr", "CAMELLIA-256-CTR"));
 
-    private OpenSSLEvpCipherCamellia() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.build(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherCamellia::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

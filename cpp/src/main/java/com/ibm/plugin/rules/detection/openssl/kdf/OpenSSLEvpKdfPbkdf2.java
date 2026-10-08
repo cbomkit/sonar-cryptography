@@ -26,14 +26,14 @@ import com.ibm.engine.model.factory.IterationCountFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -43,13 +43,9 @@ import javax.annotation.Nonnull;
  * is selected.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpKdfPbkdf2 {
+public final class OpenSSLEvpKdfPbkdf2 extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
-
-    private OpenSSLEvpKdfPbkdf2() {
-        // private
-    }
 
     // PKCS5_PBKDF2_HMAC(pass, passlen, salt, saltlen, iter, digest, keylen, out)
     private static final IDetectionRule<AstNode> PKCS5_PBKDF2_HMAC =
@@ -69,7 +65,7 @@ public final class OpenSSLEvpKdfPbkdf2 {
                     .shouldBeDetectedAs(new IterationCountFactory<>())
                     .asChildOfParameterWithId(-1)
                     .withMethodParameter("*") // digest
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .withMethodParameter("*") // keylen
                     .shouldBeDetectedAs(
                             new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
@@ -105,16 +101,9 @@ public final class OpenSSLEvpKdfPbkdf2 {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKdfPbkdf2::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(PKCS5_PBKDF2_HMAC, PKCS5_PBKDF2_HMAC_SHA1);
     }
 }

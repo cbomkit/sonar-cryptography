@@ -24,6 +24,7 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
@@ -38,23 +39,19 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Builds the cipher detection rules shared by every OpenSSL cipher family: the {@code
- * EVP_CIPHER}-returning functions (AES, ARIA, Camellia, DES, ...), which take no argument and
- * always resolve to a fixed cipher-spec label, and the legacy (pre-EVP) key setup and encryption
- * functions of each cipher.
+ * The rule set of an OpenSSL cipher family, built by the builders shared by every family: the
+ * {@code EVP_CIPHER}-returning functions (AES, ARIA, Camellia, DES, ...), which take no argument
+ * and always resolve to a fixed cipher-spec label, and the legacy (pre-EVP) key setup and
+ * encryption functions of each cipher.
  */
-public final class OpenSSLEvpCipherRuleFactory {
-
-    private OpenSSLEvpCipherRuleFactory() {
-        // private
-    }
+public abstract class OpenSSLEvpCipherRuleFactory extends DetectionRuleSet<AstNode> {
 
     /** One {@code functionName -> label} entry, e.g. {@code "EVP_aes_128_cbc" -> "AES-128-CBC"}. */
     public record Entry(@Nonnull String functionName, @Nonnull String label) {}
 
     /** Builds one detection rule per entry, in list order. */
     @Nonnull
-    public static List<IDetectionRule<AstNode>> build(
+    protected static List<IDetectionRule<AstNode>> build(
             @Nonnull String bundle, @Nonnull List<Entry> entries) {
         List<IDetectionRule<AstNode>> rules = new ArrayList<>(entries.size());
         for (Entry entry : entries) {
@@ -171,7 +168,7 @@ public final class OpenSSLEvpCipherRuleFactory {
      * }</pre>
      */
     @Nonnull
-    public static List<IDetectionRule<AstNode>> buildLegacy(
+    protected static List<IDetectionRule<AstNode>> buildLegacy(
             @Nonnull String bundle, @Nonnull List<LegacyEntry> entries) {
         final List<IDetectionRule<AstNode>> keySetups =
                 entries.stream()

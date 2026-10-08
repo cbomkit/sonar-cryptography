@@ -21,23 +21,23 @@ package com.ibm.plugin.rules.detection.openssl.ssl;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.ProtocolContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
  * Detection rules for the creation of an OpenSSL TLS context, {@code SSL_CTX_new(method)} and
  * {@code SSL_CTX_new_ex(libctx, propq, method)}. The protocol is given by the method; the context
- * is followed to its configuration ({@link OpenSSLLibssl#contextRules()}) and to the connections
+ * is followed to its configuration ({@link OpenSSLLibssl.ContextSettings}) and to the connections
  * created from it with {@code SSL_new(ctx)}, followed to theirs ({@link
- * OpenSSLLibssl#connectionRules()}). A TLS setup is so reported as one protocol, with its versions,
- * cipher suites, groups and signature algorithms, as the JCA {@code Cipher.getInstance} rules
- * report the operations made on the cipher:
+ * OpenSSLLibssl.ConnectionSettings}). A TLS setup is so reported as one protocol, with its
+ * versions, cipher suites, groups and signature algorithms, as the JCA {@code Cipher.getInstance}
+ * rules report the operations made on the cipher:
  *
  * <pre>{@code
  * SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
@@ -47,7 +47,7 @@ import javax.annotation.Nonnull;
  * SSL_set1_groups_list(ssl, "X25519");
  * }</pre>
  */
-public final class OpenSSLSslContext {
+public final class OpenSSLSslContext extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -60,7 +60,8 @@ public final class OpenSSLSslContext {
                     .withMethodParameter("*")
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
-                    .withDependingDetectionRules(OpenSSLLibssl.connectionRules());
+                    .withDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLLibssl.ConnectionSettings.class));
 
     private static final IDetectionRule<AstNode> SSL_CTX_NEW =
             new DetectionRuleBuilder<AstNode>()
@@ -68,7 +69,7 @@ public final class OpenSSLSslContext {
                     .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
                     .forMethods("SSL_CTX_new")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLLibssl.methodRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLLibssl.Methods.class))
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(dependingRules());
@@ -81,26 +82,23 @@ public final class OpenSSLSslContext {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLLibssl.methodRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLLibssl.Methods.class))
                     .buildForContext(new ProtocolContext(ProtocolContext.Kind.TLS))
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(dependingRules());
 
-    private OpenSSLSslContext() {
-        // private
-    }
-
     /** The configuration of a context and the connections created from it. */
     @Nonnull
     private static List<IDetectionRule<AstNode>> dependingRules() {
-        return Stream.concat(OpenSSLLibssl.contextRules().stream(), Stream.of(SSL_NEW)).toList();
+        return Stream.concat(
+                        RuleSets.rulesOf(OpenSSLLibssl.ContextSettings.class).stream(),
+                        Stream.of(SSL_NEW))
+                .toList();
     }
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(() -> List.of(SSL_CTX_NEW, SSL_CTX_NEW_EX));
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return List.of(SSL_CTX_NEW, SSL_CTX_NEW_EX);
     }
 }

@@ -22,15 +22,15 @@ package com.ibm.plugin.rules.detection.openssl.mac;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -52,12 +52,14 @@ import javax.annotation.Nonnull;
  * <p>The password-based MAC of CRMF is reported with the MAC and the one-way function given to
  * {@code OSSL_CRMF_pbmp_new}.
  */
-public final class OpenSSLEvpMac {
+public final class OpenSSLEvpMac extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
     private static final List<IDetectionRule<AstNode>> PARAMS_RULES =
-            Stream.of(OpenSSLParams.digestRules().stream(), OpenSSLParams.cipherRules().stream())
+            Stream.of(
+                            RuleSets.rulesOf(OpenSSLParams.Digests.class).stream(),
+                            RuleSets.rulesOf(OpenSSLParams.Ciphers.class).stream())
                     .flatMap(i -> i)
                     .toList();
 
@@ -181,20 +183,9 @@ public final class OpenSSLEvpMac {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpMac() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(EVP_MAC_FETCH, EVP_Q_MAC, OSSL_CRMF_PBMP_NEW_MAC, OSSL_CRMF_PBMP_NEW_OWF);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpMac::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

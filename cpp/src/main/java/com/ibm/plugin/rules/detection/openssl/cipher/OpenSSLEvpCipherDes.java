@@ -20,11 +20,8 @@
 package com.ibm.plugin.rules.detection.openssl.cipher;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.Entry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -33,7 +30,7 @@ import javax.annotation.Nonnull;
  * <p>Covers single DES, 3DES EDE (2-key) and EDE3 (3-key) across all EVP modes, plus DESX and the
  * EDE3 key-wrap variant.
  */
-public final class OpenSSLEvpCipherDes {
+public final class OpenSSLEvpCipherDes extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -69,20 +66,9 @@ public final class OpenSSLEvpCipherDes {
                     // EVP_des_ede3_wrap
                     new Entry("EVP_des_ede3_wrap", "DES-EDE3-WRAP"));
 
-    private OpenSSLEvpCipherDes() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.build(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherDes::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

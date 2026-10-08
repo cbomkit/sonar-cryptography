@@ -22,17 +22,16 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) MD2/MD4/MD5/MDC2 digest APIs. */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDigestMd {
+public final class OpenSSLLegacyDigestMd extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -132,12 +131,9 @@ public final class OpenSSLLegacyDigestMd {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyDigestMd() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // MD2
                 MD2,
@@ -151,13 +147,5 @@ public final class OpenSSLLegacyDigestMd {
                 // MDC2
                 MDC2,
                 MDC2_INIT);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDigestMd::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

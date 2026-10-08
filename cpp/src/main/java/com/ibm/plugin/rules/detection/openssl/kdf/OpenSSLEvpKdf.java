@@ -23,16 +23,16 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.ibm.plugin.rules.detection.openssl.params.OpenSSLParams;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -64,9 +64,9 @@ import javax.annotation.Nonnull;
  * <p>The PKCS#5 PBKDF2 functions are in {@link OpenSSLEvpKdfPbkdf2}, the scrypt functions in {@link
  * OpenSSLEvpKdfScrypt}, the PKCS#12 and PKCS#5 password-based functions in {@link
  * OpenSSLEvpKdfPkcs12}, and the password-based encryption selected by its algorithm identifier in
- * {@link OpenSSLPasswordBasedEncryption}; {@link #rules()} includes them.
+ * {@link OpenSSLPasswordBasedEncryption}; {@link #buildRules()} includes them.
  */
-public final class OpenSSLEvpKdf {
+public final class OpenSSLEvpKdf extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -77,7 +77,7 @@ public final class OpenSSLEvpKdf {
                     .forMethods("EVP_KDF_CTX_set_params")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLParams.digestRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLParams.Digests.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -95,7 +95,7 @@ public final class OpenSSLEvpKdf {
                     .shouldBeDetectedAs(
                             new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BYTE)))
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLParams.digestRules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLParams.Digests.class))
                     .buildForContext(new KeyDerivationFunctionContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -129,7 +129,9 @@ public final class OpenSSLEvpKdf {
     // context is created, and its digest is set on that context
 
     private static final List<IDetectionRule<AstNode>> EVP_PKEY_KDF_CONTEXT_RULES =
-            Stream.of(OpenSSLEvpKdfHkdf.rules().stream(), OpenSSLEvpKdfTls.rules().stream())
+            Stream.of(
+                            RuleSets.rulesOf(OpenSSLEvpKdfHkdf.class).stream(),
+                            RuleSets.rulesOf(OpenSSLEvpKdfTls.class).stream())
                     .flatMap(i -> i)
                     .toList();
 
@@ -163,27 +165,16 @@ public final class OpenSSLEvpKdf {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(EVP_PKEY_KDF_CONTEXT_RULES);
 
-    private OpenSSLEvpKdf() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLEvpKdfPbkdf2.rules().stream(),
-                        OpenSSLEvpKdfScrypt.rules().stream(),
-                        OpenSSLEvpKdfPkcs12.rules().stream(),
-                        OpenSSLPasswordBasedEncryption.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKdfPbkdf2.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKdfScrypt.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpKdfPkcs12.class).stream(),
+                        RuleSets.rulesOf(OpenSSLPasswordBasedEncryption.class).stream(),
                         Stream.of(EVP_KDF_FETCH, EVP_PKEY_CTX_NEW_ID, EVP_PKEY_CTX_NEW_FROM_NAME))
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpKdf::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

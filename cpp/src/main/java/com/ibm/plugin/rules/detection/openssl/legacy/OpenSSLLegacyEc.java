@@ -25,13 +25,12 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -45,7 +44,7 @@ import javax.annotation.Nonnull;
  * operations
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyEc {
+public final class OpenSSLLegacyEc extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -255,12 +254,9 @@ public final class OpenSSLLegacyEc {
                                     ECDSA_DO_SIGN_EX,
                                     ECDH_COMPUTE_KEY));
 
-    private OpenSSLLegacyEc() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.concat(
                         Stream.of(
                                 // ECDSA Signatures
@@ -279,13 +275,5 @@ public final class OpenSSLLegacyEc {
                         // Groups on custom curves
                         EC_GROUP_NEW_CUSTOM_CURVE.stream())
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyEc::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

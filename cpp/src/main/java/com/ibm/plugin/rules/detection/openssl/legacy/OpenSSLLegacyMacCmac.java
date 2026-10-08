@@ -22,13 +22,13 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -36,7 +36,7 @@ import javax.annotation.Nonnull;
  * cipher of the CMAC.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyMacCmac {
+public final class OpenSSLLegacyMacCmac extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -50,26 +50,15 @@ public final class OpenSSLLegacyMacCmac {
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpCipher.class))
                     .withMethodParameter("*")
                     .buildForContext(new MacContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLLegacyMacCmac() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(CMAC_INIT);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyMacCmac::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

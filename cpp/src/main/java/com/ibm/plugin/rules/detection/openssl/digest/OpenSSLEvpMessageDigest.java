@@ -22,16 +22,16 @@ package com.ibm.plugin.rules.detection.openssl.digest;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.DerivedDetectionRules;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
 import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -47,11 +47,11 @@ import javax.annotation.Nonnull;
  * remaining single-variant digests (SHA-1, RIPEMD, Whirlpool, SM3, combined/special digests) and
  * the digests selected by name or NID ({@code EVP_MD_fetch}, {@code EVP_get_digestbyname}, {@code
  * EVP_get_digestbynid}, {@code EVP_Q_digest}), and aggregates every family's rules in {@link
- * #rules()}. The digest given to {@code EVP_DigestInit} and the other functions that take an {@code
- * EVP_MD} is reported where it is created.
+ * #buildRules()}. The digest given to {@code EVP_DigestInit} and the other functions that take an
+ * {@code EVP_MD} is reported where it is created.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpMessageDigest {
+public final class OpenSSLEvpMessageDigest extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -184,17 +184,14 @@ public final class OpenSSLEvpMessageDigest {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpMessageDigest() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLEvpMessageDigestMd.rules().stream(),
-                        OpenSSLEvpMessageDigestSha2.rules().stream(),
-                        OpenSSLEvpMessageDigestSha3.rules().stream(),
-                        OpenSSLEvpMessageDigestBlake2.rules().stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestMd.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestSha2.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestSha3.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestBlake2.class).stream(),
                         directRules().stream())
                 .flatMap(i -> i)
                 .toList();
@@ -221,51 +218,39 @@ public final class OpenSSLEvpMessageDigest {
                 EVP_Q_DIGEST);
     }
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpMessageDigest::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> MGF1_RULES =
-            Memoize.of(
-                    () ->
-                            DerivedDetectionRules.withContext(
-                                    rules(),
-                                    new DigestContext(
-                                            Map.of(
-                                                    CxxDigestContextTranslator.KIND,
-                                                    CxxDigestContextTranslator.MGF1_KIND))));
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> OAEP_RULES =
-            Memoize.of(
-                    () ->
-                            DerivedDetectionRules.withContext(
-                                    rules(),
-                                    new DigestContext(
-                                            Map.of(
-                                                    CxxDigestContextTranslator.KIND,
-                                                    CxxDigestContextTranslator.OAEP_KIND))));
-
     /**
-     * The rules of {@link #rules()} for the digest of MGF1, the mask generation function of RSA-PSS
-     * and RSA-OAEP, e.g. the {@code mgf1Hash} argument of {@code RSA_padding_add_PKCS1_PSS_mgf1}:
-     * each digest is reported as MGF1 with that digest.
+     * The digest rules for the digest of MGF1, the mask generation function of RSA-PSS and
+     * RSA-OAEP, e.g. the {@code mgf1Hash} argument of {@code RSA_padding_add_PKCS1_PSS_mgf1}: each
+     * digest is reported as MGF1 with that digest.
      */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> mgf1Rules() {
-        return MGF1_RULES.get();
+    public static final class Mgf1 extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return inDigestContext(CxxDigestContextTranslator.MGF1_KIND);
+        }
     }
 
     /**
-     * The rules of {@link #rules()} for the digest of RSA-OAEP, e.g. the {@code md} argument of
-     * {@code RSA_padding_add_PKCS1_OAEP_mgf1}: each digest is reported as the OAEP padding with
-     * that digest.
+     * The digest rules for the digest of RSA-OAEP, e.g. the {@code md} argument of {@code
+     * RSA_padding_add_PKCS1_OAEP_mgf1}: each digest is reported as the OAEP padding with that
+     * digest.
      */
+    public static final class Oaep extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return inDigestContext(CxxDigestContextTranslator.OAEP_KIND);
+        }
+    }
+
+    /** The digest rules, each derived to report its digest in the digest context of the kind. */
     @Nonnull
-    public static List<IDetectionRule<AstNode>> oaepRules() {
-        return OAEP_RULES.get();
+    private static List<IDetectionRule<AstNode>> inDigestContext(@Nonnull String kind) {
+        final DigestContext context =
+                new DigestContext(Map.of(CxxDigestContextTranslator.KIND, kind));
+        return RuleSets.rulesOf(OpenSSLEvpMessageDigest.class).stream()
+                .map(rule -> DerivedDetectionRules.withContext(rule, context))
+                .toList();
     }
 }

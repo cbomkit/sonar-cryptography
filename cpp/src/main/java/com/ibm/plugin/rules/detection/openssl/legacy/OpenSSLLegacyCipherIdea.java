@@ -20,16 +20,13 @@
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) IDEA cipher APIs. */
-public final class OpenSSLLegacyCipherIdea {
+public final class OpenSSLLegacyCipherIdea extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -44,20 +41,9 @@ public final class OpenSSLLegacyCipherIdea {
                     new LegacyEntry("IDEA_cfb64_encrypt", "IDEA-CFB", 7).keyAt(3),
                     new LegacyEntry("IDEA_ofb64_encrypt", "IDEA-OFB", 6).keyAt(3));
 
-    private OpenSSLLegacyCipherIdea() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipherIdea::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

@@ -24,6 +24,7 @@ import static com.ibm.plugin.ExpectedFinding.assertFinding;
 import static com.ibm.plugin.ExpectedFinding.finding;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.CxxVerifier;
 import com.ibm.plugin.ExpectedFinding;
@@ -58,7 +59,7 @@ class OpenSSLEvpKdfScryptTest extends TestBase {
     private int findings = 0;
 
     OpenSSLEvpKdfScryptTest() {
-        super(OpenSSLEvpKdfScrypt.rules());
+        super(RuleSets.rulesOf(OpenSSLEvpKdfScrypt.class));
     }
 
     @Test

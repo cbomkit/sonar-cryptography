@@ -33,7 +33,9 @@ import com.ibm.engine.model.factory.IActionFactory;
 import com.ibm.engine.model.factory.KeyActionFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
@@ -72,7 +74,7 @@ import javax.annotation.Nonnull;
  * ...). The {@code X509_sign_ctx} forms sign with a context initialized by {@code
  * EVP_DigestSignInit}, which is where the key and the digest are reported.
  */
-public final class OpenSSLEvpKeyUsage {
+public final class OpenSSLEvpKeyUsage extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -93,7 +95,7 @@ public final class OpenSSLEvpKeyUsage {
                     .forMethods("EVP_PKEY_CTX_set_signature_md")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
@@ -119,7 +121,7 @@ public final class OpenSSLEvpKeyUsage {
                 .shouldBeDetectedAs(new ValueActionFactory<>(setting))
                 .withMethodParameter("*")
                 .withMethodParameter("*")
-                .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                 .buildForContext(new AlgorithmParameterContext())
                 .inBundle(() -> BUNDLE)
                 .withoutDependingDetectionRules();
@@ -132,7 +134,7 @@ public final class OpenSSLEvpKeyUsage {
                                     EVP_PKEY_CTX_SET_RSA_OAEP_MD,
                                     EVP_PKEY_CTX_SET_RSA_MGF1_MD,
                                     OpenSSLEvpCipher.rsaOaepDigestNameRule()),
-                            OpenSSLEvpSignature.signingContextRules().stream())
+                            RuleSets.rulesOf(OpenSSLEvpSignature.SigningContext.class).stream())
                     .toList();
 
     // Operations on a context created for the key: the init function of each operation, one rule
@@ -279,7 +281,7 @@ public final class OpenSSLEvpKeyUsage {
                             Stream.of(
                                     OpenSSLEvpCipher.rsaPaddingRule(),
                                     EVP_PKEY_CTX_SET_RSA_MGF1_MD),
-                            OpenSSLEvpSignature.signingContextRules().stream())
+                            RuleSets.rulesOf(OpenSSLEvpSignature.SigningContext.class).stream())
                     .toList();
 
     // EVP_DigestSignInit(mdctx, pctx, md, e, pkey) / EVP_DigestVerifyInit(...)
@@ -308,7 +310,7 @@ public final class OpenSSLEvpKeyUsage {
                 .withMethodParameter("*")
                 .withMethodParameter("*")
                 .withMethodParameter("*")
-                .addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                 .withMethodParameter("*")
                 .withMethodParameter("*")
                 .buildForContext(new SignatureContext())
@@ -458,7 +460,8 @@ public final class OpenSSLEvpKeyUsage {
                             : withDigest.withMethodParameter("*");
             withDigest =
                     i == digestIndex
-                            ? parameters.addDependingDetectionRules(OpenSSLEvpMessageDigest.rules())
+                            ? parameters.addDependingDetectionRules(
+                                    RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
                             : null;
         }
         return (withDigest == null
@@ -468,34 +471,34 @@ public final class OpenSSLEvpKeyUsage {
                 .withoutDependingDetectionRules();
     }
 
-    private OpenSSLEvpKeyUsage() {
-        // private
-    }
-
     /**
      * The signatures and their verifications made with a key given as an argument: detection rules
      * on their own as well, for a key that is not generated in the analyzed code, e.g. loaded from
      * a file. A signature reported with the generation of its key is not reported again.
      */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> signatureRules() {
-        return List.of(
-                EVP_DIGEST_SIGN_INIT,
-                EVP_DIGEST_VERIFY_INIT,
-                EVP_DIGEST_SIGN_INIT_EX,
-                EVP_DIGEST_VERIFY_INIT_EX,
-                X509_SIGN,
-                X509_VERIFY,
-                X509_REQ_VERIFY_EX,
-                CMS_SIGN,
-                CMS_SIGN_EX,
-                CMS_ADD_SIGNER,
-                OCSP_BASIC_SIGN);
+    public static final class Signatures extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return List.of(
+                    EVP_DIGEST_SIGN_INIT,
+                    EVP_DIGEST_VERIFY_INIT,
+                    EVP_DIGEST_SIGN_INIT_EX,
+                    EVP_DIGEST_VERIFY_INIT_EX,
+                    X509_SIGN,
+                    X509_VERIFY,
+                    X509_REQ_VERIFY_EX,
+                    CMS_SIGN,
+                    CMS_SIGN_EX,
+                    CMS_ADD_SIGNER,
+                    OCSP_BASIC_SIGN);
+        }
     }
 
     /** The uses of a key, followed from the variable holding it. */
     @Nonnull
-    static List<IDetectionRule<AstNode>> rules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_PKEY_CTX_NEW,
                 EVP_PKEY_CTX_NEW_FROM_PKEY,

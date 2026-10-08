@@ -24,15 +24,14 @@ import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLNameCanonicalizerFactory;
 import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -45,7 +44,7 @@ import javax.annotation.Nonnull;
  * digest they use are detected by {@code OpenSSLEvpKeyUsage}.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpSignature {
+public final class OpenSSLEvpSignature extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -121,12 +120,9 @@ public final class OpenSSLEvpSignature {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpSignature() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Fetch
                 EVP_SIGNATURE_FETCH,
@@ -137,21 +133,16 @@ public final class OpenSSLEvpSignature {
                 TS_CONF_SET_SIGNER_DIGEST);
     }
 
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpSignature::buildRules);
-
     /**
      * The rules for the RSA-PSS settings of a signing context: its salt length and the digest of
      * its mask generation function, set on the context a digest sign or verify operation returns in
      * {@code pctx}.
      */
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> signingContextRules() {
-        return List.of(EVP_PKEY_CTX_SET_RSA_PSS_SALTLEN, EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME);
-    }
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
+    public static final class SigningContext extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return List.of(EVP_PKEY_CTX_SET_RSA_PSS_SALTLEN, EVP_PKEY_CTX_SET_RSA_MGF1_MD_NAME);
+        }
     }
 }

@@ -23,12 +23,12 @@ import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.CipherAction;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -43,7 +43,7 @@ import javax.annotation.Nonnull;
  * initialization reported with the creation of its context is not reported again.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpCipherInit {
+public final class OpenSSLEvpCipherInit extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -57,7 +57,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new CipherContext())
@@ -72,7 +73,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -88,7 +90,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .buildForContext(new CipherContext())
@@ -103,7 +106,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -120,7 +124,8 @@ public final class OpenSSLEvpCipherInit {
                     .forMethods("EVP_CipherInit")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -136,7 +141,8 @@ public final class OpenSSLEvpCipherInit {
                     .forMethods("EVP_CipherInit_ex")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -153,7 +159,8 @@ public final class OpenSSLEvpCipherInit {
                     .forMethods("EVP_CipherInit_ex2")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -174,7 +181,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -192,7 +200,8 @@ public final class OpenSSLEvpCipherInit {
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
-                    .addDependingDetectionRules(OpenSSLEvpCipher.cipherSelectionRules())
+                    .addDependingDetectionRules(
+                            RuleSets.rulesOf(OpenSSLEvpCipher.CipherSelection.class))
                     .withMethodParameter("*")
                     .withMethodParameter("*")
                     .withMethodParameter("*")
@@ -201,20 +210,9 @@ public final class OpenSSLEvpCipherInit {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpCipherInit() {
-        // private
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherInit::buildRules);
-
     @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
-    }
-
-    @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 EVP_ENCRYPT_INIT,
                 EVP_ENCRYPT_INIT_EX,

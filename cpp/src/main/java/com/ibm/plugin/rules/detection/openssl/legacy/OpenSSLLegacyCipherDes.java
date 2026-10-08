@@ -20,16 +20,13 @@
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) DES and 3DES cipher APIs. */
-public final class OpenSSLLegacyCipherDes {
+public final class OpenSSLLegacyCipherDes extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -58,20 +55,9 @@ public final class OpenSSLLegacyCipherDes {
                     new LegacyEntry("DES_ede3_ofb64_encrypt", "3DES-OFB", 8).keyAt(3),
                     new LegacyEntry("DES_xcbc_encrypt", "DES-XCBC", 8).keyAt(3));
 
-    private OpenSSLLegacyCipherDes() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipherDes::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

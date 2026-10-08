@@ -26,14 +26,13 @@ import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -45,7 +44,7 @@ import javax.annotation.Nonnull;
  * <p>Covers: key generation, signing, verification, size/utility, and conversion functions.
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLLegacyDsa {
+public final class OpenSSLLegacyDsa extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -118,12 +117,9 @@ public final class OpenSSLLegacyDsa {
                     .inBundle(() -> BUNDLE)
                     .withDependingDetectionRules(List.of(DSA_SIGN, DSA_DO_SIGN));
 
-    private OpenSSLLegacyDsa() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(
                 // Signatures
                 DSA_SIGN,
@@ -131,13 +127,5 @@ public final class OpenSSLLegacyDsa {
                 // Key Generation
                 DSA_GENERATE_KEY,
                 DSA_GENERATE_PARAMETERS_EX);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyDsa::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

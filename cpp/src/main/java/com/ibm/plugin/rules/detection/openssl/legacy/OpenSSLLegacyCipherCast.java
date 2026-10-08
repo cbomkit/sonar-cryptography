@@ -21,16 +21,13 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) CAST5 cipher APIs. */
-public final class OpenSSLLegacyCipherCast {
+public final class OpenSSLLegacyCipherCast extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -44,20 +41,9 @@ public final class OpenSSLLegacyCipherCast {
                     new LegacyEntry("CAST_cfb64_encrypt", "CAST5-CFB", 7).keyAt(3),
                     new LegacyEntry("CAST_ofb64_encrypt", "CAST5-OFB", 6).keyAt(3));
 
-    private OpenSSLLegacyCipherCast() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipherCast::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

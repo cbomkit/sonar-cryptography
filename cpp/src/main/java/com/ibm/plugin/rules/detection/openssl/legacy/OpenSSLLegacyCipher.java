@@ -19,11 +19,11 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -35,36 +35,25 @@ import javax.annotation.Nonnull;
  *
  * <p>Per-family cipher rules live in their own {@code OpenSSLLegacyCipher<Family>} classes (AES,
  * DES/3DES, Blowfish, RC4, RC2, CAST, IDEA, Camellia, RC5, SEED); this class aggregates all of them
- * in {@link #rules()}.
+ * in {@link #buildRules()}.
  */
-public final class OpenSSLLegacyCipher {
-
-    private OpenSSLLegacyCipher() {
-        // private
-    }
+public final class OpenSSLLegacyCipher extends DetectionRuleSet<AstNode> {
 
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLLegacyCipherAes.rules().stream(),
-                        OpenSSLLegacyCipherDes.rules().stream(),
-                        OpenSSLLegacyCipherBlowfish.rules().stream(),
-                        OpenSSLLegacyCipherRc4.rules().stream(),
-                        OpenSSLLegacyCipherRc2.rules().stream(),
-                        OpenSSLLegacyCipherCast.rules().stream(),
-                        OpenSSLLegacyCipherIdea.rules().stream(),
-                        OpenSSLLegacyCipherCamellia.rules().stream(),
-                        OpenSSLLegacyCipherRc5.rules().stream(),
-                        OpenSSLLegacyCipherSeed.rules().stream())
+                        RuleSets.rulesOf(OpenSSLLegacyCipherAes.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherDes.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherBlowfish.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherRc4.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherRc2.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherCast.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherIdea.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherCamellia.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherRc5.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyCipherSeed.class).stream())
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipher::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

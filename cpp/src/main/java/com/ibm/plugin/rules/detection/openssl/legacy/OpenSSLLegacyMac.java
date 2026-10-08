@@ -19,11 +19,11 @@
  */
 package com.ibm.plugin.rules.detection.openssl.legacy;
 
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
+import com.ibm.engine.rule.RuleSets;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -34,32 +34,21 @@ import javax.annotation.Nonnull;
  * but still widely used in existing codebases.
  *
  * <p>HMAC and CMAC each live in their own {@code OpenSSLLegacyMac<Family>} class; this class
- * aggregates both in {@link #rules()}. Poly1305 is intentionally excluded — its {@code
+ * aggregates both in {@link #buildRules()}. Poly1305 is intentionally excluded — its {@code
  * Poly1305_Init/Update/Final} symbols are OpenSSL-internal (declared in {@code
  * include/crypto/poly1305.h}, not {@code include/openssl/}). Public Poly1305 access in OpenSSL 3.x
  * is via {@code EVP_MAC_fetch(..., "POLY1305", ...)}, handled by {@link
  * com.ibm.plugin.rules.detection.openssl.mac.OpenSSLEvpMac}.
  */
-public final class OpenSSLLegacyMac {
-
-    private OpenSSLLegacyMac() {
-        // private
-    }
+public final class OpenSSLLegacyMac extends DetectionRuleSet<AstNode> {
 
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return Stream.of(
-                        OpenSSLLegacyMacHmac.rules().stream(),
-                        OpenSSLLegacyMacCmac.rules().stream())
+                        RuleSets.rulesOf(OpenSSLLegacyMacHmac.class).stream(),
+                        RuleSets.rulesOf(OpenSSLLegacyMacCmac.class).stream())
                 .flatMap(i -> i)
                 .toList();
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyMac::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

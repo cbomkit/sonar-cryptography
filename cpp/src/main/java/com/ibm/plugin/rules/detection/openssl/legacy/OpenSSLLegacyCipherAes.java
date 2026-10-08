@@ -21,16 +21,13 @@ package com.ibm.plugin.rules.detection.openssl.legacy;
 
 import com.ibm.engine.model.Size;
 import com.ibm.engine.rule.IDetectionRule;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory;
-import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipherRuleFactory.LegacyEntry;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** Detection rules for OpenSSL legacy (pre-EVP) AES cipher APIs. */
-public final class OpenSSLLegacyCipherAes {
+public final class OpenSSLLegacyCipherAes extends OpenSSLEvpCipherRuleFactory {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -52,20 +49,9 @@ public final class OpenSSLLegacyCipherAes {
                     new LegacyEntry("AES_wrap_key", "AES-WRAP", 5).keyAt(0),
                     new LegacyEntry("AES_unwrap_key", "AES-WRAP", 5).keyAt(0));
 
-    private OpenSSLLegacyCipherAes() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return OpenSSLEvpCipherRuleFactory.buildLegacy(BUNDLE, ENTRIES);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLLegacyCipherAes::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }

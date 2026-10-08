@@ -22,12 +22,11 @@ package com.ibm.plugin.rules.detection.openssl.cipher;
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
-import com.ibm.plugin.rules.detection.Memoize;
 import com.sonar.cxx.sslr.api.AstNode;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -36,7 +35,7 @@ import javax.annotation.Nonnull;
  * <p>Covers SEED (the Korean national standard cipher, RFC 4269).
  */
 @SuppressWarnings("java:S1192")
-public final class OpenSSLEvpCipherSeed {
+public final class OpenSSLEvpCipherSeed extends DetectionRuleSet<AstNode> {
 
     private static final String BUNDLE = "OpenSSL";
 
@@ -84,20 +83,9 @@ public final class OpenSSLEvpCipherSeed {
                     .inBundle(() -> BUNDLE)
                     .withoutDependingDetectionRules();
 
-    private OpenSSLEvpCipherSeed() {
-        // private
-    }
-
     @Nonnull
-    private static List<IDetectionRule<AstNode>> buildRules() {
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
         return List.of(EVP_SEED_ECB, EVP_SEED_CBC, EVP_SEED_CFB, EVP_SEED_OFB);
-    }
-
-    private static final Supplier<List<IDetectionRule<AstNode>>> RULES =
-            Memoize.of(OpenSSLEvpCipherSeed::buildRules);
-
-    @Nonnull
-    public static List<IDetectionRule<AstNode>> rules() {
-        return RULES.get();
     }
 }
