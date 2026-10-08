@@ -1,0 +1,63 @@
+Sonar Cryptography Plugin ${project.version}
+
+Independently authored Sonar Cryptography Plugin code is licensed under
+Apache License 2.0. See META-INF/LICENSE.txt. Third-party components retain
+their own licences; the Apache licence does not relicense their code.
+
+This JAR contains portions of the following SonarSource analyzers:
+
+sonar-java ${sonar.java.version}
+  Maven coordinate: org.sonarsource.java:sonar-java-plugin:${sonar.java.version}
+  Project: https://github.com/SonarSource/sonar-java
+  Release source tree: https://github.com/SonarSource/sonar-java/tree/${sonar.java.version}
+  Published plugin sources:
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/sonar-java-plugin/${sonar.java.version}/sonar-java-plugin-${sonar.java.version}-sources.jar
+  Original legal files: META-INF/third-party/analyzers/sonar-java-plugin-${sonar.java.version}-jar/
+
+sonar-python ${sonar.python.version}
+  Maven coordinate: org.sonarsource.python:sonar-python-plugin:${sonar.python.version}
+  Published plugin sources:
+    https://repo.maven.apache.org/maven2/org/sonarsource/python/sonar-python-plugin/${sonar.python.version}/sonar-python-plugin-${sonar.python.version}-sources.jar
+  Original legal files: META-INF/third-party/analyzers/sonar-python-plugin-${sonar.python.version}-jar/
+
+sonar-go ${sonar.go.version}
+  Maven coordinate: org.sonarsource.go:sonar-go-plugin:${sonar.go.version}
+  Published plugin sources:
+    https://repo.maven.apache.org/maven2/org/sonarsource/go/sonar-go-plugin/${sonar.go.version}/sonar-go-plugin-${sonar.go.version}-sources.jar
+  Original legal files: META-INF/third-party/analyzers/sonar-go-plugin-${sonar.go.version}-jar/
+
+The SSAL-covered portions and their source are available under the Sonar
+Source-Available License v1.0 (SSALv1). The sonar-java licence text is included at
+META-INF/third-party/SSALv1.txt. The Python and Go licence texts are preserved
+in licenses/LICENSE.txt within their original-legal-files directories above.
+Consult each component's own text; the upstream texts differ in the named
+SonarSource legal entity. Individual files and embedded third-party
+components may have other licences; retain and consult their original notices.
+Copyright statements are preserved in the source JARs and original legal files.
+
+Obtaining source
+
+Extract the source JARs from META-INF/third-party/analyzer-sources/ in this JAR.
+They are the unmodified sources classifiers published on Maven Central for the
+resolved Java, Python and Go analyzer modules, including Java and Python
+frontends, checks and other resolved modules in those Maven groups. Each
+filename identifies the module and its exact version. They can also be fetched
+from https://repo.maven.apache.org/maven2/ using each module's Maven coordinate.
+Source-specific legal notices remain within each source JAR.
+
+The upstream plugin source JARs are not complete repository source trees. In
+particular, the Go plugin source JAR does not include the native Go-to-Slang
+bridge implementation. Its matching source availability must be resolved before
+claiming full source compliance for the bundled native executables.
+
+Packaging
+
+Analyzer bytecode is combined with this plugin using Maven Shade with
+minimizeJar enabled. Unused classes are removed; package names are not relocated.
+Analyzer source JARs and the namespaced legal files are copied without changes.
+The build configuration is sonar-cryptography-plugin/pom.xml in the matching
+Sonar Cryptography Plugin release at https://github.com/cbomkit/sonar-cryptography.
+
+This notice documents redistribution materials. It does not grant additional
+rights or establish that the plugin's functionality or every downstream use
+satisfies SSAL's permitted-purpose restrictions.

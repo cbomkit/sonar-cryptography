@@ -21,6 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <sonar.jreMinVersion>17</sonar.jreMinVersion>
+        <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.go</sonar.analyzer.groups>
     </properties>
     <dependencies>
         <dependency>
@@ -64,9 +65,58 @@
                 <directory>src/main/resources-filtered</directory>
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>${project.build.directory}/analyzer-resources</directory>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/..</directory>
+                <includes>
+                    <include>LICENSE.txt</include>
+                </includes>
+                <targetPath>META-INF</targetPath>
+            </resource>
         </resources>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <executions>
+                    <execution>
+                        <id>preserve-analyzer-notices</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
+                            <includeScope>runtime</includeScope>
+                            <!-- Keep each artifact's files separate: Shade otherwise keeps only
+                                 one copy of shared paths such as licenses/LICENSE.txt. -->
+                            <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+                            <includes>**/*LICENSE*,**/*NOTICE*,**/*license*,**/*notice*,**/license/**,**/licenses/**,about_files/**</includes>
+                            <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>include-analyzer-sources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Plugin sources alone omit the Java and Python frontends.
+                                 Include the sources of the resolved analyzer modules too. -->
+                            <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
+                            <includeScope>runtime</includeScope>
+                            <classifier>sources</classifier>
+                            <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
+                            <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
                 <artifactId>sonar-packaging-maven-plugin</artifactId>
@@ -102,15 +152,14 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <exclude>META-INF/LICENSE*</exclude>
-                                        <exclude>META-INF/NOTICE*</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                         <exclude>META-INF/*.SF</exclude>
-                                        <exclude>LICENSE*</exclude>
-                                        <exclude>NOTICE*</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
