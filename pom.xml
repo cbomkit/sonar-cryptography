@@ -60,7 +60,7 @@
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
-        <google-java-format.version>1.28.0</google-java-format.version>
+        <google-java-format.version>1.36.1</google-java-format.version>
     </properties>
 
     <distributionManagement>
