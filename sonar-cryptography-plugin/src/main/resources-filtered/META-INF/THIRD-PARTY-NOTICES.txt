@@ -22,6 +22,11 @@ sonar-python ${sonar.python.version}
 
 sonar-go ${sonar.go.version}
   Maven coordinate: org.sonarsource.go:sonar-go-plugin:${sonar.go.version}
+  Release source tree: https://github.com/SonarSource/sonar-go/tree/${sonar.go.source.revision}
+  Complete release source:
+    https://codeload.github.com/SonarSource/sonar-go/zip/${sonar.go.source.revision}
+  Public source revision: ${sonar.go.source.revision}
+  GitOrigin-RevId / plugin Implementation-Build: ${sonar.go.source.origin-revision}
   Published plugin sources:
     https://repo.maven.apache.org/maven2/org/sonarsource/go/sonar-go-plugin/${sonar.go.version}/sonar-go-plugin-${sonar.go.version}-sources.jar
   Original legal files: META-INF/third-party/analyzers/sonar-go-plugin-${sonar.go.version}-jar/
@@ -45,16 +50,19 @@ filename identifies the module and its exact version. They can also be fetched
 from https://repo.maven.apache.org/maven2/ using each module's Maven coordinate.
 Source-specific legal notices remain within each source JAR.
 
-The upstream plugin source JARs are not complete repository source trees. In
-particular, the Go plugin source JAR does not include the native Go-to-Slang
-bridge implementation. Its matching source availability must be resolved before
-claiming full source compliance for the bundled native executables.
+The Go plugin source JAR omits the native Go-to-Slang bridge and shaded modules.
+The complete release tree is additionally included in the same directory as
+sonar-go-${sonar.go.version}-${sonar.go.source.revision}-source.zip.
+It includes the native bridge, generated-source inputs, GoConverter and the
+build scripts. The public commit's GitOrigin-RevId matches Implementation-Build
+in the original plugin JAR; its published Java sources match the source JAR.
+Original legal notices remain within the complete release archive.
 
 Packaging
 
 Analyzer bytecode is combined with this plugin using Maven Shade with
 minimizeJar enabled. Unused classes are removed; package names are not relocated.
-Analyzer source JARs and the namespaced legal files are copied without changes.
+Analyzer source archives and the namespaced legal files are copied without changes.
 The build configuration is sonar-cryptography-plugin/pom.xml in the matching
 Sonar Cryptography Plugin release at https://github.com/cbomkit/sonar-cryptography.
 

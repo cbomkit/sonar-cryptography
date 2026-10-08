@@ -54,6 +54,10 @@
         <sonar.java.version>8.22.0.41895</sonar.java.version>
         <sonar.python.version>5.29.0.35837</sonar.python.version>
         <sonar.go.version>1.32.0.5128</sonar.go.version>
+        <!-- Update both source revisions with sonar.go.version. GitOrigin-RevId in
+             the public commit must match the plugin JAR's Implementation-Build. -->
+        <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
+        <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>

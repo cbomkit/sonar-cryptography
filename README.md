@@ -337,9 +337,11 @@ The plugin JAR includes `META-INF/THIRD-PARTY-NOTICES.txt`, the SSAL text, and
 each resolved analyser module's original legal files under
 `META-INF/third-party/analyzers/`. Matching upstream Maven source JARs are included
 under `META-INF/third-party/analyzer-sources/`, including the Java and Python
-frontends. The notices describe the versions, source locations and packaging
-transformations.
+frontends. A pinned complete sonar-go release source ZIP in the same directory
+also provides the native Go bridge, shaded Go modules and build scripts. Its
+public commit maps to the plugin's build revision through `GitOrigin-RevId`.
+The notices describe the versions, source locations and packaging transformations.
 
 These packaging materials do not establish that every use is permitted by SSAL.
-The permitted-purpose restrictions and the completeness of upstream source
-distributions, including the native Go bridge, still require review before release.
+The permitted-purpose restrictions and the provenance and licence notices of
+any adapted implementation code still require review before release.

@@ -1,6 +1,7 @@
 """Verify the legal materials and source distributions in the shaded release JAR."""
 
 import argparse
+from io import BytesIO
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
@@ -63,11 +64,47 @@ def verify(plugin_jar, repository):
             assert "META-INF/third-party/analyzer-sources/" + source_name in names, (
                 "Missing parser implementation sources: " + source_name
             )
-        assert "does not include the native Go-to-Slang" in notice, (
-            "Missing upstream source gap"
+        version = properties.find("m:sonar.go.version", namespace).text
+        revision = properties.find("m:sonar.go.source.revision", namespace).text
+        origin = properties.find("m:sonar.go.source.origin-revision", namespace).text
+        assert revision in notice and origin in notice, "Missing Go source provenance"
+        artifact_directory = (
+            repository / "org/sonarsource/go/sonar-go-plugin" / version
         )
+        with ZipFile(artifact_directory / ("sonar-go-plugin-" + version + ".jar")) as go:
+            manifest = go.read("META-INF/MANIFEST.MF").decode().replace("\r\n ", "")
+            assert "Implementation-Build: " + origin in manifest, (
+                "Go dependency changed: update the matching release source revisions"
+            )
+
+        archive_name = "sonar-go-" + version + "-" + revision + "-source.zip"
+        archive = packaged.read("META-INF/third-party/analyzer-sources/" + archive_name)
+        with ZipFile(BytesIO(archive)) as source:
+            assert source.comment.decode() == revision, "Wrong Go source revision"
+            prefix = "sonar-go-" + revision + "/"
+            for path in (
+                "LICENSE.txt",
+                "sonar-go-commons/src/main/java/org/sonar/go/converter/GoConverter.java",
+                "sonar-go-to-slang/main.go",
+                "sonar-go-to-slang/goparser.go",
+                "sonar-go-to-slang/generate_source.go",
+                "sonar-go-to-slang/mapping_generated.go",
+                "sonar-go-to-slang/go.mod",
+                "sonar-go-to-slang/go.sum",
+                "sonar-go-to-slang/make.sh",
+                "build-logic/common/build.gradle.kts",
+            ):
+                assert source.read(prefix + path), "Missing Go release source: " + path
+            source_jar = artifact_directory / ("sonar-go-plugin-" + version + "-sources.jar")
+            with ZipFile(source_jar) as published:
+                java_files = [name for name in published.namelist() if name.endswith(".java")]
+                assert java_files, "No published Go Java sources to compare"
+                for name in java_files:
+                    assert source.read(
+                        prefix + "sonar-go-plugin/src/main/java/" + name
+                    ) == published.read(name), "Go release source mismatch: " + name
     print(
-        "Verified analyzer notices, licences and published source JARs in "
+        "Verified analyzer notices, licences, source JARs and complete Go source in "
         + str(plugin_jar)
     )
 
