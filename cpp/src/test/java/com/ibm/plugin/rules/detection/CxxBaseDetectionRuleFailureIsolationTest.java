@@ -36,6 +36,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.event.Level;
+import org.sonar.api.testfixtures.log.LogTesterJUnit5;
 import org.sonar.cxx.utils.CxxAstNodeHelper;
 
 /**
@@ -43,6 +46,9 @@ import org.sonar.cxx.utils.CxxAstNodeHelper;
  * follow it in the same scan.
  */
 class CxxBaseDetectionRuleFailureIsolationTest {
+
+    @RegisterExtension
+    final LogTesterJUnit5 logTester = new LogTesterJUnit5().setLevel(Level.ERROR);
 
     @AfterEach
     void resetSharedState() {
@@ -61,6 +67,11 @@ class CxxBaseDetectionRuleFailureIsolationTest {
                         "rules/detection/isolation/CxxFileAfterFailingFileTestFile.cc"),
                 new InventoryRule(rules));
 
+        assertThat(logTester.logs(Level.ERROR))
+                .anyMatch(
+                        log ->
+                                log.startsWith("Unable to detect cryptographic assets in file")
+                                        && log.contains("CxxFailingFileTestFile.cc"));
         assertThat(CxxAggregator.getDetectedNodes())
                 .extracting(INode::asString)
                 .containsExactly("SHA-256");
@@ -74,6 +85,11 @@ class CxxBaseDetectionRuleFailureIsolationTest {
                         "rules/detection/isolation/CxxFileAfterFailingFileTestFile.cc"),
                 new InventoryRule(RuleSets.rulesOf(CxxDetectionRules.class)));
 
+        assertThat(logTester.logs(Level.ERROR))
+                .anyMatch(
+                        log ->
+                                log.startsWith("Unable to parse file")
+                                        && log.contains("CxxUnparsableFileTestFile.cc"));
         assertThat(CxxAggregator.getDetectedNodes())
                 .extracting(INode::asString)
                 .containsExactly("SHA-256");
