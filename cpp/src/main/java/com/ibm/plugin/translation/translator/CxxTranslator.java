@@ -22,8 +22,8 @@ package com.ibm.plugin.translation.translator;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.KeyAgreementContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
@@ -82,7 +82,7 @@ public final class CxxTranslator
     public Optional<INode> translate(
             @Nonnull final IBundle bundleIdentifier,
             @Nonnull final IValue<AstNode> value,
-            @Nonnull final IDetectionContext detectionValueContext,
+            @Nonnull final DetectionContext detectionValueContext,
             @Nonnull final String filePath) {
         DetectionLocation detectionLocation =
                 getDetectionContextFrom(value.getLocation(), bundleIdentifier, filePath);

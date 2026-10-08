@@ -22,7 +22,7 @@ package com.ibm.plugin.rules.detection;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.language.ILanguageTranslation;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.mapper.model.INode;
@@ -109,7 +109,7 @@ class CxxBaseDetectionRuleFailureIsolationTest {
 
         @Nonnull
         @Override
-        public IDetectionContext detectionValueContext() {
+        public DetectionContext detectionValueContext() {
             throw new UnsupportedOperationException();
         }
 

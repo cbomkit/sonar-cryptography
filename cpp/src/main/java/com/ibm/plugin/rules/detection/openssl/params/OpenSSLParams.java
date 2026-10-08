@@ -21,8 +21,8 @@ package com.ibm.plugin.rules.detection.openssl.params;
 
 import com.ibm.engine.language.cxx.CxxLanguageTranslation;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.DigestContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import com.ibm.plugin.rules.detection.Memoize;
@@ -107,7 +107,7 @@ public final class OpenSSLParams {
     private static List<IDetectionRule<AstNode>> entryRules(
             @Nonnull List<String> keys,
             @Nonnull Map<String, String> names,
-            @Nonnull IDetectionContext context) {
+            @Nonnull DetectionContext context) {
         return keys.stream()
                 .map(
                         key ->
@@ -134,7 +134,7 @@ public final class OpenSSLParams {
     private static List<IDetectionRule<AstNode>> builderEntryRules(
             @Nonnull List<String> keys,
             @Nonnull Map<String, String> names,
-            @Nonnull IDetectionContext context) {
+            @Nonnull DetectionContext context) {
         return keys.stream()
                 .map(
                         key ->
@@ -162,7 +162,7 @@ public final class OpenSSLParams {
     private static List<IDetectionRule<AstNode>> rules(
             @Nonnull List<String> keys,
             @Nonnull Map<String, String> names,
-            @Nonnull IDetectionContext context) {
+            @Nonnull DetectionContext context) {
         final IDetectionRule<AstNode> toParam =
                 new DetectionRuleBuilder<AstNode>()
                         .createDetectionRule()

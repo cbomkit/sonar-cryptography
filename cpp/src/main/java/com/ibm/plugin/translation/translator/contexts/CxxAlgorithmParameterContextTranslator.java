@@ -25,7 +25,7 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.Padding;
 import com.ibm.engine.model.TagSize;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
@@ -52,7 +52,7 @@ public final class CxxAlgorithmParameterContextTranslator implements IContextTra
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<AstNode> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         // parameters set on a cipher context (see OpenSSLEvpCipherParameters)
         if (value instanceof KeySize<AstNode> keySize) {

@@ -25,7 +25,7 @@ import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
 import com.ibm.engine.model.factory.CipherActionFactory;
@@ -206,7 +206,7 @@ public final class OpenSSLEvpKeyUsage {
     @Nonnull
     private static List<IDetectionRule<AstNode>> operationInit(
             @Nonnull IActionFactory<AstNode> operation,
-            @Nonnull Supplier<IDetectionContext> context,
+            @Nonnull Supplier<DetectionContext> context,
             @Nonnull InitFunctions... initFunctions) {
         return Stream.of(initFunctions)
                 .map(
@@ -439,7 +439,7 @@ public final class OpenSSLEvpKeyUsage {
     @Nonnull
     private static IDetectionRule<AstNode> keyOperation(
             @Nonnull IActionFactory<AstNode> operation,
-            @Nonnull IDetectionContext context,
+            @Nonnull DetectionContext context,
             int parameterCount,
             int digestIndex,
             @Nonnull String... functions) {

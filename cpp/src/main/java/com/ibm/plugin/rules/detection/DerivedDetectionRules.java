@@ -19,7 +19,7 @@
  */
 package com.ibm.plugin.rules.detection;
 
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.factory.IActionFactory;
 import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
@@ -54,13 +54,13 @@ public final class DerivedDetectionRules {
      */
     @Nonnull
     public static List<IDetectionRule<AstNode>> withContext(
-            @Nonnull List<IDetectionRule<AstNode>> rules, @Nonnull IDetectionContext context) {
+            @Nonnull List<IDetectionRule<AstNode>> rules, @Nonnull DetectionContext context) {
         return rules.stream().map(rule -> withContext(rule, context)).toList();
     }
 
     @Nonnull
     private static IDetectionRule<AstNode> withContext(
-            @Nonnull IDetectionRule<AstNode> rule, @Nonnull IDetectionContext context) {
+            @Nonnull IDetectionRule<AstNode> rule, @Nonnull DetectionContext context) {
         if (!(rule instanceof DetectionRule<AstNode> detectionRule)) {
             return rule;
         }
@@ -87,7 +87,7 @@ public final class DerivedDetectionRules {
     public static IDetectionRule<AstNode> withAction(
             @Nonnull IDetectionRule<AstNode> rule,
             @Nonnull IActionFactory<AstNode> actionFactory,
-            @Nonnull IDetectionContext context) {
+            @Nonnull DetectionContext context) {
         final DetectionRule<AstNode> detectionRule = (DetectionRule<AstNode>) rule;
         final List<Parameter<AstNode>> parameters =
                 detectionRule.parameters().stream()

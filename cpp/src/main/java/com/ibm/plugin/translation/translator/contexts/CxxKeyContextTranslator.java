@@ -27,7 +27,6 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
-import com.ibm.engine.model.context.IDetectionContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.rule.IBundle;
@@ -63,7 +62,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<AstNode> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (isRawKey(detectionContext)
                 && (value instanceof ValueAction<AstNode> || value instanceof Algorithm<AstNode>)) {
@@ -86,7 +85,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
     }
 
     /** Whether the value is the type of a key created from raw bytes (see OpenSSLEvpRawKey). */
-    private static boolean isRawKey(@Nonnull IDetectionContext detectionContext) {
+    private static boolean isRawKey(@Nonnull DetectionContext detectionContext) {
         return detectionContext instanceof DetectionContext context
                 && context.get("kind").filter("RAW_KEY"::equals).isPresent();
     }
@@ -100,7 +99,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
     private Optional<INode> rawKey(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<AstNode> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         final Optional<? extends INode> mac =
                 new OpenSslMacMapper().parse(value.asString(), detectionLocation);
@@ -122,7 +121,7 @@ public final class CxxKeyContextTranslator implements IContextTranslation<AstNod
     private Optional<INode> translateValue(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<AstNode> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
         // settings made on a key generation context (see OpenSSLEvpKeyGen)

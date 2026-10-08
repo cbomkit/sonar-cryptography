@@ -21,7 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.IDetectionContext;
+import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.openssl.OpenSslPRNGMapper;
@@ -43,7 +43,7 @@ public final class CxxPRNGContextTranslator implements IContextTranslation<AstNo
     public @Nonnull Optional<INode> translate(
             @Nonnull IBundle bundleIdentifier,
             @Nonnull IValue<AstNode> value,
-            @Nonnull IDetectionContext detectionContext,
+            @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
 
         if (value instanceof ValueAction<AstNode>
