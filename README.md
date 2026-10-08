@@ -327,4 +327,21 @@ start a discussion using [GitHub Discussions](https://github.com/cbomkit/sonar-c
 
 ## License
 
-[Apache License 2.0](LICENSE.txt)
+The independently authored code in this repository is licensed under the
+[Apache License 2.0](LICENSE.txt). The packaged plugin also contains third-party
+code under its own licences, including sonar-java, sonar-python and sonar-go
+under the [Sonar Source-Available License v1.0](https://www.sonarsource.com/license/ssal-1-0-0/),
+subject to their individual-file licence notices.
+
+The plugin JAR includes `META-INF/THIRD-PARTY-NOTICES.txt`, the SSAL text, and
+each resolved analyser module's original legal files under
+`META-INF/third-party/analyzers/`. Matching upstream Maven source JARs are included
+under `META-INF/third-party/analyzer-sources/`, including the Java and Python
+frontends. A pinned complete sonar-go release source ZIP in the same directory
+also provides the native Go bridge, shaded Go modules and build scripts. Its
+public commit maps to the plugin's build revision through `GitOrigin-RevId`.
+The notices describe the versions, source locations and packaging transformations.
+
+These packaging materials do not establish that every use is permitted by SSAL.
+The permitted-purpose restrictions and the provenance and licence notices of
+any adapted implementation code still require review before release.
