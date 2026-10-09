@@ -109,6 +109,50 @@ public abstract class TestBase extends CSharpInventoryRule {
                             detectionStore,
             @Nonnull List<INode> nodes);
 
+    /**
+     * Asserts that {@code node} has, or deliberately does not have, a child of the given kind.
+     *
+     * <p>Passing {@code null} for {@code expected} asserts <em>absence</em>. Half of the value of
+     * these rule tests lies in those assertions: a parameter the engine cannot resolve must leave
+     * the child off the node entirely rather than attach a guessed or defaulted value, and only an
+     * explicit absence assertion keeps a later change from quietly filling it in.
+     */
+    protected static void assertChild(
+            @Nonnull INode node, @Nonnull Class<? extends INode> kind, @Nullable String expected) {
+        final INode child = node.getChildren().get(kind);
+        if (expected == null) {
+            org.assertj.core.api.Assertions.assertThat(child)
+                    .as("child %s of %s must be absent", kind.getSimpleName(), node.asString())
+                    .isNull();
+        } else {
+            org.assertj.core.api.Assertions.assertThat(child)
+                    .as("child %s of %s must be present", kind.getSimpleName(), node.asString())
+                    .isNotNull();
+            org.assertj.core.api.Assertions.assertThat(child.asString())
+                    .as("child %s of %s", kind.getSimpleName(), node.asString())
+                    .isEqualTo(expected);
+        }
+    }
+
+    /**
+     * Asserts that {@code node} has no child of the given kind.
+     *
+     * <p>Exists because a bare {@code null} passed to {@link #assertChild} is ambiguous between its
+     * {@code String} and {@code Integer} overloads. Pass a typed {@code null} variable to {@code
+     * assertChild} when the expectation is computed, and use this when it is written literally.
+     */
+    protected static void assertNoChild(@Nonnull INode node, @Nonnull Class<? extends INode> kind) {
+        org.assertj.core.api.Assertions.assertThat(node.getChildren().get(kind))
+                .as("child %s of %s must be absent", kind.getSimpleName(), node.asString())
+                .isNull();
+    }
+
+    /** {@link #assertChild} for an integer-valued child such as a length or an iteration count. */
+    protected static void assertChild(
+            @Nonnull INode node, @Nonnull Class<? extends INode> kind, @Nullable Integer expected) {
+        assertChild(node, kind, expected == null ? null : String.valueOf(expected));
+    }
+
     private void writeNodeTree(int id, @Nonnull List<INode> nodes) {
         try {
             StringBuilder sb = new StringBuilder();

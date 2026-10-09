@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -41,6 +43,14 @@ public final class CSharpParserErrorListener extends BaseErrorListener {
 
     @Nonnull private final InputFile inputFile;
 
+    /**
+     * Collected messages rather than logged ones, because a file may be parsed twice: once with
+     * every conditional branch active and, if that fails, once with a single branch (see {@code
+     * CSharpConditionalDirectives}). Only the attempt that is actually used should report, so the
+     * caller picks an attempt and calls {@link #flushToLog()} on it.
+     */
+    @Nonnull private final List<String> messages = new ArrayList<>();
+
     public CSharpParserErrorListener(@Nonnull InputFile inputFile) {
         this.inputFile = inputFile;
     }
@@ -53,6 +63,18 @@ public final class CSharpParserErrorListener extends BaseErrorListener {
             int charPositionInLine,
             @Nonnull String msg,
             @Nullable RecognitionException e) {
-        LOG.warn("Parse error in {}: line {}:{} — {}", inputFile, line, charPositionInLine, msg);
+        messages.add("line " + line + ":" + charPositionInLine + " — " + msg);
+    }
+
+    /** How many syntax errors this attempt produced. */
+    public int errorCount() {
+        return messages.size();
+    }
+
+    /** Logs the collected messages. Called only for the parse attempt that is kept. */
+    public void flushToLog() {
+        for (String message : messages) {
+            LOG.warn("Parse error in {}: {}", inputFile, message);
+        }
     }
 }

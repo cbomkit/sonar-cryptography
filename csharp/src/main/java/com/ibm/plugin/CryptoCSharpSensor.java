@@ -138,23 +138,56 @@ public class CryptoCSharpSensor implements Sensor {
         }
     }
 
+    /**
+     * Parses the file, handling conditional compilation in two attempts.
+     *
+     * <p>Conditional regions are skipped by the grammar, which costs whole files' worth of
+     * cryptography, so they are neutralized first with every branch active. That is not always
+     * valid C#: a conditional may split a single construct instead of enclosing whole ones, and the
+     * resulting parse failure costs the rest of the file. When the broad attempt reports errors,
+     * the file is parsed again with one branch per chain, which is valid by construction, and
+     * whichever attempt parsed cleaner is kept. See {@code CSharpConditionalDirectives}.
+     */
     @Nullable private static CSharpParser.Compilation_unitContext parseContent(
             @Nonnull String content, @Nonnull InputFile inputFile) {
         try {
-            CSharpLexer lexer =
-                    new CSharpLexer(CharStreams.fromString(content, inputFile.toString()));
-            lexer.removeErrorListeners();
-            lexer.addErrorListener(new CSharpParserErrorListener(inputFile));
+            ParseAttempt allBranches =
+                    parseAttempt(CSharpConditionalDirectives.neutralize(content), inputFile);
+            if (allBranches.listener().errorCount() == 0) {
+                return allBranches.tree();
+            }
 
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            CSharpParser parser = new CSharpParser(tokens);
-            parser.removeErrorListeners();
-            parser.addErrorListener(new CSharpParserErrorListener(inputFile));
-
-            return parser.compilation_unit();
+            ParseAttempt firstBranch =
+                    parseAttempt(CSharpConditionalDirectives.selectFirstBranch(content), inputFile);
+            ParseAttempt kept =
+                    firstBranch.listener().errorCount() < allBranches.listener().errorCount()
+                            ? firstBranch
+                            : allBranches;
+            kept.listener().flushToLog();
+            return kept.tree();
         } catch (RuntimeException e) {
             LOG.warn("Unable to parse file: {}", inputFile, e);
             return null;
         }
+    }
+
+    private record ParseAttempt(
+            @Nullable CSharpParser.Compilation_unitContext tree,
+            @Nonnull CSharpParserErrorListener listener) {}
+
+    @Nonnull
+    private static ParseAttempt parseAttempt(@Nonnull String source, @Nonnull InputFile inputFile) {
+        CSharpParserErrorListener listener = new CSharpParserErrorListener(inputFile);
+
+        CSharpLexer lexer = new CSharpLexer(CharStreams.fromString(source, inputFile.toString()));
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(listener);
+
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        CSharpParser parser = new CSharpParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(listener);
+
+        return new ParseAttempt(parser.compilation_unit(), listener);
     }
 }

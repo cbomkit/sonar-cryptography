@@ -130,12 +130,27 @@ wrong-type optional parameter is skipped while the rest of the rule can still fi
 rules. Extra unknown keyword arguments are ignored. Positional-only rules continue using
 their existing matcher.
 
-The C# binder (`CSharpNamedArgumentBinder`) follows the same keyword-first, positional-fallback
-resolution, using C# named arguments (`Foo.F(a: x, b: y)`). It rejects the call if it has fewer
-arguments than mandatory parameters or if a required named parameter cannot be resolved. Unlike
-the Python binder, it does not check parameter types, since C# detection has no semantic type
-resolution, and a `withMethodParameter` declaration in a mixed rule is matched by index whether
-or not the argument at that index is named.
+The C# binder (`CSharpNamedArgumentBinder`) uses C# named arguments (`Foo.F(a: x, b: y)`) and
+performs the overload resolution the C# frontend has no semantic model for. It fills each declared
+parameter in three steps, first match wins: by keyword, wherever the argument sits in the call; by
+position, but only when that argument carries no keyword of its own and its inferred type is not
+definitely incompatible with the declared type; and failing both, by declared type, when exactly
+one unclaimed argument can supply it. An argument already taken by one parameter is never offered
+to another, so one value can never fill two slots.
+
+The third step is what separates two .NET overloads that share an arity but order their parameters
+differently, which happens throughout `System.Security.Cryptography`: `RSA.SignData` moves the hash
+and padding from indices one and two to three and four depending on the overload. It relies on
+`CSharpTypeInference`, a syntactic type inference with three levels of strictness. The permissive
+one feeds the `MethodMatcher`, where a wrong rejection loses the whole detection; the other two
+feed this binder, where a wrong rejection only leaves one parameter uncaptured while a wrong
+acceptance would attach a value to the wrong parameter.
+
+A call is accepted only when its argument count lies in the band `[required, declared]`, where
+`required` counts the positional and non-optional named parameters. Because .NET overloads are
+distinguished by arity, that band is what keeps one rule per overload from also matching a sibling
+overload. A required parameter that cannot be filled rejects the call outright, since that means
+the call is a different overload than the rule describes.
 
 Then, `buildForContext(DetectionContext detectionValueContext)` defines the detection context ([`DetectionContext`](../engine/src/main/java/com/ibm/engine/model/context/DetectionContext.java)) for all the detected values of your rule (but detections from dependent rules have their own context).
 A detection context is therefore linked to each detected value, and is designed to categorize your findings and to help you carry additional information that is not present in the detected value.

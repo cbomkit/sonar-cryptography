@@ -44,8 +44,13 @@ public final class CSharpObjectCreationTree implements CSharpTree {
     /** Optional identifier this new object is assigned to. */
     @Nullable private final String assignedIdentifier;
 
-    /** The enclosing block tree (for depending rule context). */
+    /**
+     * The enclosing block tree (for depending rule context), when this is a top-level statement.
+     */
     @Nullable private CSharpBlockTree enclosingBlock;
+
+    /** The lexical scope this creation was created in — used to resolve its own arguments. */
+    @Nullable private final CSharpScope scope;
 
     public CSharpObjectCreationTree(
             int line,
@@ -53,13 +58,15 @@ public final class CSharpObjectCreationTree implements CSharpTree {
             @Nonnull String typeName,
             @Nonnull List<CSharpArgument> arguments,
             @Nullable String assignedIdentifier,
-            @Nullable CSharpBlockTree enclosingBlock) {
+            @Nullable CSharpBlockTree enclosingBlock,
+            @Nullable CSharpScope scope) {
         this.line = line;
         this.column = column;
         this.typeName = typeName;
         this.arguments = arguments;
         this.assignedIdentifier = assignedIdentifier;
         this.enclosingBlock = enclosingBlock;
+        this.scope = scope;
     }
 
     @Override
@@ -76,6 +83,11 @@ public final class CSharpObjectCreationTree implements CSharpTree {
     @Override
     public String getText() {
         return "new " + typeName + "(...)";
+    }
+
+    @Nullable @Override
+    public CSharpScope getScope() {
+        return scope;
     }
 
     @Nonnull

@@ -30,28 +30,24 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link DotNetKMAC}.
+ * Tests for the KMAC detection rules.
  *
- * <p>findingId → test method → expected translated node ({@code asString()}), in source order of
- * {@code DotNetKMACTestFile.cs}:
+ * <p>Each case asserts the algorithm the rule reports, the mapper node it translates to, and the
+ * MAC key length. The XOF variants translate to the same node as their fixed-output siblings, which
+ * is why the reported value and the node name differ for two of them.
  *
- * <ul>
- *   <li>0 → {@code TestKmac128} → {@code KMAC128}
- *   <li>1 → {@code TestKmac256} → {@code KMAC256}
- *   <li>2 → {@code TestKmacXof128} → {@code KMAC128} (raw detected value is {@code KMACXOF128}; the
- *       translated node collapses to the same {@code KMAC} model as {@code Kmac128} — see {@link
- *       DotNetKMAC} javadoc "Known modeling gap" section)
- *   <li>3 → {@code TestKmacXof256} → {@code KMAC256} (raw detected value is {@code KMACXOF256};
- *       same collapse as above, for the 256-bit pair)
- * </ul>
+ * <p>The last case takes its key from an environment variable, where the only correct answer is the
+ * algorithm with no key length at all.
  */
 class DotNetKMACTest extends TestBase {
 
@@ -67,40 +63,42 @@ class DotNetKMACTest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-
-        /*
-         * Detection Store
-         */
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
         IValue<CSharpTree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
 
-        /*
-         * Translation
-         */
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node.getKind()).isEqualTo(Mac.class);
 
         switch (findingId) {
-            case 0 -> {
-                assertThat(value0.asString()).isEqualTo("KMAC128");
-                assertThat(node.asString()).isEqualTo("KMAC128");
-            }
-            case 1 -> {
-                assertThat(value0.asString()).isEqualTo("KMAC256");
-                assertThat(node.asString()).isEqualTo("KMAC256");
-            }
-            case 2 -> {
-                assertThat(value0.asString()).isEqualTo("KMACXOF128");
-                assertThat(node.asString()).isEqualTo("KMAC128");
-            }
-            case 3 -> {
-                assertThat(value0.asString()).isEqualTo("KMACXOF256");
-                assertThat(node.asString()).isEqualTo("KMAC256");
-            }
+            // new Kmac128(byte[16])
+            case 0 -> assertKmac(value0, node, "KMAC128", "KMAC128", 128);
+            // new Kmac256(byte[32])
+            case 1 -> assertKmac(value0, node, "KMAC256", "KMAC256", 256);
+            // new KmacXof128(byte[16])
+            case 2 -> assertKmac(value0, node, "KMACXOF128", "KMAC128", 128);
+            // new KmacXof256(byte[32])
+            case 3 -> assertKmac(value0, node, "KMACXOF256", "KMAC256", 256);
+            // new Kmac256(byte[48], byte[8]): the customization string carries no length
+            case 4 -> assertKmac(value0, node, "KMAC256", "KMAC256", 384);
+            // new Kmac128(key: byte[20]) by keyword
+            case 5 -> assertKmac(value0, node, "KMAC128", "KMAC128", 160);
+            // new Kmac128(key) where key comes from the environment
+            case 6 -> assertKmac(value0, node, "KMAC128", "KMAC128", null);
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
+    }
+
+    /** A {@code null} key length asserts absence, not a default. */
+    private static void assertKmac(
+            @Nonnull IValue<CSharpTree> value,
+            @Nonnull INode node,
+            @Nonnull String expectedValue,
+            @Nonnull String expectedNode,
+            @Nullable Integer expectedKeyBits) {
+        assertThat(value.asString()).isEqualTo(expectedValue);
+        assertThat(node.asString()).isEqualTo(expectedNode);
+        assertChild(node, KeyLength.class, expectedKeyBits);
     }
 }

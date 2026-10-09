@@ -26,9 +26,11 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.factory.BlockSizeFactory;
 import com.ibm.engine.model.factory.CipherActionFactory;
+import com.ibm.engine.model.factory.InitializationVectorSizeFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ModeFactory;
 import com.ibm.engine.model.factory.PaddingFactory;
+import com.ibm.engine.model.factory.TagSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -45,6 +47,7 @@ import javax.annotation.Nonnull;
  * <ul>
  *   <li>{@code Aes} — abstract base ({@code Aes.Create()}, {@code Aes.Create(string)})
  *   <li>{@code AesManaged} — pure-managed implementation
+ *   <li>{@code Rijndael} / {@code RijndaelManaged} — the obsolete pre-AES spelling of AES
  *   <li>{@code AesCng} — CNG-backed implementation (ephemeral and persisted-key constructors)
  *   <li>{@code AesCryptoServiceProvider} — legacy CAPI implementation
  *   <li>{@code AesGcm} — authenticated encryption (GCM mode)
@@ -654,7 +657,15 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -666,7 +677,15 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -681,7 +700,15 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -693,7 +720,15 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("nonce", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new InitializationVectorSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("ciphertext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("tag", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("plaintext", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("associatedData", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -741,6 +776,35 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(AES_DEPENDING_RULES);
 
+    /**
+     * {@code Rijndael.Create()} / {@code new RijndaelManaged()} — the pre-AES spelling of the same
+     * algorithm, obsolete since .NET 6 but still present in legacy code. Rijndael and AES differ
+     * only in that Rijndael also permitted 192- and 256-bit <em>block</em> sizes; with the default
+     * 128-bit block it is AES exactly, and any non-default block size is reported by the existing
+     * {@code set_BlockSize} depending rule, so the finding stays accurate either way.
+     */
+    private static final IDetectionRule<CSharpTree> RIJNDAEL_CREATE =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("Rijndael")
+                    .forMethods("Create")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
+                    .withAnyParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(AES_DEPENDING_RULES);
+
+    private static final IDetectionRule<CSharpTree> RIJNDAEL_MANAGED =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RijndaelManaged")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
+                    .withoutParameters()
+                    .buildForContext(new CipherContext())
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(AES_DEPENDING_RULES);
+
     // new AesCng() / new AesCng("keyName") / new AesCng("keyName", provider) / ...
     // Matches all AesCng constructors (ephemeral 0-param and persisted 1–3 params).
     // Uses withAnyParameters() to avoid double-detection that would occur if a separate
@@ -775,7 +839,12 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("AesGcm")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("key", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("tagSizeInBytes", "int")
+                    .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(GCM_OP_RULES);
@@ -787,7 +856,9 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("AesCcm")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("AES"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("key", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(CCM_OP_RULES);
@@ -802,6 +873,8 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                 AES_CNG_NAMED,
                 AES_CSP,
                 AES_GCM,
-                AES_CCM);
+                AES_CCM,
+                RIJNDAEL_CREATE,
+                RIJNDAEL_MANAGED);
     }
 }

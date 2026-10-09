@@ -60,8 +60,13 @@ class CSharpParserErrorListenerTest {
     }
 
     @Test
-    void warningIsLoggedForMalformedCSharp() {
-        // Incomplete C# — missing closing braces triggers a parse error
+    void errorsAreCollectedAndLoggedOnFlush() {
+        // Incomplete C# — missing closing braces triggers a parse error.
+        //
+        // The listener collects rather than logs on the spot, because a file may be parsed twice:
+        // once with every conditional branch active and, if that fails, once with a single branch
+        // per chain. Only the attempt that is kept should report, so the caller flushes that one.
+        // See CryptoCSharpSensor#parseContent and CSharpConditionalDirectives.
         String brokenCode = "class Foo { void Bar() { Aes.Create();";
 
         InputFile inputFile =
@@ -72,17 +77,25 @@ class CSharpParserErrorListenerTest {
                         .setType(InputFile.Type.MAIN)
                         .build();
 
+        CSharpParserErrorListener listener = new CSharpParserErrorListener(inputFile);
+
         CSharpLexer lexer =
                 new CSharpLexer(CharStreams.fromString(brokenCode, inputFile.toString()));
         lexer.removeErrorListeners();
-        lexer.addErrorListener(new CSharpParserErrorListener(inputFile));
+        lexer.addErrorListener(listener);
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CSharpParser parser = new CSharpParser(tokens);
         parser.removeErrorListeners();
-        parser.addErrorListener(new CSharpParserErrorListener(inputFile));
+        parser.addErrorListener(listener);
 
         parser.compilation_unit();
+
+        // Collected, so the caller can compare two parse attempts, and nothing logged yet.
+        assertThat(listener.errorCount()).isPositive();
+        assertThat(listAppender.list).isEmpty();
+
+        listener.flushToLog();
 
         assertThat(listAppender.list)
                 .isNotEmpty()

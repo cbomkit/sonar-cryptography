@@ -21,12 +21,14 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.SeedSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -74,6 +76,12 @@ public final class CSharpPRNGContextTranslator implements IContextTranslation<CS
                 case "GETBYTES", "GETNONZEROBYTES" -> Optional.of(new Generate(detectionLocation));
                 default -> Optional.empty();
             };
+        } else if (value instanceof SeedSize<?> seedSize) {
+            // How many random bytes the call draws, taken from a count argument or from the length
+            // of the buffer being filled. The platform generator has no algorithm choice to record,
+            // so the requested amount is the one property of such a call worth stating: it is what
+            // tells a reader whether this is a 16-byte nonce or a 32-byte key.
+            return Optional.of(new KeyLength(seedSize.getValue(), detectionLocation));
         }
 
         return Optional.empty();

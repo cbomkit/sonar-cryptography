@@ -20,6 +20,7 @@
 package com.ibm.engine.language.csharp.tree;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Base interface for C# AST nodes used in the detection engine.
@@ -39,4 +40,15 @@ public interface CSharpTree {
     /** Returns a brief human-readable description of this tree node for debugging purposes. */
     @Nonnull
     String getText();
+
+    /**
+     * Returns the lexical scope this node was created in, if any. Populated by {@code
+     * CSharpTreeConverter} for nodes that may need to resolve an identifier back to its declaration
+     * ({@link CSharpIdentifierTree}, and any expression node that can itself contain identifiers as
+     * sub-expressions). Nodes that never need scope lookups (literals, member access) leave this at
+     * the default {@code null}.
+     */
+    @Nullable default CSharpScope getScope() {
+        return null;
+    }
 }

@@ -21,7 +21,9 @@ package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.PRNGContext;
+import com.ibm.engine.model.factory.SeedSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -128,7 +130,11 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("GetBytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("GetBytes"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SeedSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -140,7 +146,9 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("GetNonZeroBytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("GetNonZeroBytes"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SeedSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -190,7 +198,9 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes("RandomNumberGenerator")
                     .forMethods("Fill")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SeedSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -204,7 +214,11 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes("RandomNumberGenerator")
                     .forMethods("GetBytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SeedSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -217,7 +231,8 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes("RandomNumberGenerator")
                     .forMethods("GetHexString")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("stringLength", "int")
+                    .withOptionalNamedMethodParameter("lowercase", "bool")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -264,7 +279,8 @@ public final class DotNetRandomNumberGenerator extends DetectionRuleSet<CSharpTr
                     .forObjectTypes("RandomNumberGenerator")
                     .forMethods("GetString")
                     .shouldBeDetectedAs(new ValueActionFactory<>("NATIVEPRNG"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("choices", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("length", "int")
                     .buildForContext(new PRNGContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
