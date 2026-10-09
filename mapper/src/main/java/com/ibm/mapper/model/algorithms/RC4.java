@@ -85,4 +85,20 @@ public final class RC4 extends Algorithm implements StreamCipher {
     public RC4(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RC4 rc4) {
         super(rc4, asKind);
     }
+
+    private RC4(@Nonnull RC4 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected RC4 copy() {
+        return new RC4(this);
+    }
+
+    @Nonnull
+    @Override
+    public RC4 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new RC4(kind, this);
+    }
 }

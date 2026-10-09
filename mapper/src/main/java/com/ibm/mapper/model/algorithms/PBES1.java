@@ -23,6 +23,7 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedEncryption;
@@ -98,5 +99,25 @@ public final class PBES1 extends Algorithm implements PasswordBasedEncryption {
     public PBES1(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private PBES1(@Nonnull PBES1 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PBES1 copy() {
+        return new PBES1(this);
+    }
+
+    public PBES1(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull PBES1 pbes1) {
+        super(pbes1, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PBES1 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PBES1(kind, this);
     }
 }

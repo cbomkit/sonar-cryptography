@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -72,5 +73,25 @@ public final class MLKEM extends Algorithm implements KeyEncapsulationMechanism 
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
+    }
+
+    private MLKEM(@Nonnull MLKEM algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MLKEM copy() {
+        return new MLKEM(this);
+    }
+
+    public MLKEM(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull MLKEM mlkem) {
+        super(mlkem, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MLKEM asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MLKEM(kind, this);
     }
 }

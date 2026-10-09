@@ -3,7 +3,6 @@
 [![License](https://img.shields.io/github/license/cbomkit/sonar-cryptography.svg?)](https://opensource.org/licenses/Apache-2.0) <!--- long-description-skip-begin -->
 [![Current Release](https://img.shields.io/github/release/cbomkit/sonar-cryptography.svg?logo=IBM)](https://github.com/cbomkit/sonar-cryptography/releases)
 
-
 This repository contains a SonarQube Plugin that detects cryptographic assets
 in source code and generates [CBOM](https://cyclonedx.org/capabilities/cbom/).
 It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
@@ -22,52 +21,70 @@ It is part of **the [CBOMKit](https://github.com/cbomkit) toolset**.
 
 ## Version compatibility
 
-| Plugin Version  | SonarQube Version              |
-|-----------------|--------------------------------|
-| 1.3.7 and up    | SonarQube 9.9 (LTS) and up     |
-| 1.3.2 and 1.3.6 | SonarQube 9.8 (LTS) up to 10.8 | 
-| 1.2.0 to 1.3.1  | SonarQube 9.8 (LTS) up to 10.4 |      
-
+| Plugin Version | SonarQube Version                       | Requires Java |
+| -------------- | --------------------------------------- | ------------- |
+| 2.0.0 and up   | SonarQube 2025.1 (LTA) and up           | 21            |
+| 1.3.2 to 1.3.x | SonarQube 9.14 (LTS) up to 2025.1 (LTA) | 17            |
+| 1.2.0 to 1.3.1 | SonarQube 9.14 (LTS) up to 10.4         | 17            |
 
 ## Supported languages and libraries
 
-| Language | Cryptographic Library                                                                         | Coverage         |
-|----------|-----------------------------------------------------------------------------------------------|------------------|
-| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) | 100%             |
-|          | [BouncyCastle](https://github.com/bcgit/bc-java) (*light-weight API*)                         | 100%[^1]         |
-| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                       | 100%             |
-| Go       | [crypto](https://pkg.go.dev/crypto) (*standard library*)                                      | 100%[^2]         |
-|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                 | Partial[^3]      |
+| Language | Cryptographic Library                                                                                     | Coverage           |
+| -------- | --------------------------------------------------------------------------------------------------------- | ------------------ |
+| Java     | [JCA](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html)             | 100%               |
+|          | [BouncyCastle](https://github.com/bcgit/bc-java) (_light-weight API_)                                     | 100%[^1]           |
+| Python   | [pyca/cryptography](https://cryptography.io/en/latest/)                                                   | 100%               |
+| Go       | [crypto](https://pkg.go.dev/crypto) (_standard library_)                                                  | 100%[^2]           |
+|          | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)                                             | Partial[^3]        |
 | C#       | [System.Security.Cryptography](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography) | In development[^4] |
+| C/C++    | [OpenSSL](https://www.openssl.org/)                                                                       | Partial[^5]        |
 
-[^1]: We only cover the BouncyCastle *light-weight API* according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+[^1]: We only cover the BouncyCastle _light-weight API_ according to [this specification](https://javadoc.io/static/org.bouncycastle/bctls-jdk14/1.80/specifications.html)
+
 [^2]: All packages under [`crypto`](https://pkg.go.dev/crypto@go1.25.6#section-directories) are covered except `crypto/x509`
+
 [^3]: Covers `golang.org/x/crypto/hkdf`, `golang.org/x/crypto/pbkdf2`, and `golang.org/x/crypto/sha3`
+
 [^4]: C# support uses an [ANTLR v7 grammar](https://github.com/antlr/grammars-v4/tree/master/csharp) to parse source files directly. The current csharp support only covers the language support and does not contain detection rules other than the rules used for verifying the detection engine. **This is not yet meant for active usage!** **Known limitations of the detection engine:** no cross-method variable tracking (only single-method scope), only works for c# v7, string-based matching (no type resolution)
+
+[^5]: Covers the OpenSSL EVP API (ciphers, digests, MACs, KDFs, key agreement, key encapsulation, key generation, signatures, envelope encryption), the legacy (pre-EVP) API, SSL/TLS configuration, X.509 certificate, request and CRL signatures, CMS/PKCS#7/OCSP signatures and encryption, encrypted private keys and password-based encryption, and random number generation. An operation is reported with the key it uses when the key is generated in the scanned code, a signature made with a key from elsewhere as a signature with its digest, and a digest or cipher where it is selected (e.g. the digest of `EVP_DigestInit` or `EVP_Digest`). ENGINE, provider and FIPS configuration (`ENGINE_by_id`, `OSSL_PROVIDER_load`, `EVP_default_properties_enable_fips`) is not reported: it configures the whole process rather than naming an algorithm, as the JCA provider of a Java call is not reported either. Uses the [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) plugin, which is bundled (see [Installation](#installation)).
 
 > [!NOTE]
 > The plugin is designed in a modular way so that it can be extended to support additional languages and recognition rules to support more libraries.
-> - To add support for another language or cryptography library, see [*Extending the Sonar Cryptography Plugin to add support for another language or cryptography library*](./docs/LANGUAGE_SUPPORT.md)
-> - If you just want to know more about the syntax for writing new detection rules, see [*Writing new detection rules for the Sonar Cryptography Plugin*](./docs/DETECTION_RULE_STRUCTURE.md)
+>
+> - To add support for another language or cryptography library, see [_Extending the Sonar Cryptography Plugin to add support for another language or cryptography library_](./docs/LANGUAGE_SUPPORT.md)
+> - If you just want to know more about the syntax for writing new detection rules, see [_Writing new detection rules for the Sonar Cryptography Plugin_](./docs/DETECTION_RULE_STRUCTURE.md)
 
 ## Installation
 
-> [!NOTE] 
-> To run the plugin, you need a running SonarQube instance with one of the supported 
-> versions. If you don't have one but want to try the plugin, you can use the
-> included Docker Compose to set up a development environment. See 
+> [!NOTE]
+> To run the plugin, you need a running SonarQube instance with one of the supported
+> versions (see [Version compatibility](#version-compatibility) above), and that
+> instance's own JVM must be Java 21 or newer — the plugin JAR is built for Java 21
+> and a SonarQube server running on Java 17 will fail to load it. If you don't have
+> a suitable instance but want to try the plugin, you can use the included Docker
+> Compose to set up a development environment. See
 > [here](CONTRIBUTING.md#build) for instructions.
 
 Copy the plugin (the JAR file from the [latest releases](https://github.com/cbomkit/sonar-cryptography/releases))
-to `$SONARQUBE_HOME/extensions/plugins` and restart 
+to `$SONARQUBE_HOME/extensions/plugins` and restart
 SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-plugin/)).
+
+> [!IMPORTANT]
+> C/C++ support comes from [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx), which is
+> bundled inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. You do
+> not need to install sonar-cxx separately.
+>
+> If sonar-cxx is already installed on your SonarQube instance, remove it. Both plugins would
+> register the same C/C++ language, rules and configuration properties, and SonarQube will fail
+> to start.
 
 ## Using
 
 The plugin provides new rules regarding the use of cryptography for the supported languages.
 They are grouped in the **Sonar Cryptography** rule repositories, one per language
-(`sonar-java-crypto`, `sonar-python-crypto` and `sonar-go-crypto`).
-If you enable the *Cryptographic Inventory (CBOM)* rule, a source code scan creates a cryptographic
+(`sonar-java-crypto`, `sonar-python-crypto`, `sonar-go-crypto` and `sonar-cpp-crypto`).
+If you enable the _Cryptographic Inventory (CBOM)_ rule, a source code scan creates a cryptographic
 inventory by creating a [CBOM](https://cyclonedx.org/capabilities/cbom/) with all cryptographic
 assets and writing a `cbom.json` to the scan directory.
 
@@ -76,32 +93,32 @@ assets and writing a `cbom.json` to the scan directory.
 This plugin incorporates rules specifically focused on cryptography.
 
 > To generate a Cryptography Bill of Materials (CBOM), it is mandatory to activate the
-> *Cryptographic Inventory (CBOM)* rule.
+> _Cryptographic Inventory (CBOM)_ rule.
 
 ![Activate Rules Crypto Rules](docs/images/rules.png)
 
 The plugin currently ships these rules:
 
-| Rule                                                     | Languages        | Contributes to the CBOM |
-|----------------------------------------------------------|------------------|-------------------------|
-| *Cryptographic Inventory (CBOM)*                         | Java, Python, Go | yes                     |
-| *Do not use MD5 for cryptographic purposes like hashing* | Java, Python     | no                      |
+| Rule                                                     | Languages               | Contributes to the CBOM |
+| -------------------------------------------------------- | ----------------------- | ----------------------- |
+| _Cryptographic Inventory (CBOM)_                         | Java, Python, Go, C/C++ | yes                     |
+| _Do not use MD5 for cryptographic purposes like hashing_ | Java, Python, C/C++     | no                      |
 
-Only the *Cryptographic Inventory (CBOM)* rule writes a `cbom.json`; the other rules just raise
+Only the _Cryptographic Inventory (CBOM)_ rule writes a `cbom.json`; the other rules just raise
 issues on the scanned code. Future updates may introduce additional rules to expand functionality.
 
 ### Scan Source Code
 
-Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/) 
+Now you can follow the [SonarQube documentation](https://docs.sonarqube.org/latest/analyzing-source-code/overview/)
 to start your first scan.
 
 ### Configuration
 
 | Property                   | Default | Scope   | Description                                                                   |
-|----------------------------|---------|---------|-------------------------------------------------------------------------------|
+| -------------------------- | ------- | ------- | ----------------------------------------------------------------------------- |
 | `sonar.cryptoScanner.cbom` | `cbom`  | Project | Filename (without extension) of the generated CBOM, written as `<name>.json`. |
 
-The property can be set in the SonarQube UI under *Project Settings → General*, or passed to the
+The property can be set in the SonarQube UI under _Project Settings → General_, or passed to the
 scanner directly:
 
 ```bash
@@ -208,6 +225,7 @@ The plugin generates a `cbom.json` file in [CycloneDX CBOM format](https://cyclo
 ```
 
 The CBOM includes:
+
 - **Algorithms**: Hash functions, ciphers, key exchange mechanisms with their parameters
 - **Keys and secrets**: Private keys, secret keys, and other cryptographic materials
 - **Evidence**: Source file locations where each asset was detected
@@ -287,10 +305,10 @@ Run with `go run gen_package.go`, then delete the script.
 
 2. **Check for dependencies**: Some packages depend on types from other packages. Common dependencies:
 
-| Package | May require |
-|---------|-------------|
-| `crypto/hmac` | `hash` |
-| `crypto/cipher` | `io` |
+| Package           | May require  |
+| ----------------- | ------------ |
+| `crypto/hmac`     | `hash`       |
+| `crypto/cipher`   | `io`         |
 | `crypto/*` (most) | `io`, `hash` |
 
 3. **Add mapping entry** to `mapping_generated.go` in alphabetical order:
@@ -303,19 +321,19 @@ Run with `go run gen_package.go`, then delete the script.
 
 ### File naming convention
 
-| Package Path | Export Data File |
-|--------------|------------------|
-| `crypto/hmac` | `crypto_hmac.o` |
-| `crypto/elliptic` | `crypto_elliptic.o` |
+| Package Path                 | Export Data File    |
+| ---------------------------- | ------------------- |
+| `crypto/hmac`                | `crypto_hmac.o`     |
+| `crypto/elliptic`            | `crypto_elliptic.o` |
 | `golang.org/x/crypto/bcrypt` | `x_crypto_bcrypt.o` |
 
 </details>
 
 ## Help and troubleshooting
 
-If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [*Testing your configuration and troubleshooting*](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
+If you encounter difficulties or unexpected results while installing the plugin with SonarQube, or when trying to scan a repository, please check out our guide [_Testing your configuration and troubleshooting_](docs/TROUBLESHOOTING.md) to run our plugin with step-by-step instructions.
 
-To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [*Performance & Heap Testing*](docs/PERFORMANCE_TESTING.md).
+To measure the plugin's runtime performance and heap usage — including a full end-to-end scan of a large project (Keycloak) — see [_Performance & Heap Testing_](docs/PERFORMANCE_TESTING.md).
 
 ## Contribution Guidelines
 
@@ -345,3 +363,7 @@ The notices describe the versions, source locations and packaging transformation
 These packaging materials do not establish that every use is permitted by SSAL.
 The permitted-purpose restrictions and the provenance and licence notices of
 any adapted implementation code still require review before release.
+
+The plugin JAR bundles [sonar-cxx](https://github.com/SonarOpenCommunity/sonar-cxx) for C/C++
+analysis, which is licensed under the
+[GNU Lesser General Public License v3.0](https://github.com/SonarOpenCommunity/sonar-cxx/blob/master/LICENSE).

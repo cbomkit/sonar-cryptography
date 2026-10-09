@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,25 @@ public final class SABER extends Algorithm implements KeyEncapsulationMechanism 
 
     public SABER(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private SABER(@Nonnull SABER algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SABER copy() {
+        return new SABER(this);
+    }
+
+    public SABER(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SABER saber) {
+        super(saber, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SABER asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SABER(kind, this);
     }
 }

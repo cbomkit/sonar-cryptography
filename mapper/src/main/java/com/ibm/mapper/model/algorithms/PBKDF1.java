@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
@@ -78,5 +79,25 @@ public final class PBKDF1 extends Algorithm implements PasswordBasedKeyDerivatio
 
     public PBKDF1(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
+    }
+
+    private PBKDF1(@Nonnull PBKDF1 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PBKDF1 copy() {
+        return new PBKDF1(this);
+    }
+
+    public PBKDF1(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull PBKDF1 pbkdf1) {
+        super(pbkdf1, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PBKDF1 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PBKDF1(kind, this);
     }
 }

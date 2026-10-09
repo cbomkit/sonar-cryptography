@@ -19,7 +19,6 @@
  */
 package com.ibm.mapper.model.functionality;
 
-import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -34,11 +33,7 @@ public final class KeyDerivation extends Functionality {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        KeyDerivation copy = new KeyDerivation(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected KeyDerivation copy() {
+        return new KeyDerivation(this);
     }
 }

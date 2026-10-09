@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class GMSS extends Algorithm implements Signature {
 
     public GMSS(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private GMSS(@Nonnull GMSS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected GMSS copy() {
+        return new GMSS(this);
+    }
+
+    public GMSS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull GMSS gmss) {
+        super(gmss, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public GMSS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new GMSS(kind, this);
     }
 }

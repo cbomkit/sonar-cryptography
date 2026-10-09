@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -57,5 +58,25 @@ public final class KDF2 extends Algorithm implements KeyDerivationFunction {
     public KDF2(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    private KDF2(@Nonnull KDF2 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected KDF2 copy() {
+        return new KDF2(this);
+    }
+
+    public KDF2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull KDF2 kdf2) {
+        super(kdf2, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public KDF2 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new KDF2(kind, this);
     }
 }

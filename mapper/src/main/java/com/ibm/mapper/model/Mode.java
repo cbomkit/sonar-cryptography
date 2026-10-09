@@ -41,8 +41,9 @@ public class Mode extends Property {
         this.put(blockSize);
     }
 
-    private Mode(@Nonnull Mode mode) {
-        super(mode.type, mode.detectionLocation, mode.children);
+    /** A copy of the given mode without its children. */
+    protected Mode(@Nonnull Mode mode) {
+        super(mode);
         this.name = mode.name;
     }
 
@@ -71,14 +72,14 @@ public class Mode extends Property {
         return name;
     }
 
+    /**
+     * A mode class returns an instance of its own class, which the enrichers and the output
+     * recognise the mode by.
+     */
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Mode copy = new Mode(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Mode copy() {
+        return new Mode(this);
     }
 
     @Override

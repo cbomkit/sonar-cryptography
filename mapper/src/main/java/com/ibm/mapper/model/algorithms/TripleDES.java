@@ -101,4 +101,20 @@ public final class TripleDES extends Algorithm implements BlockCipher {
             @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull TripleDES tripleDES) {
         super(tripleDES, asKind);
     }
+
+    private TripleDES(@Nonnull TripleDES algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected TripleDES copy() {
+        return new TripleDES(this);
+    }
+
+    @Nonnull
+    @Override
+    public TripleDES asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new TripleDES(kind, this);
+    }
 }

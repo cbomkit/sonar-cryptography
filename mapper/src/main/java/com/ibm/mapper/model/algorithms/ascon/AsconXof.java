@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.ascon;
 
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -48,5 +49,25 @@ public final class AsconXof extends Ascon implements ExtendableOutputFunction {
     public AsconXof(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
         this.put(BlockSize.ofDefault(64, detectionLocation));
+    }
+
+    private AsconXof(@Nonnull AsconXof algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected AsconXof copy() {
+        return new AsconXof(this);
+    }
+
+    public AsconXof(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull AsconXof asconXof) {
+        super(asKind, asconXof);
+    }
+
+    @Nonnull
+    @Override
+    public AsconXof asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new AsconXof(kind, this);
     }
 }

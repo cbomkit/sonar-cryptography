@@ -27,4 +27,14 @@ public final class Secp256r1 extends EllipticCurve {
     public Secp256r1(@Nonnull DetectionLocation detectionLocation) {
         super("secp256r1", detectionLocation);
     }
+
+    private Secp256r1(@Nonnull Secp256r1 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Secp256r1 copy() {
+        return new Secp256r1(this);
+    }
 }

@@ -30,4 +30,14 @@ public final class ANSIX923 extends Padding {
     public ANSIX923(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
     }
+
+    private ANSIX923(@Nonnull ANSIX923 padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX923 copy() {
+        return new ANSIX923(this);
+    }
 }

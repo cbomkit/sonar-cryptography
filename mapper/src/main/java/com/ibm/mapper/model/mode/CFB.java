@@ -44,4 +44,14 @@ public final class CFB extends Mode {
     public CFB(int s, @Nonnull DetectionLocation detectionLocation) {
         super("CFB" + s, detectionLocation);
     }
+
+    private CFB(@Nonnull CFB mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new CFB(this);
+    }
 }

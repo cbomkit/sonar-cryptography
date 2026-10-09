@@ -20,7 +20,6 @@
 package com.ibm.mapper.model;
 
 import com.ibm.mapper.utils.DetectionLocation;
-import java.util.HashMap;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
@@ -28,7 +27,7 @@ public class Padding extends Property {
     @Nonnull private final String name;
 
     public Padding(@Nonnull String name, @Nonnull DetectionLocation detectionLocation) {
-        super(Padding.class, detectionLocation, new HashMap<>());
+        super(Padding.class, detectionLocation);
         this.name = name;
     }
 
@@ -36,12 +35,13 @@ public class Padding extends Property {
             @Nonnull String name,
             @Nonnull DetectionLocation detectionLocation,
             @Nonnull Class<? extends Padding> kind) {
-        super(kind, detectionLocation, new HashMap<>());
+        super(kind, detectionLocation);
         this.name = name;
     }
 
-    private Padding(@Nonnull Padding padding) {
-        super(padding.type, padding.detectionLocation, padding.children);
+    /** A copy of the given padding without its children. */
+    protected Padding(@Nonnull Padding padding) {
+        super(padding);
         this.name = padding.name;
     }
 
@@ -61,14 +61,14 @@ public class Padding extends Property {
         return name;
     }
 
+    /**
+     * A padding class returns an instance of its own class, which the output recognises the padding
+     * by.
+     */
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Padding copy = new Padding(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Padding copy() {
+        return new Padding(this);
     }
 
     @Override

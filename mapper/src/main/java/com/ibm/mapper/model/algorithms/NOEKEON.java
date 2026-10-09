@@ -74,4 +74,20 @@ public final class NOEKEON extends Algorithm implements BlockCipher {
     public NOEKEON(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull NOEKEON noekeon) {
         super(noekeon, asKind);
     }
+
+    private NOEKEON(@Nonnull NOEKEON algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected NOEKEON copy() {
+        return new NOEKEON(this);
+    }
+
+    @Nonnull
+    @Override
+    public NOEKEON asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new NOEKEON(kind, this);
+    }
 }

@@ -82,4 +82,20 @@ public final class Threefish extends Algorithm implements BlockCipher, Authentic
             @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Threefish threefish) {
         super(threefish, asKind);
     }
+
+    private Threefish(@Nonnull Threefish algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Threefish copy() {
+        return new Threefish(this);
+    }
+
+    @Nonnull
+    @Override
+    public Threefish asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Threefish(kind, this);
+    }
 }

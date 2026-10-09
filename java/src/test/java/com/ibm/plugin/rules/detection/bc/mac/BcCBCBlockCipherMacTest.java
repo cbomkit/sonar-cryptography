@@ -32,6 +32,7 @@ import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.model.functionality.Encrypt;
@@ -138,8 +139,14 @@ class BcCBCBlockCipherMacTest extends TestBase {
         // Mac
         INode macNode3 = nodes.get(0);
         assertThat(macNode3.getKind()).isEqualTo(Mac.class);
-        assertThat(macNode3.getChildren()).hasSize(findingId == 7 ? 6 : 5);
+        assertThat(macNode3.getChildren()).hasSize(findingId == 7 ? 7 : 6);
         assertThat(macNode3.asString()).isEqualTo("AES");
+
+        // Oid under Mac
+        INode oidNode3 = macNode3.getChildren().get(Oid.class);
+        assertThat(oidNode3).isNotNull();
+        assertThat(oidNode3.getChildren()).isEmpty();
+        assertThat(oidNode3.asString()).isEqualTo("2.16.840.1.101.3.4.1");
 
         if (findingId == 1 || findingId == 5 || findingId == 7) {
             // TagLength under Mac

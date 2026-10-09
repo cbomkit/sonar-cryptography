@@ -26,8 +26,7 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
-import com.ibm.mapper.reorganizer.UsualPerformActions;
-import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import com.ibm.mapper.reorganizer.rules.AsymmetricBlockCipherReorganizer;
 import com.ibm.mapper.reorganizer.rules.CipherSuiteReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
@@ -42,17 +41,6 @@ public final class GoReorganizerRules {
     private GoReorganizerRules() {
         // private
     }
-
-    private static final IReorganizerRule MERGE_PKE_PARENT_AND_CHILD =
-            new ReorganizerRuleBuilder()
-                    .createReorganizerRule("MERGE_PKE_PARENT_AND_CHILD")
-                    .forNodeKind(PublicKeyEncryption.class)
-                    .withDetectionCondition(
-                            (node, parent, roots) ->
-                                    node.hasChildOfType(PublicKeyEncryption.class).isPresent())
-                    .perform(
-                            UsualPerformActions.performMergeParentAndChildOfSameKind(
-                                    PublicKeyEncryption.class));
 
     @Nonnull
     public static List<IReorganizerRule> rules() {
@@ -71,7 +59,9 @@ public final class GoReorganizerRules {
                         SignatureReorganizer.MERGE_SIGNATURE_WITH_PKE_UNDER_PRIVATE_KEY,
                         SignatureReorganizer.MOVE_PSS_FROM_UNDER_SIGN_FUNCTION_TO_UNDER_KEY,
                         SignatureReorganizer.MAKE_RSA_TO_SIGNATURE,
-                        MERGE_PKE_PARENT_AND_CHILD,
+                        AsymmetricBlockCipherReorganizer.MERGE_PKE_PARENT_AND_CHILD,
+                        AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
+                                PublicKeyEncryption.class),
                         KeyDerivationReorganizer.moveModeFromParentToNode(BlockCipher.class),
                         KeyDerivationReorganizer.moveModeFromParentToNode(MessageDigest.class),
                         KeyAgreementReorganizer.MERGE_KEYAGREEMENT_WITH_PKE_UNDER_PRIVATE_KEY,

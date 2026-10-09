@@ -29,16 +29,52 @@ import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.algorithms.ascon.Ascon128;
+import com.ibm.mapper.model.algorithms.ascon.AsconHash;
+import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-public class CipherSuiteMapperTest {
+class CipherSuiteMapperTest {
+
+    @ParameterizedTest
+    @CsvSource({
+        "RC4-MD5, TLS_RSA_WITH_RC4_128_MD5",
+        "EXP-RC4-MD5, TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+        "EDH-RSA-DES-CBC-SHA, TLS_DHE_RSA_WITH_DES_CBC_SHA",
+        "DHE-RSA-DES-CBC-SHA, TLS_DHE_RSA_WITH_DES_CBC_SHA",
+        "KRB5-DES-CBC-SHA, TLS_KRB5_WITH_DES_CBC_SHA",
+        "ECDH-RSA-AES128-GCM-SHA256, TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256"
+    })
+    void anOpenSslNameMissingFromTheDataNamesItsSuite(String opensslName, String ianaName) {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final Optional<? extends INode> node =
+                new CipherSuiteMapper().parse(opensslName, testDetectionLocation);
+
+        assertThat(node).get().extracting(INode::asString).isEqualTo(ianaName);
+        assertThat(((CipherSuite) node.get()).getAssetCollection()).isPresent();
+    }
 
     @Test
-    public void test1() {
+    void theFortezzaNameOfACodeAssignedToAnotherSuiteNamesNoSuite() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        assertThat(new CipherSuiteMapper().parse("FZA-RC4-SHA", testDetectionLocation))
+                .get()
+                .extracting(INode::asString)
+                .isEqualTo("FZA-RC4-SHA");
+    }
+
+    @Test
+    void test1() {
         DetectionLocation testDetectionLocation =
                 new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
 
@@ -70,10 +106,62 @@ public class CipherSuiteMapperTest {
     }
 
     @Test
-    public void findingTest() {
+    void asconAeadSuite() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final CipherSuiteMapper mapper = new CipherSuiteMapper();
+        final Optional<? extends INode> node =
+                mapper.parse("TLS_ASCONAEAD128_SHA256", testDetectionLocation);
+        assertThat(node).isPresent();
+        assertThat(node.get().is(CipherSuite.class)).isTrue();
+        final CipherSuite cipherSuite = (CipherSuite) node.get();
+
+        assertThat(cipherSuite.getIdentifierCollection()).isPresent();
+        assertThat(
+                        cipherSuite.getIdentifierCollection().get().getCollection().stream()
+                                .map(Identifier::asString))
+                .contains("0x00", "0x6F");
+
+        assertThat(cipherSuite.getAssetCollection()).isPresent();
+        assertThat(cipherSuite.getAssetCollection().get().getCollection())
+                .contains(
+                        new Ascon128(testDetectionLocation), new SHA2(256, testDetectionLocation));
+    }
+
+    @Test
+    void asconHashSuite() {
+        DetectionLocation testDetectionLocation =
+                new DetectionLocation("testfile", 1, 1, List.of("test"), () -> "SSL");
+
+        final CipherSuiteMapper mapper = new CipherSuiteMapper();
+        final Optional<? extends INode> node =
+                mapper.parse("TLS_AES_128_GCM_ASCONHASH256", testDetectionLocation);
+        assertThat(node).isPresent();
+        assertThat(node.get().is(CipherSuite.class)).isTrue();
+        final CipherSuite cipherSuite = (CipherSuite) node.get();
+
+        assertThat(cipherSuite.getIdentifierCollection()).isPresent();
+        assertThat(
+                        cipherSuite.getIdentifierCollection().get().getCollection().stream()
+                                .map(Identifier::asString))
+                .contains("0x00", "0x70");
+
+        assertThat(cipherSuite.getAssetCollection()).isPresent();
+        assertThat(cipherSuite.getAssetCollection().get().getCollection())
+                .contains(
+                        new AES(128, new GCM(testDetectionLocation), testDetectionLocation),
+                        new AsconHash(testDetectionLocation));
+    }
+
+    @Test
+    void findingTest() {
         assertThat(CipherSuiteMapper.findCipherSuite("TLS_DHE_DSS_WITH_AES_256_CBC_SHA256"))
                 .isPresent();
         assertThat(CipherSuiteMapper.findCipherSuite("TLS_DHE_DSS_AES_256_CBC_SHA256")).isPresent();
         assertThat(CipherSuiteMapper.findCipherSuite("DHE-DSS-AES256-SHA256")).isPresent();
+        assertThat(CipherSuiteMapper.findCipherSuite("TLS_ASCONAEAD128_SHA256")).isPresent();
+        assertThat(CipherSuiteMapper.findCipherSuite("TLS_AES_128_GCM_ASCONHASH256")).isPresent();
+        assertThat(CipherSuiteMapper.findCipherSuite("TLS_AES_128_CCM_ASCONHASH256")).isPresent();
     }
 }

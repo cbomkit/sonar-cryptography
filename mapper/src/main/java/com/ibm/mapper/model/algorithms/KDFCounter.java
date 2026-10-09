@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -55,5 +56,26 @@ public final class KDFCounter extends Algorithm implements KeyDerivationFunction
     public KDFCounter(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private KDFCounter(@Nonnull KDFCounter algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFCounter copy() {
+        return new KDFCounter(this);
+    }
+
+    public KDFCounter(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull KDFCounter kdfCounter) {
+        super(kdfCounter, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public KDFCounter asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new KDFCounter(kind, this);
     }
 }

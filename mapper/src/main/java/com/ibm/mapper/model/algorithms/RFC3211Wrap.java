@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,26 @@ public class RFC3211Wrap extends Algorithm implements KeyWrap {
 
     public RFC3211Wrap(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyWrap.class, detectionLocation);
+    }
+
+    private RFC3211Wrap(@Nonnull RFC3211Wrap algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected RFC3211Wrap copy() {
+        return new RFC3211Wrap(this);
+    }
+
+    public RFC3211Wrap(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RFC3211Wrap rfc3211Wrap) {
+        super(rfc3211Wrap, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public RFC3211Wrap asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new RFC3211Wrap(kind, this);
     }
 }

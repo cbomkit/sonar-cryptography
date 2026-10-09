@@ -34,10 +34,7 @@ public final class InitializationVectorLength extends Property {
 
     private InitializationVectorLength(
             @Nonnull InitializationVectorLength initializationVectorLength) {
-        super(
-                initializationVectorLength.type,
-                initializationVectorLength.detectionLocation,
-                initializationVectorLength.children);
+        super(initializationVectorLength);
         this.value = initializationVectorLength.value;
     }
 
@@ -54,12 +51,8 @@ public final class InitializationVectorLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        InitializationVectorLength copy = new InitializationVectorLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected InitializationVectorLength copy() {
+        return new InitializationVectorLength(this);
     }
 
     @Override

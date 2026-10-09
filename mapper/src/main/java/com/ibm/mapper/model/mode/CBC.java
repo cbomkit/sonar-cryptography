@@ -28,4 +28,14 @@ public final class CBC extends Mode {
     public CBC(@Nonnull DetectionLocation detectionLocation) {
         super("CBC", detectionLocation);
     }
+
+    private CBC(@Nonnull CBC mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new CBC(this);
+    }
 }

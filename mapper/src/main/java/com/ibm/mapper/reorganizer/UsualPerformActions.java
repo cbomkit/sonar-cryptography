@@ -91,7 +91,7 @@ public final class UsualPerformActions {
                 // Create a copy of the roots list
                 List<INode> rootsCopy = new ArrayList<>(roots);
                 for (int i = 0; i < rootsCopy.size(); i++) {
-                    if (rootsCopy.get(i).equals(node)) {
+                    if (rootsCopy.get(i) == node) {
                         rootsCopy.set(i, newKindNode);
                         break;
                     }
@@ -102,6 +102,29 @@ public final class UsualPerformActions {
                 parent.put(newKindNode);
                 return roots;
             }
+        };
+    }
+
+    /**
+     * Merges the child of the given kind of a node into the node: the node keeps its name and takes
+     * the children of the child it does not have, e.g. the key length of the key set up for a
+     * cipher operation.
+     *
+     * @param kind - The kind of the node and of its child
+     * @return The {@code Function3} returning the updated list of root nodes
+     */
+    @Nonnull
+    public static IFunctionPerformReorganization performMergeChildIntoParentOfSameKind(
+            Class<? extends IPrimitive> kind) {
+        return (node, parent, roots) -> {
+            final INode child = node.getChildren().get(kind);
+            node.removeChildOfType(kind);
+            for (INode grandChild : child.getChildren().values()) {
+                if (!node.getChildren().containsKey(grandChild.getKind())) {
+                    node.put(grandChild);
+                }
+            }
+            return roots;
         };
     }
 
@@ -138,7 +161,7 @@ public final class UsualPerformActions {
             // Create a copy of the root nodes
             List<INode> rootsCopy = new ArrayList<>(roots);
             for (int i = 0; i < rootsCopy.size(); i++) {
-                if (rootsCopy.get(i).equals(originalNode)) {
+                if (rootsCopy.get(i) == originalNode) {
                     rootsCopy.set(i, newNode);
                     break;
                 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class XDH extends Algorithm implements KeyAgreement {
 
     public XDH(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
+    }
+
+    private XDH(@Nonnull XDH algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected XDH copy() {
+        return new XDH(this);
+    }
+
+    public XDH(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull XDH xdh) {
+        super(xdh, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public XDH asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new XDH(kind, this);
     }
 }

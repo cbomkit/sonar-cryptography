@@ -38,7 +38,7 @@ import org.sonar.plugins.java.api.tree.TreeVisitor;
  * tree. Column offsets are stored 0-based (matching {@link Position#columnOffset()}); {@link
  * Position#at(int, int)} takes a 1-based column, so {@link #range()} adds one.
  */
-public final class DetachedSyntaxToken implements SyntaxToken {
+public final class DetachedSyntaxToken implements SyntaxToken, DetachedLocation {
 
     private final int line;
     private final int columnOffset;

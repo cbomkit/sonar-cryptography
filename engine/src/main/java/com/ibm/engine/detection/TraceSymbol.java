@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.detection;
 
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -48,10 +49,16 @@ public final class TraceSymbol<S> {
 
     private final S symbol;
     private final State state;
+    @Nullable private final Object origin;
 
     private TraceSymbol(S symbol, State state) {
+        this(symbol, state, null);
+    }
+
+    private TraceSymbol(S symbol, State state, @Nullable Object origin) {
         this.symbol = symbol;
         this.state = state;
+        this.origin = origin;
     }
 
     public S getSymbol() {
@@ -71,6 +78,22 @@ public final class TraceSymbol<S> {
     @Nonnull
     public static <S> TraceSymbol<S> createWithStateNoSymbol() {
         return new TraceSymbol<>(null, State.NO_SYMBOL);
+    }
+
+    /**
+     * NO_SYMBOL for the result of a known call that is passed as an argument of another call,
+     * example: test(create()). Only the call that takes the origin as an argument is connected to
+     * it.
+     */
+    @Nonnull
+    public static <S> TraceSymbol<S> createWithStateNoSymbol(@Nonnull Object origin) {
+        return new TraceSymbol<>(null, State.NO_SYMBOL, origin);
+    }
+
+    /** The call whose result is traced, for a NO_SYMBOL created for a known call. */
+    @Nonnull
+    public Optional<Object> getOrigin() {
+        return Optional.ofNullable(origin);
     }
 
     @Nonnull

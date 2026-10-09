@@ -146,6 +146,18 @@ public interface IDetectionEngine<T, S> {
     Optional<TraceSymbol<S>> getAssignedSymbol(@Nonnull T expression);
 
     /**
+     * Returns the symbol of the object a call creates or operates on, which the rules depending on
+     * the call follow. By default, this is the symbol the call is assigned to.
+     *
+     * @param expression the call.
+     * @return The symbol of the object, if any, or an empty optional otherwise.
+     */
+    @Nonnull
+    default Optional<TraceSymbol<S>> getObjectSymbol(@Nonnull T expression) {
+        return getAssignedSymbol(expression);
+    }
+
+    /**
      * Returns the related symbol for the detectionParameter of a given expression.
      *
      * <p>Example

@@ -28,4 +28,14 @@ public final class PCBC extends Mode {
     public PCBC(@Nonnull DetectionLocation detectionLocation) {
         super("PCBC", detectionLocation);
     }
+
+    private PCBC(@Nonnull PCBC mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new PCBC(this);
+    }
 }

@@ -20,8 +20,13 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
+import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -46,7 +51,48 @@ public final class ANSIX942 extends Algorithm implements KeyDerivationFunction {
 
     private static final String NAME = "ANSI-KDF-X9.42";
 
+    @Override
+    public @Nonnull String asString() {
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
+        final Optional<INode> digest = this.hasChildOfType(MessageDigest.class);
+        digest.ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        final Optional<INode> parameterSetIdentifier =
+                this.hasChildOfType(ParameterSetIdentifier.class);
+        parameterSetIdentifier.ifPresent(node -> stringBuilder.append("-").append(node.asString()));
+        return stringBuilder.toString();
+    }
+
     public ANSIX942(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyDerivationFunction.class, detectionLocation);
+    }
+
+    public ANSIX942(@Nonnull MessageDigest messageDigest) {
+        super(NAME, KeyDerivationFunction.class, messageDigest.getDetectionContext());
+        this.put(messageDigest);
+    }
+
+    public ANSIX942(@Nonnull String mode, @Nonnull DetectionLocation detectionLocation) {
+        this(detectionLocation);
+        this.put(new ParameterSetIdentifier(mode, detectionLocation));
+    }
+
+    private ANSIX942(@Nonnull ANSIX942 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ANSIX942 copy() {
+        return new ANSIX942(this);
+    }
+
+    public ANSIX942(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ANSIX942 ansix942) {
+        super(ansix942, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ANSIX942 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ANSIX942(kind, this);
     }
 }

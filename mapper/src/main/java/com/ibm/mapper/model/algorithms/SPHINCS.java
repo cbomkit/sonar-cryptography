@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -63,5 +64,25 @@ public class SPHINCS extends Algorithm implements Signature {
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
+    }
+
+    private SPHINCS(@Nonnull SPHINCS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SPHINCS copy() {
+        return new SPHINCS(this);
+    }
+
+    public SPHINCS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SPHINCS sphincs) {
+        super(sphincs, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SPHINCS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SPHINCS(kind, this);
     }
 }

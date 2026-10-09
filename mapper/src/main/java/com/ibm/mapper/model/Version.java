@@ -31,7 +31,7 @@ public final class Version extends Property {
     }
 
     private Version(@Nonnull Version version) {
-        super(version.type, version.detectionLocation, version.children);
+        super(version);
         this.value = version.value;
     }
 
@@ -48,12 +48,8 @@ public final class Version extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Version copy = new Version(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Version copy() {
+        return new Version(this);
     }
 
     @Override

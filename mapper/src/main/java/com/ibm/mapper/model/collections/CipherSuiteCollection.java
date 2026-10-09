@@ -20,7 +20,6 @@
 package com.ibm.mapper.model.collections;
 
 import com.ibm.mapper.model.CipherSuite;
-import com.ibm.mapper.model.INode;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -28,20 +27,6 @@ public class CipherSuiteCollection extends AbstractAssetCollection<CipherSuite> 
 
     public CipherSuiteCollection(@Nonnull List<CipherSuite> collection) {
         super(collection, CipherSuiteCollection.class);
-    }
-
-    private CipherSuiteCollection(@Nonnull CipherSuiteCollection cipherSuiteCollection) {
-        super(cipherSuiteCollection.collection, cipherSuiteCollection.kind);
-    }
-
-    @Nonnull
-    @Override
-    public INode deepCopy() {
-        CipherSuiteCollection copy = new CipherSuiteCollection(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
     }
 
     @Override

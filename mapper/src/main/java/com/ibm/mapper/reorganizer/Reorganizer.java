@@ -20,7 +20,7 @@
 package com.ibm.mapper.reorganizer;
 
 import com.ibm.mapper.model.INode;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,9 @@ public final class Reorganizer implements IReorganizer {
 
     public Reorganizer(@Nonnull List<IReorganizerRule> rules) {
         this.rules = rules;
-        this.alreadyAppliedRules = new HashMap<>();
+        // by identity: equal nodes of different trees (e.g. the copies of a root made for each
+        // value of a property) are reorganized each
+        this.alreadyAppliedRules = new IdentityHashMap<>();
     }
 
     @Override

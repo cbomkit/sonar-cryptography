@@ -21,6 +21,7 @@ package com.ibm.mapper.model.collections;
 
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.NodeOrigin;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -112,6 +113,35 @@ public abstract class AbstractAssetCollection<K extends INode> implements IAsset
         return false;
     }
 
+    /**
+     * A copy of this collection, with a copy of each of its items and children: the items belong to
+     * the collection, e.g. the algorithms of an {@link AssetCollection} are enriched in place.
+     */
+    @Nonnull
+    @Override
+    public INode deepCopy() {
+        final List<K> items = new ArrayList<>(this.collection.size());
+        for (K item : this.collection) {
+            items.add(copyOf(item));
+        }
+        final AbstractAssetCollection<K> copy = createMerged(items);
+        for (INode child : this.children.values()) {
+            copy.children.put(child.getKind(), child.deepCopy());
+        }
+        return copy;
+    }
+
+    /**
+     * A collection of the class of this collection that holds the given items, without the children
+     * of this collection: the items of merged collections, enriched items or copied items.
+     */
     @Nonnull
     public abstract AbstractAssetCollection<K> createMerged(@Nonnull List<K> mergedCollection);
+
+    /** A copy of the item, which is of the class of the item, as every node is copied. */
+    @SuppressWarnings("unchecked")
+    @Nonnull
+    private K copyOf(@Nonnull K item) {
+        return (K) item.deepCopy();
+    }
 }

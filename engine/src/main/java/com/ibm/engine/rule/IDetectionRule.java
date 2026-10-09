@@ -98,6 +98,13 @@ public interface IDetectionRule<T> {
         @Nonnull
         ParametersFactoryBuilder<T> withOptionalNamedMethodParameter(
                 @Nonnull String name, @Nonnull String type);
+
+        /**
+         * A call without arguments and without a value of its own, e.g. the creation of an object
+         * whose operations are detected by the depending rules.
+         */
+        @Nonnull
+        FinalDetectionRuleBuilder<T> withoutParameters();
     }
 
     interface ParametersTypeBuilder<T> {

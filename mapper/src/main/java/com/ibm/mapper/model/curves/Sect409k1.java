@@ -27,4 +27,14 @@ public final class Sect409k1 extends EllipticCurve {
     public Sect409k1(@Nonnull DetectionLocation detectionLocation) {
         super("sect409k1", detectionLocation);
     }
+
+    private Sect409k1(@Nonnull Sect409k1 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Sect409k1 copy() {
+        return new Sect409k1(this);
+    }
 }

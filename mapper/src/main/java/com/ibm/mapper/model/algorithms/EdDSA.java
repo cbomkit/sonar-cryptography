@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -33,5 +34,25 @@ public class EdDSA extends Algorithm implements Signature {
 
     public EdDSA(@Nonnull DetectionLocation detectionLocation) {
         this(NAME, detectionLocation);
+    }
+
+    protected EdDSA(@Nonnull EdDSA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected EdDSA copy() {
+        return new EdDSA(this);
+    }
+
+    public EdDSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull EdDSA edDSA) {
+        super(edDSA, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public EdDSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new EdDSA(kind, this);
     }
 }

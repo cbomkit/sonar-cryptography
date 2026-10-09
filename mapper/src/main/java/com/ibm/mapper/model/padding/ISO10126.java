@@ -28,4 +28,14 @@ public final class ISO10126 extends Padding {
     public ISO10126(@Nonnull DetectionLocation detectionLocation) {
         super("ISO 10126", detectionLocation);
     }
+
+    private ISO10126(@Nonnull ISO10126 padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected ISO10126 copy() {
+        return new ISO10126(this);
+    }
 }

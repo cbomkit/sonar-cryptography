@@ -1,0 +1,154 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection.openssl.legacy;
+
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
+import com.ibm.engine.model.Size;
+import com.ibm.engine.model.context.KeyAgreementContext;
+import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
+import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.OpenSSLSizeFactory;
+import com.sonar.cxx.sslr.api.AstNode;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Nonnull;
+
+/**
+ * Detection rules for OpenSSL legacy DH (Diffie-Hellman) APIs.
+ *
+ * <p>These rules detect direct DH operations using the legacy (pre-EVP) APIs from dh.h. These APIs
+ * are deprecated but still widely used in existing codebases.
+ *
+ * <p>Covers: Key/Parameter Generation, Predefined Groups (RFC 5114), Key Agreement
+ */
+@SuppressWarnings("java:S1192")
+public final class OpenSSLLegacyDh extends DetectionRuleSet<AstNode> {
+
+    private static final String BUNDLE = "OpenSSL";
+
+    // Parameter generation: DH_generate_parameters_ex(dh, prime_len, generator, cb)
+
+    private static final IDetectionRule<AstNode> DH_GENERATE_PARAMETERS_EX =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_generate_parameters_ex")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLSizeFactory(new KeySizeFactory<>(Size.UnitType.BIT)))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // Predefined Groups (RFC 5114) functions
+
+    private static final IDetectionRule<AstNode> DH_GET_1024_160 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_get_1024_160")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-1024-160"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> DH_GET_2048_224 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_get_2048_224")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-224"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> DH_GET_2048_256 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_get_2048_256")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH-2048-256"))
+                    .withoutParameters()
+                    .buildForContext(new KeyContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // Key Agreement functions
+
+    private static final IDetectionRule<AstNode> DH_COMPUTE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_compute_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new KeyAgreementContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // DH_generate_key(dh): a key is generated for the parameters of dh, a named group or generated
+    // parameters, followed by the key agreement made with it
+
+    private static final IDetectionRule<AstNode> DH_GENERATE_KEY =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("DH_generate_key")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("DH"))
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(
+                            List.of(
+                                    DH_GET_1024_160,
+                                    DH_GET_2048_224,
+                                    DH_GET_2048_256,
+                                    DH_GENERATE_PARAMETERS_EX))
+                    .buildForContext(new PrivateKeyContext(Map.of()))
+                    .inBundle(() -> BUNDLE)
+                    .withDependingDetectionRules(List.of(DH_COMPUTE_KEY));
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return List.of(
+                // Key/Parameter Generation
+                DH_GENERATE_PARAMETERS_EX,
+                DH_GENERATE_KEY,
+                // Predefined Groups (RFC 5114)
+                DH_GET_1024_160,
+                DH_GET_2048_224,
+                DH_GET_2048_256,
+                // Key Agreement
+                DH_COMPUTE_KEY);
+    }
+}

@@ -19,15 +19,23 @@
  */
 package com.ibm.mapper.reorganizer.rules;
 
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.TagLength;
+import com.ibm.mapper.model.algorithms.Blowfish;
+import com.ibm.mapper.model.algorithms.RC2;
+import com.ibm.mapper.model.algorithms.RC4;
+import com.ibm.mapper.model.algorithms.RC5;
+import com.ibm.mapper.model.algorithms.cast.CAST128;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public final class CipherParameterReorganizer {
@@ -63,6 +71,48 @@ public final class CipherParameterReorganizer {
                                 }
                             });
 
+    /**
+     * A key length set for an encryption with a cipher (in C, {@code EVP_CIPHER_CTX_set_key_length}
+     * on the context the cipher is initialized on) is the key length of a cipher whose key length
+     * is variable: RC2, RC4, RC5, Blowfish and CAST5, the ciphers OpenSSL marks {@code
+     * EVP_CIPH_VARIABLE_LENGTH}. A cipher whose key length is fixed keeps the key length it has, as
+     * OpenSSL refuses another one.
+     */
+    @Nonnull
+    public static final IReorganizerRule KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_AN_ENCRYPTION =
+            keepTheFixedKeyLengthOfTheCipher(Encrypt.class);
+
+    @Nonnull
+    public static final IReorganizerRule KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_A_DECRYPTION =
+            keepTheFixedKeyLengthOfTheCipher(Decrypt.class);
+
+    @Nonnull
+    private static IReorganizerRule keepTheFixedKeyLengthOfTheCipher(
+            @Nonnull Class<? extends INode> operationClazz) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule()
+                .forNodeKind(operationClazz)
+                .withDetectionCondition(
+                        (node, parent, roots) ->
+                                parent instanceof IAlgorithm
+                                        && parent.hasChildOfType(KeyLength.class).isPresent()
+                                        && node.hasChildOfType(KeyLength.class).isPresent()
+                                        && !hasVariableKeyLength(parent))
+                .perform(
+                        (node, parent, roots) -> {
+                            node.removeChildOfType(KeyLength.class);
+                            return roots;
+                        });
+    }
+
+    private static boolean hasVariableKeyLength(@Nonnull INode cipher) {
+        return cipher instanceof RC2
+                || cipher instanceof RC4
+                || cipher instanceof RC5
+                || cipher instanceof Blowfish
+                || cipher instanceof CAST128;
+    }
+
     @Nonnull
     public static final IReorganizerRule MOVE_NODES_UNDER_ENCRYPT_UP =
             new ReorganizerRuleBuilder()
@@ -78,4 +128,44 @@ public final class CipherParameterReorganizer {
                     .forNodeKind(Decrypt.class)
                     .withAnyNonNullChildren()
                     .perform(UsualPerformActions.performMovingChildrenUp);
+
+    /**
+     * An encryption or decryption operation detected before the cipher it uses (as in C, where
+     * {@code EVP_EncryptInit_ex(ctx, cipher, ...)} names the cipher) has the cipher as its child.
+     * The cipher becomes the root node and the operation its child, the same shape as when the
+     * cipher is detected first.
+     */
+    @Nonnull
+    public static final IReorganizerRule MOVE_ENCRYPT_UNDER_ITS_CIPHER =
+            moveOperationUnderItsCipher(Encrypt.class);
+
+    @Nonnull
+    public static final IReorganizerRule MOVE_DECRYPT_UNDER_ITS_CIPHER =
+            moveOperationUnderItsCipher(Decrypt.class);
+
+    @Nonnull
+    private static IReorganizerRule moveOperationUnderItsCipher(
+            @Nonnull Class<? extends INode> operationClazz) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule()
+                .forNodeKind(operationClazz)
+                .withDetectionCondition(
+                        (node, parent, roots) -> parent == null && cipherOf(node).isPresent())
+                .perform(
+                        (node, parent, roots) -> {
+                            final INode cipher = cipherOf(node).orElseThrow();
+                            node.removeChildOfType(cipher.getKind());
+                            cipher.put(node);
+                            final List<INode> newRoots = new ArrayList<>(roots);
+                            newRoots.replaceAll(root -> root == node ? cipher : root);
+                            return newRoots;
+                        });
+    }
+
+    @Nonnull
+    private static Optional<INode> cipherOf(@Nonnull INode operation) {
+        return operation.getChildren().values().stream()
+                .filter(IAlgorithm.class::isInstance)
+                .findFirst();
+    }
 }

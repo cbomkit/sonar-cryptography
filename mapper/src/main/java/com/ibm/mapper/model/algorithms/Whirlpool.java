@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -54,5 +55,26 @@ public final class Whirlpool extends Algorithm implements MessageDigest {
         this.put(new DigestSize(512, detectionLocation));
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new NumberOfIterations(10, detectionLocation));
+    }
+
+    private Whirlpool(@Nonnull Whirlpool algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Whirlpool copy() {
+        return new Whirlpool(this);
+    }
+
+    public Whirlpool(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Whirlpool whirlpool) {
+        super(whirlpool, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Whirlpool asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Whirlpool(kind, this);
     }
 }

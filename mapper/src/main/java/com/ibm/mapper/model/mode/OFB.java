@@ -37,4 +37,14 @@ public final class OFB extends Mode {
     public OFB(int s, @Nonnull DetectionLocation detectionLocation) {
         super("OFB" + s, detectionLocation);
     }
+
+    private OFB(@Nonnull OFB mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new OFB(this);
+    }
 }

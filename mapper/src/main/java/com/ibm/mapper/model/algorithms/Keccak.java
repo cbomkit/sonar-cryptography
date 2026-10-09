@@ -55,4 +55,20 @@ public final class Keccak extends Algorithm implements MessageDigest, Authentica
     public Keccak(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Keccak keccak) {
         super(keccak, asKind);
     }
+
+    private Keccak(@Nonnull Keccak algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Keccak copy() {
+        return new Keccak(this);
+    }
+
+    @Nonnull
+    @Override
+    public Keccak asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Keccak(kind, this);
+    }
 }

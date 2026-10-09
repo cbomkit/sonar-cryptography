@@ -1,0 +1,77 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.mapper.model.algorithms;
+
+import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
+import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.utils.DetectionLocation;
+import javax.annotation.Nonnull;
+
+/**
+ *
+ *
+ * <h2>{@value #NAME}</h2>
+ *
+ * <p>Hybrid post-quantum key encapsulation mechanism combining X448 (Curve448 elliptic curve
+ * Diffie-Hellman) with ML-KEM-1024 (post-quantum KEM), for high-security TLS 1.3 key exchange.
+ *
+ * <h3>Specification</h3>
+ *
+ * <ul>
+ *   <li>https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/
+ * </ul>
+ *
+ * <h3>Other Names and Related Standards</h3>
+ *
+ * <ul>
+ *   <li>TLS Named Group 0x11EE
+ * </ul>
+ */
+public final class X448MLKEM1024 extends Algorithm implements KeyEncapsulationMechanism {
+
+    private static final String NAME = "X448MLKEM1024";
+
+    public X448MLKEM1024(@Nonnull DetectionLocation detectionLocation) {
+        super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private X448MLKEM1024(@Nonnull X448MLKEM1024 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected X448MLKEM1024 copy() {
+        return new X448MLKEM1024(this);
+    }
+
+    public X448MLKEM1024(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull X448MLKEM1024 x448mlkem1024) {
+        super(x448mlkem1024, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public X448MLKEM1024 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new X448MLKEM1024(kind, this);
+    }
+}

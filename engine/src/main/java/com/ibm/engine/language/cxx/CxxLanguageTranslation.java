@@ -1,0 +1,486 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.engine.language.cxx;
+
+import com.ibm.engine.detection.IType;
+import com.ibm.engine.detection.MatchContext;
+import com.ibm.engine.language.ILanguageTranslation;
+import com.sonar.cxx.sslr.api.AstNode;
+import com.sonar.cxx.sslr.api.GenericTokenType;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sonar.cxx.parser.CxxGrammarImpl;
+import org.sonar.cxx.parser.CxxTokenType;
+import org.sonar.cxx.squidbridge.api.AstNodeSymbolExtension;
+import org.sonar.cxx.squidbridge.api.AstNodeTypeExtension;
+import org.sonar.cxx.squidbridge.api.Symbol;
+import org.sonar.cxx.squidbridge.api.Type;
+import org.sonar.cxx.utils.CxxAstNodeHelper;
+
+public class CxxLanguageTranslation implements ILanguageTranslation<AstNode> {
+    @Nonnull
+    private static final Logger LOGGER = LoggerFactory.getLogger(CxxLanguageTranslation.class);
+
+    /**
+     * Synthetic type name used for standalone C/C++ function calls that have no object qualifier.
+     * Detection rules for C-style functions (e.g., OpenSSL's EVP_DigestInit_ex) use {@code
+     * forObjectTypes(GLOBAL_SCOPE)}, so that a C++ member function of the same name (e.g. {@code
+     * hasher.MD5(...)}) does not match; {@code forObjectTypes("*")} matches any call.
+     */
+    public static final String GLOBAL_SCOPE = "<global>";
+
+    @Nonnull
+    @Override
+    public Optional<String> getMethodName(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            return Optional.of("<init>");
+        } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            String name = CxxAstNodeHelper.getFunctionCallName(methodInvocation);
+            if (name != null) {
+                // a static member function is named in its class, Hasher::make(...) calls make
+                final String qualifyingClass = qualifyingClassOf(methodInvocation, name);
+                return Optional.of(
+                        qualifyingClass == null
+                                ? name
+                                : name.substring(qualifyingClass.length() + 2));
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * The functions a call through a function pointer calls (see {@link
+     * CxxSemantic#resolveCalledFunctions}), or the one function any other call names.
+     */
+    @Nonnull
+    @Override
+    public List<String> getMethodNames(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        final List<String> calledFunctions = CxxSemantic.resolveCalledFunctions(methodInvocation);
+        if (!calledFunctions.isEmpty()) {
+            return calledFunctions;
+        }
+        final Optional<String> name = getMethodName(matchContext, methodInvocation);
+        if (name.isEmpty() || !callsAFreeFunction(methodInvocation, name.get())) {
+            return name.stream().toList();
+        }
+        // a free function is named with the namespaces it is declared in, which a call inside
+        // them may leave out
+        return CxxScopes.lookupNames(methodInvocation, name.get());
+    }
+
+    /** The key of a method name: its last component, {@code digest} of {@code util::digest}. */
+    @Nonnull
+    @Override
+    public String getMethodNameKey(@Nonnull String methodName) {
+        return methodName.substring(methodName.lastIndexOf(':') + 1);
+    }
+
+    /**
+     * Whether a call calls a free function: it is neither a constructor call, a member access, a
+     * call of a static member function, nor a call of a member function of the class of the
+     * function it is in.
+     */
+    private static boolean callsAFreeFunction(@Nonnull AstNode call, @Nonnull String name) {
+        if (!CxxAstNodeHelper.isFunctionCall(call)
+                || CxxConstructorCalls.isConstructorCall(call)
+                || CxxAstNodeHelper.isMemberAccess(call)) {
+            return false;
+        }
+        final String writtenName = CxxAstNodeHelper.getFunctionCallName(call);
+        return writtenName != null
+                && qualifyingClassOf(call, writtenName) == null
+                && memberClassOf(call, name) == null;
+    }
+
+    /**
+     * The class of the member function a call without an object is made in, when the class declares
+     * a member of the name called, e.g. {@code Hasher} for {@code reset(name)} in {@code
+     * Hasher::start}, or null.
+     */
+    @Nullable private static String memberClassOf(@Nonnull AstNode call, @Nonnull String name) {
+        if (name.contains("::")) {
+            return null;
+        }
+        final String className = CxxScopes.classOfEnclosingFunction(call);
+        return className != null && CxxScopes.declaresMember(call, className, name)
+                ? className
+                : null;
+    }
+
+    @Nonnull
+    @Override
+    public Optional<IType> getInvokedObjectTypeString(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            final String className = CxxConstructorCalls.getClassName(methodInvocation);
+            return className == null
+                    ? Optional.empty()
+                    : Optional.of(createTypeFromClassName(className));
+        } else if (CxxAstNodeHelper.isMemberAccess(methodInvocation)) {
+            final Optional<IType> qualifierType = getQualifierType(matchContext, methodInvocation);
+            if (callsMemberFunction(methodInvocation)) {
+                return qualifierType;
+            }
+            // a call through a function pointer member, e.g. api->EVP_sha256(), calls a C
+            // function, as a standalone call does
+            final IType globalScope = createTypeFromFqn(GLOBAL_SCOPE, matchContext);
+            return Optional.of(
+                    qualifierType
+                            .<IType>map(
+                                    type ->
+                                            typeString ->
+                                                    type.is(typeString)
+                                                            || globalScope.is(typeString))
+                            .orElse(globalScope));
+        } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            final String name = CxxAstNodeHelper.getFunctionCallName(methodInvocation);
+            final String qualifyingClass =
+                    name == null ? null : qualifyingClassOf(methodInvocation, name);
+            if (qualifyingClass != null) {
+                return Optional.of(createTypeFromClassName(qualifyingClass));
+            }
+            // a member function called without an object in another member function of its class
+            final String memberClass = name == null ? null : memberClassOf(methodInvocation, name);
+            if (memberClass != null) {
+                return Optional.of(createTypeFromClassName(memberClass));
+            }
+            // Standalone C/C++ function call (no member access qualifier).
+            // Return a synthetic global scope type so MethodMatcher.match() doesn't
+            // short-circuit on empty. Detection rules match it with forObjectTypes(GLOBAL_SCOPE).
+            return Optional.of(createTypeFromFqn(GLOBAL_SCOPE, matchContext));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * The class a call of a static member function names it in, {@code Hasher} of {@code
+     * Hasher::make(...)}, or null when the function is not named in a class.
+     */
+    @Nullable private static String qualifyingClassOf(@Nonnull AstNode call, @Nonnull String name) {
+        final int separator = name.lastIndexOf("::");
+        if (separator <= 0 || CxxAstNodeHelper.isMemberAccess(call)) {
+            return null;
+        }
+        final List<AstNode> identifiers =
+                call.getFirstChild().getDescendants(GenericTokenType.IDENTIFIER);
+        if (identifiers.size() < 2) {
+            return null;
+        }
+        final String qualifier = name.substring(0, separator);
+        return CxxConstructorCalls.namesAClass(identifiers.get(identifiers.size() - 2), qualifier)
+                ? qualifier
+                : null;
+    }
+
+    /** The type of the object a member is accessed on, e.g. of {@code obj} in {@code obj.f()}. */
+    @Nonnull
+    private Optional<IType> getQualifierType(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode memberAccess) {
+        AstNode qualifier = CxxAstNodeHelper.getMemberAccessQualifier(memberAccess);
+        if (qualifier == null) {
+            return Optional.empty();
+        }
+        // this is a pointer to the object of the member function it is used in
+        if ("this".equals(qualifier.getTokenValue()) && qualifier.getNumberOfChildren() <= 1) {
+            final String className = CxxScopes.classOfEnclosingFunction(memberAccess);
+            if (className != null) {
+                return Optional.of(createTypeFromClassName(className));
+            }
+        }
+        // an object, a pointer or a reference is of the class it is declared with
+        if (AstNodeSymbolExtension.getSymbol(qualifier) instanceof Symbol.VariableSymbol variable
+                && !variable.isUnknown()) {
+            final String className = CxxConstructorCalls.getDeclaredClassName(variable);
+            if (className != null) {
+                return Optional.of(createTypeFromClassName(className));
+            }
+        }
+        Type cxxType = AstNodeTypeExtension.getType(qualifier);
+        if (cxxType != null && !cxxType.isUnknown()) {
+            return Optional.of(createTypeFromCxxType(cxxType, matchContext));
+        }
+
+        Symbol symbol = AstNodeSymbolExtension.getSymbol(qualifier);
+        if (symbol != null && !symbol.isUnknown()) {
+            String fqn = symbol.fullyQualifiedName();
+            if (fqn != null) {
+                return Optional.of(createTypeFromFqn(fqn, matchContext));
+            }
+        }
+
+        String identifierName = CxxAstNodeHelper.getIdentifierName(qualifier);
+        if (identifierName != null) {
+            return Optional.of(createTypeFromFqn(identifierName, matchContext));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Whether a member access calls a member function, i.e. its member resolves to a function of a
+     * class rather than to a function pointer member or an unresolved member.
+     */
+    private static boolean callsMemberFunction(@Nonnull AstNode memberAccess) {
+        final List<AstNode> children = memberAccess.getChildren();
+        for (int i = children.size() - 2; i >= 0; i--) {
+            final String operator = children.get(i).getTokenValue();
+            if (".".equals(operator) || "->".equals(operator)) {
+                AstNode member = children.get(i + 1);
+                if (!member.is(GenericTokenType.IDENTIFIER)) {
+                    member = member.getFirstDescendant(GenericTokenType.IDENTIFIER);
+                }
+                final Symbol symbol =
+                        member != null ? AstNodeSymbolExtension.getSymbol(member) : null;
+                return symbol != null && !symbol.isUnknown() && symbol.isFunctionSymbol();
+            }
+        }
+        return false;
+    }
+
+    @Nonnull
+    @Override
+    public Optional<IType> getMethodReturnTypeString(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            Type cxxType = AstNodeTypeExtension.getType(methodInvocation);
+            if (cxxType != null && !cxxType.isUnknown()) {
+                return Optional.of(createTypeFromCxxType(cxxType, matchContext));
+            }
+
+            AstNode idExpr = methodInvocation.getFirstDescendant(CxxGrammarImpl.idExpression);
+            if (idExpr != null) {
+                Symbol symbol = AstNodeSymbolExtension.getSymbol(idExpr);
+                if (symbol != null
+                        && symbol.isFunctionSymbol()
+                        && symbol instanceof Symbol.FunctionSymbol funcSym) {
+                    Type returnType = funcSym.returnType();
+                    if (returnType != null && !returnType.isUnknown()) {
+                        return Optional.of(createTypeFromCxxType(returnType, matchContext));
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Nonnull
+    @Override
+    public List<IType> getMethodParameterTypes(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode methodInvocation) {
+        List<AstNode> arguments;
+
+        if (CxxConstructorCalls.isConstructorCall(methodInvocation)) {
+            arguments = CxxConstructorCalls.getArguments(methodInvocation);
+        } else if (CxxAstNodeHelper.isFunctionCall(methodInvocation)) {
+            arguments = CxxAstNodeHelper.getFunctionCallArguments(methodInvocation);
+        } else {
+            return Collections.emptyList();
+        }
+
+        if (arguments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<IType> types = new ArrayList<>();
+        List<Boolean> parameterMatchExactTypes = matchContext.parametersShouldMatchExactTypes();
+        List<Boolean> matchMatrix = parameterMatchExactTypes;
+
+        if (parameterMatchExactTypes.size() != arguments.size()) {
+            Boolean[] defaults = new Boolean[arguments.size()];
+            java.util.Arrays.fill(defaults, Boolean.FALSE);
+            matchMatrix = java.util.Arrays.asList(defaults);
+        }
+
+        for (int i = 0; i < arguments.size(); i++) {
+            AstNode argument = arguments.get(i);
+            boolean exactMatch = matchMatrix.get(i);
+
+            final String argumentText = argumentText(argument);
+            if (argumentText != null) {
+                types.add(createTypeFromArgumentText(argumentText));
+                continue;
+            }
+
+            Type argType = AstNodeTypeExtension.getType(argument);
+            if (argType != null && !argType.isUnknown()) {
+                types.add(
+                        createTypeFromCxxType(
+                                argType,
+                                new MatchContext(
+                                        matchContext.isHookContext(),
+                                        exactMatch,
+                                        Collections.emptyList())));
+                continue;
+            }
+
+            Symbol argSymbol = AstNodeSymbolExtension.getSymbol(argument);
+            if (argSymbol != null && !argSymbol.isUnknown()) {
+                String fqn = argSymbol.fullyQualifiedName();
+                if (fqn != null) {
+                    types.add(
+                            createTypeFromFqn(
+                                    fqn,
+                                    new MatchContext(
+                                            matchContext.isHookContext(),
+                                            exactMatch,
+                                            Collections.emptyList())));
+                    continue;
+                }
+            }
+
+            types.add(createUnknownType());
+        }
+        return types;
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> resolveIdentifierAsString(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode identifier) {
+        if (identifier.is(GenericTokenType.IDENTIFIER)) {
+            return Optional.of(identifier.getTokenValue());
+        }
+        String name = CxxAstNodeHelper.getIdentifierName(identifier);
+        if (name != null) {
+            return Optional.of(name);
+        }
+        return Optional.empty();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getEnumIdentifierName(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode enumIdentifier) {
+        if (enumIdentifier.is(GenericTokenType.IDENTIFIER)) {
+            return Optional.of(enumIdentifier.getTokenValue());
+        }
+        String name = CxxAstNodeHelper.getIdentifierName(enumIdentifier);
+        if (name != null) {
+            return Optional.of(name);
+        }
+        return Optional.empty();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getEnumClassName(
+            @Nonnull MatchContext matchContext, @Nonnull AstNode enumClass) {
+        if (enumClass.is(CxxGrammarImpl.enumSpecifier)) {
+            AstNode enumHead = enumClass.getFirstChild(CxxGrammarImpl.enumHead);
+            if (enumHead != null) {
+                AstNode enumHeadName = enumHead.getFirstChild(CxxGrammarImpl.enumHeadName);
+                if (enumHeadName != null) {
+                    String name = CxxAstNodeHelper.getIdentifierName(enumHeadName);
+                    if (name != null) {
+                        return Optional.of(name);
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * The source text of an argument that is a literal or an identifier, e.g. {@code "digest"}
+     * (with its quotes), {@code 32} or {@code OSSL_KDF_PARAM_DIGEST}, or null for any other
+     * expression. Rules match such an argument by its text, as the key of an {@code OSSL_PARAM}
+     * entry is matched by {@code withMethodParameter("\"digest\"")}.
+     */
+    @Nullable private static String argumentText(@Nonnull AstNode argument) {
+        AstNode node = argument;
+        while (!node.is(CxxGrammarImpl.LITERAL) && node.getNumberOfChildren() == 1) {
+            node = node.getFirstChild();
+        }
+        if (node.is(CxxGrammarImpl.LITERAL)) {
+            final StringBuilder text = new StringBuilder();
+            node.getTokens().forEach(token -> text.append(token.getValue()));
+            return text.toString();
+        }
+        if (node.hasChildren()) {
+            return null;
+        }
+        if (node.is(
+                CxxTokenType.STRING,
+                CxxTokenType.NUMBER,
+                CxxTokenType.CHARACTER,
+                GenericTokenType.IDENTIFIER)) {
+            return node.getTokenValue();
+        }
+        return null;
+    }
+
+    @Nonnull
+    private static IType createTypeFromArgumentText(@Nonnull String argumentText) {
+        return argumentText::equals;
+    }
+
+    IType createTypeFromCxxType(@Nonnull Type cxxType, @Nonnull MatchContext matchContext) {
+        final String fqn = cxxType.fullyQualifiedName();
+        final boolean exactOnly =
+                matchContext.isHookContext() || matchContext.objectShouldMatchExactTypes();
+        if (exactOnly) {
+            return typeString -> fqn != null && fqn.equals(typeString);
+        }
+
+        final Symbol.TypeSymbol typeSymbol = cxxType.symbol();
+        final List<String> baseFqns = new ArrayList<>();
+        if (typeSymbol != null) {
+            for (Symbol.TypeSymbol base : typeSymbol.baseClasses()) {
+                String baseFqn = base.fullyQualifiedName();
+                if (baseFqn != null) {
+                    baseFqns.add(baseFqn);
+                }
+            }
+        }
+        return typeString ->
+                (fqn != null && fqn.equals(typeString)) || baseFqns.contains(typeString);
+    }
+
+    private IType createTypeFromFqn(@Nonnull String fqn, @Nonnull MatchContext matchContext) {
+        return typeString -> {
+            if (matchContext.isHookContext() || matchContext.objectShouldMatchExactTypes()) {
+                return fqn.equals(typeString);
+            }
+            return fqn.equals(typeString)
+                    || fqn.endsWith("::" + typeString)
+                    || typeString.endsWith("::" + fqn);
+        };
+    }
+
+    /**
+     * The type of an object of a class named as it is written, which may leave out the namespaces
+     * and classes the code naming it is in (see {@link CxxConstructorCalls#isSameClass}).
+     */
+    @Nonnull
+    private static IType createTypeFromClassName(@Nonnull String className) {
+        return typeString -> CxxConstructorCalls.isSameClass(className, typeString);
+    }
+
+    private IType createUnknownType() {
+        return typeString -> false;
+    }
+}

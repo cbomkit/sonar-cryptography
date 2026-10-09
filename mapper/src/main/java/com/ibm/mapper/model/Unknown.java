@@ -29,7 +29,7 @@ public final class Unknown extends Property implements IPrimitive {
     }
 
     private Unknown(@Nonnull Unknown unknown) {
-        super(unknown.type, unknown.detectionLocation, unknown.children);
+        super(unknown);
     }
 
     @Override
@@ -59,12 +59,8 @@ public final class Unknown extends Property implements IPrimitive {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Unknown copy = new Unknown(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Unknown copy() {
+        return new Unknown(this);
     }
 
     @Nonnull

@@ -72,4 +72,20 @@ public final class GOST28147 extends Algorithm
             @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull GOST28147 gost28147) {
         super(gost28147, asKind);
     }
+
+    private GOST28147(@Nonnull GOST28147 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected GOST28147 copy() {
+        return new GOST28147(this);
+    }
+
+    @Nonnull
+    @Override
+    public GOST28147 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new GOST28147(kind, this);
+    }
 }

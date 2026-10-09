@@ -1,0 +1,152 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.translation.reorganizer;
+
+import com.ibm.mapper.model.KeyAgreement;
+import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.Protocol;
+import com.ibm.mapper.model.PublicKey;
+import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.SecretKey;
+import com.ibm.mapper.model.Signature;
+import com.ibm.mapper.model.StreamCipher;
+import com.ibm.mapper.model.functionality.KeyGeneration;
+import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
+import com.ibm.mapper.model.protocol.TLS;
+import com.ibm.mapper.reorganizer.IReorganizerRule;
+import com.ibm.mapper.reorganizer.rules.AeadBlockCipherReorganizer;
+import com.ibm.mapper.reorganizer.rules.AsymmetricBlockCipherReorganizer;
+import com.ibm.mapper.reorganizer.rules.BlockCipherReorganizer;
+import com.ibm.mapper.reorganizer.rules.CipherParameterReorganizer;
+import com.ibm.mapper.reorganizer.rules.CipherSuiteReorganizer;
+import com.ibm.mapper.reorganizer.rules.KeyReorgenizer;
+import com.ibm.mapper.reorganizer.rules.KeyUsageReorganizer;
+import com.ibm.mapper.reorganizer.rules.MacReorganizer;
+import com.ibm.mapper.reorganizer.rules.ProtocolVersionReorganizer;
+import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
+import java.util.List;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+
+/**
+ * Reorganizer rules for C++ detection results.
+ *
+ * <p>This class provides the reorganizer rules used to normalize the translation tree structure.
+ * The rules are the same as used in the Java module, as they operate on the language-agnostic
+ * mapper model.
+ */
+public final class CxxReorganizerRules {
+    private CxxReorganizerRules() {
+        // private
+    }
+
+    @Nonnull
+    public static List<IReorganizerRule> rules() {
+        return Stream.concat(
+                        // the range of versions of a TLS context, from the versions set on it,
+                        // before the context takes the place of its version
+                        Stream.concat(
+                                Stream.of(
+                                        ProtocolVersionReorganizer.resolveVersionsSetOn(TLS.class),
+                                        ProtocolVersionReorganizer.resolveVersionsSetOn(
+                                                Protocol.class)),
+                                ProtocolVersionReorganizer.resolveVersionsSetOnTheirOwn().stream()),
+                        otherRules().stream())
+                .toList();
+    }
+
+    @Nonnull
+    private static List<IReorganizerRule> otherRules() {
+        return List.of(
+                AeadBlockCipherReorganizer.MERGE_AE_PARENT_AND_CHILD,
+                AeadBlockCipherReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,
+                AsymmetricBlockCipherReorganizer.INVERT_DIGEST_AND_ITS_SIZE,
+                AsymmetricBlockCipherReorganizer.MERGE_PKE_PARENT_AND_CHILD,
+                AsymmetricBlockCipherReorganizer.MOVE_MASK_GENERATION_FUNCTION_UNDER_OAEP,
+                AsymmetricBlockCipherReorganizer.MAKE_RSA_ENCRYPTION_OF_AN_OAEP_PADDING,
+                BlockCipherReorganizer.MERGE_BLOCK_CIPHER_CHILD_INTO_PARENT,
+                // a legacy stream cipher operation on the key set up for it, e.g. RC4 on
+                // RC4_set_key
+                AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
+                        StreamCipher.class),
+                CipherParameterReorganizer.MOVE_KEY_LENGTH_UNDER_TAG_LENGTH_UP,
+                CipherParameterReorganizer.KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_A_DECRYPTION,
+                CipherParameterReorganizer.KEEP_THE_FIXED_KEY_LENGTH_OF_THE_CIPHER_OF_AN_ENCRYPTION,
+                CipherParameterReorganizer.MOVE_NODES_UNDER_DECRYPT_UP,
+                CipherParameterReorganizer.MOVE_ENCRYPT_UNDER_ITS_CIPHER,
+                CipherParameterReorganizer.MOVE_DECRYPT_UNDER_ITS_CIPHER,
+                CipherParameterReorganizer.MOVE_NODES_UNDER_ENCRYPT_UP,
+                CipherSuiteReorganizer.ADD_TLS_PROTOCOL_AS_PARENT_NODE,
+                CipherSuiteReorganizer.ADD_TLS_PROTOCOL_AS_PARENT_OF_CIPHER_SUITES,
+                CipherSuiteReorganizer.REPLACE_TLS_WITH_VERSIONED_CHILD,
+                MacReorganizer.MERGE_UNKNOWN_MAC_PARENT_AND_CIPHER_CHILD,
+                MacReorganizer.MERGE_GMAC_PARENT_AND_GCM_CIPHER_CHILD,
+                MacReorganizer.MOVE_SOME_MAC_CHILDREN_UNDER_BLOCKCIPHER,
+                MacReorganizer.MOVE_TAG_LENGTH_UNDER_MAC,
+                SignatureReorganizer.MERGE_UNKNOWN_SIGNATURE_PARENT_AND_CHILD,
+                SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                        Sign.class, Signature.class),
+                SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
+                // a sign or verify operation on the signature scheme it was detected with
+                SignatureReorganizer.moveFunctionalityUnderChildNode(Sign.class, Signature.class),
+                SignatureReorganizer.moveFunctionalityUnderChildNode(Verify.class, Signature.class),
+                KeyReorgenizer.SPECIFY_KEY_TYPE_BY_LOOKING_AT_KEY_GENERATION,
+                // the operations performed with a key generated by EVP_PKEY_keygen are found under
+                // its key generation
+                SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                        KeyGeneration.class, PublicKeyEncryption.class),
+                SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                        KeyGeneration.class, Signature.class),
+                SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                        KeyGeneration.class, KeyAgreement.class),
+                SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
+                        KeyGeneration.class, KeyEncapsulationMechanism.class),
+                // a key generated for parameters, a group or a curve described by a child
+                AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
+                        PublicKeyEncryption.class),
+                AsymmetricBlockCipherReorganizer.mergeParentAndChildOfSameAlgorithm(
+                        Signature.class),
+                // a generated asymmetric key is a private key holding its algorithm
+                KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(PublicKeyEncryption.class),
+                KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(Signature.class),
+                KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(
+                        ProbabilisticSignatureScheme.class),
+                KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(KeyAgreement.class),
+                KeyReorgenizer.makePrivateKeyOfGeneratedAlgorithm(KeyEncapsulationMechanism.class),
+                // the operations performed with a key created from raw bytes are found on the key
+                KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(PrivateKey.class),
+                KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(PublicKey.class),
+                KeyUsageReorganizer.moveOperationsOfImportedKeyUnderItsAlgorithm(SecretKey.class),
+                // the operations performed with a private key, e.g. ECDSA with an EC key
+                KeyUsageReorganizer.MAKE_KEY_DERIVATION_OF_A_DECRYPTION_WITH_A_KEY_AGREEMENT_KEY,
+                KeyUsageReorganizer.MAKE_ALGORITHMS_OF_PRIVATE_KEY_OPERATIONS,
+                KeyUsageReorganizer.MOVE_OPERATION_ALGORITHMS_OF_PRIVATE_KEY_TO_THE_KEY,
+                // the MAC computed with a MAC key
+                KeyUsageReorganizer.MAKE_TAGS_OF_SECRET_KEY_OPERATIONS,
+                KeyReorgenizer.MOVE_KEY_UNDER_ALGORITHM_AND_REPLACE_INNER_ALGORITHM,
+                KeyReorgenizer.PROPAGATE_KEY_LENGTH_TO_BLOCK_CIPHER,
+                // a signature made with a key whose type is not known in the analyzed code
+                SignatureReorganizer.MAKE_SIGNATURE_OF_A_SIGNING_OPERATION_WITHOUT_SCHEME,
+                SignatureReorganizer.MAKE_SIGNATURE_OF_A_VERIFYING_OPERATION_WITHOUT_SCHEME);
+    }
+}

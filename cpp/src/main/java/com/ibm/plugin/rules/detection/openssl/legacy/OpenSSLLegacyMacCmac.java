@@ -1,0 +1,64 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection.openssl.legacy;
+
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
+import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
+import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.cipher.OpenSSLEvpCipher;
+import com.sonar.cxx.sslr.api.AstNode;
+import java.util.List;
+import javax.annotation.Nonnull;
+
+/**
+ * Detection rules for OpenSSL legacy (pre-EVP) CMAC APIs: {@code CMAC_Init}, which selects the
+ * cipher of the CMAC.
+ */
+@SuppressWarnings("java:S1192")
+public final class OpenSSLLegacyMacCmac extends DetectionRuleSet<AstNode> {
+
+    private static final String BUNDLE = "OpenSSL";
+
+    private static final IDetectionRule<AstNode> CMAC_INIT =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("CMAC_Init")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("CMAC"))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpCipher.class))
+                    .withMethodParameter("*")
+                    .buildForContext(new MacContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return List.of(CMAC_INIT);
+    }
+}

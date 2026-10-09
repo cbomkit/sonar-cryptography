@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.elephant;
 
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class Delirium extends Elephant {
         super(NAME, detectionLocation);
         this.put(BlockSize.ofDefault(200, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
+    }
+
+    private Delirium(@Nonnull Delirium algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Delirium copy() {
+        return new Delirium(this);
+    }
+
+    public Delirium(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Delirium delirium) {
+        super(asKind, delirium);
+    }
+
+    @Nonnull
+    @Override
+    public Delirium asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Delirium(kind, this);
     }
 }

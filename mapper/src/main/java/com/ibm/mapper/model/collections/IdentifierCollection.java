@@ -19,7 +19,6 @@
  */
 package com.ibm.mapper.model.collections;
 
-import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Identifier;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -28,20 +27,6 @@ public class IdentifierCollection extends AbstractAssetCollection<Identifier> {
 
     public IdentifierCollection(@Nonnull List<Identifier> collection) {
         super(collection, IdentifierCollection.class);
-    }
-
-    private IdentifierCollection(@Nonnull IdentifierCollection identifierCollection) {
-        super(identifierCollection.collection, identifierCollection.kind);
-    }
-
-    @Nonnull
-    @Override
-    public INode deepCopy() {
-        IdentifierCollection copy = new IdentifierCollection(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
     }
 
     @Nonnull

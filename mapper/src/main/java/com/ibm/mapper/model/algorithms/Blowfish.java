@@ -86,4 +86,20 @@ public final class Blowfish extends Algorithm implements BlockCipher, Authentica
     public Blowfish(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Blowfish blowfish) {
         super(blowfish, asKind);
     }
+
+    private Blowfish(@Nonnull Blowfish algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Blowfish copy() {
+        return new Blowfish(this);
+    }
+
+    @Nonnull
+    @Override
+    public Blowfish asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Blowfish(kind, this);
+    }
 }

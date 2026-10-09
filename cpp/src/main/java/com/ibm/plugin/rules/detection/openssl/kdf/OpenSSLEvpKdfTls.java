@@ -1,0 +1,63 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection.openssl.kdf;
+
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
+import com.ibm.engine.model.context.KeyDerivationFunctionContext;
+import com.ibm.engine.rule.DetectionRuleSet;
+import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.openssl.digest.OpenSSLEvpMessageDigest;
+import com.sonar.cxx.sslr.api.AstNode;
+import java.util.List;
+import javax.annotation.Nonnull;
+
+/**
+ * Detection rules for the calls made on a TLS1-PRF (TLS 1.0/1.1/1.2) context of the {@code
+ * EVP_PKEY} interface: the digest setter. The context itself is created by the {@code
+ * EVP_PKEY_CTX_new_id} and {@code EVP_PKEY_CTX_new_from_name} rules of {@link OpenSSLEvpKdf}, which
+ * also covers the TLS1-PRF and TLS13-KDF fetched by name through {@code EVP_KDF_fetch}.
+ */
+@SuppressWarnings("java:S1192")
+public final class OpenSSLEvpKdfTls extends DetectionRuleSet<AstNode> {
+
+    private static final String BUNDLE = "OpenSSL";
+
+    private static final IDetectionRule<AstNode> EVP_PKEY_CTX_SET_TLS1_PRF_MD =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_PKEY_CTX_set_tls1_prf_md")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .addDependingDetectionRules(RuleSets.rulesOf(OpenSSLEvpMessageDigest.class))
+                    .buildForContext(new KeyDerivationFunctionContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return List.of(
+                // TLS1-PRF setters
+                EVP_PKEY_CTX_SET_TLS1_PRF_MD);
+    }
+}

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class Scrypt extends Algorithm implements PasswordBasedKeyDerivatio
 
     public Scrypt(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
+    }
+
+    private Scrypt(@Nonnull Scrypt algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Scrypt copy() {
+        return new Scrypt(this);
+    }
+
+    public Scrypt(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Scrypt scrypt) {
+        super(scrypt, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Scrypt asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Scrypt(kind, this);
     }
 }

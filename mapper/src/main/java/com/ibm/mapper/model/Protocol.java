@@ -45,7 +45,8 @@ public class Protocol implements IAsset {
         this.kind = Protocol.class;
     }
 
-    private Protocol(@Nonnull Protocol protocol) {
+    /** A copy of the given protocol without its children. */
+    protected Protocol(@Nonnull Protocol protocol) {
         this.children = new HashMap<>();
         this.kind = protocol.kind;
         this.detectionLocation = protocol.detectionLocation;
@@ -119,11 +120,20 @@ public class Protocol implements IAsset {
     @Nonnull
     @Override
     public INode deepCopy() {
-        Protocol copy = new Protocol(this);
+        final Protocol copy = copy();
         for (INode child : this.children.values()) {
             copy.children.put(child.getKind(), child.deepCopy());
         }
         return copy;
+    }
+
+    /**
+     * A copy of this protocol without its children. A protocol class returns an instance of its own
+     * class, which the output reports the protocol by.
+     */
+    @Nonnull
+    protected Protocol copy() {
+        return new Protocol(this);
     }
 
     public boolean is(@Nonnull final Class<? extends INode> type) {

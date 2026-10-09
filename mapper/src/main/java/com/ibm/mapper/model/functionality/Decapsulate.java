@@ -19,7 +19,6 @@
  */
 package com.ibm.mapper.model.functionality;
 
-import com.ibm.mapper.model.INode;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -34,11 +33,7 @@ public final class Decapsulate extends Functionality {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Decapsulate copy = new Decapsulate(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Decapsulate copy() {
+        return new Decapsulate(this);
     }
 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.elephant;
 
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class Dumbo extends Elephant {
         super(NAME, detectionLocation);
         this.put(BlockSize.ofDefault(160, detectionLocation));
         this.put(new TagLength(64, detectionLocation));
+    }
+
+    private Dumbo(@Nonnull Dumbo algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Dumbo copy() {
+        return new Dumbo(this);
+    }
+
+    public Dumbo(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Dumbo dumbo) {
+        super(asKind, dumbo);
+    }
+
+    @Nonnull
+    @Override
+    public Dumbo asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Dumbo(kind, this);
     }
 }

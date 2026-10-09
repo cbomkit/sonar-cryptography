@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,27 @@ public final class ClassicMcEliece extends Algorithm implements KeyEncapsulation
 
     public ClassicMcEliece(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private ClassicMcEliece(@Nonnull ClassicMcEliece algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ClassicMcEliece copy() {
+        return new ClassicMcEliece(this);
+    }
+
+    public ClassicMcEliece(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull ClassicMcEliece classicMcEliece) {
+        super(classicMcEliece, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ClassicMcEliece asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ClassicMcEliece(kind, this);
     }
 }

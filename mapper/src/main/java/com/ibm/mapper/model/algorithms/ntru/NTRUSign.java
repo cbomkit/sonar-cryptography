@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.ntru;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -29,5 +30,25 @@ public class NTRUSign extends Algorithm implements Signature {
 
     public NTRUSign(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private NTRUSign(@Nonnull NTRUSign algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected NTRUSign copy() {
+        return new NTRUSign(this);
+    }
+
+    public NTRUSign(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull NTRUSign ntruSign) {
+        super(ntruSign, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public NTRUSign asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new NTRUSign(kind, this);
     }
 }

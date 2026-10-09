@@ -77,4 +77,20 @@ public final class SHA3 extends Algorithm implements MessageDigest {
     public SHA3(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SHA3 sha3) {
         super(sha3, asKind);
     }
+
+    private SHA3(@Nonnull SHA3 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SHA3 copy() {
+        return new SHA3(this);
+    }
+
+    @Nonnull
+    @Override
+    public SHA3 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SHA3(kind, this);
+    }
 }

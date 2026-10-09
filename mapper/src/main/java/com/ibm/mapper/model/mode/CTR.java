@@ -31,4 +31,14 @@ public final class CTR extends Mode {
     public CTR(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, detectionLocation);
     }
+
+    private CTR(@Nonnull CTR mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new CTR(this);
+    }
 }

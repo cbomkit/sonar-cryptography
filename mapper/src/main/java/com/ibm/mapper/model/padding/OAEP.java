@@ -68,16 +68,12 @@ public final class OAEP extends Padding {
     }
 
     private OAEP(@Nonnull OAEP oaep) {
-        super(oaep.getName(), oaep.getDetectionContext(), Padding.class);
+        super(oaep);
     }
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        OAEP copy = new OAEP(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected OAEP copy() {
+        return new OAEP(this);
     }
 }

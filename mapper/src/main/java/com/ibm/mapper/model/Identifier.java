@@ -32,7 +32,7 @@ public final class Identifier extends Property {
     }
 
     private Identifier(@Nonnull Identifier identifier) {
-        super(identifier.type, identifier.detectionLocation, identifier.children);
+        super(identifier);
         this.value = identifier.value;
     }
 
@@ -49,12 +49,8 @@ public final class Identifier extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        Identifier copy = new Identifier(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected Identifier copy() {
+        return new Identifier(this);
     }
 
     @Override

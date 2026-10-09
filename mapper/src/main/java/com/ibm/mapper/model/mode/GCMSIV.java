@@ -28,4 +28,14 @@ public final class GCMSIV extends Mode {
     public GCMSIV(@Nonnull DetectionLocation detectionLocation) {
         super("GCM-SIV", detectionLocation);
     }
+
+    private GCMSIV(@Nonnull GCMSIV mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new GCMSIV(this);
+    }
 }

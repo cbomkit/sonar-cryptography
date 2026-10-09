@@ -69,4 +69,24 @@ public final class LMS extends Algorithm implements Signature, MessageDigest {
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
     }
+
+    private LMS(@Nonnull LMS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected LMS copy() {
+        return new LMS(this);
+    }
+
+    public LMS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull LMS lms) {
+        super(lms, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public LMS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new LMS(kind, this);
+    }
 }

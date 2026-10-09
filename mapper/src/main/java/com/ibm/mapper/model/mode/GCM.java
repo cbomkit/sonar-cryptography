@@ -28,4 +28,14 @@ public final class GCM extends Mode {
     public GCM(@Nonnull DetectionLocation detectionLocation) {
         super("GCM", detectionLocation);
     }
+
+    private GCM(@Nonnull GCM mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new GCM(this);
+    }
 }

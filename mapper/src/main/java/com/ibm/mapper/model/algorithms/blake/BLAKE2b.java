@@ -74,4 +74,20 @@ public final class BLAKE2b extends Algorithm implements MessageDigest {
     public BLAKE2b(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull BLAKE2b blake) {
         super(blake, asKind);
     }
+
+    private BLAKE2b(@Nonnull BLAKE2b algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected BLAKE2b copy() {
+        return new BLAKE2b(this);
+    }
+
+    @Nonnull
+    @Override
+    public BLAKE2b asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new BLAKE2b(kind, this);
+    }
 }

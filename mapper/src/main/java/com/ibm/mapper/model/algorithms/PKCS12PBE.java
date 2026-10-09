@@ -20,17 +20,44 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.Cipher;
+import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PasswordBasedEncryption;
+import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public final class PKCS12PBE extends Algorithm implements PasswordBasedEncryption {
     // https://www.rfc-editor.org/rfc/rfc7292#appendix-B
 
     private static final String NAME = "PKCS12"; // id-PKCS12PBE
+
+    /** The name, followed by the cipher and the MAC or digest when known. */
+    @Nonnull
+    @Override
+    public String asString() {
+        final Optional<INode> cipher =
+                this.hasChildOfType(BlockCipher.class)
+                        .or(() -> this.hasChildOfType(StreamCipher.class));
+        final StringBuilder stringBuilder = new StringBuilder(this.name);
+        cipher.ifPresent(
+                c -> {
+                    stringBuilder.append("-").append(c.asString());
+                    this.hasChildOfType(Mac.class)
+                            .or(() -> this.hasChildOfType(MessageDigest.class))
+                            .ifPresent(
+                                    macOrDigest ->
+                                            stringBuilder
+                                                    .append("-")
+                                                    .append(macOrDigest.asString()));
+                });
+        return stringBuilder.toString();
+    }
 
     public PKCS12PBE(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedEncryption.class, detectionLocation);
@@ -51,5 +78,26 @@ public final class PKCS12PBE extends Algorithm implements PasswordBasedEncryptio
     public PKCS12PBE(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private PKCS12PBE(@Nonnull PKCS12PBE algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PKCS12PBE copy() {
+        return new PKCS12PBE(this);
+    }
+
+    public PKCS12PBE(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull PKCS12PBE pkcs12pbe) {
+        super(pkcs12pbe, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PKCS12PBE asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PKCS12PBE(kind, this);
     }
 }

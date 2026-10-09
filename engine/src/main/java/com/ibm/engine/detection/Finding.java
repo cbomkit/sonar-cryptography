@@ -22,6 +22,7 @@ package com.ibm.engine.detection;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.rule.IBundle;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public record Finding<R, T, S, P>(@Nonnull DetectionStore<R, T, S, P> detectionStore) {
@@ -35,12 +36,33 @@ public record Finding<R, T, S, P>(@Nonnull DetectionStore<R, T, S, P> detectionS
         return detectionStore.getDetectionRule().bundle();
     }
 
+    /**
+     * The tree to report the finding on: the location of the first value of the store, or, for a
+     * store without a value that reports the calls made on the object it detected, the call that
+     * created the object (or, when the store has no matched call, the first value below it).
+     */
     @Nonnull
     public T getMarkerTree() {
         return detectionStore.getDetectionValues().stream()
                 .map(IValue::getLocation)
                 .findFirst()
+                .or(detectionStore::getDetectedExpression)
+                .or(() -> firstValueLocation(detectionStore))
                 .orElseThrow();
+    }
+
+    @Nonnull
+    private static <R, T, S, P> Optional<T> firstValueLocation(
+            @Nonnull DetectionStore<R, T, S, P> store) {
+        final Optional<T> own =
+                store.getDetectionValues().stream().map(IValue::getLocation).findFirst();
+        if (own.isPresent()) {
+            return own;
+        }
+        return store.getChildren().stream()
+                .map(Finding::firstValueLocation)
+                .flatMap(Optional::stream)
+                .findFirst();
     }
 
     @Override

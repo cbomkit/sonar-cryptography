@@ -79,4 +79,20 @@ public final class SHAKE extends Algorithm implements ExtendableOutputFunction {
     public SHAKE(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SHAKE shake) {
         super(shake, asKind);
     }
+
+    private SHAKE(@Nonnull SHAKE algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SHAKE copy() {
+        return new SHAKE(this);
+    }
+
+    @Nonnull
+    @Override
+    public SHAKE asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SHAKE(kind, this);
+    }
 }

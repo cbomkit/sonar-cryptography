@@ -90,4 +90,20 @@ public final class CAST128 extends Algorithm implements BlockCipher {
     public CAST128(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CAST128 cast128) {
         super(cast128, asKind);
     }
+
+    private CAST128(@Nonnull CAST128 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected CAST128 copy() {
+        return new CAST128(this);
+    }
+
+    @Nonnull
+    @Override
+    public CAST128 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new CAST128(kind, this);
+    }
 }

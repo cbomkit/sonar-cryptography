@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms.photonbeetle;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -56,5 +57,27 @@ public class PhotonBeetleHash extends Algorithm implements MessageDigest {
     public PhotonBeetleHash(int blockSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new BlockSize(blockSize, detectionLocation));
+    }
+
+    private PhotonBeetleHash(@Nonnull PhotonBeetleHash algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected PhotonBeetleHash copy() {
+        return new PhotonBeetleHash(this);
+    }
+
+    public PhotonBeetleHash(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull PhotonBeetleHash photonBeetleHash) {
+        super(photonBeetleHash, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public PhotonBeetleHash asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new PhotonBeetleHash(kind, this);
     }
 }

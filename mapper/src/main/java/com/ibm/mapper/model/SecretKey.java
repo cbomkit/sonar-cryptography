@@ -29,4 +29,14 @@ public final class SecretKey extends Key {
     public SecretKey(@Nonnull Algorithm algorithm) {
         super(algorithm, SecretKey.class);
     }
+
+    private SecretKey(@Nonnull SecretKey key) {
+        super(key);
+    }
+
+    @Nonnull
+    @Override
+    protected SecretKey copy() {
+        return new SecretKey(this);
+    }
 }

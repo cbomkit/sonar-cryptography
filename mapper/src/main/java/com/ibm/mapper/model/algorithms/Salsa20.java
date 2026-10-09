@@ -60,4 +60,20 @@ public final class Salsa20 extends Algorithm implements StreamCipher {
     public Salsa20(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Salsa20 salsa20) {
         super(salsa20, asKind);
     }
+
+    private Salsa20(@Nonnull Salsa20 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Salsa20 copy() {
+        return new Salsa20(this);
+    }
+
+    @Nonnull
+    @Override
+    public Salsa20 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Salsa20(kind, this);
+    }
 }

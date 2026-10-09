@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.curves.Edwards25519;
@@ -51,5 +52,25 @@ public final class Ed25519 extends EdDSA implements Signature {
         this.put(new Edwards25519(detectionLocation));
         this.put(new SHA2(512, detectionLocation));
         this.put(new Oid("1.3.101.112", detectionLocation));
+    }
+
+    private Ed25519(@Nonnull Ed25519 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Ed25519 copy() {
+        return new Ed25519(this);
+    }
+
+    public Ed25519(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Ed25519 ed25519) {
+        super(asKind, ed25519);
+    }
+
+    @Nonnull
+    @Override
+    public Ed25519 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Ed25519(kind, this);
     }
 }

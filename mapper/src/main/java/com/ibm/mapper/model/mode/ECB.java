@@ -28,4 +28,14 @@ public final class ECB extends Mode {
     public ECB(@Nonnull DetectionLocation detectionLocation) {
         super("ECB", detectionLocation);
     }
+
+    private ECB(@Nonnull ECB mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new ECB(this);
+    }
 }

@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -57,5 +58,25 @@ public final class ECNR extends Algorithm implements Signature {
             @Nonnull EllipticCurve ellipticCurve, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(ellipticCurve);
+    }
+
+    private ECNR(@Nonnull ECNR algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECNR copy() {
+        return new ECNR(this);
+    }
+
+    public ECNR(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECNR ecnr) {
+        super(ecnr, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ECNR asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECNR(kind, this);
     }
 }

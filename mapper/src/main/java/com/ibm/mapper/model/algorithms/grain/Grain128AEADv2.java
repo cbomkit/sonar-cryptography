@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.grain;
 
 import com.ibm.mapper.model.AuthenticatedEncryption;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.InitializationVectorLength;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -51,5 +52,27 @@ public class Grain128AEADv2 extends Grain implements AuthenticatedEncryption {
         super(NAME, AuthenticatedEncryption.class, detectionLocation);
         this.put(KeyLength.ofDefault(128, detectionLocation));
         this.put(new InitializationVectorLength(96, detectionLocation));
+    }
+
+    private Grain128AEADv2(@Nonnull Grain128AEADv2 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Grain128AEADv2 copy() {
+        return new Grain128AEADv2(this);
+    }
+
+    public Grain128AEADv2(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull Grain128AEADv2 grain128AEADv2) {
+        super(asKind, grain128AEADv2);
+    }
+
+    @Nonnull
+    @Override
+    public Grain128AEADv2 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Grain128AEADv2(kind, this);
     }
 }

@@ -56,8 +56,19 @@ public final class AES extends Algorithm
         implements BlockCipher, AuthenticatedEncryption, KeyWrap, Mac {
     private static final String NAME = "AES";
 
+    /**
+     * {@code AES[-keyLength][-mode][-padding]}; as a MAC {@code AES[-keyLength][-GMAC]}, the MAC
+     * names of the CycloneDX registry: the mode of a MAC built on another mode (e.g. a CBC-MAC) is
+     * a child of the MAC, not part of its name.
+     */
     @Override
     public @Nonnull String asString() {
+        if (is(Mac.class)) {
+            return composeName(
+                    true,
+                    getMode().filter(com.ibm.mapper.model.mode.GMAC.class::isInstance).isPresent(),
+                    false);
+        }
         return composeName(true, true, true);
     }
 
@@ -101,5 +112,21 @@ public final class AES extends Algorithm
             @Nonnull DetectionLocation detectionLocation) {
         super(NAME, asKind, detectionLocation);
         this.put(BlockSize.ofDefault(128, detectionLocation));
+    }
+
+    private AES(@Nonnull AES algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected AES copy() {
+        return new AES(this);
+    }
+
+    @Nonnull
+    @Override
+    public AES asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new AES(kind, this);
     }
 }

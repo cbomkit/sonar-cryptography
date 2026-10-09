@@ -48,23 +48,27 @@ public abstract class Property implements IProperty {
         this.origin = origin;
     }
 
-    protected Property(
-            @Nonnull Class<? extends IProperty> type,
-            @Nonnull DetectionLocation detectionLocation,
-            @Nonnull Map<Class<? extends INode>, INode> children) {
-        this(type, detectionLocation, children, NodeOrigin.DETECTED);
+    /** A copy of the given property without its children. */
+    protected Property(@Nonnull Property property) {
+        this(property.type, property.detectionLocation, property.origin);
     }
 
-    protected Property(
-            @Nonnull Class<? extends IProperty> type,
-            @Nonnull DetectionLocation detectionLocation,
-            @Nonnull Map<Class<? extends INode>, INode> children,
-            @Nonnull NodeOrigin origin) {
-        this.type = type;
-        this.children = children;
-        this.detectionLocation = detectionLocation;
-        this.origin = origin;
+    @Nonnull
+    @Override
+    public INode deepCopy() {
+        final Property copy = copy();
+        for (INode child : this.children.values()) {
+            copy.children.put(child.getKind(), child.deepCopy());
+        }
+        return copy;
     }
+
+    /**
+     * A copy of this property without its children, of the class of this property: the class gives
+     * the name of the property, how the enrichers complete it and how the output reports it.
+     */
+    @Nonnull
+    protected abstract Property copy();
 
     @Override
     public void put(@Nonnull INode child) {

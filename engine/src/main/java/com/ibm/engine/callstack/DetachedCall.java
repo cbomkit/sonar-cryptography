@@ -20,6 +20,7 @@
 package com.ibm.engine.callstack;
 
 import com.ibm.engine.detection.IType;
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.IScanContext;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -35,10 +36,36 @@ import javax.annotation.Nullable;
 public record DetachedCall<R, T>(
         @Nonnull IType invokedObjectType,
         @Nonnull String methodName,
+        @Nonnull List<String> methodNames,
         @Nonnull List<IType> parameterTypes,
-        @Nonnull List<ArgSnapshot> arguments,
+        @Nonnull List<ArgSnapshot<T>> arguments,
         @Nonnull DetachedScanContext<R, T> detachedPublisher)
         implements CallContext<R, T> {
+
+    /** A detached call of the one method named {@code methodName}. */
+    public DetachedCall(
+            @Nonnull IType invokedObjectType,
+            @Nonnull String methodName,
+            @Nonnull List<IType> parameterTypes,
+            @Nonnull List<ArgSnapshot<T>> arguments,
+            @Nonnull DetachedScanContext<R, T> detachedPublisher) {
+        this(
+                invokedObjectType,
+                methodName,
+                List.of(methodName),
+                parameterTypes,
+                arguments,
+                detachedPublisher);
+    }
+
+    /**
+     * Whether a method matcher matches the call, by one of the names of the methods it may call
+     * (see {@code ILanguageTranslation#getMethodNames}).
+     */
+    public boolean isMatchedBy(@Nonnull MethodMatcher<T> methodMatcher) {
+        return methodNames.stream()
+                .anyMatch(name -> methodMatcher.matchKeys(invokedObjectType, name, parameterTypes));
+    }
 
     @Nullable @Override
     public T tree() {

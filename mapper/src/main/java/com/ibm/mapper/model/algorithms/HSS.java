@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -49,5 +50,25 @@ public class HSS extends Algorithm implements Signature {
 
     public HSS(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private HSS(@Nonnull HSS algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected HSS copy() {
+        return new HSS(this);
+    }
+
+    public HSS(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull HSS hss) {
+        super(hss, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public HSS asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new HSS(kind, this);
     }
 }

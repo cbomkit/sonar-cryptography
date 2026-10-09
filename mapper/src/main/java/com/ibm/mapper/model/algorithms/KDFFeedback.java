@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -55,5 +56,26 @@ public final class KDFFeedback extends Algorithm implements KeyDerivationFunctio
     public KDFFeedback(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    private KDFFeedback(@Nonnull KDFFeedback algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected KDFFeedback copy() {
+        return new KDFFeedback(this);
+    }
+
+    public KDFFeedback(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull KDFFeedback kdfFeedback) {
+        super(kdfFeedback, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public KDFFeedback asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new KDFFeedback(kind, this);
     }
 }

@@ -1,0 +1,256 @@
+/*
+ * Sonar Cryptography Plugin
+ * Copyright (C) 2024 PQCA
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.ibm.plugin.rules.detection.openssl.digest;
+
+import com.ibm.engine.language.cxx.CxxLanguageTranslation;
+import com.ibm.engine.model.context.DigestContext;
+import com.ibm.engine.model.factory.ValueActionFactory;
+import com.ibm.engine.rule.DetectionRuleSet;
+import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
+import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.DerivedDetectionRules;
+import com.ibm.plugin.rules.detection.openssl.legacy.OpenSSLNidLookupFactory;
+import com.ibm.plugin.translation.translator.contexts.CxxDigestContextTranslator;
+import com.sonar.cxx.sslr.api.AstNode;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+
+/**
+ * Detection rules for OpenSSL EVP message digest algorithm specifiers.
+ *
+ * <p>These rules detect calls to OpenSSL functions that return EVP_MD pointers, identifying the
+ * specific hash algorithm being used. Each function (e.g., {@code EVP_sha256()}) maps to a known
+ * digest algorithm name.
+ *
+ * <p>Per-family digest specifiers with multiple variants live in their own {@code
+ * OpenSSLEvpMessageDigest<Family>} classes (MD, SHA-2, SHA-3/SHAKE, BLAKE2); this class holds the
+ * remaining single-variant digests (SHA-1, RIPEMD, Whirlpool, SM3, combined/special digests) and
+ * the digests selected by name or NID ({@code EVP_MD_fetch}, {@code EVP_get_digestbyname}, {@code
+ * EVP_get_digestbynid}, {@code EVP_Q_digest}), and aggregates every family's rules in {@link
+ * #buildRules()}. The digest given to {@code EVP_DigestInit} and the other functions that take an
+ * {@code EVP_MD} is reported where it is created.
+ */
+@SuppressWarnings("java:S1192")
+public final class OpenSSLEvpMessageDigest extends DetectionRuleSet<AstNode> {
+
+    private static final String BUNDLE = "OpenSSL";
+
+    private static final IDetectionRule<AstNode> EVP_SHA1 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_sha1")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SHA-1"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_RIPEMD160 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_ripemd160")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RIPEMD160"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_WHIRLPOOL =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_whirlpool")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("WHIRLPOOL"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_SM3 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_sm3")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("SM3"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_MD5_SHA1 =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_md5_sha1")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("MD5-SHA1"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_MD_NULL =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_md_null")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("NULL"))
+                    .withoutParameters()
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_MD_FETCH =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_MD_fetch")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    private static final IDetectionRule<AstNode> EVP_GET_DIGESTBYNAME =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_get_digestbyname")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // EVP_get_digestbynid(nid) (evp.h): EVP_get_digestbyname for the digest of the NID
+    private static final IDetectionRule<AstNode> EVP_GET_DIGESTBYNID =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_get_digestbynid")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNidLookupFactory(
+                                    OpenSSLNidLookupFactory.DIGEST_BY_CODE,
+                                    OpenSSLNidLookupFactory.DIGEST_BY_NAME))
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    // EVP_Q_digest(libctx, name, propq, data, datalen, md, mdlen): one-shot digest by name
+    private static final IDetectionRule<AstNode> EVP_Q_DIGEST =
+            new DetectionRuleBuilder<AstNode>()
+                    .createDetectionRule()
+                    .forObjectTypes(CxxLanguageTranslation.GLOBAL_SCOPE)
+                    .forMethods("EVP_Q_digest")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .shouldBeDetectedAs(
+                            new OpenSSLNameCanonicalizerFactory(
+                                    OpenSSLNameCanonicalizerFactory.DIGEST_NAMES))
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .withMethodParameter("*")
+                    .buildForContext(new DigestContext())
+                    .inBundle(() -> BUNDLE)
+                    .withoutDependingDetectionRules();
+
+    @Nonnull
+    @Override
+    protected List<IDetectionRule<AstNode>> buildRules() {
+        return Stream.of(
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestMd.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestSha2.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestSha3.class).stream(),
+                        RuleSets.rulesOf(OpenSSLEvpMessageDigestBlake2.class).stream(),
+                        directRules().stream())
+                .flatMap(i -> i)
+                .toList();
+    }
+
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> directRules() {
+        return List.of(
+                // SHA-1
+                EVP_SHA1,
+                // RIPEMD
+                EVP_RIPEMD160,
+                // Whirlpool
+                EVP_WHIRLPOOL,
+                // SM3 (Chinese National Standard)
+                EVP_SM3,
+                // Combined and Special Digests
+                EVP_MD5_SHA1,
+                EVP_MD_NULL,
+                // Digest selected by name: fetch, legacy lookup and one-shot digest
+                EVP_MD_FETCH,
+                EVP_GET_DIGESTBYNAME,
+                EVP_GET_DIGESTBYNID,
+                EVP_Q_DIGEST);
+    }
+
+    /**
+     * The digest rules for the digest of MGF1, the mask generation function of RSA-PSS and
+     * RSA-OAEP, e.g. the {@code mgf1Hash} argument of {@code RSA_padding_add_PKCS1_PSS_mgf1}: each
+     * digest is reported as MGF1 with that digest.
+     */
+    public static final class Mgf1 extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return inDigestContext(CxxDigestContextTranslator.MGF1_KIND);
+        }
+    }
+
+    /**
+     * The digest rules for the digest of RSA-OAEP, e.g. the {@code md} argument of {@code
+     * RSA_padding_add_PKCS1_OAEP_mgf1}: each digest is reported as the OAEP padding with that
+     * digest.
+     */
+    public static final class Oaep extends DetectionRuleSet<AstNode> {
+        @Nonnull
+        @Override
+        protected List<IDetectionRule<AstNode>> buildRules() {
+            return inDigestContext(CxxDigestContextTranslator.OAEP_KIND);
+        }
+    }
+
+    /** The digest rules, each derived to report its digest in the digest context of the kind. */
+    @Nonnull
+    private static List<IDetectionRule<AstNode>> inDigestContext(@Nonnull String kind) {
+        final DigestContext context =
+                new DigestContext(Map.of(CxxDigestContextTranslator.KIND, kind));
+        return RuleSets.rulesOf(OpenSSLEvpMessageDigest.class).stream()
+                .map(rule -> DerivedDetectionRules.withContext(rule, context))
+                .toList();
+    }
+}

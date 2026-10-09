@@ -46,4 +46,14 @@ public final class CCM extends Mode {
         tagLength.ifPresent(node -> builtName.append(node.asString()));
         return builtName.toString();
     }
+
+    private CCM(@Nonnull CCM mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new CCM(this);
+    }
 }

@@ -20,7 +20,9 @@
 package com.ibm.mapper.reorganizer.rules;
 
 import com.ibm.mapper.ITranslator;
+import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.PrivateKey;
@@ -30,6 +32,7 @@ import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
@@ -60,6 +63,62 @@ public final class SignatureReorganizer {
                     .perform(
                             UsualPerformActions.performMergeParentAndChildOfSameKind(
                                     Signature.class));
+
+    /**
+     * A signature or its verification found with no algorithm holding it, e.g. made with a key
+     * whose type is not known in the analyzed code: a signature scheme the operation names (e.g.
+     * RSA-PSS, selected by the padding set for it) holds the operation and what it uses, else a
+     * signature of an unknown scheme does, with the digest the operation uses.
+     */
+    @Nonnull
+    public static final IReorganizerRule MAKE_SIGNATURE_OF_A_SIGNING_OPERATION_WITHOUT_SCHEME =
+            signatureOfOperationWithoutScheme(Sign.class);
+
+    @Nonnull
+    public static final IReorganizerRule MAKE_SIGNATURE_OF_A_VERIFYING_OPERATION_WITHOUT_SCHEME =
+            signatureOfOperationWithoutScheme(Verify.class);
+
+    @Nonnull
+    private static IReorganizerRule signatureOfOperationWithoutScheme(
+            @Nonnull Class<? extends Functionality> operationClazz) {
+        return new ReorganizerRuleBuilder()
+                .createReorganizerRule()
+                .forNodeKind(operationClazz)
+                .withDetectionCondition((node, parent, roots) -> parent == null)
+                .perform(
+                        (node, parent, roots) -> {
+                            final INode signature =
+                                    schemeOf(node)
+                                            .orElseGet(
+                                                    () ->
+                                                            new Algorithm(
+                                                                    ITranslator.UNKNOWN,
+                                                                    Signature.class,
+                                                                    ((Functionality) node)
+                                                                            .getDetectionContext()));
+                            node.removeChildOfType(signature.getKind());
+                            for (INode used : List.copyOf(node.getChildren().values())) {
+                                signature.put(used);
+                                node.removeChildOfType(used.getKind());
+                            }
+                            signature.put(node);
+                            final List<INode> newRoots = new LinkedList<>(roots);
+                            newRoots.replaceAll(root -> root == node ? signature : root);
+                            return newRoots;
+                        });
+    }
+
+    /** The signature scheme an operation names, e.g. RSA-PSS selected by the padding. */
+    @Nonnull
+    private static Optional<INode> schemeOf(@Nonnull INode operation) {
+        return operation.getChildren().values().stream()
+                .filter(IAlgorithm.class::isInstance)
+                .filter(
+                        child ->
+                                child.is(Signature.class)
+                                        || child.is(ProbabilisticSignatureScheme.class))
+                .findFirst();
+    }
 
     @Nonnull
     public static final IReorganizerRule MERGE_SIGNATURE_PARENT_AND_CHILD =

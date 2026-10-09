@@ -29,4 +29,14 @@ public final class KW extends Mode {
     public KW(@Nonnull DetectionLocation detectionLocation) {
         super("WRAP", detectionLocation);
     }
+
+    private KW(@Nonnull KW mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new KW(this);
+    }
 }

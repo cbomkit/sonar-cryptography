@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.model.Signature;
@@ -87,5 +88,25 @@ public final class MLDSA extends Algorithm implements Signature {
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), preHash.getDetectionContext()));
+    }
+
+    private MLDSA(@Nonnull MLDSA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MLDSA copy() {
+        return new MLDSA(this);
+    }
+
+    public MLDSA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull MLDSA mldsa) {
+        super(mldsa, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MLDSA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MLDSA(kind, this);
     }
 }

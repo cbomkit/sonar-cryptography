@@ -35,10 +35,7 @@ public final class ClassicalBitSecurityLevel extends Property {
 
     private ClassicalBitSecurityLevel(
             @Nonnull ClassicalBitSecurityLevel classicalBitSecurityLevel) {
-        super(
-                classicalBitSecurityLevel.type,
-                classicalBitSecurityLevel.detectionLocation,
-                classicalBitSecurityLevel.children);
+        super(classicalBitSecurityLevel);
         this.bitSecurityLevel = classicalBitSecurityLevel.bitSecurityLevel;
     }
 
@@ -55,12 +52,8 @@ public final class ClassicalBitSecurityLevel extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        ClassicalBitSecurityLevel copy = new ClassicalBitSecurityLevel(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected ClassicalBitSecurityLevel copy() {
+        return new ClassicalBitSecurityLevel(this);
     }
 
     @Override

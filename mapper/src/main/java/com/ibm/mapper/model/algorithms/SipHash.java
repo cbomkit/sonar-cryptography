@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -56,5 +57,25 @@ public final class SipHash extends Algorithm implements Mac {
 
     public SipHash(@Nonnull DetectionLocation detectionLocation) {
         this(64, detectionLocation);
+    }
+
+    private SipHash(@Nonnull SipHash algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SipHash copy() {
+        return new SipHash(this);
+    }
+
+    public SipHash(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SipHash sipHash) {
+        super(sipHash, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SipHash asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SipHash(kind, this);
     }
 }

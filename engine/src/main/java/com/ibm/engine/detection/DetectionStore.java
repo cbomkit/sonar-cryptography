@@ -68,6 +68,10 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
      * action related to the detected method
      */
     @Nullable IAction<T> actionValue;
+    /*
+     * the calls or object creations the detection rule matched, in the order they were detected
+     */
+    @Nonnull private final List<T> detectedExpressions = new ArrayList<>();
 
     public DetectionStore(
             final int level,
@@ -138,6 +142,35 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
     /** This method returns the action value, if present. */
     public Optional<IAction<T>> getActionValue() {
         return Optional.ofNullable(actionValue);
+    }
+
+    /**
+     * Returns the first call or object creation the detection rule matched, if the rule matched
+     * one.
+     *
+     * @return the first matched expression
+     */
+    @Nonnull
+    public Optional<T> getDetectedExpression() {
+        return detectedExpressions.stream().findFirst();
+    }
+
+    /**
+     * Returns the calls or object creations the detection rule matched, in the order they were
+     * detected. A depending rule matching several calls made on the same object, e.g. two {@code
+     * init} calls, records each of them in the same store.
+     *
+     * @return the matched expressions
+     */
+    @Nonnull
+    public List<T> getDetectedExpressions() {
+        return Collections.unmodifiableList(detectedExpressions);
+    }
+
+    private void addDetectedExpression(@Nonnull T expression) {
+        if (detectedExpressions.stream().noneMatch(detected -> detected == expression)) {
+            detectedExpressions.add(expression);
+        }
     }
 
     /**
@@ -290,6 +323,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
     @SuppressWarnings("java:S3776")
     public void onReceivingNewDetection(@Nonnull IDetection<T> detection) {
         if (detection instanceof MethodDetection<T> methodDetection) {
+            addDetectedExpression(methodDetection.expression());
             List<IDetectionRule<T>> nextDetectionRules = new LinkedList<>();
             // A detectionRule can also reflect the actual action (method) as a value if provided
             if (detectionRule.is(DetectionRule.class)) {
@@ -321,6 +355,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
 
         } else if (detection instanceof ValueDetection<?, T> valueDetection) {
             final DetectableParameter<T> detectableParameter = valueDetection.detectableParameter();
+            addDetectedExpression(valueDetection.expression());
 
             final Optional<Integer> positionMove = detectableParameter.getShouldBeMovedUnder();
             // Check if the parameter should be moved under
@@ -339,6 +374,8 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
                                                     scanContext,
                                                     handler,
                                                     statusReporting);
+                                    detectionStore.addDetectedExpression(
+                                            valueDetection.expression());
                                     // Compute the detection values for the given id
                                     addValue(detectionStore, id, iValue);
                                     // Attach the detection store to the given id
@@ -450,7 +487,7 @@ public class DetectionStore<R, T, S, P> implements IHookDetectionObserver<R, T, 
         IDetectionEngine<T, S> detectionEngine =
                 handler.getLanguageSupport().createDetectionEngineInstance(this);
         return detectionEngine
-                .getAssignedSymbol(expression)
+                .getObjectSymbol(expression)
                 .orElse(TraceSymbol.createWithStateNoSymbol());
     }
 

@@ -32,7 +32,7 @@ public final class DigestSize extends Property {
     }
 
     private DigestSize(@Nonnull DigestSize digestSize) {
-        super(digestSize.type, digestSize.detectionLocation, digestSize.children);
+        super(digestSize);
         this.value = digestSize.value;
     }
 
@@ -49,12 +49,8 @@ public final class DigestSize extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        DigestSize copy = new DigestSize(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected DigestSize copy() {
+        return new DigestSize(this);
     }
 
     @Override

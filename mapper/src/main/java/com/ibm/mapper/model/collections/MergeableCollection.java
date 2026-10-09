@@ -31,25 +31,10 @@ import javax.annotation.Nonnull;
  * <p>This differs from the default behavior, in which the root nodes are duplicated to create
  * multiple trees, each containing one instance of the various {@code MergeableCollection}.
  */
-// TODO: handle this in the output layer
 public class MergeableCollection extends AbstractAssetCollection<INode> {
 
     public MergeableCollection(@Nonnull List<INode> collection) {
         super(collection, MergeableCollection.class);
-    }
-
-    private MergeableCollection(@Nonnull MergeableCollection mergeableCollection) {
-        super(mergeableCollection.collection, mergeableCollection.kind);
-    }
-
-    @Nonnull
-    @Override
-    public INode deepCopy() {
-        MergeableCollection copy = new MergeableCollection(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
     }
 
     @Override

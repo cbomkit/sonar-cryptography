@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -55,5 +56,27 @@ public final class ConcatenationKDF extends Algorithm implements KeyDerivationFu
     public ConcatenationKDF(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    private ConcatenationKDF(@Nonnull ConcatenationKDF algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ConcatenationKDF copy() {
+        return new ConcatenationKDF(this);
+    }
+
+    public ConcatenationKDF(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull ConcatenationKDF concatenationKDF) {
+        super(concatenationKDF, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public ConcatenationKDF asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ConcatenationKDF(kind, this);
     }
 }

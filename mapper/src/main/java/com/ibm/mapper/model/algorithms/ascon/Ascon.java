@@ -64,4 +64,24 @@ public class Ascon extends Algorithm implements BlockCipher {
             @Nonnull DetectionLocation detectionLocation) {
         super(name, asKind, detectionLocation);
     }
+
+    protected Ascon(@Nonnull Ascon algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Ascon copy() {
+        return new Ascon(this);
+    }
+
+    public Ascon(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Ascon ascon) {
+        super(ascon, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Ascon asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Ascon(kind, this);
+    }
 }

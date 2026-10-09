@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.ies;
 
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.PublicKeyEncryption;
@@ -74,5 +75,25 @@ public class ECIES extends IES {
     public ECIES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new DH(detectionLocation));
+    }
+
+    private ECIES(@Nonnull ECIES algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected ECIES copy() {
+        return new ECIES(this);
+    }
+
+    public ECIES(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ECIES ecies) {
+        super(asKind, ecies);
+    }
+
+    @Nonnull
+    @Override
+    public ECIES asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new ECIES(kind, this);
     }
 }

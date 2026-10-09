@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,25 @@ public class Rainbow extends Algorithm implements Signature {
 
     public Rainbow(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private Rainbow(@Nonnull Rainbow algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Rainbow copy() {
+        return new Rainbow(this);
+    }
+
+    public Rainbow(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Rainbow rainbow) {
+        super(rainbow, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Rainbow asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Rainbow(kind, this);
     }
 }

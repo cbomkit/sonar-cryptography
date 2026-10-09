@@ -36,7 +36,7 @@ public class BcGMacTestFile {
 
         MultiBlockCipher aesEngine = AESEngine.newInstance(); // Noncompliant {{(BlockCipher) AES}}
         GCMModeCipher blockCipher = GCMBlockCipher.newInstance(aesEngine); // Noncompliant {{(AuthenticatedEncryption) AES-GCM}}
-        GMac gmac = new GMac(blockCipher, 128); // Noncompliant {{(Mac) AES}}
+        GMac gmac = new GMac(blockCipher, 128); // Noncompliant {{(Mac) AES-GMAC}}
 
         CipherParameters params = new KeyParameter(key);
         gmac.init(params);

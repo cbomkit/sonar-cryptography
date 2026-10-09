@@ -32,7 +32,7 @@ public final class SaltLength extends Property {
     }
 
     private SaltLength(@Nonnull SaltLength saltLength) {
-        super(saltLength.type, saltLength.detectionLocation, saltLength.children);
+        super(saltLength);
         this.value = saltLength.value;
     }
 
@@ -49,12 +49,8 @@ public final class SaltLength extends Property {
 
     @Nonnull
     @Override
-    public INode deepCopy() {
-        SaltLength copy = new SaltLength(this);
-        for (INode child : this.children.values()) {
-            copy.children.put(child.getKind(), child.deepCopy());
-        }
-        return copy;
+    protected SaltLength copy() {
+        return new SaltLength(this);
     }
 
     @Override

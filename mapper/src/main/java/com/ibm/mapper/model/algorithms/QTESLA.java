@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,25 @@ public class QTESLA extends Algorithm implements Signature {
 
     public QTESLA(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, Signature.class, detectionLocation);
+    }
+
+    private QTESLA(@Nonnull QTESLA algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected QTESLA copy() {
+        return new QTESLA(this);
+    }
+
+    public QTESLA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull QTESLA qtesla) {
+        super(qtesla, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public QTESLA asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new QTESLA(kind, this);
     }
 }

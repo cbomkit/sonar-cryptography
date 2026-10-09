@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -57,5 +58,27 @@ public final class MarsupilamiFourteen extends Algorithm implements MessageDiges
     public MarsupilamiFourteen(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    private MarsupilamiFourteen(@Nonnull MarsupilamiFourteen algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected MarsupilamiFourteen copy() {
+        return new MarsupilamiFourteen(this);
+    }
+
+    public MarsupilamiFourteen(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull MarsupilamiFourteen marsupilamiFourteen) {
+        super(marsupilamiFourteen, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public MarsupilamiFourteen asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new MarsupilamiFourteen(kind, this);
     }
 }

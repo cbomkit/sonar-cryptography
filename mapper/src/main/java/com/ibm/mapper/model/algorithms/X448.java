@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.curves.Curve448;
@@ -51,5 +52,25 @@ public final class X448 extends Algorithm implements KeyAgreement {
         super(NAME, KeyAgreement.class, detectionLocation);
         this.put(new Curve448(detectionLocation));
         this.put(new Oid("1.3.101.111", detectionLocation));
+    }
+
+    private X448(@Nonnull X448 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected X448 copy() {
+        return new X448(this);
+    }
+
+    public X448(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull X448 x448) {
+        super(x448, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public X448 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new X448(kind, this);
     }
 }

@@ -14,6 +14,7 @@
         <module>python</module>
         <module>go</module>
         <module>csharp</module>
+        <module>cpp</module>
         <module>engine</module>
         <module>output</module>
         <module>common</module>
@@ -37,8 +38,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JUnit tags excluded from the default build; clear via -DexcludedGroups= to run them. -->
@@ -46,9 +47,10 @@
 
         <cyclonedx-maven-plugin.version>2.9.2</cyclonedx-maven-plugin.version>
         <checkstyle.version>10.15.0</checkstyle.version>
+        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 
         <sonar.version>25.9.0.112764</sonar.version>
-        <sonar.minVersion>9.14.0.375</sonar.minVersion>
+        <sonar.minVersion>11.2.0.2797</sonar.minVersion>
         <sonar.plugin.api.version>13.11.0.4459</sonar.plugin.api.version>
         <!-- language parser versions -->
         <sonar.java.version>8.22.0.41895</sonar.java.version>
@@ -59,9 +61,22 @@
         <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
+        <!-- sonar-cxx (community plugin), built via JitPack from a commit of
+             chmodshubham/sonar-cxx@symbol-resol-hardening for testing only. Replace it with the
+             official version once the changes are merged upstream. -->
+        <sonar.cxx.groupId>com.github.chmodshubham.sonar-cxx</sonar.cxx.groupId>
+        <sonar.cxx.version>1bb3452bb043d9c28593a9adf84fff15b15142a8</sonar.cxx.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
+        <logback.version>1.6.3</logback.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
@@ -73,6 +88,15 @@
 
     <dependencyManagement>
       <dependencies>
+        <!-- one version for every jackson module, which come from several dependencies (the
+             CycloneDX library, the sonar analyzers and sonar-cxx) and must not be mixed -->
+        <dependency>
+          <groupId>com.fasterxml.jackson</groupId>
+          <artifactId>jackson-bom</artifactId>
+          <version>2.22.3</version>
+          <type>pom</type>
+          <scope>import</scope>
+        </dependency>
         <dependency>
           <groupId>org.junit</groupId>
           <artifactId>junit-bom</artifactId>
@@ -83,14 +107,21 @@
         <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
-          <version>1.5.35</version>
+          <version>${logback.version}</version>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
-          <version>1.6.3</version>
+          <version>${logback.version}</version>
           <scope>test</scope>
+        </dependency>
+        <!-- staxmate 2.0.1 (from the sonar-python plugin) asks for stax2-api as a version range,
+             whose resolution queries the plain-http repositories its POM declares -->
+        <dependency>
+          <groupId>org.codehaus.woodstox</groupId>
+          <artifactId>stax2-api</artifactId>
+          <version>4.3.1</version>
         </dependency>
         <dependency>
           <groupId>org.slf4j</groupId>
@@ -122,7 +153,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.13.2</version>
+            <version>2.14.0</version>
         </dependency>
         <!-- language supporters -->
         <dependency>
@@ -145,6 +176,22 @@
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
+        </dependency>
+        <!-- sonar-cxx (community plugin for C/C++ support) -->
+        <!-- provided: cxx-squid-bridge/cxx-squid are compile-time APIs only. At runtime their
+             classes come from the sonar-cxx plugin bundled with this plugin
+             (see sonar-cryptography-plugin/pom.xml). -->
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid-bridge</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- unit tests -->
@@ -306,6 +353,27 @@
                         <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>

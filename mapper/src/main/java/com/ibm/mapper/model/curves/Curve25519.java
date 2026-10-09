@@ -27,4 +27,14 @@ public final class Curve25519 extends EllipticCurve {
     public Curve25519(@Nonnull DetectionLocation detectionLocation) {
         super("Curve25519", detectionLocation);
     }
+
+    private Curve25519(@Nonnull Curve25519 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Curve25519 copy() {
+        return new Curve25519(this);
+    }
 }

@@ -28,4 +28,14 @@ public final class XTS extends Mode {
     public XTS(@Nonnull DetectionLocation detectionLocation) {
         super("XTS", detectionLocation);
     }
+
+    private XTS(@Nonnull XTS mode) {
+        super(mode);
+    }
+
+    @Nonnull
+    @Override
+    protected Mode copy() {
+        return new XTS(this);
+    }
 }

@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms.ies;
 
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -49,5 +50,25 @@ public class DLIES extends IES {
     public DLIES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new DH(detectionLocation));
+    }
+
+    private DLIES(@Nonnull DLIES algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected DLIES copy() {
+        return new DLIES(this);
+    }
+
+    public DLIES(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull DLIES dlies) {
+        super(asKind, dlies);
+    }
+
+    @Nonnull
+    @Override
+    public DLIES asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new DLIES(kind, this);
     }
 }

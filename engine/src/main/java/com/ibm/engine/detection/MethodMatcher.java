@@ -82,15 +82,17 @@ public final class MethodMatcher<T> {
             @Nonnull ILanguageTranslation<T> translation,
             @Nonnull MatchContext context) {
         var owner = translation.getInvokedObjectTypeString(context, expression);
-        var name = translation.getMethodName(context, expression);
+        var names = translation.getMethodNames(context, expression);
         var arguments = translation.getMethodParameterTypes(context, expression);
         return owner.isPresent()
-                && name.isPresent()
-                && acceptsCall(
-                        owner.get(),
-                        name.get(),
-                        arguments,
-                        translation.supportsSubsetParameterMatching());
+                && names.stream()
+                        .anyMatch(
+                                name ->
+                                        acceptsCall(
+                                                owner.get(),
+                                                name,
+                                                arguments,
+                                                translation.supportsSubsetParameterMatching()));
     }
 
     /**

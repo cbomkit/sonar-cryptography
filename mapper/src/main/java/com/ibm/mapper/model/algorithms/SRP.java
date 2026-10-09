@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -47,5 +48,25 @@ public final class SRP extends Algorithm implements KeyAgreement {
 
     public SRP(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyAgreement.class, detectionLocation);
+    }
+
+    private SRP(@Nonnull SRP algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected SRP copy() {
+        return new SRP(this);
+    }
+
+    public SRP(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SRP srp) {
+        super(srp, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public SRP asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new SRP(kind, this);
     }
 }

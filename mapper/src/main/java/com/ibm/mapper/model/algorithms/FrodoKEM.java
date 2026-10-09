@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -48,5 +49,25 @@ public final class FrodoKEM extends Algorithm implements KeyEncapsulationMechani
 
     public FrodoKEM(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, KeyEncapsulationMechanism.class, detectionLocation);
+    }
+
+    private FrodoKEM(@Nonnull FrodoKEM algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected FrodoKEM copy() {
+        return new FrodoKEM(this);
+    }
+
+    public FrodoKEM(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull FrodoKEM frodoKEM) {
+        super(frodoKEM, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public FrodoKEM asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new FrodoKEM(kind, this);
     }
 }

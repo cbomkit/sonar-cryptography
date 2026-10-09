@@ -28,4 +28,14 @@ public final class ISO9796Padding extends Padding {
     public ISO9796Padding(@Nonnull DetectionLocation detectionLocation) {
         super("ISO 9796", detectionLocation);
     }
+
+    private ISO9796Padding(@Nonnull ISO9796Padding padding) {
+        super(padding);
+    }
+
+    @Nonnull
+    @Override
+    protected ISO9796Padding copy() {
+        return new ISO9796Padding(this);
+    }
 }

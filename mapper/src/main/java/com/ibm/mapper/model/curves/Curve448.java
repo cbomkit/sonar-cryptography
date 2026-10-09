@@ -27,4 +27,14 @@ public final class Curve448 extends EllipticCurve {
     public Curve448(@Nonnull DetectionLocation detectionLocation) {
         super("Curve448", detectionLocation);
     }
+
+    private Curve448(@Nonnull Curve448 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Curve448 copy() {
+        return new Curve448(this);
+    }
 }

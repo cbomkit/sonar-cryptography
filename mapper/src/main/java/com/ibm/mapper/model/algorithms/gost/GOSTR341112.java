@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms.gost;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
@@ -59,8 +60,23 @@ public final class GOSTR341112 extends Algorithm implements MessageDigest {
     }
 
     public GOSTR341112(
-            @Nonnull final Class<? extends MessageDigest> asKind,
-            @Nonnull GOSTR341112 gostr341112) {
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull GOSTR341112 gostr341112) {
         super(gostr341112, asKind);
+    }
+
+    private GOSTR341112(@Nonnull GOSTR341112 algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected GOSTR341112 copy() {
+        return new GOSTR341112(this);
+    }
+
+    @Nonnull
+    @Override
+    public GOSTR341112 asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new GOSTR341112(kind, this);
     }
 }

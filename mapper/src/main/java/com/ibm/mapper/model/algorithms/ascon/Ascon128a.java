@@ -21,6 +21,7 @@ package com.ibm.mapper.model.algorithms.ascon;
 
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockSize;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NonceLength;
 import com.ibm.mapper.model.TagLength;
@@ -54,5 +55,26 @@ public final class Ascon128a extends Ascon implements AuthenticatedEncryption {
         this.put(new NonceLength(128, detectionLocation));
         this.put(new TagLength(128, detectionLocation));
         this.put(BlockSize.ofDefault(128, detectionLocation));
+    }
+
+    private Ascon128a(@Nonnull Ascon128a algorithm) {
+        super(algorithm);
+    }
+
+    @Nonnull
+    @Override
+    protected Ascon128a copy() {
+        return new Ascon128a(this);
+    }
+
+    public Ascon128a(
+            @Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Ascon128a ascon128a) {
+        super(asKind, ascon128a);
+    }
+
+    @Nonnull
+    @Override
+    public Ascon128a asKind(@Nonnull Class<? extends IPrimitive> kind) {
+        return new Ascon128a(kind, this);
     }
 }

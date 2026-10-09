@@ -27,4 +27,14 @@ public final class Brainpoolp512r1 extends EllipticCurve {
     public Brainpoolp512r1(@Nonnull DetectionLocation detectionLocation) {
         super("Brainpoolp512r1", detectionLocation);
     }
+
+    private Brainpoolp512r1(@Nonnull Brainpoolp512r1 curve) {
+        super(curve);
+    }
+
+    @Nonnull
+    @Override
+    protected Brainpoolp512r1 copy() {
+        return new Brainpoolp512r1(this);
+    }
 }
