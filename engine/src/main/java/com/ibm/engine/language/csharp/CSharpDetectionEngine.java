@@ -142,6 +142,27 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
 
     @Override
     public void run(@Nonnull TraceSymbol<CSharpSymbol> traceSymbol, @Nonnull CSharpTree tree) {
+        // A depending rule whose receiver could not be resolved matches nothing.
+        //
+        // The receiver guards below only fire for State.SYMBOL, so a NO_SYMBOL trace symbol used
+        // to fall through them and offer every statement of the enclosing block to the depending
+        // rules. Because operation rules in this module match the receiver as MethodMatcher.ANY
+        // (there is no semantic type resolution to narrow it), nothing else stopped an unrelated
+        // statement from being accepted: an unassigned Aes.Create() followed by
+        // "unrelated.KeySize = 4096" on a different object produced a fabricated AES-4096. Java,
+        // Python and Go never hit this because they resolve receiver types and name them
+        // concretely, which is their second line of defence.
+        //
+        // NO_SYMBOL reaches here only from DetectionStore#getAssignedTraceSymbol, i.e. a creation
+        // this engine could not tie to a named variable. Parameter-attached depending rules are
+        // unaffected: this module dispatches them with Scope.EXPRESSION, which runs them on the
+        // argument expression itself and never passes a trace symbol through here. State.DIFFERENT
+        // cannot reach this path either, as it is only produced by the parameter-symbol methods.
+        // Trading a missing value for a wrong one is the intended direction: a fabricated key size
+        // in a bill of materials is worse than an absent one.
+        if (traceSymbol.is(TraceSymbol.State.NO_SYMBOL)) {
+            return;
+        }
         if (tree instanceof CSharpBlockTree blockTree) {
             for (CSharpTree statement : blockTree.getStatements()) {
                 processStatement(traceSymbol, statement);
