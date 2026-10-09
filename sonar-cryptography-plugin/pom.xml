@@ -59,19 +59,25 @@
             <scope>compile</scope>
         </dependency>
         <!-- sonar-cxx, bundled so that C/C++ is analyzed without installing another plugin. Its
-             plugin JAR contains everything it needs, with its API classes under
-             org.sonar.plugins.cxx.api, so none of its dependencies are packaged again. -->
+             classes and dependencies are packaged into this plugin's JAR like any other library. -->
         <dependency>
             <groupId>${sonar.cxx.groupId}</groupId>
             <artifactId>sonar-cxx-plugin</artifactId>
             <version>${sonar.cxx.version}</version>
             <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <!-- provided in the parent POM for the modules that compile against them; packaged here -->
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid-bridge</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${sonar.cxx.groupId}</groupId>
+            <artifactId>cxx-squid</artifactId>
+            <version>${sonar.cxx.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -203,7 +209,99 @@
                                      reachable from this plugin's own code, but SonarQube loads
                                      sonar-cxx's extensions by reflection. -->
                                 <filter>
+                                    <artifact>${sonar.cxx.groupId}:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- the libraries of sonar-cxx are packaged from their own
+                                     artifacts, not again from the copies the sonar-cxx plugin JAR
+                                     embeds -->
+                                <filter>
                                     <artifact>${sonar.cxx.groupId}:sonar-cxx-plugin</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/lib/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Keep every class of the libraries sonar-cxx uses, as its own
+                                     plugin JAR does: they load classes by name, which minimizeJar
+                                     cannot see (e.g. the javax.xml.stream factories find Woodstox
+                                     through META-INF/services, jaxen loads its XPath reader by
+                                     name). -->
+                                <filter>
+                                    <artifact>com.fasterxml.woodstox:woodstox-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.codehaus.woodstox:stax2-api</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.staxmate:staxmate</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>jaxen:jaxen</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jdom:jdom2</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.ant:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>commons-lang:commons-lang</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.googlecode.plist:dd-plist</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.github.hakky54:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.ow2.asm:asm</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.google.guava:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.google.code.gson:gson</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.jackson.core:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
@@ -211,21 +309,9 @@
                             </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                                <!-- merges the META-INF/services files of the bundled libraries -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
-                            <!-- sonar-cxx shares its AST, grammar, check and symbol classes with
-                                 other plugins under org.sonar.plugins.cxx.api. References to them
-                                 use those names, so that the C/C++ checks work with the bundled
-                                 sonar-cxx and with a separately installed one alike. -->
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.sonar.cxx.sslr</pattern>
-                                    <shadedPattern>org.sonar.plugins.cxx.api.sslr</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.sonar.cxx</pattern>
-                                    <shadedPattern>org.sonar.plugins.cxx.api.cxx</shadedPattern>
-                                </relocation>
-                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

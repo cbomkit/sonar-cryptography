@@ -75,12 +75,9 @@ SonarQube ([more](https://docs.sonarqube.org/latest/setup-and-upgrade/install-a-
 > bundled inside this plugin's JAR, the same way Java, Python and Go parsing are bundled. You do
 > not need to install sonar-cxx separately.
 >
-> If sonar-cxx is already installed on your SonarQube instance:
->
-> - If that sonar-cxx build shares its API with other plugins, it is used for C/C++ analysis
->   instead of the bundled one.
-> - Otherwise, remove it. Both plugins would register the same sonar-cxx configuration
->   properties, and SonarQube will fail to start.
+> If sonar-cxx is already installed on your SonarQube instance, remove it. Both plugins would
+> register the same C/C++ language, rules and configuration properties, and SonarQube will fail
+> to start.
 
 ## Using
 

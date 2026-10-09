@@ -42,7 +42,7 @@ class PluginTest {
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
         CryptographyPlugin plugin = new CryptographyPlugin();
         plugin.define(context);
-        // no separate sonar-cxx here: the bundled one provides the C/C++ language and sensor
+        // the bundled sonar-cxx provides the C/C++ language and sensor
         Assertions.assertTrue(context.getExtensions().contains(CxxLanguage.class));
         Assertions.assertTrue(context.getExtensions().contains(CxxSquidSensor.class));
         Assertions.assertTrue(context.getExtensions().contains(CxxScannerRuleDefinition.class));

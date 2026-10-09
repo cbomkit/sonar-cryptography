@@ -14,12 +14,6 @@ This is the **Sonar Cryptography Plugin (CBOMkit-hyperion)** - a SonarQube plugi
 - C/C++: OpenSSL (EVP, legacy API, SSL/TLS, PRNG), analyzed via the bundled sonar-cxx plugin
 - C#: `System.Security.Cryptography` - in development, ANTLR-based parser, only engine-verification rules; not for active use
 
-**sonar-cxx dependency:** the root `pom.xml` pulls `cxx-squid`/`cxx-squid-bridge` from the
-`chmodshubham/sonar-cxx@symbol-resol` fork via JitPack (`sonar.cxx.groupId`/`sonar.cxx.version`),
-because upstream sonar-cxx does not yet share its check API. Keep this until the fork's changes
-land upstream. The deps are `provided`; at runtime the classes come from the sonar-cxx plugin
-bundled by `sonar-cryptography-plugin` (see `SonarCxx.java`) or an existing sonar-cxx install.
-
 ## Build Commands
 
 ```bash
@@ -87,7 +81,6 @@ Multi-module Maven project (Java 21):
 sonar-cryptography-plugin/    # Main SonarQube plugin entry point
 ├── CryptographyPlugin.java   # Plugin registration
 ├── OutputFileJob.java        # CBOM output handler
-├── SonarCxx.java             # Bundled sonar-cxx wiring
 engine/                       # Core detection engine
 ├── detection/                # DetectionStore, Finding classes
 ├── rule/                     # IDetectionRule interface

@@ -54,13 +54,8 @@ public class CryptographyPlugin implements Plugin {
                 CryptoCSharpSensor.class, // Custom sensor (sonar-csharp has no CheckRegistrar API)
                 // general
                 OutputFileJob.class);
-        // cxx: the language and its sensor come from sonar-cxx, bundled with this plugin, or from a
-        // separately installed sonar-cxx when there is one
-        if (SonarCxx.isInstalled()) {
-            LOGGER.info("C/C++ analysis uses the installed sonar-cxx plugin");
-        } else {
-            new CxxPlugin().define(context);
-        }
+        // cxx: the language and its sensor come from sonar-cxx, bundled with this plugin
+        new CxxPlugin().define(context);
         context.addExtensions(
                 CxxScannerRuleDefinition.class, // Define C++ rules
                 CxxCheckRegistrar.class); // Register C++ rules by sonar-cxx sensor
