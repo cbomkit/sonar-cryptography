@@ -19,16 +19,20 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Curve;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.mapper.pyca.PycaCurveMapper;
+import com.ibm.mapper.mapper.pyca.PycaKeyBasedAlgorithmMapper;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Key;
+import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.PublicKey;
-import com.ibm.mapper.model.algorithms.DH;
-import com.ibm.mapper.model.algorithms.DSA;
-import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -45,24 +49,31 @@ public final class PycaPublicKeyContextTranslator implements IContextTranslation
             @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
         if (value instanceof KeyAction<Tree>) {
+            final PycaKeyBasedAlgorithmMapper mapper = new PycaKeyBasedAlgorithmMapper();
             return detectionContext
                     .get("algorithm")
+                    .flatMap(str -> mapper.parse(str, detectionLocation))
+                    .map(algorithm -> new PublicKey(new Key(algorithm)))
                     .map(
-                            algorithm ->
-                                    switch (algorithm.toUpperCase().trim()) {
-                                        case "DH" -> new DH(detectionLocation);
-                                        case "RSA" -> new RSA(detectionLocation);
-                                        case "DSA" -> new DSA(detectionLocation);
-                                        default -> null;
-                                    })
+                            publicKey -> {
+                                publicKey.put(new KeyGeneration(detectionLocation));
+                                return publicKey;
+                            });
+        } else if (value instanceof Curve) {
+            final PycaCurveMapper mapper = new PycaCurveMapper();
+            return mapper.parse(value.asString(), detectionLocation)
                     .map(
-                            algorithm -> {
-                                PublicKey publicKey = new PublicKey(algorithm);
-                                publicKey.put(
-                                        new KeyGeneration(
-                                                detectionLocation)); // currently only GENERATE is
-                                // used as key action is this
-                                // context
+                            algo -> {
+                                // currently only GENERATE is used as key action in this context
+                                PublicKey publicKey;
+                                if (algo instanceof Signature sig) {
+                                    publicKey = new PublicKey(sig);
+                                } else if (algo instanceof KeyAgreement ka) {
+                                    publicKey = new PublicKey(ka);
+                                } else {
+                                    publicKey = new PublicKey((PublicKeyEncryption) algo);
+                                }
+                                publicKey.put(new KeyGeneration(detectionLocation));
                                 return publicKey;
                             });
         }
