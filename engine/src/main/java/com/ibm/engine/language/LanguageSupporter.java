@@ -19,6 +19,11 @@
  */
 package com.ibm.engine.language;
 
+import com.ibm.engine.language.c.CCheck;
+import com.ibm.engine.language.c.CLanguageSupport;
+import com.ibm.engine.language.c.CScanContext;
+import com.ibm.engine.language.c.CSymbol;
+import com.ibm.engine.language.c.tree.CTree;
 import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpLanguageSupport;
 import com.ibm.engine.language.csharp.CSharpScanContext;
@@ -72,5 +77,10 @@ public final class LanguageSupporter {
     public static ILanguageSupport<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
             csharpLanguageSupporter() {
         return new CSharpLanguageSupport();
+    }
+
+    @Nonnull
+    public static ILanguageSupport<CCheck, CTree, CSymbol, CScanContext> cLanguageSupporter() {
+        return new CLanguageSupport();
     }
 }
