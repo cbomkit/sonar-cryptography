@@ -21,10 +21,13 @@ package com.ibm.plugin.rules.detection.dotnet;
 
 import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.IterationCountFactory;
+import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.SaltSizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -80,26 +83,32 @@ import javax.annotation.Nonnull;
  * closely than the ECDH case, since here the parent node is already a concrete KDF algorithm, not
  * an ambiguous key-agreement primitive.
  *
- * <p>As with every other file in this rule set, the ANTLR4-based C# engine cannot resolve parameter
- * types (see {@code CSharpLanguageTranslation}), so all overloads that only differ by {@code
- * byte[]} vs. {@code ReadOnlySpan<byte>}/{@code Span<byte>}, {@code string} vs. {@code
- * ReadOnlySpan<char>}, or the presence of an output-buffer parameter are collapsed into a single
- * {@code withAnyParameters()} rule per method name. The {@code HashAlgorithmName} parameter that
- * several of these methods take (e.g. {@code HashAlgorithmName.SHA256}) is not decoded into a
- * digest child node — consistent with {@code DotNetECDsa}/{@code DotNetECDiffieHellman}, which
- * leave the same parameter opaque on {@code SignData}/{@code DeriveKeyFromHash}, since only
- * literals and bare identifiers are readable by the engine (see {@code CSharpTreeConverter}), not
- * static member-access expressions like {@code HashAlgorithmName.SHA256}.
+ * <h2>Parameters captured</h2>
+ *
+ * <p>Each method is covered by one rule whose parameter list is the positional union of that
+ * method's overloads, declared with the .NET parameter names and only as required as the narrowest
+ * overload allows (see {@code CSharpNamedArgumentBinder} for why one rule covers every arity and
+ * why that keeps a call from being detected twice). Captured are the {@code HashAlgorithmName},
+ * which is the pseudo-random function of the derivation, the salt length, the derived output length
+ * and, for {@code SP800108HmacCounterKdf}, the length of the HMAC key.
+ *
+ * <p>The overloads that differ only by {@code byte[]} against {@code ReadOnlySpan<byte>}, or {@code
+ * string} against {@code ReadOnlySpan<char>}, need no distinction: those positions hold the same
+ * value either way. The pairs that do need distinguishing are the ones where a {@code Span<byte>}
+ * destination sits at the same position and arity as an {@code int} output length, which is the
+ * case for {@code HKDF.Expand}, {@code HKDF.DeriveKey} and {@code SP800108HmacCounterKdf}'s derive
+ * methods. Those are separated by declared parameter type: an output length is reported for the
+ * {@code int} form and left absent for the span form, whose derived length lives in the caller's
+ * buffer and is not a value this engine can measure.
  *
  * <p><b>Known gap — {@code SP800108HmacCounterKdf.DeriveBytes} (instance overload):</b> only the
  * instance {@code DeriveKey} overloads are modeled as depending rules; the instance {@code
  * DeriveBytes} overloads (which take the label/context/hash-algorithm again, redundantly with the
  * constructor) exist per the API reference but are not separately covered here — {@code DeriveKey}
  * already exercises the same depending-rule path and this avoids an unnecessary near-duplicate rule
- * for a method that behaves identically for detection purposes (an opaque {@code
- * withAnyParameters()} call site). Not a gap in coverage of the class's cryptographic identity or
- * of the "a key was derived" signal — only a granularity choice, called out here rather than
- * decided silently.
+ * for a method that behaves identically for detection purposes. Not a gap in coverage of the
+ * class's cryptographic identity or of the "a key was derived" signal — only a granularity choice,
+ * called out here rather than decided silently.
  *
  * <p><b>Modeling decision — {@code PasswordDeriveBytes}'s {@code HashName}/{@code IterationCount}/
  * {@code Salt} property setters:</b> unlike {@code HMAC.Key} (see {@code DotNetHMAC}'s "Known gap"
@@ -148,7 +157,14 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("HKDF")
                     .forMethods("Extract")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hashAlgorithmName", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("ikm", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("salt", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("prk", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_HKDF")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -160,7 +176,14 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("HKDF")
                     .forMethods("Expand")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hashAlgorithmName", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("prk", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("outputLength", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("info", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_HKDF")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -172,7 +195,17 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("HKDF")
                     .forMethods("DeriveKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("HKDF"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hashAlgorithmName", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("ikm", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("outputLength", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("salt", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("info", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_HKDF")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -190,7 +223,11 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("DeriveKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DeriveKey"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("label", MethodMatcher.ANY)
+                    .withNamedMethodParameter("context", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("derivedKeyLengthInBytes", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_SP800108_DERIVE_KEY")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -205,7 +242,12 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("SP800108HmacCounterKdf")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SP800108"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("key", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_SP800108")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(SP800108_DEPENDING_RULES);
@@ -218,7 +260,15 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("SP800108HmacCounterKdf")
                     .forMethods("DeriveBytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("SP800108"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("key", MethodMatcher.ANY)
+                    .withNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("label", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("context", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("derivedKeyLengthInBytes", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_SP800108")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -235,7 +285,9 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("GetBytes")
                     .shouldBeDetectedAs(new ValueActionFactory<>("GetBytes"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("cb", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_PDB_GET_BYTES")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -247,7 +299,14 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("CryptDeriveKey")
                     .shouldBeDetectedAs(new ValueActionFactory<>("CryptDeriveKey"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("algname", "string")
+                    .withNamedMethodParameter("alghashname", "string")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("keySize", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withNamedMethodParameter("rgbIV", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_PDB_CRYPT_DERIVE_KEY")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -288,14 +347,26 @@ public final class DotNetKeyDerivation extends DetectionRuleSet<CSharpTree> {
 
     // new PasswordDeriveBytes(password, salt[, hashName, iterations][, cspParams]) — 8
     // constructor overloads (password as string or byte[]; optional hashName/iterations;
-    // optional CspParameters), all collapsed via withAnyParameters().
+    // optional CspParameters). Position two is `string hashName` in the four- and five-parameter
+    // overloads but `CspParameters` in the three-parameter ones, so it is declared as `string`:
+    // a CspParameters argument is then refused there rather than read as a hash name.
     private static final IDetectionRule<CSharpTree> PASSWORD_DERIVE_BYTES_CTOR =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("PasswordDeriveBytes")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PBKDF1"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("password", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("salt", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new SaltSizeFactory<>(Size.UnitType.BYTE))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("hashName", "string")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("iterations", "int")
+                    .shouldBeDetectedAs(new IterationCountFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("cspParams", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "KDF_PASSWORD_DERIVE_BYTES")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(PDB_DEPENDING_RULES);

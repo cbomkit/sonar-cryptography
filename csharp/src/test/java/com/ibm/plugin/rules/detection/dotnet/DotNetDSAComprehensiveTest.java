@@ -29,6 +29,7 @@ import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.functionality.Sign;
@@ -37,6 +38,7 @@ import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -117,9 +119,13 @@ class DotNetDSAComprehensiveTest extends TestBase {
         switch (findingId) {
 
             // -----------------------------------------------------------------
-            // Section 1: simple constructors — only DSA, no children fired
+            // Section 1: constructors. The parameterless ones report only DSA; the two that state
+            // a key size in bits report it, which for DSA is the property that decides whether the
+            // component is acceptable at all.
             // -----------------------------------------------------------------
-            case 0, 1, 2, 3, 4, 5 -> assertThat(node.asString()).isEqualTo("DSA");
+            case 0, 2, 4, 5 -> assertThat(node.asString()).isEqualTo("DSA");
+            // DSA.Create(2048) and new DSACng(2048)
+            case 1, 3 -> assertKeySize(node, "2048");
 
             // -----------------------------------------------------------------
             // Section 2: property KeySize setters
@@ -139,20 +145,34 @@ class DotNetDSAComprehensiveTest extends TestBase {
             case 12, 13 -> assertVerify(node);
 
             // -----------------------------------------------------------------
-            // Section 5: SignData / TrySignData
+            // Section 5: SignData / TrySignData. Unlike CreateSignature above, these hash the data
+            // themselves and name the hash, so the digest is recorded on the signing action.
             // -----------------------------------------------------------------
-            case 14, 15 -> assertSign(node);
+            case 14, 15 -> {
+                assertSign(node);
+                assertDigest(node, Sign.class, "SHA-256");
+            }
 
             // -----------------------------------------------------------------
             // Section 6: VerifyData
             // -----------------------------------------------------------------
-            case 16 -> assertVerify(node);
+            case 16 -> {
+                assertVerify(node);
+                assertDigest(node, Verify.class, "SHA-256");
+            }
 
             // -----------------------------------------------------------------
-            // Section 7: SignHash / VerifyHash
+            // Section 7: SignHash / VerifyHash. These are the CSP-era methods, which name the
+            // hash as a plain string rather than a HashAlgorithmName.
             // -----------------------------------------------------------------
-            case 17 -> assertSign(node);
-            case 18 -> assertVerify(node);
+            case 17 -> {
+                assertSign(node);
+                assertDigest(node, Sign.class, "SHA-1");
+            }
+            case 18 -> {
+                assertVerify(node);
+                assertDigest(node, Verify.class, "SHA-1");
+            }
 
             // -----------------------------------------------------------------
             // Section 8: combined usage patterns
@@ -162,12 +182,30 @@ class DotNetDSAComprehensiveTest extends TestBase {
                 assertThat(node.getChildren().get(KeyLength.class)).isNotNull();
                 assertThat(node.getChildren().get(KeyLength.class).asString()).isEqualTo("2048");
                 assertThat(node.getChildren().get(Sign.class)).isNotNull();
+                assertDigest(node, Sign.class, "SHA-256");
             }
-            case 20 -> assertVerify(node);
-            case 21 -> assertSign(node);
+            case 20 -> {
+                assertVerify(node);
+                assertDigest(node, Verify.class, "SHA-1");
+            }
+            // CreateSignature(hash) takes a precomputed hash and names no algorithm
+            case 21 -> {
+                assertSign(node);
+                assertDigest(node, Sign.class, null);
+            }
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
+    }
+
+    /** A {@code null} expectation asserts the operation names no digest at all. */
+    private static void assertDigest(
+            @Nonnull INode node,
+            @Nonnull Class<? extends INode> operation,
+            @Nullable String expectedDigest) {
+        INode operationNode = node.getChildren().get(operation);
+        assertThat(operationNode).isNotNull();
+        assertChild(operationNode, MessageDigest.class, expectedDigest);
     }
 
     private void assertKeySize(@Nonnull INode node, @Nonnull String expectedKeySize) {

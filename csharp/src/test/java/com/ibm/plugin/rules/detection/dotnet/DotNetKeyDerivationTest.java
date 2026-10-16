@@ -26,58 +26,35 @@ import com.ibm.engine.language.csharp.CSharpCheck;
 import com.ibm.engine.language.csharp.CSharpScanContext;
 import com.ibm.engine.language.csharp.CSharpSymbol;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
-import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
-import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.ValueAction;
-import com.ibm.engine.model.context.KeyContext;
 import com.ibm.mapper.model.INode;
-import com.ibm.mapper.model.KeyDerivationFunction;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
-import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
-import com.ibm.mapper.model.functionality.KeyDerivation;
+import com.ibm.mapper.model.SaltLength;
 import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive test for all KDF-family detection rules (DotNetKeyDerivation.java), excluding
- * {@code Rfc2898DeriveBytes} (covered separately by {@code DotNetRfc2898DeriveBytesTest}).
+ * Covers the KDF family other than {@code Rfc2898DeriveBytes}: {@code HKDF}, {@code
+ * SP800108HmacCounterKdf} and the legacy {@code PasswordDeriveBytes}.
  *
- * <p>Covers:
+ * <p>Each method is exercised in its array form and, where .NET offers one, in its span form. The
+ * span forms matter because they put a {@code Span<byte>} destination exactly where the array forms
+ * put an {@code int} output length, at the same arity. The expectations below therefore assert an
+ * output length for the array form and its <em>absence</em> for the span form, which is what proves
+ * the two are told apart by parameter type rather than by position.
  *
- * <ul>
- *   <li>{@code HKDF} — static-only class ({@code Extract}, {@code Expand}, {@code DeriveKey})
- *   <li>{@code SP800108HmacCounterKdf} — constructor + instance {@code DeriveKey}, and the static
- *       one-shot {@code DeriveBytes} overload
- *   <li>{@code PasswordDeriveBytes} — constructor + instance {@code GetBytes} / {@code
- *       CryptDeriveKey}
- * </ul>
- *
- * <p>Node strings below were captured from an actual test run's debug log ({@code
- * target/node-tree.log}), not guessed:
- *
- * <pre>
- * Finding mapping (one finding per test method in DotNetKeyDerivationTestFile.cs):
- *
- * 0 TestHkdfExtract                     → KeyDerivationFunction "HKDF"
- * 1 TestHkdfExpand                      → KeyDerivationFunction "HKDF"
- * 2 TestHkdfDeriveKey                   → KeyDerivationFunction "HKDF"
- * 3 TestSp800108CtorAndDeriveKey        → KeyDerivationFunction "SP800_108_CounterKDF"
- *                                          + KeyDerivation "KEYDERIVATION" child
- * 4 TestSp800108StaticDeriveBytes       → KeyDerivationFunction "SP800_108_CounterKDF"
- *                                          (no children — static one-shot call)
- * 5 TestPasswordDeriveBytesGetBytes     → PasswordBasedKeyDerivationFunction "PBKDF1"
- *                                          + KeyDerivation "KEYDERIVATION" child
- * 6 TestPasswordDeriveBytesCryptDeriveKey → PasswordBasedKeyDerivationFunction "PBKDF1"
- *                                          + KeyDerivation "KEYDERIVATION" child
- * 7 TestPasswordDeriveBytesProperties    → PasswordBasedKeyDerivationFunction "PBKDF1-SHA-256"
- *                                          + NumberOfIterations "100000" child
- *                                          + MessageDigest "SHA-256" child (from set_HashName)
- * </pre>
+ * <p>Two further cases carry most of the weight. One writes every argument as a keyword in the
+ * reverse of the declared order, so a value landing on the wrong parameter would show up
+ * immediately as a swapped salt and output length. The other takes its salt from an environment
+ * variable through a helper, where the only correct answer is to report {@code HKDF} and its hash
+ * and no salt length at all.
  */
 class DotNetKeyDerivationTest extends TestBase {
 
@@ -93,108 +70,62 @@ class DotNetKeyDerivationTest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-
-        assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<CSharpTree> primary = detectionStore.getDetectionValues().get(0);
         assertThat(primary).isInstanceOf(ValueAction.class);
-
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
 
         switch (findingId) {
-            // -----------------------------------------------------------------
-            // Section 1: HKDF static methods — no depending rules, no children
-            // -----------------------------------------------------------------
-            case 0, 1, 2 -> {
-                assertThat(primary.asString()).isEqualTo("HKDF");
-                assertThat(node.getKind()).isEqualTo(KeyDerivationFunction.class);
-                assertThat(node.asString()).isEqualTo("HKDF");
-                assertThat(node.getChildren()).isEmpty();
-            }
-
-            // -----------------------------------------------------------------
-            // Section 2: SP800108HmacCounterKdf
-            // -----------------------------------------------------------------
-            case 3 -> {
-                assertThat(primary.asString()).isEqualTo("SP800108");
-                assertThat(node.getKind()).isEqualTo(KeyDerivationFunction.class);
-                assertThat(node.asString()).isEqualTo("SP800_108_CounterKDF");
-                assertKeyDerivationChild(detectionStore, node);
-            }
-            case 4 -> {
-                assertThat(primary.asString()).isEqualTo("SP800108");
-                assertThat(node.getKind()).isEqualTo(KeyDerivationFunction.class);
-                assertThat(node.asString()).isEqualTo("SP800_108_CounterKDF");
-                assertThat(node.getChildren()).isEmpty();
-            }
-
-            // -----------------------------------------------------------------
-            // Section 3: PasswordDeriveBytes
-            // -----------------------------------------------------------------
-            case 5, 6 -> {
-                assertThat(primary.asString()).isEqualTo("PBKDF1");
-                assertThat(node.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
-                assertThat(node.asString()).isEqualTo("PBKDF1");
-                assertKeyDerivationChild(detectionStore, node);
-            }
-            case 7 -> {
-                /*
-                 * TestPasswordDeriveBytesProperties: pdb.IterationCount = 100000;
-                 * pdb.HashName = "SHA256"; — property-setter depending rules
-                 */
-                assertThat(primary.asString()).isEqualTo("PBKDF1");
-                assertThat(node.getKind()).isEqualTo(PasswordBasedKeyDerivationFunction.class);
-
-                // Depending rule: set_IterationCount detected IterationCount(100000)
-                DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-                        iterationStore =
-                                getStoreOfValueType(
-                                        IterationCount.class, detectionStore.getChildren());
-                assertThat(iterationStore).isNotNull();
-                assertThat(iterationStore.getDetectionValues()).hasSize(1);
-                assertThat(iterationStore.getDetectionValues().get(0).asString())
-                        .isEqualTo("100000");
-
-                // Depending rule: set_HashName detected Algorithm("SHA256")
-                DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-                        hashNameStore =
-                                getStoreOfValueType(Algorithm.class, detectionStore.getChildren());
-                assertThat(hashNameStore).isNotNull();
-                assertThat(hashNameStore.getDetectionValues()).hasSize(1);
-                assertThat(hashNameStore.getDetectionValues().get(0).asString())
-                        .isEqualTo("SHA256");
-
-                // Translation: PBKDF1 node with NumberOfIterations + MessageDigest children
-                // (PBKDF1#asString() appends the digest child's name, per its own source)
-                assertThat(node.asString()).isEqualTo("PBKDF1-SHA-256");
-                INode iterations = node.getChildren().get(NumberOfIterations.class);
-                assertThat(iterations).isNotNull();
-                assertThat(iterations.asString()).isEqualTo("100000");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA-256");
-            }
-
+            // HKDF.Extract(SHA256, ikm, salt): salt is a local byte[16]
+            case 0 -> assertKdf(node, "HKDF-SHA-256", "SHA-256", 128, null, null);
+            // HKDF.Expand(SHA256, prk, 32, info): 32 output bytes
+            case 1 -> assertKdf(node, "HKDF-SHA-256", "SHA-256", null, 256, null);
+            // HKDF.DeriveKey(SHA256, ikm, 32, salt, info)
+            case 2 -> assertKdf(node, "HKDF-SHA-256", "SHA-256", 128, 256, null);
+            // new SP800108HmacCounterKdf(byte[32], SHA256) then kdf.DeriveKey(label, context, 32)
+            case 3 -> assertKdf(node, "SP800_108_CounterKDF", "SHA-256", null, 256, null);
+            // SP800108HmacCounterKdf.DeriveBytes(byte[32], SHA256, label, context, 32)
+            case 4 -> assertKdf(node, "SP800_108_CounterKDF", "SHA-256", null, 256, null);
+            // new PasswordDeriveBytes("password", byte[16]) then pdb.GetBytes(16)
+            case 5 -> assertKdf(node, "PBKDF1", null, 128, null, null);
+            // new PasswordDeriveBytes("password", byte[16], "SHA1", 100)
+            case 6 -> assertKdf(node, "PBKDF1-SHA-1", "SHA-1", 128, null, 100);
+            // pdb.IterationCount = 100000; pdb.HashName = "SHA256"
+            case 7 -> assertKdf(node, "PBKDF1-SHA-256", "SHA-256", 128, null, 100000);
+            // HKDF.Extract(SHA384, byte[32], byte[8], prk): the four-parameter span form
+            case 8 -> assertKdf(node, "HKDF-SHA-384", "SHA-384", 64, null, null);
+            // HKDF.Expand(SHA512, byte[32], Span output, byte[8]): a span sits where the array
+            // form has outputLength, so no output length may be reported
+            case 9 -> assertKdf(node, "HKDF-SHA-512", "SHA-512", null, null, null);
+            // HKDF.DeriveKey(SHA256, byte[32], Span output, byte[24], byte[8]): salt still
+            // readable at 24 bytes, output length still absent
+            case 10 -> assertKdf(node, "HKDF-SHA-256", "SHA-256", 192, null, null);
+            // every argument written as a keyword, in the reverse of the declared order
+            case 11 -> assertKdf(node, "HKDF-SHA-384", "SHA-384", 160, 512, null);
+            // output length through a local aliasing a const field, salt through a readonly field
+            case 12 -> assertKdf(node, "HKDF-SHA-512", "SHA-512", 512, 384, null);
+            // salt read from an environment variable: no salt length may be reported
+            case 13 -> assertKdf(node, "HKDF-SHA-256", "SHA-256", null, 256, null);
+            // SP800-108 DeriveBytes with keyword arguments out of order
+            case 14 -> assertKdf(node, "SP800_108_CounterKDF", "SHA-384", null, 512, null);
+            // new PasswordDeriveBytes("password", byte[16], "SHA256", 20000, null)
+            case 15 -> assertKdf(node, "PBKDF1-SHA-256", "SHA-256", 128, null, 20000);
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Assertion helpers
-    // -------------------------------------------------------------------------
-
-    private void assertKeyDerivationChild(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> deriveStore =
-                getStoreOfValueType(ValueAction.class, store.getChildren());
-        assertThat(deriveStore).isNotNull();
-        assertThat(deriveStore.getDetectionValues()).hasSize(1);
-
-        assertThat(node.getChildren().get(KeyDerivation.class)).isNotNull();
-        assertThat(node.getChildren().get(KeyDerivation.class).asString())
-                .isEqualTo("KEYDERIVATION");
+    /** A {@code null} expectation asserts the value is absent, not that it has some default. */
+    private static void assertKdf(
+            @Nonnull INode node,
+            @Nonnull String expectedName,
+            @Nullable String expectedDigest,
+            @Nullable Integer expectedSaltBits,
+            @Nullable Integer expectedKeyBits,
+            @Nullable Integer expectedIterations) {
+        assertThat(node.asString()).isEqualTo(expectedName);
+        assertChild(node, MessageDigest.class, expectedDigest);
+        assertChild(node, SaltLength.class, expectedSaltBits);
+        assertChild(node, KeyLength.class, expectedKeyBits);
+        assertChild(node, NumberOfIterations.class, expectedIterations);
     }
 }

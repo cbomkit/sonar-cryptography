@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SecretKey;
@@ -72,6 +73,47 @@ class KeyTest extends TestBase {
                                     cryptoProperties.getRelatedCryptoMaterialProperties();
                             assertThat(relatedCryptoMaterialProperties.getType())
                                     .isEqualTo(RelatedCryptoMaterialType.PUBLIC_KEY);
+                        } else {
+                            throw new AssertionError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * A certificate-backed private key: the algorithm is known, the length is not.
+     *
+     * <p>{@code cert.GetRSAPrivateKey()} in C# produces exactly this node. The point of the
+     * assertion is the pair of outcomes — a {@code private-key} related-crypto-material component
+     * whose {@code size} is absent, next to a full RSA algorithm component. An absent size here is
+     * the truth (the length is whatever the certificate holds), and it is only readable as such
+     * because the key kind is present.
+     */
+    @Test
+    void privateKeyWithoutSize() {
+        this.assertsNode(
+                () -> new PrivateKey((PublicKeyEncryption) new RSA(detectionLocation)),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(2);
+                    for (Component component : bom.getComponents()) {
+                        asserts(component.getEvidence());
+                        assertThat(component.getCryptoProperties()).isNotNull();
+                        final CryptoProperties cryptoProperties = component.getCryptoProperties();
+
+                        if (cryptoProperties.getAssetType().equals(AssetType.ALGORITHM)) {
+                            assertThat(component.getName()).isEqualTo("RSA");
+                            assertThat(cryptoProperties.getAlgorithmProperties()).isNotNull();
+                            assertThat(cryptoProperties.getAlgorithmProperties().getPrimitive())
+                                    .isEqualTo(Primitive.PKE);
+                        } else if (cryptoProperties
+                                .getAssetType()
+                                .equals(AssetType.RELATED_CRYPTO_MATERIAL)) {
+                            final RelatedCryptoMaterialProperties related =
+                                    cryptoProperties.getRelatedCryptoMaterialProperties();
+                            assertThat(related).isNotNull();
+                            assertThat(related.getType())
+                                    .isEqualTo(RelatedCryptoMaterialType.PRIVATE_KEY);
+                            assertThat(related.getSize()).isNull();
                         } else {
                             throw new AssertionError();
                         }

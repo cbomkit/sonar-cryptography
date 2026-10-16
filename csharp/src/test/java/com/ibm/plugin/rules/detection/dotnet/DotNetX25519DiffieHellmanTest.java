@@ -128,10 +128,17 @@ class DotNetX25519DiffieHellmanTest extends TestBase {
             // -----------------------------------------------------------------
             case 5, 6 -> assertRawSecretAgreement(detectionStore, node);
 
+            // TestDeriveRawSecretAgreementOtherParty generates two keys, and only the receiver
+            // derives: otherParty is handed to DeriveRawSecretAgreement as an argument and never
+            // agrees on anything itself. It therefore must not carry Generate. The two keys used
+            // to share one detection store, which merged the receiver's operation onto both and
+            // credited otherParty with a derivation it never performs.
+            case 7 -> assertThat(node.getChildren().get(Generate.class)).isNull();
+
             // -----------------------------------------------------------------
             // Section 3: combined usage patterns
             // -----------------------------------------------------------------
-            case 7, 8 -> assertRawSecretAgreement(detectionStore, node);
+            case 8, 9 -> assertRawSecretAgreement(detectionStore, node);
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }

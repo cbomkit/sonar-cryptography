@@ -30,6 +30,7 @@ import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PseudorandomNumberGenerator;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.plugin.CSharpVerifier;
@@ -117,10 +118,18 @@ class DotNetRandomNumberGeneratorTest extends TestBase {
             case 0, 1, 2 -> assertGenerateChild(detectionStore, node);
 
             // -----------------------------------------------------------------
-            // Section 2: RandomNumberGenerator static-only methods — self-contained,
-            // no depending rules, no children.
+            // Section 2: RandomNumberGenerator static-only methods — self-contained, with no
+            // depending rules. The platform generator exposes no algorithm choice, so the one
+            // property worth recording is how much random output the call asks for, which these
+            // report as a key length where the call states it.
             // -----------------------------------------------------------------
-            case 3, 4, 5, 6, 7, 8, 9, 10 -> assertThat(node.getChildren()).isEmpty();
+            // Fill(byte[32]) and GetBytes(32): 32 bytes of output
+            case 3, 4 -> assertChild(node, KeyLength.class, 256);
+            // GetHexString(16) and GetString(alphabet, 10) count characters, not bytes, so no
+            // byte length may be reported for them
+            case 5 -> assertThat(node.getChildren()).isEmpty();
+            // GetInt32, GetItems and Shuffle draw no buffer at all
+            case 6, 7, 8, 9, 10 -> assertThat(node.getChildren()).isEmpty();
 
             // -----------------------------------------------------------------
             // Section 3: RNGCryptoServiceProvider

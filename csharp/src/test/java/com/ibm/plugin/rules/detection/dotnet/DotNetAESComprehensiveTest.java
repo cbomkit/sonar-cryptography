@@ -37,6 +37,8 @@ import com.ibm.engine.model.context.CipherContext;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NonceLength;
+import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.model.functionality.Generate;
@@ -170,10 +172,19 @@ class DotNetAESComprehensiveTest extends TestBase {
             // -----------------------------------------------------------------
             // Section 1: simple constructors — only AES, no children fired
             // -----------------------------------------------------------------
-            case 0, 1, 2, 3, 4, 5, 6, 7 -> {
+            case 0, 1, 2, 3, 4, 5 -> {
                 assertThat(nodes).hasSize(1);
                 assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
                 assertThat(nodes.get(0).asString()).isEqualTo("AES");
+            }
+
+            // new AesGcm(key) / new AesCcm(key): the key is a byte[32] local, so unlike the
+            // constructors above these two do carry a key length
+            case 6, 7 -> {
+                assertThat(nodes).hasSize(1);
+                assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-256");
+                assertChild(nodes.get(0), KeyLength.class, 256);
             }
 
             // -----------------------------------------------------------------
@@ -295,15 +306,33 @@ class DotNetAESComprehensiveTest extends TestBase {
 
             // -----------------------------------------------------------------
             // Section 8: AesGcm AEAD operations
+            //
+            // The key is a byte[32] local, the nonce a byte[12] and the tag a byte[16], so each of
+            // these carries a key length, a nonce length and a tag length. Encrypt and Decrypt put
+            // the tag in different argument positions, Encrypt at index three and Decrypt at index
+            // two, so asserting the same 128-bit tag on both is what proves each method's own
+            // parameter layout is used rather than a shared guess.
             // -----------------------------------------------------------------
-            case 41 -> assertEncryptFindings(detectionStore, nodes, "AES");
-            case 42 -> assertDecryptFindings(detectionStore, nodes, "AES");
+            case 41 -> {
+                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertAeadLengths(nodes.get(0), Encrypt.class);
+            }
+            case 42 -> {
+                assertDecryptFindings(detectionStore, nodes, "AES-256");
+                assertAeadLengths(nodes.get(0), Decrypt.class);
+            }
 
             // -----------------------------------------------------------------
             // Section 9: AesCcm AEAD operations
             // -----------------------------------------------------------------
-            case 43 -> assertEncryptFindings(detectionStore, nodes, "AES");
-            case 44 -> assertDecryptFindings(detectionStore, nodes, "AES");
+            case 43 -> {
+                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertAeadLengths(nodes.get(0), Encrypt.class);
+            }
+            case 44 -> {
+                assertDecryptFindings(detectionStore, nodes, "AES-256");
+                assertAeadLengths(nodes.get(0), Decrypt.class);
+            }
 
             // -----------------------------------------------------------------
             // Section 10: combined usage patterns
@@ -330,8 +359,11 @@ class DotNetAESComprehensiveTest extends TestBase {
             case 49 -> assertEncryptFindings(detectionStore, nodes, "AES");
             case 50 ->
                     assertModePaddingFindings(detectionStore, nodes, "ECB", "None", "AES-ECB-None");
-            case 51 -> assertEncryptFindings(detectionStore, nodes, "AES");
-            case 52 -> assertEncryptFindings(detectionStore, nodes, "AES");
+            // TestAesGcmFullFlow / TestAesCcmFullFlow: byte[32] key, byte[12] nonce, byte[16] tag
+            case 51, 52 -> {
+                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertAeadLengths(nodes.get(0), Encrypt.class);
+            }
 
             // -----------------------------------------------------------------
             // Section 11: EncryptKeyWrapPadded / DecryptKeyWrapPadded /
@@ -340,6 +372,30 @@ class DotNetAESComprehensiveTest extends TestBase {
             // -----------------------------------------------------------------
             case 53, 54 -> assertEncryptFindings(detectionStore, nodes, "AES");
             case 55, 56, 57 -> assertDecryptFindings(detectionStore, nodes, "AES");
+
+            // -----------------------------------------------------------------
+            // Section 12: the AesGcm tag-size constructor, keyword arguments, and a key whose
+            // length cannot be read
+            // -----------------------------------------------------------------
+            // new AesGcm(new byte[16], 12): a 128-bit key and a 96-bit tag
+            case 58 -> {
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-128");
+                assertChild(nodes.get(0), KeyLength.class, 128);
+                assertChild(nodes.get(0), TagLength.class, 96);
+            }
+            // new AesGcm(tagSizeInBytes: 16, key: new byte[24]): both written as keywords, in the
+            // reverse of the declared order, so a positional reading would swap them
+            case 59 -> {
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-192");
+                assertChild(nodes.get(0), KeyLength.class, 192);
+                assertChild(nodes.get(0), TagLength.class, 128);
+            }
+            // new AesGcm(key) with a key read from the environment: no key length may be reported
+            case 60 -> {
+                assertThat(nodes.get(0).asString()).isEqualTo("AES");
+                assertNoChild(nodes.get(0), KeyLength.class);
+                assertNoChild(nodes.get(0), TagLength.class);
+            }
 
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
@@ -402,6 +458,15 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(nodes).hasSize(1);
         assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
+    }
+
+    /** Asserts the nonce and tag lengths an AEAD call reports on its operation node. */
+    private static void assertAeadLengths(
+            @Nonnull INode node, @Nonnull Class<? extends INode> operation) {
+        INode operationNode = node.getChildren().get(operation);
+        assertThat(operationNode).isNotNull();
+        assertChild(operationNode, NonceLength.class, 96);
+        assertChild(operationNode, TagLength.class, 128);
     }
 
     private void assertEncryptFindings(

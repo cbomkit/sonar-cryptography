@@ -179,4 +179,124 @@ public class DotNetRSATest
         byte[] signature = new byte[256];
         bool valid = rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }
+
+    // -------------------------------------------------------------------------
+    // Section 7: single-argument constructor overloads that carry a key size
+    // (added with DotNetKeySizeOrAlgorithmFactory / arity-split creation rules)
+    // -------------------------------------------------------------------------
+
+    public void TestRsaCryptoServiceProviderWithKeySize()
+    {
+        var rsa = new RSACryptoServiceProvider(3072);
+    }
+
+    public void TestRsaCngWithKeySize()
+    {
+        var rsa = new RSACng(4096);
+    }
+
+    public void TestRsaOpenSslWithKeySize()
+    {
+        var rsa = new RSAOpenSsl(2048);
+    }
+
+    // Real-world pattern verified against the Bitwarden server corpus
+    // (util/Seeder/Data/Generators/SshKeyDataGenerator.cs): a `using`-scoped variable created
+    // inside a `for` loop, with the key size as a literal argument. Exercises both the arity-split
+    // RSA.Create(int) capture and block flattening (the `for` body is not its own scope).
+    public void TestRsaCreateInsideForLoop()
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            using var rsa = RSA.Create(2048);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Section 8: parameter forms — offsets, keywords, PSS, OAEP digests, and
+    // values that must stay unresolved
+    // -------------------------------------------------------------------------
+
+    private const int ConfiguredKeySize = 3072;
+
+    // SignData(data, offset, count, hashAlgorithm, padding): the hash and padding sit at
+    // indices three and four here.
+    public void TestSignDataWithOffset()
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[64];
+        byte[] signature = rsa.SignData(data, 0, 32, HashAlgorithmName.SHA384, RSASignaturePadding.Pss);
+    }
+
+    // VerifyData(data, offset, count, signature, hashAlgorithm, padding) — the six-parameter form.
+    public void TestVerifyDataWithOffset()
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[64];
+        byte[] signature = new byte[256];
+        bool valid = rsa.VerifyData(data, 0, 32, signature, HashAlgorithmName.SHA384, RSASignaturePadding.Pkcs1);
+    }
+
+    // Hash and padding written as keyword arguments, in the reverse of the declared order.
+    public void TestSignDataNamedReordered()
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[64];
+        byte[] signature = rsa.SignData(data, padding: RSASignaturePadding.Pss, hashAlgorithm: HashAlgorithmName.SHA512);
+    }
+
+    // OAEP with a SHA-512 digest rather than the SHA-256 used above.
+    public void TestEncryptOaepSha512()
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[32];
+        byte[] ciphertext = rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA512);
+    }
+
+    // Key size from a const field.
+    public void TestRsaCreateFromConstant()
+    {
+        var rsa = RSA.Create(ConfiguredKeySize);
+    }
+
+    // RSAParameters is not a key size: none may be reported.
+    public void TestRsaCreateFromParameters()
+    {
+        RSAParameters parameters = default;
+        var rsa = RSA.Create(parameters);
+    }
+
+    // The padding arrives from a call this engine cannot see into: the encryption must still be
+    // reported, the padding must not.
+    public void TestEncryptUnknownPadding()
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[32];
+        var padding = ResolvePaddingFromConfiguration();
+        byte[] ciphertext = rsa.Encrypt(data, padding);
+    }
+
+    private RSAEncryptionPadding ResolvePaddingFromConfiguration()
+    {
+        return RSAEncryptionPadding.CreateOaep(HashAlgorithmName.SHA256);
+    }
+
+    // The hash arrives as a method parameter whose callers disagree, while the padding is a
+    // literal: the padding must be reported and the digest must not.
+    public void TestSignDataUnknownHash(HashAlgorithmName algorithm)
+    {
+        var rsa = RSA.Create();
+        byte[] data = new byte[64];
+        byte[] signature = rsa.SignData(data, algorithm, RSASignaturePadding.Pkcs1);
+    }
+
+    public void CallRsaSignUnknownHashSha256()
+    {
+        TestSignDataUnknownHash(HashAlgorithmName.SHA256);
+    }
+
+    public void CallRsaSignUnknownHashSha384()
+    {
+        TestSignDataUnknownHash(HashAlgorithmName.SHA384);
+    }
 }

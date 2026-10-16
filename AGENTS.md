@@ -22,6 +22,12 @@ Use Spotless's Google Java Format in AOSP style for Java indentation, imports, a
 
 Tests use JUnit 5 and AssertJ. Name test classes `*Test.java` and place them beside the corresponding module's code under `src/test/java`. For detection rules, add representative source fixtures under that module's `src/test/files/` and assert the detected findings. Run `mvn test` for broad changes or `mvn test -pl <module>` for focused changes. No numeric coverage threshold is configured in the parent build.
 
+## Writing C# Detection Rules
+
+Declare a rule's parameters with `withNamedMethodParameter` / `withOptionalNamedMethodParameter` using the real .NET parameter names rather than positionally. A rule that declares any named parameter is matched without an arity constraint, and `CSharpNamedArgumentBinder` resolves the overload by binding each parameter by keyword, then by position, then by unique declared type. That is what lets one rule per method cover every overload, place a value correctly when an overload reorders it, and still refuse to guess.
+
+Write one rule per method, not one per arity: two rules on the same method would both match and the call would be detected twice. Mark a parameter required only if every overload has it, since the rule accepts argument counts between the required count and the declared count. Declare a distinctive type (`"HashAlgorithmName"`, `"RSASignaturePadding"`, `"int"`) wherever one exists, because the type is what places a value when the position varies and what rejects an argument that cannot be it. Every new test should also assert the *absence* of a value that cannot be resolved, via `assertNoChild` or a typed `null` passed to `assertChild`: a guessed parameter is worse than a missing one.
+
 ## Commits & Pull Requests
 
 Recent commits commonly use short subjects such as `feat: ...`, `fix: ...`, `ci: ...`, and `chore(deps): ...`; some use plain descriptive subjects. Keep the subject specific and include an issue or PR reference when applicable. In pull requests, describe the behavior changed, affected modules, and commands run; link the relevant issue. Add screenshots only for visible SonarQube interface changes.

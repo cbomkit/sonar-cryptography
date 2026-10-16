@@ -23,11 +23,14 @@ import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.dotnet.factory.DotNetEcKeySizeOrCurveFactory;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -138,7 +141,12 @@ public final class DotNetECDiffieHellman extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("DeriveKeyFromHash")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DeriveKeyFromHash"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("otherPartyPublicKey", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("secretPrepend", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("secretAppend", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH_DERIVE_KEY_FROM_HASH")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -150,7 +158,13 @@ public final class DotNetECDiffieHellman extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("DeriveKeyFromHmac")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DeriveKeyFromHmac"))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("otherPartyPublicKey", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("hmacKey", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("secretPrepend", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("secretAppend", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH_DERIVE_KEY_FROM_HMAC")))
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -206,7 +220,10 @@ public final class DotNetECDiffieHellman extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDiffieHellman")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDH_DEPENDING_RULES);
@@ -220,7 +237,10 @@ public final class DotNetECDiffieHellman extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDiffieHellmanCng")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDH_DEPENDING_RULES);
@@ -233,7 +253,10 @@ public final class DotNetECDiffieHellman extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDiffieHellmanOpenSsl")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDH"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDH")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDH_DEPENDING_RULES);

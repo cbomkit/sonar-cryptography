@@ -71,17 +71,35 @@ public abstract class CSharpBaseDetectionRule
         this.csharpTranslationProcess = new CSharpTranslationProcess(reorganizerRules);
     }
 
+    /**
+     * Runs every detection rule against every call site in the block, one detection at a time.
+     *
+     * <p>The dispatch is per statement rather than per block on purpose. A {@code
+     * DetectionExecutive} owns a single root {@link com.ibm.engine.detection.DetectionStore}, and a
+     * store holds the parameters of one call. Handing it a whole method body made every matching
+     * call in that body share one store, so of three {@code ECDsa.Create(ECCurve.NamedCurves.X)}
+     * calls in one method only the first kept its curve and the other two came out bare. Java
+     * subscribes to {@code METHOD_INVOCATION}/{@code NEW_CLASS} nodes and Python to call
+     * expressions, so both already get one store per call site; this brings C# in line.
+     *
+     * <p>Depending rules are unaffected: they are followed from {@code
+     * ILanguageSupport#getEnclosingMethod}, which resolves the block from the call node itself, so
+     * variable tracking still sees the entire method body.
+     */
     @Override
     public void scan(@Nonnull CSharpScanContext scanContext, @Nonnull CSharpBlockTree blockTree) {
-        detectionRules.forEach(
-                rule -> {
-                    DetectionExecutive<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
-                            detectionExecutive =
-                                    CSharpAggregator.getLanguageSupport()
-                                            .createDetectionExecutive(blockTree, rule, scanContext);
-                    detectionExecutive.subscribe(this);
-                    detectionExecutive.start();
-                });
+        for (CSharpTree statement : blockTree.getStatements()) {
+            detectionRules.forEach(
+                    rule -> {
+                        DetectionExecutive<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
+                                detectionExecutive =
+                                        CSharpAggregator.getLanguageSupport()
+                                                .createDetectionExecutive(
+                                                        statement, rule, scanContext);
+                        detectionExecutive.subscribe(this);
+                        detectionExecutive.start();
+                    });
+        }
     }
 
     @Override

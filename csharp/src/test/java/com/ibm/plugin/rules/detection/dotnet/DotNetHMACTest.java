@@ -29,36 +29,29 @@ import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.MacContext;
-import com.ibm.mapper.model.BlockSize;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link DotNetHMAC}.
+ * Tests for the HMAC detection rules, covering the nine {@code HMAC*} classes and {@code
+ * MACTripleDES}.
  *
- * <p>findingId → test method → expected translated node ({@code asString()}), in source order of
- * {@code DotNetHMACTestFile.cs}:
+ * <p>The first ten cases use the parameterless constructor, which generates a random key of the
+ * algorithm's own default length. There is nothing in the source to read there, so they must report
+ * the algorithm and its digest and no key length.
  *
- * <ul>
- *   <li>0 → {@code TestHmacSha1} → {@code HMAC-SHA-1}
- *   <li>1 → {@code TestHmacSha256} → {@code HMAC-SHA-256}
- *   <li>2 → {@code TestHmacSha384} → {@code HMAC-SHA-384}
- *   <li>3 → {@code TestHmacSha512} → {@code HMAC-SHA-512}
- *   <li>4 → {@code TestHmacMd5} → {@code HMAC-MD5}
- *   <li>5 → {@code TestHmacRipemd160} → {@code HMAC-RIPEMD} (digest child: {@code RIPEMD-160})
- *   <li>6 → {@code TestHmacSha3_256} → {@code HMAC-SHA3-256}
- *   <li>7 → {@code TestHmacSha3_384} → {@code HMAC-SHA3-384}
- *   <li>8 → {@code TestHmacSha3_512} → {@code HMAC-SHA3-512}
- *   <li>9 → {@code TestMacTripleDes} → {@code DESede} (not an HMAC(digest) node; see {@link
- *       DotNetHMAC} javadoc for why {@code MACTripleDES} is modeled as DESede-as-Mac)
- * </ul>
+ * <p>The next four pass a key whose length the engine can read, as a literal array, through a local
+ * and through a {@code readonly} field, and assert that length. The last passes a key read from the
+ * environment and asserts the key length stays absent, since a guessed MAC key length would be
+ * worse than none.
  */
 class DotNetHMACTest extends TestBase {
 
@@ -74,123 +67,49 @@ class DotNetHMACTest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-
-        /*
-         * Detection Store
-         */
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
         IValue<CSharpTree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
 
-        /*
-         * Translation
-         */
         assertThat(nodes).hasSize(1);
         INode node = nodes.get(0);
         assertThat(node.getKind()).isEqualTo(Mac.class);
 
         switch (findingId) {
-            case 0 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA1");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA-1");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA-1");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("160");
-            }
-            case 1 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA256");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA-256");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA-256");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("256");
-            }
-            case 2 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA384");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA-384");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA-384");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("384");
-            }
-            case 3 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA512");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA-512");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA-512");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("512");
-            }
-            case 4 -> {
-                assertThat(value0.asString()).isEqualTo("HMACMD5");
-                assertThat(node.asString()).isEqualTo("HMAC-MD5");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("MD5");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("128");
-            }
-            case 5 -> {
-                assertThat(value0.asString()).isEqualTo("HMACRIPEMD160");
-                assertThat(node.asString()).isEqualTo("HMAC-RIPEMD");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("RIPEMD-160");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("160");
-            }
-            case 6 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA3_256");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA3-256");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA3-256");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("256");
-            }
-            case 7 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA3_384");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA3-384");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA3-384");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("384");
-            }
-            case 8 -> {
-                assertThat(value0.asString()).isEqualTo("HMACSHA3_512");
-                assertThat(node.asString()).isEqualTo("HMAC-SHA3-512");
-                INode digest = node.getChildren().get(MessageDigest.class);
-                assertThat(digest).isNotNull();
-                assertThat(digest.asString()).isEqualTo("SHA3-512");
-                INode digestSize = digest.getChildren().get(DigestSize.class);
-                assertThat(digestSize).isNotNull();
-                assertThat(digestSize.asString()).isEqualTo("512");
-            }
-            case 9 -> {
-                // MACTripleDES is not HMAC-based: it translates to the DESede algorithm
-                // reinterpreted "as" a Mac (see DotNetHMAC javadoc), not to an HMAC(digest) node.
-                assertThat(value0.asString()).isEqualTo("MACTRIPLEDES");
-                assertThat(node.asString()).isEqualTo("DESede");
-                INode blockSize = node.getChildren().get(BlockSize.class);
-                assertThat(blockSize).isNotNull();
-                assertThat(blockSize.asString()).isEqualTo("64");
-            }
+            // parameterless constructors: a random key, so no key length may be reported
+            case 0 -> assertHmac(node, "HMAC-SHA-1", "SHA-1", null);
+            case 1 -> assertHmac(node, "HMAC-SHA-256", "SHA-256", null);
+            case 2 -> assertHmac(node, "HMAC-SHA-384", "SHA-384", null);
+            case 3 -> assertHmac(node, "HMAC-SHA-512", "SHA-512", null);
+            case 4 -> assertHmac(node, "HMAC-MD5", "MD5", null);
+            case 5 -> assertHmac(node, "HMAC-RIPEMD", "RIPEMD-160", null);
+            case 6 -> assertHmac(node, "HMAC-SHA3-256", "SHA3-256", null);
+            case 7 -> assertHmac(node, "HMAC-SHA3-384", "SHA3-384", null);
+            case 8 -> assertHmac(node, "HMAC-SHA3-512", "SHA3-512", null);
+            // MACTripleDES is not an HMAC; it translates to Triple DES used as a MAC
+            case 9 -> assertHmac(node, "DESede", null, null);
+            // new HMACSHA256(new byte[32])
+            case 10 -> assertHmac(node, "HMAC-SHA-256", "SHA-256", 256);
+            // a byte[64] key through a local
+            case 11 -> assertHmac(node, "HMAC-SHA-512", "SHA-512", 512);
+            // a byte[16] key through a readonly field
+            case 12 -> assertHmac(node, "HMAC-SHA-256", "SHA-256", 128);
+            // new MACTripleDES(new byte[24]): a 192-bit Triple DES key
+            case 13 -> assertHmac(node, "DESede192", null, 192);
+            // a key read from the environment: no key length may be reported
+            case 14 -> assertHmac(node, "HMAC-SHA-256", "SHA-256", null);
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
+    }
+
+    /** A {@code null} expectation asserts absence, not a default. */
+    private static void assertHmac(
+            @Nonnull INode node,
+            @Nonnull String expectedNode,
+            @Nullable String expectedDigest,
+            @Nullable Integer expectedKeyBits) {
+        assertThat(node.asString()).isEqualTo(expectedNode);
+        assertChild(node, MessageDigest.class, expectedDigest);
+        assertChild(node, KeyLength.class, expectedKeyBits);
     }
 }

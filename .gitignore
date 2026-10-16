@@ -53,3 +53,5 @@ venv/
 
 ### Local worktrees ###
 /.worktree/
+
+.integration-test-workdir

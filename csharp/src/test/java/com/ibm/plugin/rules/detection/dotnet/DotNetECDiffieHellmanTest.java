@@ -29,9 +29,11 @@ import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.functionality.Generate;
 import com.ibm.mapper.model.functionality.KeyDerivation;
@@ -39,48 +41,22 @@ import com.ibm.plugin.CSharpVerifier;
 import com.ibm.plugin.TestBase;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive test for all ECDH (ECDiffieHellman) related detection rules
- * (DotNetECDiffieHellman.java).
+ * Comprehensive test for the ECDH detection rules, covering {@code ECDiffieHellman}, {@code
+ * ECDiffieHellmanCng} and {@code ECDiffieHellmanOpenSsl}.
  *
- * <p>Covers all three ECDiffieHellman-related classes and their complete operational API surface:
+ * <p>The creation calls are read exactly as the ECDSA ones are, by value out of a single argument
+ * position that .NET fills with an {@code int}, an {@code ECCurve}, an {@code ECParameters}, a
+ * {@code string} or a {@code CngKey}, so the cases below assert a curve, a key length, or the
+ * absence of both.
  *
- * <ul>
- *   <li>ECDiffieHellman (abstract base)
- *   <li>ECDiffieHellmanCng, ECDiffieHellmanOpenSsl (derived from ECDiffieHellman)
- * </ul>
- *
- * <p>Note: every top-level finding translates to a {@link com.ibm.mapper.model.algorithms.ECDH}
- * node ({@code node.asString()} == "ECDH"), whose kind is {@link KeyAgreement}, and which always
- * carries an {@link Oid} child ("1.3.132.1.12") added unconditionally by the {@code ECDH} algorithm
- * model constructor.
- *
- * <p>Finding mapping (one finding per test method in DotNetECDiffieHellmanTestFile.cs):
- *
- * <pre>
- * Section 1 – factory methods / constructors (findings 0–3):
- *   0 TestECDHCreate             → ECDH
- *   1 TestECDHCreateWithCurve    → ECDH
- *   2 TestECDHCng                → ECDH
- *   3 TestECDHOpenSsl            → ECDH
- *
- * Section 2 – property KeySize setters (findings 4–5):
- *   4 TestPropertyKeySize256     → ECDH, KeyLength child "256"
- *   5 TestPropertyKeySize384     → ECDH, KeyLength child "384"
- *
- * Section 3 – key-derivation operations (findings 6–10):
- *   6  TestDeriveKeyMaterial          → ECDH + KeyDerivation child
- *   7  TestDeriveKeyFromHash          → ECDH + KeyDerivation child
- *   8  TestDeriveKeyFromHmac          → ECDH + KeyDerivation child
- *   9  TestDeriveKeyTls               → ECDH + KeyDerivation child
- *   10 TestDeriveRawSecretAgreement   → ECDH + Generate child
- *
- * Section 4 – combined usage patterns (findings 11–12):
- *   11 TestECDHCngFullFlow        → ECDH + KeyDerivation (+ KeyLength child "384")
- *   12 TestECDHOpenSslDeriveFlow  → ECDH + KeyDerivation
- * </pre>
+ * <p>Of the five derive methods only {@code DeriveKeyFromHash} and {@code DeriveKeyFromHmac} name a
+ * hash, and that hash is the derivation's pseudo-random function, so it is attached to the key
+ * derivation action. {@code DeriveKeyMaterial}, {@code DeriveKeyTls} and {@code
+ * DeriveRawSecretAgreement} name none and must carry no digest.
  */
 class DotNetECDiffieHellmanTest extends TestBase {
 
@@ -96,10 +72,7 @@ class DotNetECDiffieHellmanTest extends TestBase {
                     DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext>
                             detectionStore,
             @Nonnull List<INode> nodes) {
-
-        // Every top-level finding must be ECDH
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(KeyContext.class);
-        assertThat(detectionStore.getDetectionValues()).hasSize(1);
         IValue<CSharpTree> primary = detectionStore.getDetectionValues().get(0);
         assertThat(primary).isInstanceOf(ValueAction.class);
         assertThat(primary.asString()).isEqualTo("ECDH");
@@ -114,70 +87,62 @@ class DotNetECDiffieHellmanTest extends TestBase {
         assertThat(oid.asString()).isEqualTo("1.3.132.1.12");
 
         switch (findingId) {
-
-            // -----------------------------------------------------------------
-            // Section 1: simple constructors — only ECDH, no extra children
-            // -----------------------------------------------------------------
-            case 0, 1, 2, 3 -> {
-                // node.asString() already asserted to be "ECDH" above
-            }
-
-            // -----------------------------------------------------------------
-            // Section 2: property KeySize setters
-            // -----------------------------------------------------------------
-            case 4 -> assertKeySize(node, "256");
-            case 5 -> assertKeySize(node, "384");
-
-            // -----------------------------------------------------------------
-            // Section 3: key-derivation operations
-            // -----------------------------------------------------------------
-            case 6, 7, 8, 9 -> assertKeyDerivation(detectionStore, node);
-            case 10 -> assertRawSecretAgreement(detectionStore, node);
-
-            // -----------------------------------------------------------------
-            // Section 4: combined usage patterns
-            // -----------------------------------------------------------------
+            // ECDiffieHellman.Create()
+            case 0 -> assertEcdh(node, null, null);
+            // ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256)
+            case 1 -> assertEcdh(node, "nistP256", null);
+            // new ECDiffieHellmanCng() / new ECDiffieHellmanOpenSsl()
+            case 2, 3 -> assertEcdh(node, null, null);
+            // ecdh.KeySize = 256 / = 384
+            case 4 -> assertEcdh(node, null, 256);
+            case 5 -> assertEcdh(node, null, 384);
+            // DeriveKeyMaterial(other): names no hash
+            case 6 -> assertDerivation(node, null);
+            // DeriveKeyFromHash(other, HashAlgorithmName.SHA256)
+            case 7 -> assertDerivation(node, "SHA-256");
+            // DeriveKeyFromHmac(other, HashAlgorithmName.SHA256, hmacKey)
+            case 8 -> assertDerivation(node, "SHA-256");
+            // DeriveKeyTls(other, prfLabel, prfSeed): names no hash
+            case 9 -> assertDerivation(node, null);
+            // DeriveRawSecretAgreement(other): a raw agreement, no derivation at all
+            case 10 -> assertThat(node.getChildren().get(Generate.class)).isNotNull();
+            // ECDiffieHellmanCng full flow: KeySize 384 plus a derivation
             case 11 -> {
-                assertKeyDerivation(detectionStore, node);
-                assertThat(node.getChildren().get(KeyLength.class)).isNotNull();
-                assertThat(node.getChildren().get(KeyLength.class).asString()).isEqualTo("384");
+                assertEcdh(node, null, 384);
+                assertDerivation(node, null);
             }
-            case 12 -> assertKeyDerivation(detectionStore, node);
-
+            // ECDiffieHellmanOpenSsl derive flow
+            case 12 -> assertDerivation(node, "SHA-256");
+            // ECDiffieHellman.Create(ECCurve.NamedCurves.nistP384)
+            case 13 -> assertEcdh(node, "nistP384", null);
+            // new ECDiffieHellmanCng(521)
+            case 14 -> assertEcdh(node, null, 521);
+            // ECDiffieHellman.Create(ECCurve.CreateFromFriendlyName("secp384r1"))
+            case 15 -> assertEcdh(node, "secp384r1", null);
+            // ECDiffieHellman.Create(parameters): neither curve nor key size
+            case 16 -> assertEcdh(node, null, null);
+            // DeriveKeyFromHash(other, SHA512, secretPrepend, secretAppend)
+            case 17 -> assertDerivation(node, "SHA-512");
+            // DeriveKeyFromHmac(other, hmacKey: ..., hashAlgorithm: SHA384) by keyword
+            case 18 -> assertDerivation(node, "SHA-384");
+            // DeriveKeyFromHash(other, algorithm) where the callers disagree on algorithm
+            case 19 -> assertDerivation(node, null);
             default -> throw new IllegalStateException("Unexpected findingId: " + findingId);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Assertion helpers
-    // -------------------------------------------------------------------------
-
-    private void assertKeySize(@Nonnull INode node, @Nonnull String expectedKeySize) {
-        assertThat(node.getChildren().get(KeyLength.class)).isNotNull();
-        assertThat(node.getChildren().get(KeyLength.class).asString()).isEqualTo(expectedKeySize);
+    /** A {@code null} expectation asserts absence, not a default. */
+    private static void assertEcdh(
+            @Nonnull INode node,
+            @Nullable String expectedCurve,
+            @Nullable Integer expectedKeyBits) {
+        assertChild(node, EllipticCurve.class, expectedCurve);
+        assertChild(node, KeyLength.class, expectedKeyBits);
     }
 
-    private void assertKeyDerivation(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> deriveStore =
-                getStoreOfValueType(ValueAction.class, store.getChildren());
-        assertThat(deriveStore).isNotNull();
-        assertThat(deriveStore.getDetectionValues()).hasSize(1);
-
-        assertThat(node.getChildren().get(KeyDerivation.class)).isNotNull();
-    }
-
-    private void assertRawSecretAgreement(
-            @Nonnull DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> store,
-            @Nonnull INode node) {
-
-        DetectionStore<CSharpCheck, CSharpTree, CSharpSymbol, CSharpScanContext> deriveStore =
-                getStoreOfValueType(ValueAction.class, store.getChildren());
-        assertThat(deriveStore).isNotNull();
-        assertThat(deriveStore.getDetectionValues()).hasSize(1);
-
-        assertThat(node.getChildren().get(Generate.class)).isNotNull();
+    private static void assertDerivation(@Nonnull INode node, @Nullable String expectedDigest) {
+        INode derivation = node.getChildren().get(KeyDerivation.class);
+        assertThat(derivation).as("expected a key derivation action").isNotNull();
+        assertChild(derivation, MessageDigest.class, expectedDigest);
     }
 }

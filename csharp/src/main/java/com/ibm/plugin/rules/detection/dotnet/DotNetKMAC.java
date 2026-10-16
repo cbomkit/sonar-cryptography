@@ -19,8 +19,11 @@
  */
 package com.ibm.plugin.rules.detection.dotnet;
 
+import com.ibm.engine.detection.MethodMatcher;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -90,15 +93,19 @@ import javax.annotation.Nonnull;
 public final class DotNetKMAC extends DetectionRuleSet<CSharpTree> {
 
     // new Kmac128(key) / new Kmac128(key, customizationString) — and the KmacXof128/256, Kmac256
-    // siblings. Both constructor overloads (byte[], byte[]) and (ReadOnlySpan<Byte>,
-    // ReadOnlySpan<Byte>) are covered by withAnyParameters().
+    // siblings. One rule covers both the (byte[], byte[]) and the (ReadOnlySpan<Byte>,
+    // ReadOnlySpan<Byte>) overload; those hold the same values, so no distinction is needed.
+    // The key length is read from the key argument where the call states it as an array.
     private static IDetectionRule<CSharpTree> kmacRule(String className) {
         return new DetectionRuleBuilder<CSharpTree>()
                 .createDetectionRule()
                 .forObjectTypes(className)
                 .forMethods("<init>")
                 .shouldBeDetectedAs(new ValueActionFactory<>(className.toUpperCase()))
-                .withAnyParameters()
+                .withNamedMethodParameter("key", MethodMatcher.ANY)
+                .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
+                .asChildOfParameterWithId(-1)
+                .withOptionalNamedMethodParameter("customizationString", MethodMatcher.ANY)
                 .buildForContext(new MacContext())
                 .inBundle(() -> "DotNet")
                 .withDependingDetectionRules(List.of());

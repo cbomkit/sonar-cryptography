@@ -30,7 +30,10 @@ import javax.annotation.Nullable;
  * <p>The {@code objectTypeName} is the simple class/package name before the dot (e.g. {@code
  * "Aes"}, {@code "SHA256"}), and {@code methodName} is the method name (e.g. {@code "Create"}).
  *
- * <p>For chained calls, only the outermost method invocation is captured.
+ * <p>For chained calls, only the outermost method invocation is captured. A nested invocation used
+ * as an argument (e.g. {@code new CFBBlockCipher(AESEngine.newInstance(), 256)}) is now a real
+ * {@code CSharpMethodInvocationTree} in its own right (see {@code CSharpTreeConverter}), not
+ * collapsed into a member-access leaf as in earlier versions.
  */
 public final class CSharpMethodInvocationTree implements CSharpTree {
 
@@ -49,8 +52,20 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
     /** Optional identifier this invocation result is assigned to (for depending rule tracking). */
     @Nullable private final String assignedIdentifier;
 
-    /** The enclosing block tree (for depending rule context). */
+    /**
+     * The enclosing block tree (for depending rule context), when this is a top-level statement.
+     */
     @Nullable private CSharpBlockTree enclosingBlock;
+
+    /** The lexical scope this invocation was created in — used to resolve its own arguments. */
+    @Nullable private final CSharpScope scope;
+
+    /**
+     * The expression this call returns, when it targets a method of the same file that has exactly
+     * one return value. Back-patched by {@code CSharpTreeConverter} after the whole file has been
+     * converted, because the called method may be declared after the call.
+     */
+    @Nullable private CSharpTree resolvedReturnValue;
 
     public CSharpMethodInvocationTree(
             int line,
@@ -59,7 +74,8 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
             @Nonnull String methodName,
             @Nonnull List<CSharpArgument> arguments,
             @Nullable String assignedIdentifier,
-            @Nullable CSharpBlockTree enclosingBlock) {
+            @Nullable CSharpBlockTree enclosingBlock,
+            @Nullable CSharpScope scope) {
         this.line = line;
         this.column = column;
         this.objectTypeName = objectTypeName;
@@ -67,6 +83,7 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
         this.arguments = arguments;
         this.assignedIdentifier = assignedIdentifier;
         this.enclosingBlock = enclosingBlock;
+        this.scope = scope;
     }
 
     @Override
@@ -83,6 +100,11 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
     @Override
     public String getText() {
         return objectTypeName + "." + methodName + "(...)";
+    }
+
+    @Nullable @Override
+    public CSharpScope getScope() {
+        return scope;
     }
 
     @Nonnull
@@ -111,5 +133,14 @@ public final class CSharpMethodInvocationTree implements CSharpTree {
     /** Back-patched by {@link CSharpBlockTree} once the block is fully constructed. */
     public void setEnclosingBlock(@Nonnull CSharpBlockTree enclosingBlock) {
         this.enclosingBlock = enclosingBlock;
+    }
+
+    @Nullable public CSharpTree getResolvedReturnValue() {
+        return resolvedReturnValue;
+    }
+
+    /** Back-patched by {@code CSharpTreeConverter} once the whole file has been converted. */
+    public void setResolvedReturnValue(@Nonnull CSharpTree resolvedReturnValue) {
+        this.resolvedReturnValue = resolvedReturnValue;
     }
 }

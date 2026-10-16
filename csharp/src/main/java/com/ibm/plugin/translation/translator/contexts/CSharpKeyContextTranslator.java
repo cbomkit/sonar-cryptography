@@ -21,19 +21,31 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.Algorithm;
+import com.ibm.engine.model.Curve;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.KeyAction;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ParameterIdentifier;
+import com.ibm.engine.model.SaltSize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
+import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.context.PublicKeyContext;
+import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
+import com.ibm.mapper.model.EllipticCurve;
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.model.ParameterSetIdentifier;
+import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.PublicKey;
+import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.SecretKey;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.ECDSA;
@@ -67,96 +79,132 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
 
         if (value instanceof ValueAction<?>) {
             String kind = detectionContext.get("kind").orElse("");
-            return switch (kind) {
-                case "RSA" -> Optional.of(new RSA(detectionLocation));
-                case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
-                case "ECDH" -> Optional.of(new ECDH(detectionLocation));
-                // X25519 (DotNetX25519DiffieHellman.java): reuses the existing X25519 mapper
-                // model class (already used by the JCA XDH/X25519 and Go crypto/ecdh
-                // translations) — no new mapper model class was needed. See that rule class's
-                // javadoc for why X25519DiffieHellman's API shape (no Create(), no
-                // DeriveKeyMaterial/FromHash/FromHmac/Tls, no settable KeySize) differs from
-                // ECDiffieHellman's.
-                case "X25519" -> Optional.of(new X25519(detectionLocation));
-                case "DSA" -> Optional.of(new DSA(detectionLocation));
-                // MGF1 (DotNetLegacyFormatters.java, PKCS1MaskGenerationMethod): reuses the
-                // existing MGF1 mapper model class (already used by JcaMGFMapper/
-                // JcaOAEPPaddingMapper for JCA's OAEP padding translation) — no new mapper model
-                // class was needed. KeyContext is reused here purely as the generic "identify
-                // which standalone algorithm was just constructed" context already used for the
-                // other cases in this switch, not because MGF1 is a "key" algorithm per se — see
-                // that rule class's javadoc for the full rationale.
-                case "MGF1" -> Optional.of(new MGF1(detectionLocation));
-                // ML-KEM (DotNetMLKem.java): generic top-level node. The parameter set (when
-                // captured — see the ParameterIdentifier branch below) is attached as a child by
-                // the tree-shape-preserving translation process, yielding "ML-KEM-768" etc. via
-                // MLKEM#asString(). Reuses the mapper model class already used by the JCA,
-                // BouncyCastle and Go crypto/mlkem translations — no new model class needed.
-                case "KEM" -> Optional.of(new MLKEM(detectionLocation));
-                // ML-DSA (DotNetMLDsa.java): generic top-level node, same shape as the "KEM" case
-                // above. The parameter set (when captured — see the ParameterIdentifier branch
-                // below) is attached as a child, yielding "ML-DSA-44"/"ML-DSA-65"/"ML-DSA-87" via
-                // MLDSA#asString(). Reuses the MLDSA mapper model class that already existed
-                // (added alongside MLKEM) — no new model class needed for plain ML-DSA.
-                // "MLDSA_COMPOSITE" (CompositeMLDsa/CompositeMLDsaCng) intentionally maps to the
-                // very same MLDSA node: no composite/hybrid algorithm concept exists yet in the
-                // mapper model (verified: grep -rl "Composite\|Hybrid" mapper/ found nothing), so
-                // rather than fabricate one or drop the detection, the full CompositeMLDsaAlgorithm
-                // name (e.g. "MLDsa44WithECDsaP256") is captured verbatim as the
-                // ParameterSetIdentifier below — see DotNetMLDsa's class javadoc for the full
-                // rationale and the recommendation for a future proper composite/hybrid model.
-                case "MLDSA", "MLDSA_COMPOSITE" -> Optional.of(new MLDSA(detectionLocation));
-                // SLH-DSA (DotNetSlhDsa.java): generic top-level node, same shape as the "MLDSA"
-                // case above. The parameter set (when captured — see the ParameterIdentifier
-                // branch below) is attached as a child, yielding e.g. "SLH-DSA-SHA2-128s" via
-                // SPHINCSPlus#asString(). Reuses the SPHINCSPlus mapper model class that already
-                // existed (used by the BouncyCastle SPHINCSPlusSigner translation) — no new model
-                // class needed, per the class's "SLH-DSA .. Other Names: SPHINCS+" documentation.
-                case "SLHDSA" -> Optional.of(new SPHINCSPlus(detectionLocation));
-                case "KDF" -> Optional.of(new PBKDF2(detectionLocation));
-                // Key derivation functions (DotNetKeyDerivation.java): HKDF and
-                // SP800108HmacCounterKdf's static one-shot calls, and PasswordDeriveBytes's
-                // constructor, map directly to their KDF algorithm model node — the class itself
-                // *is* the KDF (mirrors the "KDF" -> PBKDF2 case above for Rfc2898DeriveBytes),
-                // unlike the ECDiffieHellman derive operations below (see that case's comment).
-                case "KDF_HKDF" -> Optional.of(new HKDF(detectionLocation));
-                case "KDF_SP800108" -> Optional.of(new KDFCounter(detectionLocation));
-                case "KDF_PASSWORD_DERIVE_BYTES" -> Optional.of(new PBKDF1(detectionLocation));
-                // Instance derive-operations on an already-identified KDF object
-                // (SP800108HmacCounterKdf.DeriveKey, PasswordDeriveBytes.GetBytes/
-                // CryptDeriveKey, and Rfc2898DeriveBytes.GetBytes/CryptDeriveKey — see
-                // DotNetRfc2898DeriveBytes.java): reuses the same generic KeyDerivation
-                // functionality node as the ECDiffieHellman derive operations below (Batch 3
-                // pattern), captured as a child of the already-typed KDF algorithm node rather
-                // than folded into it.
-                case "KDF_SP800108_DERIVE_KEY",
-                        "KDF_PDB_GET_BYTES",
-                        "KDF_PDB_CRYPT_DERIVE_KEY",
-                        "KDF_RFC2898_GET_BYTES",
-                        "KDF_RFC2898_CRYPT_DERIVE_KEY" ->
-                        Optional.of(new KeyDerivation(detectionLocation));
-                // ECDiffieHellman key-derivation operations (DotNetECDiffieHellman.java):
-                // no typed CipherAction.Action fits "derive a key", so each operation is
-                // captured with a generic ValueActionFactory under its own "kind" and
-                // dispatched here (see that class's javadoc for the full rationale).
-                case "ECDH_DERIVE_KEY_MATERIAL",
-                        "ECDH_DERIVE_KEY_FROM_HASH",
-                        "ECDH_DERIVE_KEY_FROM_HMAC",
-                        "ECDH_DERIVE_KEY_TLS" ->
-                        Optional.of(new KeyDerivation(detectionLocation));
-                // DeriveRawSecretAgreement returns the raw shared secret with no KDF
-                // post-processing, so it maps to the generic Generate functionality instead
-                // of KeyDerivation (mirroring how GenerateIV is translated in
-                // CSharpCipherContextTranslator).
-                case "ECDH_DERIVE_RAW_SECRET_AGREEMENT" ->
-                        Optional.of(new Generate(detectionLocation));
-                // X25519 DeriveRawSecretAgreement (DotNetX25519DiffieHellman.java): same
-                // reasoning as the ECDH case immediately above — raw shared secret, no KDF
-                // post-processing, so it maps to Generate rather than KeyDerivation.
-                case "X25519_DERIVE_RAW_SECRET_AGREEMENT" ->
-                        Optional.of(new Generate(detectionLocation));
-                default -> Optional.empty();
-            };
+            final Optional<INode> algorithm =
+                    switch (kind) {
+                        case "RSA" -> Optional.of(new RSA(detectionLocation));
+                        case "ECDSA" -> Optional.of(new ECDSA(detectionLocation));
+                        case "ECDH" -> Optional.of(new ECDH(detectionLocation));
+                        // X25519 (DotNetX25519DiffieHellman.java): reuses the existing X25519
+                        // mapper
+                        // model class (already used by the JCA XDH/X25519 and Go crypto/ecdh
+                        // translations) — no new mapper model class was needed. See that rule
+                        // class's
+                        // javadoc for why X25519DiffieHellman's API shape (no Create(), no
+                        // DeriveKeyMaterial/FromHash/FromHmac/Tls, no settable KeySize) differs
+                        // from
+                        // ECDiffieHellman's.
+                        case "X25519" -> Optional.of(new X25519(detectionLocation));
+                        case "DSA" -> Optional.of(new DSA(detectionLocation));
+                        // MGF1 (DotNetLegacyFormatters.java, PKCS1MaskGenerationMethod): reuses the
+                        // existing MGF1 mapper model class (already used by JcaMGFMapper/
+                        // JcaOAEPPaddingMapper for JCA's OAEP padding translation) — no new mapper
+                        // model
+                        // class was needed. KeyContext is reused here purely as the generic
+                        // "identify
+                        // which standalone algorithm was just constructed" context already used for
+                        // the
+                        // other cases in this switch, not because MGF1 is a "key" algorithm per se
+                        // — see
+                        // that rule class's javadoc for the full rationale.
+                        case "MGF1" -> Optional.of(new MGF1(detectionLocation));
+                        // ML-KEM (DotNetMLKem.java): generic top-level node. The parameter set
+                        // (when
+                        // captured — see the ParameterIdentifier branch below) is attached as a
+                        // child by
+                        // the tree-shape-preserving translation process, yielding "ML-KEM-768" etc.
+                        // via
+                        // MLKEM#asString(). Reuses the mapper model class already used by the JCA,
+                        // BouncyCastle and Go crypto/mlkem translations — no new model class
+                        // needed.
+                        case "KEM" -> Optional.of(new MLKEM(detectionLocation));
+                        // ML-DSA (DotNetMLDsa.java): generic top-level node, same shape as the
+                        // "KEM" case
+                        // above. The parameter set (when captured — see the ParameterIdentifier
+                        // branch
+                        // below) is attached as a child, yielding
+                        // "ML-DSA-44"/"ML-DSA-65"/"ML-DSA-87" via
+                        // MLDSA#asString(). Reuses the MLDSA mapper model class that already
+                        // existed
+                        // (added alongside MLKEM) — no new model class needed for plain ML-DSA.
+                        // "MLDSA_COMPOSITE" (CompositeMLDsa/CompositeMLDsaCng) intentionally maps
+                        // to the
+                        // very same MLDSA node: no composite/hybrid algorithm concept exists yet in
+                        // the
+                        // mapper model (verified: grep -rl "Composite\|Hybrid" mapper/ found
+                        // nothing), so
+                        // rather than fabricate one or drop the detection, the full
+                        // CompositeMLDsaAlgorithm
+                        // name (e.g. "MLDsa44WithECDsaP256") is captured verbatim as the
+                        // ParameterSetIdentifier below — see DotNetMLDsa's class javadoc for the
+                        // full
+                        // rationale and the recommendation for a future proper composite/hybrid
+                        // model.
+                        case "MLDSA", "MLDSA_COMPOSITE" ->
+                                Optional.of(new MLDSA(detectionLocation));
+                        // SLH-DSA (DotNetSlhDsa.java): generic top-level node, same shape as the
+                        // "MLDSA"
+                        // case above. The parameter set (when captured — see the
+                        // ParameterIdentifier
+                        // branch below) is attached as a child, yielding e.g. "SLH-DSA-SHA2-128s"
+                        // via
+                        // SPHINCSPlus#asString(). Reuses the SPHINCSPlus mapper model class that
+                        // already
+                        // existed (used by the BouncyCastle SPHINCSPlusSigner translation) — no new
+                        // model
+                        // class needed, per the class's "SLH-DSA .. Other Names: SPHINCS+"
+                        // documentation.
+                        case "SLHDSA" -> Optional.of(new SPHINCSPlus(detectionLocation));
+                        case "KDF" -> Optional.of(new PBKDF2(detectionLocation));
+                        // Key derivation functions (DotNetKeyDerivation.java): HKDF and
+                        // SP800108HmacCounterKdf's static one-shot calls, and PasswordDeriveBytes's
+                        // constructor, map directly to their KDF algorithm model node — the class
+                        // itself
+                        // *is* the KDF (mirrors the "KDF" -> PBKDF2 case above for
+                        // Rfc2898DeriveBytes),
+                        // unlike the ECDiffieHellman derive operations below (see that case's
+                        // comment).
+                        case "KDF_HKDF" -> Optional.of(new HKDF(detectionLocation));
+                        case "KDF_SP800108" -> Optional.of(new KDFCounter(detectionLocation));
+                        case "KDF_PASSWORD_DERIVE_BYTES" ->
+                                Optional.of(new PBKDF1(detectionLocation));
+                        // Instance derive-operations on an already-identified KDF object
+                        // (SP800108HmacCounterKdf.DeriveKey, PasswordDeriveBytes.GetBytes/
+                        // CryptDeriveKey, and Rfc2898DeriveBytes.GetBytes/CryptDeriveKey — see
+                        // DotNetRfc2898DeriveBytes.java): reuses the same generic KeyDerivation
+                        // functionality node as the ECDiffieHellman derive operations below (Batch
+                        // 3
+                        // pattern), captured as a child of the already-typed KDF algorithm node
+                        // rather
+                        // than folded into it.
+                        case "KDF_SP800108_DERIVE_KEY",
+                                "KDF_PDB_GET_BYTES",
+                                "KDF_PDB_CRYPT_DERIVE_KEY",
+                                "KDF_RFC2898_GET_BYTES",
+                                "KDF_RFC2898_CRYPT_DERIVE_KEY" ->
+                                Optional.of(new KeyDerivation(detectionLocation));
+                        // ECDiffieHellman key-derivation operations (DotNetECDiffieHellman.java):
+                        // no typed CipherAction.Action fits "derive a key", so each operation is
+                        // captured with a generic ValueActionFactory under its own "kind" and
+                        // dispatched here (see that class's javadoc for the full rationale).
+                        case "ECDH_DERIVE_KEY_MATERIAL",
+                                "ECDH_DERIVE_KEY_FROM_HASH",
+                                "ECDH_DERIVE_KEY_FROM_HMAC",
+                                "ECDH_DERIVE_KEY_TLS" ->
+                                Optional.of(new KeyDerivation(detectionLocation));
+                        // DeriveRawSecretAgreement returns the raw shared secret with no KDF
+                        // post-processing, so it maps to the generic Generate functionality instead
+                        // of KeyDerivation (mirroring how GenerateIV is translated in
+                        // CSharpCipherContextTranslator).
+                        case "ECDH_DERIVE_RAW_SECRET_AGREEMENT" ->
+                                Optional.of(new Generate(detectionLocation));
+                        // X25519 DeriveRawSecretAgreement (DotNetX25519DiffieHellman.java): same
+                        // reasoning as the ECDH case immediately above — raw shared secret, no KDF
+                        // post-processing, so it maps to Generate rather than KeyDerivation.
+                        case "X25519_DERIVE_RAW_SECRET_AGREEMENT" ->
+                                Optional.of(new Generate(detectionLocation));
+                        default -> Optional.empty();
+                    };
+            return algorithm.map(node -> asKeyMaterial(node, detectionContext));
         } else if (value instanceof KeySize<?> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
         } else if (value instanceof IterationCount<?> iterationCount) {
@@ -248,6 +296,24 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                 case DECAPSULATION -> Optional.of(new Decapsulate(detectionLocation));
                 default -> Optional.empty();
             };
+        } else if (value instanceof Curve<?> curve) {
+            // The ECCurve argument of ECDsa.Create / ECDiffieHellman.Create and of their Cng and
+            // OpenSsl constructors, resolved to the ECCurve.NamedCurves member name (e.g.
+            // "nistP256"), or the friendly name passed to ECCurve.CreateFromFriendlyName.
+            return Optional.of(new EllipticCurve(curve.asString(), detectionLocation));
+        } else if (value instanceof SaltSize<?> saltSize) {
+            // Salt length of a password-based derivation, captured either from the length of a
+            // byte[] salt argument or from an explicit saltSize argument — see
+            // DotNetRfc2898DeriveBytes and DotNetKeyDerivation.
+            return Optional.of(new SaltLength(saltSize.getValue(), detectionLocation));
+        } else if (value instanceof Algorithm<?>
+                && isKeyDerivationKind(detectionContext.get("kind").orElse(""))) {
+            // The HashAlgorithmName parameter of a key derivation function: the pseudo-random
+            // function of PBKDF2, the extract/expand hash of HKDF, or the PRF of
+            // SP800108HmacCounterKdf. Guarded by the rule's "kind" so it precedes the general
+            // Algorithm branch below, which resolves a *provider* name string
+            // (AsymmetricAlgorithm.Create) and would otherwise consume the hash name.
+            return DotNetHashAlgorithmNames.parseAsNode(value.asString(), detectionLocation);
         } else if (value instanceof Algorithm<?>) {
             // AsymmetricAlgorithm.Create(string) — string table verified against the official API
             // reference (learn.microsoft.com), see DotNetAlgorithmFactory javadoc. Unlike the
@@ -266,6 +332,30 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
                         "ECDIFFIEHELLMANCNG",
                         "SYSTEM.SECURITY.CRYPTOGRAPHY.ECDIFFIEHELLMANCNG" ->
                         Optional.of(new ECDH(detectionLocation));
+                // CngAlgorithm static properties, as passed to CngKey.Create(CngAlgorithm) — see
+                // DotNetCngKey. The curve-specific spellings state the curve as unambiguously as
+                // ECCurve.NamedCurves.nistP384 does, so the curve is attached as well.
+                case "ECDSAP256" ->
+                        Optional.of(
+                                new ECDSA(
+                                        new EllipticCurve("nistP256", detectionLocation),
+                                        detectionLocation));
+                case "ECDSAP384" ->
+                        Optional.of(
+                                new ECDSA(
+                                        new EllipticCurve("nistP384", detectionLocation),
+                                        detectionLocation));
+                case "ECDSAP521" ->
+                        Optional.of(
+                                new ECDSA(
+                                        new EllipticCurve("nistP521", detectionLocation),
+                                        detectionLocation));
+                case "ECDIFFIEHELLMANP256" ->
+                        Optional.of(new ECDH(new EllipticCurve("nistP256", detectionLocation)));
+                case "ECDIFFIEHELLMANP384" ->
+                        Optional.of(new ECDH(new EllipticCurve("nistP384", detectionLocation)));
+                case "ECDIFFIEHELLMANP521" ->
+                        Optional.of(new ECDH(new EllipticCurve("nistP521", detectionLocation)));
                 // System.Security.Cryptography.AsymmetricAlgorithm has no concrete algorithm of
                 // its own per the official reference table — intentionally left unresolved.
                 default -> Optional.empty();
@@ -273,5 +363,91 @@ public final class CSharpKeyContextTranslator implements IContextTranslation<CSh
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Whether a rule "kind" denotes a key derivation function, i.e. one whose {@code
+     * HashAlgorithmName} parameter names the derivation's pseudo-random function rather than a
+     * provider or a signature digest. This covers the PBKDF2, PBKDF1, HKDF and SP800-108 rules as
+     * well as the two ECDH derive methods that take a hash.
+     */
+    private static boolean isKeyDerivationKind(@Nonnull String kind) {
+        return switch (kind) {
+            case "KDF",
+                    "KDF_HKDF",
+                    "KDF_SP800108",
+                    "KDF_PASSWORD_DERIVE_BYTES",
+                    "KDF_SP800108_DERIVE_KEY",
+                    "KDF_PDB_GET_BYTES",
+                    "KDF_PDB_CRYPT_DERIVE_KEY",
+                    "KDF_RFC2898_GET_BYTES",
+                    "KDF_RFC2898_CRYPT_DERIVE_KEY",
+                    "ECDH_DERIVE_KEY_FROM_HASH",
+                    "ECDH_DERIVE_KEY_FROM_HMAC" ->
+                    true;
+            default -> false;
+        };
+    }
+
+    /**
+     * Wraps an algorithm in the key node its detection context asks for.
+     *
+     * <p>A key node is only ever produced where the detected expression <em>yields a key</em>, and
+     * only where the source itself says which kind of key: {@code cert.GetRSAPrivateKey()} returns
+     * the private key and says so in its name, {@code HKDF.DeriveKey(...)} returns derived secret
+     * key material. Those are the sites whose rules carry a {@link PrivateKeyContext}, {@link
+     * PublicKeyContext} or {@link SecretKeyContext}; every other rule keeps the plain {@link
+     * com.ibm.engine.model.context.KeyContext} and is returned unchanged here.
+     *
+     * <p>Deliberately <em>not</em> given a key kind, because the source does not state one:
+     *
+     * <ul>
+     *   <li>{@code RSA.Create()} / {@code ECDsa.Create()} — these hold a key <em>pair</em>, not a
+     *       single key, so neither "private" nor "public" is the truth.
+     *   <li>{@code ImportParameters(RSAParameters)} — the struct carries the private components (D,
+     *       P, Q) only when it was filled with them, which is not decidable from the syntax.
+     *   <li>{@code ImportFromPem(...)} / {@code FromXmlString(...)} — the PEM label or XML content
+     *       decides at run time whether this is a private or a public key.
+     *   <li>{@code CngKey.Open(...)} — a handle into the key store, of unstated kind.
+     * </ul>
+     *
+     * <p>{@link SecretKeyContext} is supported here but no .NET rule uses it yet, and that is a
+     * measured decision rather than an omission. The obvious candidates are the KDF calls that
+     * return key material ({@code HKDF.DeriveKey}, {@code Rfc2898DeriveBytes.Pbkdf2}), which is
+     * where JCA puts it via {@code SecretKeyFactory.generateSecret}. In JCA the algorithm's own
+     * properties arrive through a depending rule on the key-spec parameter and so attach to the
+     * algorithm; the .NET rules take hash, salt and iteration count as parameters of the root rule
+     * itself, so those children attach to whatever the root node is. Wrapping therefore moves the
+     * digest and the salt off the algorithm and turns {@code HKDF-SHA-256} back into a bare {@code
+     * HKDF} — a loss of exactly the detail these rules exist to capture. Symmetric keys need no
+     * rule of their own either: {@code SecretKeyEnricher} already promotes any {@link Key} holding
+     * a block cipher or an AEAD to a {@link SecretKey}, so a future rule that genuinely yields a
+     * symmetric key object gets one for free.
+     *
+     * <p>The wrapper is applied to algorithms only. Several {@code kind} values translate to a
+     * {@link com.ibm.mapper.model.functionality.Functionality} node that belongs under an
+     * already-typed algorithm — {@code Rfc2898DeriveBytes.GetBytes} is one — and wrapping such a
+     * child in a key would misplace it.
+     *
+     * <p>A bare {@link Key} is never produced: {@code RelatedCryptoMaterialComponentBuilder} maps
+     * it to CycloneDX {@code secret-key}, which would mislabel an asymmetric key as symmetric key
+     * material.
+     */
+    @Nonnull
+    private static INode asKeyMaterial(
+            @Nonnull INode node, @Nonnull DetectionContext detectionContext) {
+        if (!(node instanceof IAlgorithm algorithm)) {
+            return node;
+        }
+        if (detectionContext.is(PrivateKeyContext.class)) {
+            return new PrivateKey(new Key(algorithm));
+        }
+        if (detectionContext.is(PublicKeyContext.class)) {
+            return new PublicKey(new Key(algorithm));
+        }
+        if (detectionContext.is(SecretKeyContext.class)) {
+            return new SecretKey(new Key(algorithm));
+        }
+        return node;
     }
 }

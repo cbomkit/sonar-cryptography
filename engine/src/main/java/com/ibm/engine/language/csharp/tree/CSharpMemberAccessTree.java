@@ -33,27 +33,50 @@ import javax.annotation.Nonnull;
  *   new Rfc2898DeriveBytes(pwd, salt, iter, HashAlgorithmName.SHA256);
  * </pre>
  *
- * <p>The {@code typeName} and {@code memberName} allow the detection engine to implement {@link
- * com.ibm.engine.language.ILanguageTranslation#getEnumClassName} and {@link
- * com.ibm.engine.language.ILanguageTranslation#getEnumIdentifierName}.
+ * <p>C# member access chains can be arbitrarily deep ({@code A.B.C.D}). This node keeps the full
+ * dotted chain: {@link #getRootType()} is the leftmost segment ({@code "ECCurve"}), {@link
+ * #getQualifier()} is everything up to (but excluding) the final segment ({@code
+ * "ECCurve.NamedCurves"}), and {@link #getMemberName()} is the final segment ({@code "nistP256"}) —
+ * the one that should be used as the resolved value. Earlier versions of this class only kept the
+ * first two segments, which meant a three-level chain like {@code ECCurve.NamedCurves.nistP256}
+ * resolved to the meaningless middle segment {@code "NamedCurves"} instead of the actual curve
+ * name.
+ *
+ * <p>{@link #getTypeName()} is kept as an alias of {@link #getRootType()} for the two-level case
+ * ({@code CipherMode.CBC}), which is by far the most common shape and is what most existing
+ * detection rules and {@code ILanguageTranslation#getEnumClassName} rely on.
  */
 public final class CSharpMemberAccessTree implements CSharpTree {
 
     private final int line;
     private final int column;
 
-    /** The qualifier/type name (e.g. "CipherMode", "HashAlgorithmName", "ECCurve"). */
-    @Nonnull private final String typeName;
+    /** The leftmost segment of the chain (e.g. "ECCurve", "CipherMode"). */
+    @Nonnull private final String rootType;
 
-    /** The member name (e.g. "CBC", "SHA256", "nistP256"). */
+    /** Everything up to (but excluding) the final segment (e.g. "ECCurve.NamedCurves"). */
+    @Nonnull private final String qualifier;
+
+    /** The final segment — the member/value name (e.g. "nistP256", "CBC", "SHA256"). */
     @Nonnull private final String memberName;
 
     public CSharpMemberAccessTree(
-            int line, int column, @Nonnull String typeName, @Nonnull String memberName) {
+            int line,
+            int column,
+            @Nonnull String rootType,
+            @Nonnull String qualifier,
+            @Nonnull String memberName) {
         this.line = line;
         this.column = column;
-        this.typeName = typeName;
+        this.rootType = rootType;
+        this.qualifier = qualifier;
         this.memberName = memberName;
+    }
+
+    /** Convenience constructor for a simple two-level access ({@code Type.Member}). */
+    public CSharpMemberAccessTree(
+            int line, int column, @Nonnull String typeName, @Nonnull String memberName) {
+        this(line, column, typeName, typeName, memberName);
     }
 
     @Override
@@ -69,12 +92,23 @@ public final class CSharpMemberAccessTree implements CSharpTree {
     @Nonnull
     @Override
     public String getText() {
-        return typeName + "." + memberName;
+        return qualifier + "." + memberName;
+    }
+
+    /** Alias of {@link #getRootType()}, kept for the common two-level-access call sites. */
+    @Nonnull
+    public String getTypeName() {
+        return rootType;
     }
 
     @Nonnull
-    public String getTypeName() {
-        return typeName;
+    public String getRootType() {
+        return rootType;
+    }
+
+    @Nonnull
+    public String getQualifier() {
+        return qualifier;
     }
 
     @Nonnull

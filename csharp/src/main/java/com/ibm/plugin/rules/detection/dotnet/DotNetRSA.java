@@ -27,8 +27,10 @@ import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.CipherActionFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
+import com.ibm.engine.model.factory.PaddingFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
@@ -60,9 +62,22 @@ import javax.annotation.Nonnull;
  * fires these rules on every matching method call, regardless of the concrete RSA subclass. Method
  * overloads that only differ by array-vs-{@code Span}, offset/length, or output-buffer parameters
  * are intentionally collapsed into a single {@code withAnyParameters()} rule per method name: the
- * ANTLR4-based C# engine cannot resolve parameter types (see {@code CSharpLanguageTranslation}), so
- * distinguishing overloads by parameter type is not possible, and none of the extra parameters
- * carry additional cryptographic information worth extracting.
+ * ANTLR4-based C# engine cannot resolve parameter <em>types</em> (see {@code
+ * CSharpLanguageTranslation}), so distinguishing these overloads that way is not possible, and none
+ * of the extra parameters carry additional cryptographic information worth extracting.
+ *
+ * <p>The single-argument creation overloads are different: {@code RSA.Create(int)} / {@code
+ * RSA.Create(string)} and the {@code int}-sized constructor overloads of {@code
+ * RSACryptoServiceProvider}/{@code RSACng}/{@code RSAOpenSsl} <em>do</em> carry information worth
+ * extracting (the key size, or — for the obsolete {@code Create(string)} — the concrete algorithm
+ * name), and the engine can now resolve a literal, a local variable, or a {@code const} passed at
+ * that position (see {@code CSharpDetectionEngine}). Since the engine still cannot distinguish the
+ * overloads by declared type, one rule per arity captures whichever shape the resolved value
+ * actually turns out to be — an {@code Integer} becomes a {@code KeySize}, and for {@code
+ * RSA.Create} specifically a {@code String} becomes an {@code Algorithm} (via {@link
+ * com.ibm.plugin.rules.detection.dotnet.factory.DotNetKeySizeOrAlgorithmFactory}); an unresolvable
+ * struct-typed argument (an {@code RSAParameters}, {@code CspParameters}, or {@code CngKey}
+ * variable) simply yields no value, exactly as if nothing had been captured at all.
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
@@ -97,7 +112,11 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Encrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("padding", "RSAEncryptionPadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -109,7 +128,11 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Decrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("padding", "RSAEncryptionPadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -121,7 +144,12 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TryEncrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.ENCRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("padding", "RSAEncryptionPadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -133,7 +161,12 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TryDecrypt")
                     .shouldBeDetectedAs(new CipherActionFactory<>(CipherAction.Action.DECRYPT))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("padding", "RSAEncryptionPadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new CipherContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -143,10 +176,11 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Signing / verification operation rules
-    // Each rule covers every overload of the given method name (arities vary only
-    // by hash-algorithm / signature-padding / offset-length / output-buffer
-    // parameters, which are not individually tracked), mirroring the DSA
-    // SignData()/VerifyData() rules. Note that RSA has no TryVerifyData/
+    // Each rule covers every overload of the given method name. Both the HashAlgorithmName and
+    // the RSASignaturePadding are found by declared type, so they are captured whether they sit at
+    // indices one and two, as in SignData(data, hashAlgorithm, padding), or at indices three and
+    // four, as in SignData(data, offset, count, hashAlgorithm, padding).
+    // Note that RSA has no TryVerifyData/
     // TryVerifyHash methods (verification returns a bool directly, so there is no
     // output buffer to size).
     // =========================================================================
@@ -158,7 +192,15 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("SignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -170,7 +212,15 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TrySignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -182,7 +232,13 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("SignHash")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hash", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -194,7 +250,15 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TrySignHash")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hash", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -206,7 +270,16 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("VerifyData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("signature", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -218,7 +291,14 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("VerifyHash")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("hash", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("padding", "RSASignaturePadding")
+                    .shouldBeDetectedAs(new PaddingFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("signature", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -249,59 +329,157 @@ public final class DotNetRSA extends DetectionRuleSet<CSharpTree> {
     // Primary creation rules
     // =========================================================================
 
-    // RSA.Create() / RSA.Create(int) / RSA.Create(RSAParameters) / RSA.Create(string)
-    private static final IDetectionRule<CSharpTree> RSA_CREATE =
+    // RSA.Create()
+    private static final IDetectionRule<CSharpTree> RSA_CREATE_DEFAULT =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("RSA")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "RSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(RSA_DEPENDING_RULES);
 
-    // new RSACryptoServiceProvider() / (int) / (CspParameters) / (int, CspParameters)
-    private static final IDetectionRule<CSharpTree> RSA_CRYPTO_SERVICE_PROVIDER =
+    // RSA.Create(int keySizeInBits) / RSA.Create(string algName) [obsolete] /
+    // RSA.Create(RSAParameters) — one rule covering all three single-argument overloads: the
+    // engine cannot distinguish them by declared parameter type (see CSharpLanguageTranslation's
+    // class javadoc). Only the int overload carries information worth extracting here — unlike the
+    // generic AsymmetricAlgorithm.Create(string) (see DotNetAlgorithmFactory), RSA.Create(string)'s
+    // algName always yields an RSA instance regardless of its value (historically a CSP provider
+    // name, not an algorithm choice), so it is not translated into an Algorithm. A resolvable
+    // string or an unresolvable RSAParameters/algName variable both correctly yield no KeySize.
+    private static final IDetectionRule<CSharpTree> RSA_CREATE_WITH_ARG =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RSA")
+                    .forMethods("Create")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(RSA_DEPENDING_RULES);
+
+    // new RSACryptoServiceProvider()
+    private static final IDetectionRule<CSharpTree> RSA_CSP_DEFAULT =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("RSACryptoServiceProvider")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "RSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(RSA_DEPENDING_RULES);
 
-    // new RSACng() / new RSACng(CngKey) / new RSACng(int) — CNG-backed implementation.
-    // Uses withAnyParameters() to avoid double-detection that would occur if a separate
-    // withoutParameters() rule were added alongside this one (see AES_CNG_NAMED).
-    private static final IDetectionRule<CSharpTree> RSA_CNG =
+    // new RSACryptoServiceProvider(int dwKeySize) / (CspParameters) — a CspParameters argument
+    // simply never resolves to an Integer, so KeySizeFactory correctly yields nothing for it.
+    private static final IDetectionRule<CSharpTree> RSA_CSP_WITH_ARG =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RSACryptoServiceProvider")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(RSA_DEPENDING_RULES);
+
+    // new RSACryptoServiceProvider(int dwKeySize, CspParameters parameters)
+    private static final IDetectionRule<CSharpTree> RSA_CSP_WITH_KEY_SIZE_AND_PARAMS =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RSACryptoServiceProvider")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withMethodParameter(MethodMatcher.ANY) // CspParameters
+                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(RSA_DEPENDING_RULES);
+
+    // new RSACng() — CNG-backed implementation.
+    private static final IDetectionRule<CSharpTree> RSA_CNG_DEFAULT =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("RSACng")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "RSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(RSA_DEPENDING_RULES);
 
-    // new RSAOpenSsl() / (int) / (IntPtr) / (RSAParameters) / (SafeEvpPKeyHandle)
-    private static final IDetectionRule<CSharpTree> RSA_OPENSSL =
+    // new RSACng(CngKey) / new RSACng(int keySizeInBits) — a CngKey argument never resolves to an
+    // Integer, so KeySizeFactory correctly yields nothing for it.
+    private static final IDetectionRule<CSharpTree> RSA_CNG_WITH_ARG =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RSACng")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(RSA_DEPENDING_RULES);
+
+    // new RSAOpenSsl()
+    private static final IDetectionRule<CSharpTree> RSA_OPENSSL_DEFAULT =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes("RSAOpenSsl")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
-                    .withAnyParameters()
+                    .withoutParameters()
                     .buildForContext(new KeyContext(Map.of("kind", "RSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(RSA_DEPENDING_RULES);
 
+    // new RSAOpenSsl(int keySizeInBits) / (IntPtr) / (RSAParameters) / (SafeEvpPKeyHandle) — only
+    // the int overload ever resolves to an Integer; the others correctly yield nothing.
+    private static final IDetectionRule<CSharpTree> RSA_OPENSSL_WITH_ARG =
+            new DetectionRuleBuilder<CSharpTree>()
+                    .createDetectionRule()
+                    .forObjectTypes("RSAOpenSsl")
+                    .forMethods("<init>")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("RSA"))
+                    .withMethodParameter(MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .buildForContext(new KeyContext(Map.of("kind", "RSA")))
+                    .inBundle(() -> "DotNet")
+                    .withDependingDetectionRules(RSA_DEPENDING_RULES);
+
+    /**
+     * The operations inherited from {@code RSA}/{@code AsymmetricAlgorithm}, for reuse by other
+     * entry points into an RSA object — notably {@link DotNetCertificateKeys}, where the key comes
+     * from a certificate instead of a {@code Create()} call.
+     */
+    @Nonnull
+    static List<IDetectionRule<CSharpTree>> dependingRules() {
+        return RSA_DEPENDING_RULES;
+    }
+
     @Nonnull
     @Override
     protected List<IDetectionRule<CSharpTree>> buildRules() {
-        return List.of(RSA_CREATE, RSA_CRYPTO_SERVICE_PROVIDER, RSA_CNG, RSA_OPENSSL);
+        return List.of(
+                RSA_CREATE_DEFAULT,
+                RSA_CREATE_WITH_ARG,
+                RSA_CSP_DEFAULT,
+                RSA_CSP_WITH_ARG,
+                RSA_CSP_WITH_KEY_SIZE_AND_PARAMS,
+                RSA_CNG_DEFAULT,
+                RSA_CNG_WITH_ARG,
+                RSA_OPENSSL_DEFAULT,
+                RSA_OPENSSL_WITH_ARG);
     }
 }

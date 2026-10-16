@@ -25,6 +25,7 @@ import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
@@ -113,7 +114,13 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("SignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -125,7 +132,13 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TrySignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -149,7 +162,14 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("VerifyData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("signature", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -163,7 +183,10 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("SignHash")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("rgbHash", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("str", "string")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -177,7 +200,11 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("VerifyHash")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("rgbHash", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("str", "string")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("rgbSignature", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -210,7 +237,9 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("DSA")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("keySizeInBits", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(DSA_DEPENDING_RULES);
@@ -222,7 +251,9 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("DSACng")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("keySizeInBits", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(DSA_DEPENDING_RULES);
@@ -234,7 +265,10 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("DSACryptoServiceProvider")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("keySizeInBits", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("parameters", MethodMatcher.ANY)
                     .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(DSA_DEPENDING_RULES);
@@ -246,7 +280,9 @@ public final class DotNetDSA extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("DSAOpenSsl")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("DSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("keySizeInBits", "int")
+                    .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BIT))
+                    .asChildOfParameterWithId(-1)
                     .buildForContext(new KeyContext(Map.of("kind", "DSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(DSA_DEPENDING_RULES);

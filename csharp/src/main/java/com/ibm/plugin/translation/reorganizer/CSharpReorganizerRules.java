@@ -20,7 +20,16 @@
 package com.ibm.plugin.translation.reorganizer;
 
 import com.ibm.mapper.model.BlockCipher;
+import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.PrivateKey;
+import com.ibm.mapper.model.PublicKey;
+import com.ibm.mapper.model.PublicKeyEncryption;
+import com.ibm.mapper.model.SecretKey;
+import com.ibm.mapper.model.functionality.Decrypt;
+import com.ibm.mapper.model.functionality.Encrypt;
+import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.rules.CipherSuiteReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
@@ -39,12 +48,38 @@ public final class CSharpReorganizerRules {
 
     @Nonnull
     public static List<IReorganizerRule> rules() {
-        return Stream.of(
-                        SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
-                        KeyDerivationReorganizer.moveModeFromParentToNode(BlockCipher.class),
-                        KeyDerivationReorganizer.moveModeFromParentToNode(MessageDigest.class),
-                        CipherSuiteReorganizer.REPLACE_TLS_WITH_VERSIONED_CHILD,
-                        PaddingReorganizer.MOVE_OAEP_UNDER_ALGORITHM)
+        return Stream.concat(
+                        Stream.of(
+                                SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
+                                KeyDerivationReorganizer.moveModeFromParentToNode(
+                                        BlockCipher.class),
+                                KeyDerivationReorganizer.moveModeFromParentToNode(
+                                        MessageDigest.class),
+                                CipherSuiteReorganizer.REPLACE_TLS_WITH_VERSIONED_CHILD,
+                                PaddingReorganizer.MOVE_OAEP_UNDER_ALGORITHM),
+                        paddingLifts())
                 .toList();
+    }
+
+    /**
+     * .NET names a padding on the operation rather than on the creation, so it arrives under the
+     * functionality node. Lift it onto the algorithm for every shape that can carry one, otherwise
+     * the CBOM reports the algorithm without its padding.
+     */
+    @Nonnull
+    private static Stream<IReorganizerRule> paddingLifts() {
+        return Stream.of(
+                        PublicKeyEncryption.class,
+                        Key.class,
+                        PrivateKey.class,
+                        PublicKey.class,
+                        SecretKey.class)
+                .flatMap(
+                        holder ->
+                                Stream.of(Encrypt.class, Decrypt.class, Sign.class, Verify.class)
+                                        .map(
+                                                functionality ->
+                                                        PaddingReorganizer.movePaddingToAlgorithm(
+                                                                holder, functionality)));
     }
 }

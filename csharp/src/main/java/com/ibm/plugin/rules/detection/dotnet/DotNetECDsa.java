@@ -25,12 +25,15 @@ import com.ibm.engine.model.SignatureAction;
 import com.ibm.engine.model.Size;
 import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.SignatureContext;
+import com.ibm.engine.model.factory.AlgorithmFactory;
 import com.ibm.engine.model.factory.KeySizeFactory;
 import com.ibm.engine.model.factory.SignatureActionFactory;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
+import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
+import com.ibm.plugin.rules.detection.dotnet.factory.DotNetEcKeySizeOrCurveFactory;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -52,15 +55,25 @@ import javax.annotation.Nonnull;
  * {@code KeySize} property, {@code SignData}/{@code VerifyData}, {@code SignHash}/{@code
  * VerifyHash}, and their {@code Try*} variants) are expressed as <em>depending rules</em> attached
  * to each primary creation rule. The detection engine tracks the variable and fires these rules on
- * every matching method call, regardless of the concrete ECDsa subclass. Method overloads that only
- * differ by array-vs-{@code Span}, offset/length, {@code DSASignatureFormat}, or output-buffer
- * parameters are intentionally collapsed into a single {@code withAnyParameters()} rule per method
- * name: the ANTLR4-based C# engine cannot resolve parameter types (see {@code
- * CSharpLanguageTranslation}), so distinguishing overloads by parameter type is not possible, and
- * none of the extra parameters carry additional cryptographic information worth extracting. Unlike
- * RSA, ECDSA has no encrypt/decrypt operations — it is signature-only. Per the {@code ECDsa} API
- * reference, there are no {@code TryVerifyData}/{@code TryVerifyHash} methods (verification returns
- * a bool directly, so there is no output buffer to size), mirroring RSA.
+ * every matching method call, regardless of the concrete ECDsa subclass.
+ *
+ * <p>Each method is covered by one rule whose parameters are declared by their .NET names, so that
+ * rule accepts every overload of the method and no call can be detected twice (see {@code
+ * CSharpNamedArgumentBinder}). Two things are captured. The single argument of the creation calls
+ * is read by value, because .NET puts an {@code int} key size, an {@code ECCurve}, an {@code
+ * ECParameters}, a {@code string} provider name and a {@code CngKey} in that one position; see
+ * {@code DotNetEcKeySizeOrCurveFactory}. And the {@code HashAlgorithmName} of a signing call is
+ * attached to the sign or verify action, found by declared type rather than by position, because
+ * the overloads move it between index one and index four.
+ *
+ * <p>{@code SignHash}, {@code TrySignHash} and {@code VerifyHash} take an already-computed hash and
+ * name no algorithm, so they carry no digest. The overloads that differ only by array against
+ * {@code Span}, by offset and length, or by an output buffer need no distinction: those positions
+ * hold no cryptographic information beyond what is already captured.
+ *
+ * <p>Unlike RSA, ECDSA has no encrypt/decrypt operations — it is signature-only. Per the {@code
+ * ECDsa} API reference, there are no {@code TryVerifyData}/{@code TryVerifyHash} methods
+ * (verification returns a bool directly, so there is no output buffer to size), mirroring RSA.
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
@@ -83,10 +96,9 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
 
     // =========================================================================
     // Signing / verification operation rules
-    // Each rule covers every overload of the given method name (arities vary only
-    // by hash-algorithm / DSASignatureFormat / offset-length / output-buffer
-    // parameters, which are not individually tracked), mirroring the RSA/DSA
-    // SignData()/VerifyData() rules.
+    // Each rule covers every overload of the given method name. The HashAlgorithmName is found
+    // by declared type, so it is captured whether it sits at index one, as in SignData(data,
+    // hashAlgorithm), or at index three, as in SignData(data, offset, count, hashAlgorithm).
     // =========================================================================
 
     // ecdsa.SignData(data, hashAlgorithm[, format]) [+ offset/length or Stream overloads]
@@ -96,7 +108,13 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("SignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -108,7 +126,13 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("TrySignData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.SIGN))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("destination", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("bytesWritten", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -146,7 +170,14 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("VerifyData")
                     .shouldBeDetectedAs(new SignatureActionFactory<>(SignatureAction.Action.VERIFY))
-                    .withAnyParameters()
+                    .withNamedMethodParameter("data", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("hashAlgorithm", "HashAlgorithmName")
+                    .shouldBeDetectedAs(new AlgorithmFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("signature", MethodMatcher.ANY)
+                    .withOptionalNamedMethodParameter("offset", "int")
+                    .withOptionalNamedMethodParameter("count", "int")
+                    .withOptionalNamedMethodParameter("signatureFormat", MethodMatcher.ANY)
                     .buildForContext(new SignatureContext())
                     .inBundle(() -> "DotNet")
                     .withoutDependingDetectionRules();
@@ -190,7 +221,10 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDsa")
                     .forMethods("Create")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDSA_DEPENDING_RULES);
@@ -205,7 +239,10 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDsaCng")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDSA_DEPENDING_RULES);
@@ -219,7 +256,10 @@ public final class DotNetECDsa extends DetectionRuleSet<CSharpTree> {
                     .forObjectTypes("ECDsaOpenSsl")
                     .forMethods("<init>")
                     .shouldBeDetectedAs(new ValueActionFactory<>("ECDSA"))
-                    .withAnyParameters()
+                    .withOptionalNamedMethodParameter("curve", MethodMatcher.ANY)
+                    .shouldBeDetectedAs(new DotNetEcKeySizeOrCurveFactory<>())
+                    .asChildOfParameterWithId(-1)
+                    .addDependingDetectionRules(RuleSets.rulesOf(DotNetEcCurve.class))
                     .buildForContext(new KeyContext(Map.of("kind", "ECDSA")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(ECDSA_DEPENDING_RULES);

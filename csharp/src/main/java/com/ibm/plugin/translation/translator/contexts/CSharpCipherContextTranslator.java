@@ -29,6 +29,8 @@ import com.ibm.mapper.mapper.jca.JcaPaddingMapper;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
+import com.ibm.mapper.model.NonceLength;
+import com.ibm.mapper.model.TagLength;
 import com.ibm.mapper.model.algorithms.*;
 import com.ibm.mapper.model.functionality.*;
 import com.ibm.mapper.utils.DetectionLocation;
@@ -115,6 +117,15 @@ public final class CSharpCipherContextTranslator
             };
         } else if (value instanceof KeySize<?> keySize) {
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
+        } else if (value instanceof TagSize<?> tagSize) {
+            // The authentication tag length of AES-GCM / AES-CCM / ChaCha20-Poly1305, taken either
+            // from the tagSizeInBytes constructor argument or from the length of the tag buffer
+            // passed to Encrypt or Decrypt.
+            return Optional.of(new TagLength(tagSize.getValue(), detectionLocation));
+        } else if (value instanceof InitializationVectorSize<?> ivSize) {
+            // The nonce length of an AEAD call. AES-GCM's 12-byte nonce is the conventional one and
+            // anything else is worth recording, which is why this is captured rather than assumed.
+            return Optional.of(new NonceLength(ivSize.getValue(), detectionLocation));
         } else if (value instanceof OperationMode<?> operationMode) {
             JcaCipherOperationModeMapper operationModeMapper = new JcaCipherOperationModeMapper();
             return operationModeMapper
@@ -125,9 +136,19 @@ public final class CSharpCipherContextTranslator
             JcaModeMapper modeMapper = new JcaModeMapper();
             return modeMapper.parse(mode.asString(), detectionLocation).map(m -> m);
         } else if (value instanceof Padding<?> padding) {
-            // From set_Padding property setter: PaddingMode.PKCS7 → "PKCS7"
-            JcaPaddingMapper paddingMapper = new JcaPaddingMapper();
-            return paddingMapper.parse(padding.asString(), detectionLocation).map(p -> p);
+            // Two sources reach this branch. RSAEncryptionPadding.OaepSHA256 and its siblings are
+            // .NET spellings that the shared JCA mapper does not recognize, so they are resolved
+            // first by DotNetPaddingNames, which also keeps the OAEP digest. PaddingMode.PKCS7 and
+            // the other symmetric padding modes fall through to the JCA mapper, whose names they
+            // share.
+            return DotNetPaddingNames.parse(padding.asString(), detectionLocation)
+                    .or(
+                            () -> {
+                                JcaPaddingMapper paddingMapper = new JcaPaddingMapper();
+                                return paddingMapper
+                                        .parse(padding.asString(), detectionLocation)
+                                        .map(p -> p);
+                            });
         } else if (value instanceof Algorithm<?>) {
             // SymmetricAlgorithm.Create(string) — unlike its four sibling Create(string) overloads
             // (HashAlgorithm/KeyedHashAlgorithm/HMAC/AsymmetricAlgorithm), the official API

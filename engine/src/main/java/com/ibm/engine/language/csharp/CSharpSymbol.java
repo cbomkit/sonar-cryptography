@@ -25,15 +25,20 @@ import javax.annotation.Nonnull;
  * Minimal symbol representation for C# detection.
  *
  * <p>Since the ANTLR4 grammar does not provide semantic symbol resolution (no type inference), this
- * class holds only the identifier name. Full symbol tracking across scopes is not supported in the
- * current implementation.
+ * class holds only the identifier name plus the source line where it was created (the line of the
+ * {@code var x = ...}/{@code x = ...} statement that produced the tracked value). The declaration
+ * line lets {@code CSharpDetectionEngine#isInvocationOnVariable} refuse to match a call that
+ * textually precedes the creation it is supposedly a member of — see that method's guard against
+ * matching {@code x.Foo()} written before {@code var x = ...} in the same (flattened) block.
  */
 public final class CSharpSymbol {
 
     @Nonnull private final String name;
+    private final int declarationLine;
 
-    public CSharpSymbol(@Nonnull String name) {
+    public CSharpSymbol(@Nonnull String name, int declarationLine) {
         this.name = name;
+        this.declarationLine = declarationLine;
     }
 
     @Nonnull
@@ -41,8 +46,13 @@ public final class CSharpSymbol {
         return name;
     }
 
+    /** The line of the statement that assigned this symbol's tracked value. */
+    public int getDeclarationLine() {
+        return declarationLine;
+    }
+
     @Override
     public String toString() {
-        return "CSharpSymbol{" + name + "}";
+        return "CSharpSymbol{" + name + "@" + declarationLine + "}";
     }
 }
