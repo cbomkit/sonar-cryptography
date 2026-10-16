@@ -20,7 +20,6 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mac;
@@ -71,6 +70,10 @@ public final class KMAC extends Algorithm implements MessageDigest {
         this.put(new CSHAKE(detectionLocation));
     }
 
+    /**
+     * The parameter set identifier (128 or 256) denotes the security strength only. The output
+     * length is independent of it and its default differs between libraries, so it is not modelled.
+     */
     public KMAC(int parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
         /* KMAC is a hash function mostly used as a MAC */
         super(NAME, Mac.class, detectionLocation);
@@ -78,7 +81,6 @@ public final class KMAC extends Algorithm implements MessageDigest {
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
         this.put(new CSHAKE(parameterSetIdentifier, detectionLocation));
-        this.put(new DigestSize(2 * parameterSetIdentifier, detectionLocation));
     }
 
     public KMAC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull KMAC kmac) {

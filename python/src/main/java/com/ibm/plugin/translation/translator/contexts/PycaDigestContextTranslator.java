@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
+import com.ibm.engine.model.DigestSize;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
@@ -41,7 +43,13 @@ public final class PycaDigestContextTranslator implements IContextTranslation<Tr
             @Nonnull IValue<Tree> value,
             @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> || value instanceof com.ibm.engine.model.Algorithm) {
+        if (value instanceof DigestSize<Tree> digestSize) {
+            // Detected truncation parameter (e.g. SHA512.new(truncate=224)):
+            // produce a DigestSize node; a reorganizer rule will reshape the parent.
+            return Optional.of(
+                    new com.ibm.mapper.model.DigestSize(digestSize.getValue(), detectionLocation));
+        }
+        if (value instanceof ValueAction<Tree> || value instanceof Algorithm) {
             final PycaDigestMapper pycaDigestMapper = new PycaDigestMapper();
             return pycaDigestMapper
                     .parse(value.asString(), detectionLocation)
