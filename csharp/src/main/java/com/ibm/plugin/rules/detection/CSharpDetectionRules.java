@@ -25,9 +25,12 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateHash;
 import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateKeys;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateRequest;
 import com.ibm.plugin.rules.detection.dotnet.DotNetChaCha20Poly1305;
 import com.ibm.plugin.rules.detection.dotnet.DotNetCngKey;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCose;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
@@ -39,6 +42,8 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetKeyDerivation;
 import com.ibm.plugin.rules.detection.dotnet.DotNetLegacyFormatters;
 import com.ibm.plugin.rules.detection.dotnet.DotNetMLDsa;
 import com.ibm.plugin.rules.detection.dotnet.DotNetMLKem;
+import com.ibm.plugin.rules.detection.dotnet.DotNetPbeParameters;
+import com.ibm.plugin.rules.detection.dotnet.DotNetPkcs;
 import com.ibm.plugin.rules.detection.dotnet.DotNetProtectedData;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRC2;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRSA;
@@ -49,6 +54,7 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetSHA3;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSlhDsa;
 import com.ibm.plugin.rules.detection.dotnet.DotNetTripleDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetX25519DiffieHellman;
+import com.ibm.plugin.rules.detection.dotnet.DotNetXml;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -79,6 +85,12 @@ public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
                         RuleSets.rulesOf(DotNetHMAC.class).stream(),
                         RuleSets.rulesOf(DotNetKMAC.class).stream(),
                         RuleSets.rulesOf(DotNetRfc2898DeriveBytes.class).stream(),
+                        RuleSets.rulesOf(DotNetPbeParameters.class).stream(),
+                        RuleSets.rulesOf(DotNetCertificateRequest.class).stream(),
+                        RuleSets.rulesOf(DotNetCertificateHash.class).stream(),
+                        RuleSets.rulesOf(DotNetPkcs.class).stream(),
+                        RuleSets.rulesOf(DotNetXml.class).stream(),
+                        RuleSets.rulesOf(DotNetCose.class).stream(),
                         RuleSets.rulesOf(DotNetKeyDerivation.class).stream(),
                         RuleSets.rulesOf(DotNetRandomNumberGenerator.class).stream(),
                         RuleSets.rulesOf(DotNetProtectedData.class).stream(),

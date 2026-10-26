@@ -23,21 +23,26 @@ import com.ibm.mapper.ITranslator;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.ProbabilisticSignatureScheme;
+import com.ibm.mapper.model.Property;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.RSA;
+import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.functionality.Functionality;
 import com.ibm.mapper.model.functionality.Sign;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.UsualPerformActions;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import com.ibm.mapper.utils.DetectionLocation;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class SignatureReorganizer {
 
@@ -62,6 +67,70 @@ public final class SignatureReorganizer {
                                     Signature.class));
 
     @Nonnull
+    /**
+     * Re-roots a signing operation that arrived as a bare {@code Sign} onto the algorithm it
+     * performs.
+     *
+     * <p>A rule whose root value is the act of signing rather than an algorithm produces a tree
+     * headed by a {@link Sign}, with the digest and the padding beneath it. Nothing downstream can
+     * use that shape: {@code CBOMOutputFile.add} knows only algorithms, keys, protocols, cipher
+     * suites and four length properties, so it replaces such a root by its children -- the padding
+     * is a {@code Property} and disappears, and the digest becomes a component reported as a
+     * digest. {@code InventoryRule.report} raises no issue at all, because it reports only a root
+     * that is an algorithm, a protocol or a key. The signing operation is therefore invisible in
+     * both outputs.
+     *
+     * <p>What the algorithm is follows from the padding, where there is one: {@code
+     * RSASignaturePadding} exists only for RSA, so {@code PKCS1} gives RSA with PKCS#1 v1.5 and
+     * {@code PSS} gives RSASSA-PSS. Without a padding the algorithm is not knowable from the call
+     * -- it is whatever the key happens to be -- so nothing is invented: the digest becomes the
+     * root instead and carries the {@code Sign}, which at least records that this digest is used to
+     * sign. A tree with neither is left alone.
+     */
+    public static final IReorganizerRule ROOT_SIGN_ONTO_ITS_ALGORITHM =
+            new ReorganizerRuleBuilder()
+                    .createReorganizerRule("ROOT_SIGN_ONTO_ITS_ALGORITHM")
+                    .forNodeKind(Sign.class)
+                    .withDetectionCondition(
+                            (node, parent, roots) ->
+                                    parent == null
+                                            && (node.hasChildOfType(MessageDigest.class).isPresent()
+                                                    || node.hasChildOfType(Padding.class)
+                                                            .isPresent()))
+                    .perform(SignatureReorganizer::rootSignOntoItsAlgorithm);
+
+    @Nullable private static List<INode> rootSignOntoItsAlgorithm(
+            @Nonnull INode node, @Nullable INode parent, @Nonnull List<INode> roots) {
+        final INode padding = node.hasChildOfType(Padding.class).orElse(null);
+        final INode digest = node.hasChildOfType(MessageDigest.class).orElse(null);
+        // Sign is a Functionality, hence a Property, which is where getDetectionContext lives.
+        final DetectionLocation location = ((Property) node).getDetectionContext();
+
+        final INode replacement;
+        if (padding != null && "PSS".equals(padding.asString())) {
+            replacement = new RSAssaPSS(location);
+        } else if (padding != null && "PKCS1".equals(padding.asString())) {
+            replacement = new RSA(Signature.class, location);
+        } else if (digest != null) {
+            replacement = digest;
+        } else {
+            return null;
+        }
+
+        if (digest != null && replacement != digest) {
+            replacement.put(digest);
+        }
+        if (padding != null && replacement != digest) {
+            replacement.put(padding);
+        }
+        replacement.put(new Sign(location));
+
+        final List<INode> newRoots = new LinkedList<>(roots);
+        newRoots.remove(node);
+        newRoots.add(replacement);
+        return newRoots;
+    }
+
     public static final IReorganizerRule MERGE_SIGNATURE_PARENT_AND_CHILD =
             new ReorganizerRuleBuilder()
                     .createReorganizerRule("MERGE_SIGNATURE_PARENT_AND_CHILD")
