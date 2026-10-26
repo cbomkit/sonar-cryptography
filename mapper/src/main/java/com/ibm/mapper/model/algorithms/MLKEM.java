@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
 import com.ibm.mapper.model.ParameterSetIdentifier;
@@ -72,5 +73,11 @@ public final class MLKEM extends Algorithm implements KeyEncapsulationMechanism 
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ML_KEM);
     }
 }

@@ -20,8 +20,10 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public class EdDSA extends Algorithm implements Signature {
@@ -33,5 +35,11 @@ public class EdDSA extends Algorithm implements Signature {
 
     public EdDSA(@Nonnull DetectionLocation detectionLocation) {
         this(NAME, detectionLocation);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.EDDSA);
     }
 }

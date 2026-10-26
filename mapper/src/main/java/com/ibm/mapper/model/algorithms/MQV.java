@@ -20,9 +20,11 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -57,5 +59,11 @@ public class MQV extends Algorithm implements KeyAgreement {
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull DetectionLocation detectionLocation) {
         super(name, asKind, detectionLocation);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.MQV);
     }
 }

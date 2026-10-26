@@ -19,7 +19,12 @@
  */
 package com.ibm.mapper.model;
 
+import com.ibm.mapper.model.curves.Curve25519;
+import com.ibm.mapper.model.curves.Curve448;
+import com.ibm.mapper.model.curves.Edwards25519;
+import com.ibm.mapper.model.curves.Edwards448;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public class EllipticCurveAlgorithm extends Algorithm
@@ -40,5 +45,25 @@ public class EllipticCurveAlgorithm extends Algorithm
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull EllipticCurveAlgorithm ellipticCurveAlgorithm) {
         super(ellipticCurveAlgorithm, asKind);
+    }
+
+    /**
+     * Montgomery curves are used for ECDH and Edwards curves for EdDSA; any other curve follows the
+     * kind it is used as. Plain EC encryption has no standardized family.
+     */
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        final INode curve = this.children.get(EllipticCurve.class);
+        if (curve instanceof Curve25519 || curve instanceof Curve448) {
+            return Optional.of(AlgorithmFamily.ECDH);
+        } else if (curve instanceof Edwards25519 || curve instanceof Edwards448) {
+            return Optional.of(AlgorithmFamily.EDDSA);
+        } else if (this.is(Signature.class)) {
+            return Optional.of(AlgorithmFamily.ECDSA);
+        } else if (this.is(KeyAgreement.class)) {
+            return Optional.of(AlgorithmFamily.ECDH);
+        }
+        return Optional.empty();
     }
 }

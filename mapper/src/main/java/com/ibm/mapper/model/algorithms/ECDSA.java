@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -67,5 +69,11 @@ public final class ECDSA extends Algorithm implements Signature {
             @Nonnull EllipticCurve ellipticCurve, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(ellipticCurve);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ECDSA);
     }
 }

@@ -20,9 +20,11 @@
 package com.ibm.mapper.model.algorithms.blake;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.ExtendableOutputFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -50,5 +52,11 @@ public final class BLAKE2X extends Algorithm implements ExtendableOutputFunction
     public BLAKE2X(@Nonnull MessageDigest blake2, @Nonnull DetectionLocation detectionLocation) {
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
         this.put(blake2);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.BLAKE2);
     }
 }

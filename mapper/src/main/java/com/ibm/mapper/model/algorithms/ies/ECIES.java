@@ -19,6 +19,7 @@
  */
 package com.ibm.mapper.model.algorithms.ies;
 
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.KeyDerivationFunction;
@@ -27,6 +28,7 @@ import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.model.algorithms.DH;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -74,5 +76,11 @@ public class ECIES extends IES {
     public ECIES(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PublicKeyEncryption.class, detectionLocation);
         this.put(new DH(detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ECIES);
     }
 }

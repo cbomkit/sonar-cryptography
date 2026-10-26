@@ -20,9 +20,11 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -54,5 +56,11 @@ public final class KDFDoublePipeline extends Algorithm implements KeyDerivationF
     public KDFDoublePipeline(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SP800_108);
     }
 }

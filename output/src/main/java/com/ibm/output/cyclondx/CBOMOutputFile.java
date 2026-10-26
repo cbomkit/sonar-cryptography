@@ -87,6 +87,9 @@ import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
+import org.cyclonedx.model.component.crypto.CryptoProperties;
+import org.cyclonedx.model.component.crypto.RelatedCryptographicAsset;
+import org.cyclonedx.model.component.crypto.enums.AssetType;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
 import org.slf4j.Logger;
@@ -94,7 +97,7 @@ import org.slf4j.LoggerFactory;
 
 public class CBOMOutputFile implements IOutputFile {
     private static final Logger LOGGER = LoggerFactory.getLogger(CBOMOutputFile.class);
-    private static final Version schema = Version.VERSION_16;
+    private static final Version schema = Version.VERSION_17;
 
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
@@ -201,13 +204,6 @@ public class CBOMOutputFile implements IOutputFile {
             return;
         }
         addComponentAndDependencies(protocol, optionalId.get(), parentBomRef, node);
-
-        Dependency protocolDependency = dependencies.get(protocol.getBomRef());
-        if (protocolDependency != null) {
-            List<String> cryptoRefs =
-                    protocolDependency.getDependencies().stream().map(Dependency::getRef).toList();
-            protocol.getCryptoProperties().getProtocolProperties().setCryptoRefArray(cryptoRefs);
-        }
     }
 
     private void createCipherSuiteComponent(
@@ -334,6 +330,7 @@ public class CBOMOutputFile implements IOutputFile {
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));
         bom.setDependencies(new ArrayList<>(this.dependencies.values()));
+        this.components.values().forEach(this::setRelatedCryptographicAssets);
         return bom;
     }
 
@@ -349,6 +346,62 @@ public class CBOMOutputFile implements IOutputFile {
         } catch (GeneratorException e) {
             LOGGER.error("Could not generate CBOM: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Lists the assets a protocol depends on. Resolved from the merged dependency graph rather than
+     * when the protocol is first seen, so that assets detected in later occurrences of the same
+     * protocol are included. {@code cryptoRefArray} is deprecated in CycloneDX 1.7 in favor of
+     * {@code relatedCryptographicAssets} but is still populated for 1.6 consumers.
+     */
+    private void setRelatedCryptographicAssets(@Nonnull Component component) {
+        final CryptoProperties cryptoProperties = component.getCryptoProperties();
+        if (cryptoProperties == null || cryptoProperties.getProtocolProperties() == null) {
+            return;
+        }
+        final Dependency dependency = dependencies.get(component.getBomRef());
+        if (dependency == null || dependency.getDependencies() == null) {
+            return;
+        }
+        final List<String> refs =
+                dependency.getDependencies().stream().map(Dependency::getRef).toList();
+        final List<RelatedCryptographicAsset> relatedAssets = new ArrayList<>();
+        for (String ref : refs) {
+            final RelatedCryptographicAsset asset = new RelatedCryptographicAsset();
+            asset.setRef(ref);
+            asset.setType(getRelatedAssetType(ref));
+            relatedAssets.add(asset);
+        }
+        cryptoProperties.getProtocolProperties().setCryptoRefArray(refs);
+        cryptoProperties.getProtocolProperties().setRelatedCryptographicAssets(relatedAssets);
+    }
+
+    /** Algorithms are {@code algorithm}; key material uses its camel cased type, e.g. publicKey. */
+    @Nonnull
+    private String getRelatedAssetType(@Nonnull String ref) {
+        final CryptoProperties properties =
+                this.components.values().stream()
+                        .filter(c -> ref.equals(c.getBomRef()))
+                        .findFirst()
+                        .map(Component::getCryptoProperties)
+                        .orElse(null);
+        if (properties == null) {
+            return "other";
+        }
+        if (properties.getAssetType() == AssetType.ALGORITHM) {
+            return "algorithm";
+        }
+        if (properties.getRelatedCryptoMaterialProperties() != null
+                && properties.getRelatedCryptoMaterialProperties().getType() != null) {
+            final String[] parts =
+                    properties.getRelatedCryptoMaterialProperties().getType().getName().split("-");
+            final StringBuilder sb = new StringBuilder(parts[0]);
+            for (int i = 1; i < parts.length; i++) {
+                sb.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
+            }
+            return sb.toString();
+        }
+        return "other";
     }
 
     @Nonnull

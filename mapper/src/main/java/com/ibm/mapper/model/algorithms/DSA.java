@@ -20,11 +20,13 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public class DSA extends Algorithm implements Signature {
@@ -48,5 +50,11 @@ public class DSA extends Algorithm implements Signature {
     public DSA(@Nonnull MessageDigest messageDigest) {
         this(messageDigest.getDetectionContext());
         this.put(messageDigest);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.DSA);
     }
 }

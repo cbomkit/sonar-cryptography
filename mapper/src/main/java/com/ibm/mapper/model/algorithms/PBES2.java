@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.Cipher;
 import com.ibm.mapper.model.INode;
@@ -93,5 +94,11 @@ public final class PBES2 extends Algorithm implements PasswordBasedEncryption {
     public PBES2(@Nonnull Mac mac) {
         this(mac.getDetectionContext());
         this.put(mac);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.PBES2);
     }
 }

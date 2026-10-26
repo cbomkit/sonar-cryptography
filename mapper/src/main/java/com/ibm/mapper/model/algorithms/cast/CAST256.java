@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms.cast;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.IPrimitive;
@@ -27,6 +28,7 @@ import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -89,5 +91,11 @@ public final class CAST256 extends Algorithm implements BlockCipher {
 
     public CAST256(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull CAST256 cast256) {
         super(cast256, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.CAST6);
     }
 }

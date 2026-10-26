@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
@@ -71,5 +72,11 @@ public final class RIPEMD extends Algorithm implements MessageDigest {
     public RIPEMD(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.RIPEMD);
     }
 }

@@ -20,11 +20,13 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -66,5 +68,11 @@ public final class ElGamal extends Algorithm implements PublicKeyEncryption, Sig
 
     public ElGamal(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ElGamal elGamal) {
         super(elGamal, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ELGAMAL);
     }
 }

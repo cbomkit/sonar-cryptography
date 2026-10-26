@@ -19,10 +19,19 @@
  */
 package com.ibm.mapper.model;
 
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public interface IAlgorithm extends IAsset {
 
     @Nonnull
     String getName();
+
+    /**
+     * @return the canonical family of this algorithm, or empty if it has no standardized family
+     */
+    @Nonnull
+    default Optional<AlgorithmFamily> getFamily() {
+        return Optional.empty();
+    }
 }

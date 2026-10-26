@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
@@ -27,6 +28,7 @@ import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -78,5 +80,11 @@ public final class ChaCha20 extends Algorithm implements StreamCipher {
 
     public ChaCha20(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ChaCha20 chaCha20) {
         super(chaCha20, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.CHACHA20);
     }
 }

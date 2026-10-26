@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.ParameterSetIdentifier;
@@ -83,5 +84,11 @@ public class SPHINCSPlus extends Algorithm implements Signature {
             @Nonnull String parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new ParameterSetIdentifier(parameterSetIdentifier, detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SLH_DSA);
     }
 }

@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.StreamCipher;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -59,5 +61,11 @@ public final class Salsa20 extends Algorithm implements StreamCipher {
 
     public Salsa20(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull Salsa20 salsa20) {
         super(salsa20, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SALSA20);
     }
 }

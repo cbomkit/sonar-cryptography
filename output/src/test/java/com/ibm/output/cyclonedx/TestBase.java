@@ -27,6 +27,7 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.mapper.utils.Utils;
 import com.ibm.output.Constants;
 import com.ibm.output.cyclondx.CBOMOutputFile;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,13 +37,13 @@ import javax.annotation.Nonnull;
 import org.cyclonedx.Version;
 import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.generators.BomGeneratorFactory;
-import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Evidence;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
+import org.cyclonedx.parsers.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,7 @@ public abstract class TestBase {
         final CBOMOutputFile outputFile = new CBOMOutputFile();
         nodeSupplier.get().forEach(node -> outputFile.add(List.of(node)));
         final Bom bom = outputFile.getBom();
-        this.printBom(bom);
+        this.assertsValidCycloneDx17(bom);
         // check bom header
         assertThat(bom.getMetadata().getToolChoice()).isNotNull();
         final ToolInformation toolInformation = bom.getMetadata().getToolChoice();
@@ -91,14 +92,17 @@ public abstract class TestBase {
         assertThat(occurrence.getAdditionalContext()).isNull();
     }
 
-    private void printBom(@Nonnull Bom bom) {
-        final BomJsonGenerator bomGenerator =
-                BomGeneratorFactory.createJson(Version.VERSION_16, bom);
+    /** Last generated CycloneDX JSON, for assertions on the serialized form. */
+    protected String lastJson;
+
+    private void assertsValidCycloneDx17(@Nonnull Bom bom) {
         try {
-            final String bomString = bomGenerator.toJsonString();
-            LOGGER.info(bomString);
-        } catch (GeneratorException e) {
-            LOGGER.error(e.getMessage());
+            lastJson = BomGeneratorFactory.createJson(Version.VERSION_17, bom).toJsonString();
+            LOGGER.info(lastJson);
+            assertThat(lastJson).contains("\"specVersion\" : \"1.7\"");
+            assertThat(new JsonParser().validate(lastJson, Version.VERSION_17)).isEmpty();
+        } catch (GeneratorException | IOException e) {
+            throw new AssertionError(e);
         }
     }
 }

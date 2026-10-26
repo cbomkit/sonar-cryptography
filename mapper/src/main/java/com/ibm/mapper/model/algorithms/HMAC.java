@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -61,5 +63,11 @@ public final class HMAC extends Algorithm implements Mac {
         return this.hasChildOfType(MessageDigest.class)
                 .map(digest -> this.name + "-" + ((IAlgorithm) digest).getName())
                 .orElse(this.name);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.HMAC);
     }
 }

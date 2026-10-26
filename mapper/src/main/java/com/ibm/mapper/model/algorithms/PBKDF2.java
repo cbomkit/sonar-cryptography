@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
@@ -78,5 +79,11 @@ public final class PBKDF2 extends Algorithm implements PasswordBasedKeyDerivatio
 
     public PBKDF2(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.PBKDF2);
     }
 }
