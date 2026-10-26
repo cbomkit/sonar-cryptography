@@ -177,8 +177,20 @@ public final class DetectionStoreWithHook<R, T, S, P> extends DetectionStore<R, 
             }
         }
         if (resolvedValues.isEmpty()) {
-            detectionEngine.resolveValuesInOuterScope(
-                    argument, methodInvocationHookWithParameterResolvement.getParameter());
+            if (!(methodInvocationHookWithParameterResolvement.getParameter()
+                            instanceof DetectableParameter<T>)
+                    && !methodInvocationHookWithParameterResolvement
+                            .getParameter()
+                            .getDetectionRules()
+                            .isEmpty()) {
+                hookRootDetectionStore.onDetectedDependingParameter(
+                        methodInvocationHookWithParameterResolvement.getParameter(),
+                        argument,
+                        DetectionStore.Scope.EXPRESSION);
+            } else {
+                detectionEngine.resolveValuesInOuterScope(
+                        argument, methodInvocationHookWithParameterResolvement.getParameter());
+            }
             return;
         }
 
