@@ -1,0 +1,7 @@
+{
+  "title": "Unsupported rule",
+  "type": "CODE_SMELL",
+  "status": "ready",
+  "defaultSeverity": "Minor",
+  "educationPrinciples": ["defense_in_depth"]
+}

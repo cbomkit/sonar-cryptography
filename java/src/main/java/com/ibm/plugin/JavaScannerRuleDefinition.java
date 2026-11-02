@@ -19,17 +19,19 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.rules.RuleMetadataLoader;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import org.sonar.api.SonarRuntime;
 import org.sonar.api.server.rule.RulesDefinition;
-import org.sonar.plugins.java.Java;
-import org.sonarsource.analyzer.commons.RuleMetadataLoader;
 
 public class JavaScannerRuleDefinition implements RulesDefinition {
     public static final String REPOSITORY_KEY = "sonar-java-crypto";
     public static final String REPOSITORY_NAME = "Sonar Cryptography";
+
+    /** Language key of sonar-java ({@code org.sonar.plugins.java.Java.KEY}). */
+    private static final String JAVA_LANGUAGE_KEY = "java";
 
     // Add the rule keys of the rules which need to be considered as template-rules
     private static final Set<String> RULE_TEMPLATES_KEY = Collections.emptySet();
@@ -45,7 +47,8 @@ public class JavaScannerRuleDefinition implements RulesDefinition {
     @Override
     public void define(Context context) {
         NewRepository repository =
-                context.createRepository(REPOSITORY_KEY, Java.KEY).setName(REPOSITORY_NAME);
+                context.createRepository(REPOSITORY_KEY, JAVA_LANGUAGE_KEY)
+                        .setName(REPOSITORY_NAME);
 
         RuleMetadataLoader ruleMetadataLoader =
                 new RuleMetadataLoader(RESOURCE_BASE_PATH, this.sonarRuntime);

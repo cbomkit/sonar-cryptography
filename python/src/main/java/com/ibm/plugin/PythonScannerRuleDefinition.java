@@ -19,12 +19,12 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.rules.RuleMetadataLoader;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import org.sonar.api.SonarRuntime;
 import org.sonar.api.server.rule.RulesDefinition;
-import org.sonarsource.analyzer.commons.RuleMetadataLoader;
 
 public class PythonScannerRuleDefinition implements RulesDefinition {
     public static final String REPOSITORY_KEY = "sonar-python-crypto";

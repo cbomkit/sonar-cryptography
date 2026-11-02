@@ -39,6 +39,7 @@ class PluginTest {
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
         CryptographyPlugin plugin = new CryptographyPlugin();
         plugin.define(context);
-        Assertions.assertEquals(10, context.getExtensions().size());
+        // 11 with Go support, which is temporarily disabled
+        Assertions.assertEquals(9, context.getExtensions().size());
     }
 }

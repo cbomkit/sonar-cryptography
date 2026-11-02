@@ -19,6 +19,7 @@
  */
 package com.ibm.plugin.rules;
 
+import com.ibm.common.VisibleForTesting;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.mapper.model.INode;
@@ -30,7 +31,6 @@ import com.ibm.rules.issue.Issue;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.sonar.check.Rule;
-import org.sonar.java.annotations.VisibleForTesting;
 import org.sonar.plugins.go.api.Tree;
 
 @Rule(key = "Inventory")

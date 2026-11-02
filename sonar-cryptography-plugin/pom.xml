@@ -42,12 +42,14 @@
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Go support temporarily disabled
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>go</artifactId>
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>csharp</artifactId>
@@ -151,7 +153,10 @@
                     <pluginName>Sonar Crypto Plugin</pluginName>
                     <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
                     <!-- This line must specify all file extensions which should be scanned by the plugin -->
-                    <requiredForLanguages>java,jsp,py,ipynb,go,cs</requiredForLanguages>
+                    <requiredForLanguages>java,jsp,py,ipynb,cs</requiredForLanguages>
+                    <!-- The language analyzers are 'provided': their public API packages
+                         (org.sonar.plugins.<key>.api) are supplied by the installed plugins -->
+                    <requirePlugins>java:${sonar.java.minVersion},python:${sonar.python.minVersion}</requirePlugins>
                     <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
                     <sonarLintSupported>true</sonarLintSupported>
                     <skipDependenciesPackaging>true</skipDependenciesPackaging>

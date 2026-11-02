@@ -22,6 +22,7 @@ package com.ibm.plugin.rules.detection.crossfile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.language.java.JavaDetachedIssueQueue;
 import com.ibm.engine.model.IValue;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
@@ -76,6 +77,23 @@ class CrossFileHookDetachTest extends TestBase {
 
         // All three algorithms resolve cross-file into the CBOM, regardless of detach vs retain:
         assertThat(resolvedValues).contains("AES", "Blowfish", "DES");
+
+        // The detached (AES, Blowfish) issues are queued on the caller for JavaDetachedIssueSensor
+        // (covered by JavaDetachedIssueSensorTest; CheckVerifier's InputFile cannot be saved
+        // through SensorContextTester). The retained DES call reports directly.
+        final List<JavaDetachedIssueQueue.Issue> queued = JavaDetachedIssueQueue.drain();
+        assertThat(queued)
+                .extracting(JavaDetachedIssueQueue.Issue::message)
+                .anySatisfy(message -> assertThat(message).contains("AES"))
+                .anySatisfy(message -> assertThat(message).contains("Blowfish"))
+                .noneSatisfy(message -> assertThat(message).contains("DES"));
+        assertThat(queued)
+                .allSatisfy(
+                        issue -> {
+                            assertThat(issue.rule()).isSameAs(this);
+                            assertThat(issue.inputFile().filename())
+                                    .isEqualTo("KeyGeneratorCaller.java");
+                        });
     }
 
     @Override

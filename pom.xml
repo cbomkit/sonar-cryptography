@@ -12,7 +12,7 @@
         <module>mapper</module>
         <module>java</module>
         <module>python</module>
-        <module>go</module>
+        <!--module>go</module--> <!-- Go support temporarily disabled -->
         <module>csharp</module>
         <module>engine</module>
         <module>output</module>
@@ -58,6 +58,11 @@
              the public commit must match the plugin JAR's Implementation-Build. -->
         <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
+        <!-- Minimum analyzer versions required at runtime (Plugin-RequirePlugins). These are
+             independent of the compile-time versions above: SonarQube refuses to load the plugin
+             if an installed analyzer is older. Baseline = versions bundled with SonarQube 26.1. -->
+        <sonar.java.minVersion>8.22.0.41895</sonar.java.minVersion>
+        <sonar.python.minVersion>5.14.2.29072</sonar.python.minVersion>
         <sonar.analyzer-commons.version>2.30.0.5193</sonar.analyzer-commons.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
@@ -129,6 +134,7 @@
             <groupId>org.sonarsource.java</groupId>
             <artifactId>sonar-java-plugin</artifactId>
             <version>${sonar.java.version}</version>
+            <scope>provided</scope>
             <exclusions>
                  <exclusion>
                      <groupId>org.apache.tomcat.embed</groupId>
@@ -140,12 +146,14 @@
             <groupId>org.sonarsource.python</groupId>
             <artifactId>sonar-python-plugin</artifactId>
             <version>${sonar.python.version}</version>
+            <scope>provided</scope>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.sonarsource.go</groupId>
             <artifactId>sonar-go-plugin</artifactId>
             <version>${sonar.go.version}</version>
-        </dependency>
+            <scope>provided</scope>
+        </dependency-->
 
         <!-- unit tests -->
         <dependency>
@@ -275,7 +283,15 @@
                         <module name="Checker">
                             <property name="localeLanguage" value="en"/>
                             <module name="TreeWalker">
-                                <module name="IllegalImport"/>
+                                <!-- sonar-java and sonar-python are 'provided': only their exported
+                                     APIs (org.sonar.plugins.java.api, org.sonar.plugins.python.api)
+                                     are visible at runtime.
+                                     sonar-analyzer-commons (SSALv1 headers) is not bundled. -->
+                                <module name="IllegalImport">
+                                    <property name="regexp" value="true"/>
+                                    <property name="illegalPkgs"
+                                              value="sun, org\.sonar\.java, org\.sonar\.plugins\.java(?!\.api), org\.sonar\.python, org\.sonar\.plugins\.python(?!\.api), org\.sonarsource\.analyzer\.commons"/>
+                                </module>
                                 <module name="RedundantImport"/>
                                 <module name="UnusedImports"/>
                                 <module name="PackageName">

@@ -38,20 +38,31 @@ public class CryptographyPlugin implements Plugin {
         LOGGER.info("Sonar Cryptography initialized in context (" + product + ")");
 
         context.addExtensions(Configuration.getPropertyDefinitions()); // add configuration
+        // Rule definitions only run on the server, where all required analyzers are installed.
         context.addExtensions(
-                // java
-                JavaScannerRuleDefinition.class, // Define Rules
-                JavaCheckRegistrar.class, // Register Java rules by sonar-java sensor
-                // python
-                PythonScannerRuleDefinition.class, // Define Rules
-                PythonCheckRegistrar.class, // Register Python rules by sonar-python sensor
-                // golang
-                GoScannerRuleDefinition.class, // Define Go rules
-                CryptoGoSensor.class, // Custom sensor (sonar-go has no CheckRegistrar API)
-                // csharp
-                CSharpScannerRuleDefinition.class, // Define C# rules
+                JavaScannerRuleDefinition.class,
+                PythonScannerRuleDefinition.class,
+                // GoScannerRuleDefinition.class, // Go support temporarily disabled
+                CSharpScannerRuleDefinition.class);
+
+        // Scanner-side extensions that use an analyzer's API are only registered when that
+        // analyzer is loaded: scanners load analyzers per detected language (see Analyzers).
+        if (Analyzers.JAVA) {
+            context.addExtensions(
+                    JavaCheckRegistrar.class, // Register Java rules by sonar-java sensor
+                    JavaDetachedIssueSensor.class); // Save cross-file issues after sonar-java
+        } else {
+            LOGGER.info("sonar-java is not loaded: Java cryptography detection is disabled");
+        }
+        if (Analyzers.PYTHON) {
+            context.addExtension(
+                    PythonCheckRegistrar.class); // Register Python rules by sonar-python sensor
+        } else {
+            LOGGER.info("sonar-python is not loaded: Python cryptography detection is disabled");
+        }
+        context.addExtensions(
+                // CryptoGoSensor.class, // Go support temporarily disabled
                 CryptoCSharpSensor.class, // Custom sensor (sonar-csharp has no CheckRegistrar API)
-                // general
                 OutputFileJob.class);
     }
 }

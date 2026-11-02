@@ -64,9 +64,14 @@ public final class ScannerManager {
     @Nonnull
     private List<INode> getAggregatedNodes() {
         List<INode> nodes = new ArrayList<>();
-        nodes.addAll(JavaAggregator.getDetectedNodes());
-        nodes.addAll(PythonAggregator.getDetectedNodes());
-        nodes.addAll(GoAggregator.getDetectedNodes());
+        // The Java/Python aggregators use their analyzer's API; skip them if it is not loaded.
+        if (Analyzers.JAVA) {
+            nodes.addAll(JavaAggregator.getDetectedNodes());
+        }
+        if (Analyzers.PYTHON) {
+            nodes.addAll(PythonAggregator.getDetectedNodes());
+        }
+        // nodes.addAll(GoAggregator.getDetectedNodes()); // Go support temporarily disabled
         nodes.addAll(CSharpAggregator.getDetectedNodes());
         return nodes;
     }
@@ -79,6 +84,9 @@ public final class ScannerManager {
      */
     @Nonnull
     public HeapAttributionSummary heapAttribution() {
+        if (!Analyzers.JAVA) {
+            return new HeapAttributionSummary(0, 0, 0, 0);
+        }
         int detectedNodes = JavaAggregator.getDetectedNodes().size();
         CallContextStats stats = JavaAggregator.getLanguageSupport().callContextStats();
         return new HeapAttributionSummary(
@@ -86,9 +94,13 @@ public final class ScannerManager {
     }
 
     public void reset() {
-        JavaAggregator.reset();
-        PythonAggregator.reset();
-        GoAggregator.reset();
+        if (Analyzers.JAVA) {
+            JavaAggregator.reset();
+        }
+        if (Analyzers.PYTHON) {
+            PythonAggregator.reset();
+        }
+        // GoAggregator.reset(); // Go support temporarily disabled
         CSharpAggregator.reset();
     }
 }
