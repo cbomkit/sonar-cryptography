@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.plugin;
+package com.ibm.common;
 
 import javax.annotation.Nonnull;
 
@@ -29,6 +29,8 @@ import javax.annotation.Nonnull;
  * SonarLint only load the analyzers for the languages detected in a project (they ignore {@code
  * Plugin-RequirePlugins}), so e.g. a Java-only scan runs this plugin without sonar-python. Any
  * class that implements or uses a missing analyzer's API must then not be registered or touched.
+ *
+ * <p>The checks use the class loader that loaded this class, which is the plugin's class loader.
  */
 public final class Analyzers {
 
@@ -40,7 +42,8 @@ public final class Analyzers {
         // constants only
     }
 
-    static boolean isLoadable(@Nonnull String className) {
+    /** Whether {@code className} can be loaded, without initialising it. */
+    public static boolean isLoadable(@Nonnull String className) {
         try {
             Class.forName(className, false, Analyzers.class.getClassLoader());
             return true;

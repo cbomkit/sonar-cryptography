@@ -19,7 +19,11 @@
  */
 package com.ibm.plugin;
 
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.ibm.output.ILanguageModule;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.sonar.api.Plugin;
 import org.sonar.api.SonarEdition;
@@ -32,14 +36,45 @@ import org.sonar.api.utils.Version;
 class PluginTest {
 
     @Test
-    void testExtensions() {
+    void findsThePackagedLanguageModulesInOrder() {
+        assertThat(LanguageModules.all())
+                .extracting(ILanguageModule::name)
+                .containsExactly("Java", "Python", "C#");
+        assertThat(LanguageModules.available()).containsExactlyElementsOf(LanguageModules.all());
+    }
+
+    @Test
+    void registersTheExtensionsOfEveryAvailableModule() {
         SonarRuntime runtime =
                 SonarRuntimeImpl.forSonarQube(
                         Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
         Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
-        CryptographyPlugin plugin = new CryptographyPlugin();
-        plugin.define(context);
-        // 11 with Go support, which is temporarily disabled
-        Assertions.assertEquals(9, context.getExtensions().size());
+        new CryptographyPlugin().define(context);
+
+        final List<Object> expected = new ArrayList<>();
+        for (ILanguageModule module : LanguageModules.all()) {
+            expected.addAll(module.serverExtensions());
+        }
+        for (ILanguageModule module : LanguageModules.available()) {
+            expected.addAll(module.scannerExtensions());
+        }
+        expected.add(OutputFileJob.class);
+
+        // The property definitions are instances; every other extension is a class.
+        assertThat(context.getExtensions())
+                .filteredOn(extension -> !(extension instanceof Class<?>))
+                .hasSize(Configuration.getPropertyDefinitions().size());
+        assertThat(context.getExtensions())
+                .filteredOn(Class.class::isInstance)
+                .containsExactlyInAnyOrderElementsOf(expected)
+                .contains(
+                        JavaScannerRuleDefinition.class,
+                        JavaCheckRegistrar.class,
+                        JavaDetachedIssueSensor.class,
+                        PythonScannerRuleDefinition.class,
+                        PythonCheckRegistrar.class,
+                        CSharpScannerRuleDefinition.class,
+                        CryptoCSharpSensor.class,
+                        OutputFileJob.class);
     }
 }

@@ -19,8 +19,10 @@
  */
 package com.ibm.plugin;
 
+import com.ibm.common.Analyzers;
 import com.ibm.engine.callstack.CallContextStats;
 import com.ibm.mapper.model.INode;
+import com.ibm.output.ILanguageModule;
 import com.ibm.output.IOutputFile;
 import com.ibm.output.IOutputFileFactory;
 import com.ibm.output.statistics.IStatistics;
@@ -34,9 +36,17 @@ import javax.annotation.Nullable;
 
 public final class ScannerManager {
     private final IOutputFileFactory outputFileFactory;
+    private final List<ILanguageModule> modules;
 
     public ScannerManager(@Nullable IOutputFileFactory outputFileFactory) {
+        this(outputFileFactory, LanguageModules.all());
+    }
+
+    ScannerManager(
+            @Nullable IOutputFileFactory outputFileFactory,
+            @Nonnull List<ILanguageModule> modules) {
         this.outputFileFactory = outputFileFactory;
+        this.modules = List.copyOf(modules);
     }
 
     @Nonnull
@@ -64,15 +74,8 @@ public final class ScannerManager {
     @Nonnull
     private List<INode> getAggregatedNodes() {
         List<INode> nodes = new ArrayList<>();
-        // The Java/Python aggregators use their analyzer's API; skip them if it is not loaded.
-        if (Analyzers.JAVA) {
-            nodes.addAll(JavaAggregator.getDetectedNodes());
-        }
-        if (Analyzers.PYTHON) {
-            nodes.addAll(PythonAggregator.getDetectedNodes());
-        }
-        // nodes.addAll(GoAggregator.getDetectedNodes()); // Go support temporarily disabled
-        nodes.addAll(CSharpAggregator.getDetectedNodes());
+        // A module's aggregator uses its analyzer's API; skip the module if it is not loaded.
+        LanguageModules.available(modules).forEach(module -> nodes.addAll(module.detectedNodes()));
         return nodes;
     }
 
@@ -94,13 +97,6 @@ public final class ScannerManager {
     }
 
     public void reset() {
-        if (Analyzers.JAVA) {
-            JavaAggregator.reset();
-        }
-        if (Analyzers.PYTHON) {
-            PythonAggregator.reset();
-        }
-        // GoAggregator.reset(); // Go support temporarily disabled
-        CSharpAggregator.reset();
+        LanguageModules.available(modules).forEach(ILanguageModule::reset);
     }
 }
