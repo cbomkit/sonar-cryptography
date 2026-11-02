@@ -12,7 +12,8 @@
         <module>mapper</module>
         <module>java</module>
         <module>python</module>
-        <!--module>go</module--> <!-- Go support temporarily disabled -->
+        <!-- Go is SSALv1-licensed; step 5 of the variants plan moves it into the with-go profile. -->
+        <module>go</module>
         <module>csharp</module>
         <module>engine</module>
         <module>output</module>
@@ -111,6 +112,12 @@
           <version>${sonar.analyzer-commons.version}</version>
           <scope>test</scope>
         </dependency>
+        <!-- SSALv1. Declared only by the go module, see go/pom.xml. -->
+        <dependency>
+          <groupId>org.sonarsource.go</groupId>
+          <artifactId>sonar-go-plugin</artifactId>
+          <version>${sonar.go.version}</version>
+        </dependency>
       </dependencies>
     </dependencyManagement>
 
@@ -151,12 +158,6 @@
             <version>${sonar.python.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!--dependency>
-            <groupId>org.sonarsource.go</groupId>
-            <artifactId>sonar-go-plugin</artifactId>
-            <version>${sonar.go.version}</version>
-            <scope>provided</scope>
-        </dependency-->
 
         <!-- unit tests -->
         <dependency>

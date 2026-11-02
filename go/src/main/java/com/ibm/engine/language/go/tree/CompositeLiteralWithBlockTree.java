@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sonar.go.impl.BaseTreeImpl;
 import org.sonar.plugins.go.api.BlockTree;
 import org.sonar.plugins.go.api.CompositeLiteralTree;
@@ -66,7 +65,7 @@ public final class CompositeLiteralWithBlockTree extends BaseTreeImpl implements
     }
 
     @Override
-    public @NonNull BlockTree blockTree() {
+    public @Nonnull BlockTree blockTree() {
         return blockTree;
     }
 

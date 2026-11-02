@@ -42,14 +42,8 @@
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- Go support temporarily disabled
-        <dependency>
-            <groupId>com.ibm</groupId>
-            <artifactId>go</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        -->
+        <!-- No go module: this plugin uses the server's analyzers, and Go needs a bundled
+             (SSALv1) sonar-go. The with-go variant adds it. -->
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>csharp</artifactId>
