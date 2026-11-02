@@ -10,6 +10,11 @@ updates:
     target-branch: "main"
     schedule:
       interval: daily
+    # Pinned to the last LGPL-3.0 releases (see the root pom.xml); newer ones need a licence review.
+    ignore:
+      - dependency-name: "org.sonarsource.java:*"
+      - dependency-name: "org.sonarsource.python:*"
+      - dependency-name: "org.sonarsource.analyzer-commons:*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: "main"
@@ -21,6 +26,11 @@ updates:
     target-branch: "dev/1.x.x"
     schedule:
       interval: daily
+    # Pinned to the last LGPL-3.0 releases (see the root pom.xml); newer ones need a licence review.
+    ignore:
+      - dependency-name: "org.sonarsource.java:*"
+      - dependency-name: "org.sonarsource.python:*"
+      - dependency-name: "org.sonarsource.analyzer-commons:*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: "dev/1.x.x"
