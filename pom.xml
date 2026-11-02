@@ -8,20 +8,46 @@
     <artifactId>sonar-cryptography</artifactId>
     <packaging>pom</packaging>
 
+    <!-- Shared modules, built by every variant. The profiles below only add modules (see
+         docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md, D1): they must not change
+         versions, dependencies or plugin configuration that reach these modules. -->
     <modules>
+        <module>common</module>
+        <module>rules</module>
         <module>mapper</module>
+        <module>enricher</module>
+        <module>output</module>
+        <module>engine</module>
         <module>java</module>
         <module>python</module>
-        <!-- Go is SSALv1-licensed; step 5 of the variants plan moves it into the with-go profile. -->
-        <module>go</module>
         <module>csharp</module>
-        <module>engine</module>
-        <module>output</module>
-        <module>common</module>
-        <module>enricher</module>
-        <module>sonar-cryptography-plugin</module>
-        <module>rules</module>
+        <module>plugin-core</module>
     </modules>
+
+    <profiles>
+        <!-- The default plugin: uses the server's Java and Python analyzers, no Go.
+             distribution/plugin is added in step 6. -->
+        <profile>
+            <id>plugin</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go and the
+             analyzer-commons classes it embeds). For private use under the SSAL terms only; never
+             publish it. distribution/plugin-with-go is added in step 6. -->
+        <profile>
+            <id>with-go</id>
+            <modules>
+                <module>go</module>
+            </modules>
+        </profile>
+        <!-- The library: bundles the LGPL Java and Python analyzers, no Go.
+             distribution/library is added in step 6. -->
+        <profile>
+            <id>lib</id>
+        </profile>
+    </profiles>
 
     <version>2.0.0-SNAPSHOT</version>
     <name>sonar-cryptography</name>

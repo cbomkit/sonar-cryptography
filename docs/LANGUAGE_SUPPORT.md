@@ -13,7 +13,7 @@ Defining those rules as part of a SonarQube plugin allows us to easily integrate
 ### Overview
 
 The project is composed of the following modules:
-- The plugin: `sonar-cryptography-plugin`
+- The plugin: `plugin-core`
 - One module per supported language, like `java`, `python` and `go`
 - The detection engine: `engine`
 - Four other modules: `mapper`, `enricher`, `output` and `common`
@@ -22,7 +22,7 @@ The project is composed of the following modules:
 ```mermaid
 flowchart TB
     SQ(["SonarQube"])
-    PLUGIN["<b>sonar-cryptography-plugin</b>"]
+    PLUGIN["<b>plugin-core</b>"]
 
     subgraph JAVA["java"]
         direction TB
@@ -60,21 +60,21 @@ flowchart TB
     GO --> SHARED
 ```
 
-*High level diagram showing the architecture of the various modules composing the Sonar Cryptography Plugin, shown here with its three language extensions (java, python and go). The `sonar-cryptography-plugin` module directly depends on the language modules, which themselves depend on a set of shared modules. The extendable parts of the modules are: the engine language support (`engine/.../language/`), the library-specific mappers (in `mapper`), and the choice of output format (in `output`).*
+*High level diagram showing the architecture of the various modules composing the Sonar Cryptography Plugin, shown here with its three language extensions (java, python and go). The `plugin-core` module directly depends on the language modules, which themselves depend on a set of shared modules. The extendable parts of the modules are: the engine language support (`engine/.../language/`), the library-specific mappers (in `mapper`), and the choice of output format (in `output`).*
 
 ### The plugin
 
-The ([`sonar-cryptography-plugin`](../sonar-cryptography-plugin/)) module creates the single SonarQube plugin, for all supported languages, so that we have only one cryptography plugin (and not one per language). 
+The ([`plugin-core`](../plugin-core/)) module creates the single SonarQube plugin, for all supported languages, so that we have only one cryptography plugin (and not one per language). 
 
-Its main class is [`CryptographyPlugin`](../sonar-cryptography-plugin/src/main/java/com/ibm/plugin/CryptographyPlugin.java) which implements the Sonar [`Plugin`](https://javadocs.sonarsource.org/10.3.0.1951/org/sonar/api/Plugin.html) interface, and registers all rules for all languages.
+Its main class is [`CryptographyPlugin`](../plugin-core/src/main/java/com/ibm/plugin/CryptographyPlugin.java) which implements the Sonar [`Plugin`](https://javadocs.sonarsource.org/10.3.0.1951/org/sonar/api/Plugin.html) interface, and registers all rules for all languages.
 This is done through the `addExtensions` method, and the extension classes to add vary depending on the language (they are usually mentioned in the documentation, or at least appear in the example plugins provided by Sonar – in the class implementing `Plugin`).
 
-This module also defines the choice of output format for all the findings (in [`OutputFileJob`](../sonar-cryptography-plugin/src/main/java/com/ibm/plugin/OutputFileJob.java)).
+This module also defines the choice of output format for all the findings (in [`OutputFileJob`](../plugin-core/src/main/java/com/ibm/plugin/OutputFileJob.java)).
 Indeed, while any SonarQube plugin will natively report the detected cryptographic findings to the SonarQube instance, our plugin adds an output layer capable of exporting the results in any other format.
 These output formats can be defined in the `output` module (with the [`IOutputFileFactory`](../output/src/main/java/com/ibm/output/IOutputFileFactory.java) interface).
 Currently, our plugin exports the findings in the standard [CBOM](https://cyclonedx.org/capabilities/cbom/) format.
 
-Ultimately, the `sonar-cryptography-plugin` is the entry point of our SonarQube plugin, it is a lightweight class that does not contain much logic but instead relies on the following modules.
+Ultimately, the `plugin-core` is the entry point of our SonarQube plugin, it is a lightweight class that does not contain much logic but instead relies on the following modules.
 
 
 ### The language modules
@@ -186,7 +186,7 @@ And add the dependency (using this version reference) under `<!-- language suppo
 
 ### Specifying related file extensions
 
-Now, open the [`pom.xml`](../sonar-cryptography-plugin/pom.xml) of the `sonar-cryptography-plugin` module, and look for the tag `<requiredForLanguages>`.
+Now, open the [`pom.xml`](../plugin-core/pom.xml) of the `plugin-core` module, and look for the tag `<requiredForLanguages>`.
 This is where you should specify the file extensions for which you want the plugin to run.
 In the case of Java, we want the Cryptography Plugin to run on `.java` and `.jsp` files, so we add these file extensions inside the tag, in addition to already existing ones (like `py`, `ipynb` and `go` below). 
 
@@ -365,7 +365,7 @@ In the Java case, these resource files have to be named with the name of the rul
 #### Registering the extension points
 
 Now that we have created our extension points, we need to register them at the plugin level.
-As explained [previously](#the-plugin), it should be done in the `addExtensions` method of [`CryptographyPlugin`](../sonar-cryptography-plugin/src/main/java/com/ibm/plugin/CryptographyPlugin.java).
+As explained [previously](#the-plugin), it should be done in the `addExtensions` method of [`CryptographyPlugin`](../plugin-core/src/main/java/com/ibm/plugin/CryptographyPlugin.java).
 For Java, we add the following lines:
 ```java
 context.addExtensions(
@@ -376,7 +376,7 @@ context.addExtensions(
         // ...
 )
 ```
-Additionally, update the function `getOutputFile` of the [`ScannerManager`](../sonar-cryptography-plugin/src/main/java/com/ibm/plugin/ScannerManager.java) of the plugin module, to add your aggregate of detections to the final list of detections that will be used for generating the CBOM.
+Additionally, update the function `getOutputFile` of the [`ScannerManager`](../plugin-core/src/main/java/com/ibm/plugin/ScannerManager.java) of the plugin module, to add your aggregate of detections to the final list of detections that will be used for generating the CBOM.
 For Java, it looks like:
 ```java
 public IOutputFile getOutputFile() {

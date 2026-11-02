@@ -18,7 +18,7 @@ def verify(plugin_jar, repository):
         assert "${" not in notice, "Unresolved Maven properties in notices"
         assert packaged.read("META-INF/LICENSE.txt") == (root / "LICENSE.txt").read_bytes()
         java_license = (
-            root / "sonar-cryptography-plugin/src/main/resources"
+            root / "plugin-core/src/main/resources"
             / "META-INF/third-party/SSALv1.txt"
         )
         assert packaged.read("META-INF/third-party/SSALv1.txt") == java_license.read_bytes()

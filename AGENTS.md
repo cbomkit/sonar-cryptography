@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a Java 17, multi-module Maven project. `sonar-cryptography-plugin/` registers the SonarQube plugin. `java/`, `python/`, `go/`, and `csharp/` implement language detection; `engine/` provides shared detection logic. `mapper/`, `enricher/`, and `output/` turn findings into a cryptographic bill of materials. Shared code lives in `common/` and `rules/`. Each module keeps production code in `src/main/java` and tests in `src/test/java`; language test inputs live under `src/test/files/`. See `docs/` for rule and language-extension guides.
+This is a Java 17, multi-module Maven project. `plugin-core/` registers the SonarQube plugin. `java/`, `python/`, `go/`, and `csharp/` implement language detection; `engine/` provides shared detection logic. `mapper/`, `enricher/`, and `output/` turn findings into a cryptographic bill of materials. Shared code lives in `common/` and `rules/`. Each module keeps production code in `src/main/java` and tests in `src/test/java`; language test inputs live under `src/test/files/`. See `docs/` for rule and language-extension guides.
 
 ## Build, Test, and Development Commands
 

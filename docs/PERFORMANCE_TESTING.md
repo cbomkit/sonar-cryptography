@@ -115,14 +115,14 @@ SonarQube loads plugins **at startup**, so the JAR must be in place and the cont
 ```bash
 # from the plugin repo root
 mvn clean package -DskipTests
-ls -la sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar   # the artifact
+ls -la plugin-core/target/sonar-cryptography-plugin-*.jar   # the artifact
 ```
 
 **3b. Deploy the JAR into the compose-mounted plugins directory:**
 
 ```bash
 rm -f .SonarQube/plugins/sonar-cryptography-plugin-*.jar
-cp sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar .SonarQube/plugins/
+cp plugin-core/target/sonar-cryptography-plugin-*.jar .SonarQube/plugins/
 ```
 
 (Do **not** copy the `*-sources.jar` or `original-*.jar`.)

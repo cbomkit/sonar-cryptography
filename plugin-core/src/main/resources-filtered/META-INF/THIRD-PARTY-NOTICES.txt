@@ -63,7 +63,7 @@ Packaging
 Analyzer bytecode is combined with this plugin using Maven Shade with
 minimizeJar enabled. Unused classes are removed; package names are not relocated.
 Analyzer source archives and the namespaced legal files are copied without changes.
-The build configuration is sonar-cryptography-plugin/pom.xml in the matching
+The build configuration is plugin-core/pom.xml in the matching
 Sonar Cryptography Plugin release at https://github.com/cbomkit/sonar-cryptography.
 
 This notice documents redistribution materials. It does not grant additional
