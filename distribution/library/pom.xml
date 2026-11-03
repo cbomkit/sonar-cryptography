@@ -20,6 +20,8 @@
         <crypto.pluginName>Sonar Crypto Plugin (library)</crypto.pluginName>
         <!-- jdt-package (EPL-2.0) is in group org.sonarsource.java. -->
         <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.analyzer-commons,org.sonarsource.sslr</sonar.analyzer.groups>
+        <!-- The committed BOMs describe the default plugin variant only. -->
+        <cyclonedx.skip>true</cyclonedx.skip>
     </properties>
 
     <dependencies>

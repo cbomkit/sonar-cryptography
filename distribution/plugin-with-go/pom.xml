@@ -31,6 +31,8 @@
         <sonar.analyzer.groups>org.sonarsource.go</sonar.analyzer.groups>
         <!-- SSALv1: never deployed or published. -->
         <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- The committed BOMs describe the default plugin variant only. -->
+        <cyclonedx.skip>true</cyclonedx.skip>
         <crypto.ssal.warning>This build packages ${project.build.finalName}.jar, which contains SSALv1-licensed code: sonar-go ${sonar.go.version} and the sonar-analyzer-commons classes it embeds (Sonar Source-Available License v1.0, see META-INF/third-party/SSALv1.txt in the JAR). It is for private use under the SSAL terms only. Do not redistribute it or offer it as a service.</crypto.ssal.warning>
     </properties>
 

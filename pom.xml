@@ -369,18 +369,19 @@
                 </executions>
             </plugin>
 
+            <!-- The committed bom/bom.json files describe the default plugin variant only. They
+                 are not written by the build: regenerate them with an explicit run that uses
+                 only the default profile (needs a network connection):
+                     mvn -Pplugin cyclonedx:makeBom cyclonedx:makeAggregateBom
+                 makeBom writes each module's bom/bom.json; makeAggregateBom is an aggregator
+                 and, called from the command line, writes only the root one.
+                 distribution/library and distribution/plugin-with-go set cyclonedx.skip, and
+                 modules that skip deploy (go) are left out by skipNotDeployed (default true).
+                 excludeArtifactId keeps them out of the root BOM with any profile. -->
             <plugin>
                 <groupId>org.cyclonedx</groupId>
                 <version>${cyclonedx-maven-plugin.version}</version>
                 <artifactId>cyclonedx-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>makeAggregateBom</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <projectType>library</projectType>
                     <includeBomSerialNumber>true</includeBomSerialNumber>
@@ -391,6 +392,7 @@
                     <includeTestScope>false</includeTestScope>
                     <includeLicenseText>false</includeLicenseText>
                     <outputReactorProjects>true</outputReactorProjects>
+                    <excludeArtifactId>sonar-cryptography-lib,sonar-cryptography-plugin-with-go,go</excludeArtifactId>
                     <outputFormat>json</outputFormat>
                     <outputName>bom</outputName>
                     <outputDirectory>${project.basedir}/bom/</outputDirectory><!-- usually target, if not redefined in pom.xml -->
