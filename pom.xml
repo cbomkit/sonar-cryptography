@@ -22,30 +22,37 @@
         <module>python</module>
         <module>csharp</module>
         <module>plugin-core</module>
+        <!-- Packaging parent of the three variants; builds nothing itself. -->
+        <module>distribution</module>
     </modules>
 
     <profiles>
-        <!-- The default plugin: uses the server's Java and Python analyzers, no Go.
-             distribution/plugin is added in step 6. -->
+        <!-- The default plugin: uses the server's Java and Python analyzers, no Go. -->
         <profile>
             <id>plugin</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <modules>
+                <module>distribution/plugin</module>
+            </modules>
         </profile>
         <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go and the
              analyzer-commons classes it embeds). For private use under the SSAL terms only; never
-             publish it. distribution/plugin-with-go is added in step 6. -->
+             publish it. -->
         <profile>
             <id>with-go</id>
             <modules>
                 <module>go</module>
+                <module>distribution/plugin-with-go</module>
             </modules>
         </profile>
-        <!-- The library: bundles the LGPL Java and Python analyzers, no Go.
-             distribution/library is added in step 6. -->
+        <!-- The library: bundles the LGPL Java and Python analyzers, no Go. -->
         <profile>
             <id>lib</id>
+            <modules>
+                <module>distribution/library</module>
+            </modules>
         </profile>
     </profiles>
 
@@ -94,6 +101,10 @@
              if an installed analyzer is older. Baseline = versions bundled with SonarQube 26.1. -->
         <sonar.java.minVersion>8.22.0.41895</sonar.java.minVersion>
         <sonar.python.minVersion>5.14.2.29072</sonar.python.minVersion>
+
+        <!-- EPL-2.0. Bundled in every variant; the version is also named in the notice
+             distribution/src/shared-resources/META-INF/third-party/notices/cbomkit-csharp-parser.txt. -->
+        <cbomkit.csharp.parser.version>0.1.3</cbomkit.csharp.parser.version>
 
         <google-java-format.version>1.28.0</google-java-format.version>
     </properties>

@@ -15,6 +15,9 @@
       <maven.compiler.source>17</maven.compiler.source>
       <maven.compiler.target>17</maven.compiler.target>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <!-- Depends on SSALv1-licensed sonar-go and is only built with -Pwith-go: never deployed or
+           published. -->
+      <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 
   <dependencies>

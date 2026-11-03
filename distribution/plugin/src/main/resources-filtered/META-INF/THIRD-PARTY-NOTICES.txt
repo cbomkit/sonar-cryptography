@@ -1,0 +1,35 @@
+Sonar Cryptography Plugin ${project.version}
+
+The Sonar Cryptography Plugin code is licensed under the Apache License 2.0.
+See META-INF/LICENSE.txt. The third-party components listed below keep their
+own licences; the Apache License does not relicense them.
+
+SonarSource analyzers
+
+This JAR bundles no SonarSource analyzer. It uses the analyzers installed in
+SonarQube, through their public API only, and requires (Plugin-RequirePlugins):
+
+  sonar-java    (plugin key java)   ${sonar.java.minVersion} or newer
+  sonar-python  (plugin key python) ${sonar.python.minVersion} or newer
+
+It contains no Go support.
+
+Bundled in object code form
+
+The following component is licensed under the Eclipse Public License 2.0
+(EPL-2.0). See META-INF/third-party/notices/cbomkit-csharp-parser.txt for its
+version, its source code and the terms under which it is distributed.
+
+  cbomkit-csharp-parser ${cbomkit.csharp.parser.version}
+
+Licence texts
+
+  EPL-2.0: META-INF/third-party/EPL-2.0.txt
+
+Packaging
+
+This plugin is combined with its dependencies using the Maven Shade plugin with
+minimizeJar enabled: unused classes are left out, and package names are not
+relocated. The build configuration is distribution/plugin/pom.xml and
+distribution/pom.xml in the matching release at
+https://github.com/cbomkit/sonar-cryptography.

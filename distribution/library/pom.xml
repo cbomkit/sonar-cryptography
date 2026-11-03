@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ibm</groupId>
+        <artifactId>distribution</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- The library (profile lib), for embedding in another tool. It bundles the last
+         LGPL-3.0 releases of sonar-java and sonar-python (root pom) instead of using the analyzers
+         installed in SonarQube, and has no Go. It keeps the plugin manifest entries. -->
+    <artifactId>sonar-cryptography-lib</artifactId>
+    <packaging>sonar-plugin</packaging>
+    <description>The Sonar Cryptography Plugin with the LGPL-3.0 Java and Python analyzers bundled</description>
+
+    <properties>
+        <crypto.pluginName>Sonar Crypto Plugin (library)</crypto.pluginName>
+        <!-- jdt-package (EPL-2.0) is in group org.sonarsource.java. -->
+        <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.analyzer-commons,org.sonarsource.sslr</sonar.analyzer.groups>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>plugin-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Bundled: compile scope instead of the root pom's 'provided'. -->
+        <dependency>
+            <groupId>org.sonarsource.java</groupId>
+            <artifactId>sonar-java-plugin</artifactId>
+            <version>${sonar.java.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.sonarsource.python</groupId>
+            <artifactId>sonar-python-plugin</artifactId>
+            <version>${sonar.python.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <!-- No requirePlugins: the analyzers are bundled. -->
+            <plugin>
+                <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
+                <artifactId>sonar-packaging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Keep the bundled analyzers whole. Our code uses only their public
+                                 API, so minimizeJar would drop nearly all of their implementation
+                                 (parsers, semantic model, sensors), which an embedding tool needs
+                                 to run an analysis. A specifically included class is kept together
+                                 with everything it references, so their third-party dependencies
+                                 stay as far as the analyzers use them. -->
+                            <filters combine.children="append">
+                                <filter>
+                                    <artifact>org.sonarsource.java:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.sonarsource.python:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.sonarsource.analyzer-commons:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.sonarsource.sslr:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

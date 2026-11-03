@@ -186,7 +186,7 @@ And add the dependency (using this version reference) under `<!-- language suppo
 
 ### Specifying related file extensions
 
-Now, open the [`pom.xml`](../plugin-core/pom.xml) of the `plugin-core` module, and look for the tag `<requiredForLanguages>`.
+Now, open the [`pom.xml`](../distribution/pom.xml) of the `distribution` module, and look for the property `crypto.requiredForLanguages` (the `plugin-with-go` variant sets its own value in [its `pom.xml`](../distribution/plugin-with-go/pom.xml)).
 This is where you should specify the file extensions for which you want the plugin to run.
 In the case of Java, we want the Cryptography Plugin to run on `.java` and `.jsp` files, so we add these file extensions inside the tag, in addition to already existing ones (like `py`, `ipynb` and `go` below). 
 

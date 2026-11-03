@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WARNING: this module builds a JAR that contains SSALv1-licensed code: sonar-go and the
+  sonar-analyzer-commons classes it embeds (Sonar Source-Available License v1.0, see
+  src/main/resources/META-INF/third-party/SSALv1.txt). The JAR is for private use under the SSAL
+  terms only. Do not redistribute it or offer it as a service. It is never deployed or published.
+  Build it with: mvn clean package -Pwith-go
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ibm</groupId>
+        <artifactId>distribution</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- The plugin with Go support (profile with-go). Java and Python work as in
+         distribution/plugin, through the installed analyzers. Go uses sonar-go internals that
+         SonarQube does not export to other plugins, so sonar-go is bundled, relocated. -->
+    <artifactId>sonar-cryptography-plugin-with-go</artifactId>
+    <packaging>sonar-plugin</packaging>
+    <description>A SonarQube Plugin to detect cryptographic assets in applications, with Go support</description>
+
+    <properties>
+        <crypto.pluginName>Sonar Crypto Plugin (with Go)</crypto.pluginName>
+        <crypto.requiredForLanguages>java,jsp,py,ipynb,go,cs</crypto.requiredForLanguages>
+        <!-- sonar-go declares no other SonarSource dependency; the analyzer-commons classes it
+             uses are embedded in its own JAR. -->
+        <sonar.analyzer.groups>org.sonarsource.go</sonar.analyzer.groups>
+        <!-- SSALv1: never deployed or published. -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <crypto.ssal.warning>This build packages ${project.build.finalName}.jar, which contains SSALv1-licensed code: sonar-go ${sonar.go.version} and the sonar-analyzer-commons classes it embeds (Sonar Source-Available License v1.0, see META-INF/third-party/SSALv1.txt in the JAR). It is for private use under the SSAL terms only. Do not redistribute it or offer it as a service.</crypto.ssal.warning>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>plugin-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Brings sonar-go-plugin at compile scope. -->
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>go</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
+                <artifactId>sonar-packaging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <requirePlugins>java:${sonar.java.minVersion},python:${sonar.python.minVersion}</requirePlugins>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- SonarQube ships sonar-go too, and every plugin exports
+                                 org/sonar/plugins/<key>/api/ to the others, ahead of its own
+                                 classes. Relocate the bundled copy so that our Go code always
+                                 uses it, not the server's. -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.sonar.go</pattern>
+                                    <shadedPattern>com.ibm.shaded.org.sonar.go</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.sonar.plugins.go</pattern>
+                                    <shadedPattern>com.ibm.shaded.org.sonar.plugins.go</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.sonarsource.analyzer.commons</pattern>
+                                    <shadedPattern>com.ibm.shaded.org.sonarsource.analyzer.commons</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Declared after the shade plugin: within the package phase, executions run in
+                 declaration order, so the inherited copy to .SonarQube/plugins
+                 (copy-to-sonarqube) and the repeated SSAL warning come after the JAR is built.
+                 The other executions are in earlier phases, where the order does not matter. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ssal-warning</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo level="warning" message="WARNING: ${crypto.ssal.warning}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>include-go-release-source</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- The Maven Go sources omit the native bridge and shaded
+                                     modules. Include the complete, pinned release tree. -->
+                                <mkdir dir="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources"/>
+                                <get src="https://codeload.github.com/SonarSource/sonar-go/zip/${sonar.go.source.revision}"
+                                     dest="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources/sonar-go-${sonar.go.version}-${sonar.go.source.revision}-source.zip"
+                                     skipexisting="true" maxtime="60" retries="3"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ssal-warning-after-package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo level="warning" message="WARNING: ${crypto.ssal.warning}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

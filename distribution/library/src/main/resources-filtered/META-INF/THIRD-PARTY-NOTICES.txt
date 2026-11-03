@@ -1,0 +1,81 @@
+Sonar Cryptography Plugin ${project.version}
+
+The Sonar Cryptography Plugin code is licensed under the Apache License 2.0.
+See META-INF/LICENSE.txt. The third-party components listed below keep their
+own licences; the Apache License does not relicense them.
+
+Bundled third-party components
+
+The following SonarSource components are licensed under the GNU Lesser General
+Public License, version 3 (LGPL-3.0):
+
+sonar-java ${sonar.java.version}
+  Project: https://github.com/SonarSource/sonar-java
+  Release source tree: https://github.com/SonarSource/sonar-java/tree/${sonar.java.version}
+  Modules (group org.sonarsource.java, version ${sonar.java.version}):
+    sonar-java-plugin, java-frontend, java-checks, java-checks-common,
+    java-checks-aws, check-list, external-reports, java-jsp, java-surefire
+
+sonar-python ${sonar.python.version}
+  Project: https://github.com/SonarSource/sonar-python
+  Release source tree: https://github.com/SonarSource/sonar-python/tree/${sonar.python.version}
+  Modules (group org.sonarsource.python, version ${sonar.python.version}):
+    sonar-python-plugin, python-frontend, python-checks
+
+sonar-analyzer-commons ${sonar.analyzer-commons.version}
+  Project: https://github.com/SonarSource/sonar-analyzer-commons
+  Modules (group org.sonarsource.analyzer-commons, version ${sonar.analyzer-commons.version}):
+    sonar-analyzer-commons, sonar-analyzer-recognizers, sonar-performance-measure,
+    sonar-regex-parsing, sonar-xml-parsing
+
+sslr 1.24.0.633
+  Project: https://github.com/SonarSource/sslr
+  Modules (group org.sonarsource.sslr, version 1.24.0.633):
+    sslr-core
+
+The following component is licensed under the Eclipse Public License 2.0
+(EPL-2.0):
+
+jdt-package 1.3.0.89
+  A repackaging of the Eclipse JDT compiler used by sonar-java.
+  Modules (group org.sonarsource.java, version 1.3.0.89):
+    jdt-package
+
+Bundled in object code form
+
+The following component is licensed under the Eclipse Public License 2.0
+(EPL-2.0). See META-INF/third-party/notices/cbomkit-csharp-parser.txt for its
+version, its source code and the terms under which it is distributed.
+
+  cbomkit-csharp-parser ${cbomkit.csharp.parser.version}
+
+Licence texts
+
+  LGPL-3.0: META-INF/third-party/LGPL-3.0.txt
+  GPL-3.0:  META-INF/third-party/GPL-3.0.txt (LGPL-3.0 adds permissions to it)
+  EPL-2.0:  META-INF/third-party/EPL-2.0.txt
+
+The original legal files of each component (licences, notices and the
+licences of components they embed) are kept unchanged under
+META-INF/third-party/analyzers/<module>-<version>-jar/. Individual files may
+have other licences; their original notices apply.
+
+Corresponding source
+
+The unmodified sources JAR of every module listed above under "Bundled
+third-party components", as published on Maven Central, is included under
+META-INF/third-party/analyzer-sources/. Each file is named
+<module>-<version>-sources.jar. The same JARs are available from
+https://repo.maven.apache.org/maven2/ under each module's Maven coordinate.
+
+Packaging
+
+The modules above are combined with this plugin using the Maven Shade plugin.
+The SonarSource modules are included whole; of the other dependencies, classes
+this plugin and the bundled modules do not use are left out (minimizeJar).
+Package names are not relocated. The bundled components are not modified.
+The build configuration is distribution/library/pom.xml and
+distribution/pom.xml in the matching release at
+https://github.com/cbomkit/sonar-cryptography. To use a modified version of an
+LGPL-3.0 component, rebuild the library from that source with the modified
+component.

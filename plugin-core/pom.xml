@@ -9,8 +9,10 @@
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
+    <!-- The plugin code (CryptographyPlugin, ScannerManager, OutputFileJob, ...) and its tests.
+         A plain jar: the modules under distribution/ package it into the plugin variants. -->
     <artifactId>plugin-core</artifactId>
-    <packaging>sonar-plugin</packaging>
+    <packaging>jar</packaging>
 
     <description>A SonarQube Plugin to detect cryptographic assets in applications</description>
     <inceptionYear>2023</inceptionYear>
@@ -19,9 +21,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <sonar.jreMinVersion>17</sonar.jreMinVersion>
-        <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.go</sonar.analyzer.groups>
     </properties>
     <dependencies>
         <dependency>
@@ -42,8 +41,8 @@
             <version>2.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- No go module: this plugin uses the server's analyzers, and Go needs a bundled
-             (SSALv1) sonar-go. The with-go variant adds it. -->
+        <!-- No go module: Go needs a bundled (SSALv1) sonar-go; distribution/plugin-with-go
+             adds it. -->
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>csharp</artifactId>
@@ -53,147 +52,15 @@
     </dependencies>
 
     <build>
-        <!-- Until distribution/plugin packages the plugin (step 6 of the variants plan), this
-             module still builds the plugin JAR; keep its released file name. -->
-        <finalName>sonar-cryptography-plugin-${project.version}</finalName>
         <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
+            <!-- plugin.properties (plugin.version), read by CBOMOutputFile. -->
             <resource>
                 <directory>src/main/resources-filtered</directory>
                 <filtering>true</filtering>
             </resource>
-            <resource>
-                <directory>${project.build.directory}/analyzer-resources</directory>
-            </resource>
-            <resource>
-                <directory>${project.basedir}/..</directory>
-                <includes>
-                    <include>LICENSE.txt</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
-            </resource>
         </resources>
 
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.11.0</version>
-                <executions>
-                    <execution>
-                        <id>preserve-analyzer-notices</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
-                            <includeScope>runtime</includeScope>
-                            <!-- Keep each artifact's files separate: Shade otherwise keeps only
-                                 one copy of shared paths such as licenses/LICENSE.txt. -->
-                            <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
-                            <includes>**/*LICENSE*,**/*NOTICE*,**/*license*,**/*notice*,**/license/**,**/licenses/**,about_files/**</includes>
-                            <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>include-analyzer-sources</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Plugin sources alone omit the Java and Python frontends.
-                                 Include the sources of the resolved analyzer modules too. -->
-                            <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
-                            <includeScope>runtime</includeScope>
-                            <classifier>sources</classifier>
-                            <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
-                            <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>include-go-release-source</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <!-- The Maven Go sources omit the native bridge and shaded
-                                     modules. Include the complete, pinned release tree. -->
-                                <mkdir dir="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources"/>
-                                <get src="https://codeload.github.com/SonarSource/sonar-go/zip/${sonar.go.source.revision}"
-                                     dest="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources/sonar-go-${sonar.go.version}-${sonar.go.source.revision}-source.zip"
-                                     skipexisting="true" maxtime="60" retries="3"/>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
-                <artifactId>sonar-packaging-maven-plugin</artifactId>
-                <version>1.25.1.3002</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <pluginKey>sonar-crypto-plugin</pluginKey>
-                    <pluginName>Sonar Crypto Plugin</pluginName>
-                    <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
-                    <!-- This line must specify all file extensions which should be scanned by the plugin -->
-                    <requiredForLanguages>java,jsp,py,ipynb,cs</requiredForLanguages>
-                    <!-- The language analyzers are 'provided': their public API packages
-                         (org.sonar.plugins.<key>.api) are supplied by the installed plugins -->
-                    <requirePlugins>java:${sonar.java.minVersion},python:${sonar.python.minVersion}</requirePlugins>
-                    <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
-                    <sonarLintSupported>true</sonarLintSupported>
-                    <skipDependenciesPackaging>true</skipDependenciesPackaging>
-                    <jreMinVersion>17</jreMinVersion>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.2</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>false</shadedArtifactAttached>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <minimizeJar>true</minimizeJar>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
-                                <!-- Merge the language modules' META-INF/services/com.ibm.output.ILanguageModule
-                                     files; without it the JAR keeps only one language. -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -204,58 +71,6 @@
                     <target>17</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-files-on-build</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>../.SonarQube/plugins</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>target</directory>
-                                    <filtering>false</filtering>
-                                    <includes>
-                                        <include>sonar-cryptography-plugin-*.jar</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>sonar-jre-defined</id>
-            <activation>
-                <property>
-                    <name>env.SONAR_JRE</name>
-                </property>
-            </activation>
-            <properties>
-                <!-- Override only if necessary -->
-                <sonar.jreMinVersion>${env.SONAR_JRE}</sonar.jreMinVersion>
-            </properties>
-        </profile>
-        <profile>
-            <id>sonar-jre-undefined</id>
-            <activation>
-                <property>
-                    <name>!env.SONAR_JRE</name>
-                </property>
-            </activation>
-            <properties>
-                <sonar.jreMinVersion>17</sonar.jreMinVersion>
-            </properties>
-        </profile>
-    </profiles>
 </project>

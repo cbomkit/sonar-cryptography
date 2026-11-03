@@ -328,20 +328,27 @@ start a discussion using [GitHub Discussions](https://github.com/cbomkit/sonar-c
 ## License
 
 The independently authored code in this repository is licensed under the
-[Apache License 2.0](LICENSE.txt). The packaged plugin also contains third-party
-code under its own licences, including sonar-java, sonar-python and sonar-go
-under the [Sonar Source-Available License v1.0](https://www.sonarsource.com/license/ssal-1-0-0/),
-subject to their individual-file licence notices.
+[Apache License 2.0](LICENSE.txt). The build produces three variants, which
+contain different third-party code. Each JAR lists it in
+`META-INF/THIRD-PARTY-NOTICES.txt`, with the licence texts under
+`META-INF/third-party/`.
 
-The plugin JAR includes `META-INF/THIRD-PARTY-NOTICES.txt`, the SSAL text, and
-each resolved analyser module's original legal files under
-`META-INF/third-party/analyzers/`. Matching upstream Maven source JARs are included
-under `META-INF/third-party/analyzer-sources/`, including the Java and Python
-frontends. A pinned complete sonar-go release source ZIP in the same directory
-also provides the native Go bridge, shaded Go modules and build scripts. Its
-public commit maps to the plugin's build revision through `GitOrigin-RevId`.
-The notices describe the versions, source locations and packaging transformations.
+| Variant (Maven profile) | JAR | Bundled SonarSource analyzers |
+|-------------------------|-----|-------------------------------|
+| `plugin` (default)      | `sonar-cryptography-plugin-<version>.jar` | None: uses the Java and Python analyzers installed in SonarQube |
+| `lib`                   | `sonar-cryptography-lib-<version>.jar` | sonar-java 8.6 and sonar-python 4.23 (LGPL-3.0), with their sources |
+| `with-go`               | `sonar-cryptography-plugin-with-go-<version>.jar` | sonar-go (SSALv1), with its sources |
 
-These packaging materials do not establish that every use is permitted by SSAL.
-The permitted-purpose restrictions and the provenance and licence notices of
-any adapted implementation code still require review before release.
+All three bundle the C# parser
+[cbomkit-csharp-parser](https://github.com/fynnth/cbomkit-csharp-parser), which
+is licensed under the [Eclipse Public License 2.0](https://www.eclipse.org/legal/epl-2.0/).
+The library also bundles jdt-package (EPL-2.0), the Eclipse JDT compiler used
+by sonar-java. All three use the plugin key `sonar-crypto-plugin`, so only one of
+them can be installed in a SonarQube instance at a time.
+
+> [!WARNING]
+> The `with-go` variant contains code licensed under the
+> [Sonar Source-Available License v1.0](https://www.sonarsource.com/license/ssal-1-0-0/)
+> (sonar-go and the sonar-analyzer-commons classes it embeds). Build it only for
+> private use under the SSAL terms; do not redistribute it or offer it as a
+> service. It is never published.
