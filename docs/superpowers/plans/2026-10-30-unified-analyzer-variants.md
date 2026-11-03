@@ -968,8 +968,11 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
         link.
   - [x] `docs/TROUBLESHOOTING.md`: building copies one variant to `.SonarQube/plugins`.
   - [x] Repo memory updated.
-  - Deviation: the plugin key is `crypto` (manifest `Plugin-Key`), not `sonar-crypto-plugin`
-    as Q1 says; the README said `sonar-crypto-plugin` since step 6 and now says `crypto`.
+  - Correction (README only, the key is unchanged): the POM configures
+    `<pluginKey>sonar-crypto-plugin</pluginKey>`, and sonar-packaging turns that into the
+    manifest key `Plugin-Key: crypto` (it drops `sonar-`, `-plugin` and non-alphanumerics).
+    Releases 1.5.1, 1.6.1 and 1.7.0 also have `Plugin-Key: crypto`. The README named the POM
+    value since step 6 and now names the effective key `crypto`.
   - Checks: no broken relative links in README, CONTRIBUTING, AGENTS and `docs/*.md`; the
     documented `mvn test -pl go -am -Pwith-go` (52 go tests) and `mvn test -pl java` pass in
     `/tmp/sc-copy`. V13 holds.
@@ -1099,7 +1102,7 @@ Still open:
 
 | #  | Question | Decision | Where applied |
 |----|----------|----------|---------------|
-| Q1 | Artifact and final names | `sonar-cryptography-plugin` (default), `sonar-cryptography-plugin-with-go`, `sonar-cryptography-lib`. The plugin key stays `sonar-crypto-plugin` for all three (not asked to change). The code module is renamed `plugin-core` to free the artifactId. | §1, D3, §4, 6.6, V14 |
+| Q1 | Artifact and final names | `sonar-cryptography-plugin` (default), `sonar-cryptography-plugin-with-go`, `sonar-cryptography-lib`. The plugin key stays `sonar-crypto-plugin` (POM `pluginKey`; manifest `Plugin-Key: crypto`, as in 1.7.0) for all three (not asked to change). The code module is renamed `plugin-core` to free the artifactId. | §1, D3, §4, 6.6, V14 |
 | Q2 | SSAL gate for with-go | A warning is enough; no opt-in property. | D5 |
 | Q3 | Variant described by the committed `bom.json` | The default plugin variant. | 8.3, V16 |
 | Q4 | Parent POM name | ~~Rename to `pom-parent.xml`~~, superseded by Q6. | — |
