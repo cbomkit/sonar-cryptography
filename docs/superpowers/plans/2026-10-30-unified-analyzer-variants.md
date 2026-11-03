@@ -1008,7 +1008,7 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
       `<id>`, `<activation>` and `<modules>`, and the effective POM of every shared module is the
       same with no profile, `-Pwith-go` and `-Plib` (step 5.3).
 - [x] V9 The shared modules' tests pass on the LGPL baseline and with the 8.22/5.29/2.30 overrides.
-- [ ] V10 `MissingAnalyzerTest`: a Java-only, a Python-only and a C#-only classpath each load the
+- [x] V10 `MissingAnalyzerTest`: a Java-only, a Python-only and a C#-only classpath each load the
       plugin without `NoClassDefFoundError` (plugin variant).
 - [ ] V11 e2e on SQ 26.1 (docker compose, fixture `/tmp/crypto-e2e`, user token):
       - plugin JAR: the server starts; scans of Java-only, Python-only and mixed projects produce
@@ -1070,7 +1070,12 @@ copy and a settings file without servers; the repository was deleted afterwards.
   effective POM of the 11 shared modules is byte-identical with no profile, `-Pwith-go` and
   `-Plib`.
 - V9: with the 8.22/5.29/2.30 overrides, `-Pplugin` 516 and `-Pwith-go` 568 tests pass.
-- V10: see the open item below.
+- V10: `MissingAnalyzerTest` now has a third case, "without sonar-java and sonar-python" (a
+  C#-only project), added after the pass: both analyzers hidden, neither check registrar
+  registered, `OutputFileJob` and `CryptoCSharpSensor` registered, every extension loads, and
+  `ScannerManager` runs with C# as the only available language. 3 of 3 pass; the case fails as
+  expected when its assertion is broken on purpose. Default build: 517 tests, Spotless and
+  Checkstyle clean.
 - V13: README, AGENTS.md and CONTRIBUTING.md name the three profiles and their commands; the
   README has the SSAL warning.
 - V15: `-Pplugin,lib` uploaded 54 files, all to the file repository (0 other uploads, 0
@@ -1086,10 +1091,6 @@ copy and a settings file without servers; the repository was deleted afterwards.
   33.3.1-jre (`pom.properties` in the JAR), the version sonar-python 4.23's POM declares.
 
 Still open:
-- **V10, partly.** The committed `MissingAnalyzerTest` has two cases, without sonar-java
-  (Python and C#) and without sonar-python (Java and C#). The C#-only case (both hidden) is not
-  in it. Added in the copy only, it passes (3 of 3). To meet V10 as written, add that case to the
-  committed test.
 - **V11.** Not run: SonarQube is not running and the fixture `/tmp/crypto-e2e` no longer exists.
   Needs `docker compose up`, a fixture and a user token.
 - V12: dropped (Q11).

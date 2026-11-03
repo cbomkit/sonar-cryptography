@@ -40,8 +40,9 @@ import org.sonar.api.utils.Version;
 
 /**
  * The scanner and SonarLint load analyzers per detected language, so this plugin may run without
- * sonar-java or sonar-python. Reproduces that by hiding the analyzer's packages from the plugin's
- * classloader, then loads every registered extension and runs the CBOM post-job's manager.
+ * sonar-java or sonar-python, or without both on a C#-only project. Reproduces that by hiding the
+ * analyzers' packages from the plugin's classloader, then loads every registered extension and runs
+ * the CBOM post-job's manager.
  */
 class MissingAnalyzerTest {
 
@@ -87,12 +88,17 @@ class MissingAnalyzerTest {
         }
     }
 
+    // Columns: missing analyzers; hidden package prefixes; extensions that must not be registered.
     @ParameterizedTest(name = "without {0}")
     @CsvSource({
         "sonar-java,   org.sonar.plugins.java.;org.sonar.java.,  JavaCheckRegistrar",
-        "sonar-python, org.sonar.plugins.python.;org.sonar.python., PythonCheckRegistrar"
+        "sonar-python, org.sonar.plugins.python.;org.sonar.python., PythonCheckRegistrar",
+        // A C#-only project: the scanner loads neither analyzer.
+        "sonar-java and sonar-python, "
+                + "org.sonar.plugins.java.;org.sonar.java.;org.sonar.plugins.python.;org.sonar.python., "
+                + "JavaCheckRegistrar;PythonCheckRegistrar"
     })
-    void runsWithoutAnalyzer(String analyzer, String hiddenPackages, String skippedExtension)
+    void runsWithoutAnalyzer(String analyzer, String hiddenPackages, String skippedExtensions)
             throws Exception {
         try (HidingClassLoader loader = new HidingClassLoader(List.of(hiddenPackages.split(";")))) {
             final Plugin plugin =
@@ -116,7 +122,7 @@ class MissingAnalyzerTest {
             }
             assertThat(extensions)
                     .extracting(Class::getSimpleName)
-                    .doesNotContain(skippedExtension)
+                    .doesNotContain(skippedExtensions.split(";"))
                     .contains("OutputFileJob", "CryptoCSharpSensor");
             // What the scanner's container does: load each extension and read its annotations.
             for (Class<?> extension : extensions) {
