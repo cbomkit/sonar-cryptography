@@ -975,39 +975,39 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
     `/tmp/sc-copy`. V13 holds.
   - Still open in §6: V11 (e2e on SQ 26.1 with the plugin and the with-go JAR) has not been run
     on this branch; it needs the local SonarQube and a user token.
-  - [ ] User commits step 10.
+  - [x] User commits step 10 (`e8e2096d`).
 
 ## 6. Validation checklist (run after each relevant step; all must hold at the end)
 
-- [ ] V1 `mvn clean package`, `mvn clean package -Plib` and `mvn clean package -Pwith-go` all
+- [x] V1 `mvn clean package`, `mvn clean package -Plib` and `mvn clean package -Pwith-go` all
       succeed with tests, Checkstyle and Spotless.
-- [ ] V2 Each JAR passes `verify_analyzer_packaging.py --variant <v>`.
-- [ ] V3 `unzip -l` of the plugin JAR: 0 entries under `org/sonar/java/`, `org/sonar/python/`,
+- [x] V2 Each JAR passes `verify_analyzer_packaging.py --variant <v>`.
+- [x] V3 `unzip -l` of the plugin JAR: 0 entries under `org/sonar/java/`, `org/sonar/python/`,
       `org/sonar/go/` or `org/sonarsource/`; the manifest has
       `Plugin-RequirePlugins: java:8.22.0.41895,python:5.14.2.29072`.
-- [ ] V4 `sonar-cryptography-lib` JAR: bundled sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, commons 2.14.0.3087,
+- [x] V4 `sonar-cryptography-lib` JAR: bundled sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, commons 2.14.0.3087,
       sslr 1.24; 0 "SSAL" matches; no Go classes; no `Plugin-RequirePlugins`.
-- [ ] V4b `sonar-cryptography-lib` JAR keeps the bundled analyzers whole (F7): for every bundled
+- [x] V4b `sonar-cryptography-lib` JAR keeps the bundled analyzers whole (F7): for every bundled
       `org.sonarsource.{java,python,analyzer-commons,sslr}` artifact, all of its classes are in the
       JAR (same per-artifact count as in the audit of 2026-11-02, but expecting 100 %).
-- [ ] V4a `sonar-cryptography-lib` JAR and jdt-package: `org/eclipse/jdt/` classes,
+- [x] V4a `sonar-cryptography-lib` JAR and jdt-package: `org/eclipse/jdt/` classes,
       `analyzer-sources/jdt-package-*-sources.jar`, `META-INF/third-party/EPL-2.0.txt` and
       `analyzers/jdt-package-*-jar/about.html` are present; `THIRD-PARTY-NOTICES.txt` lists
       jdt-package as EPL-2.0 and refers to `EPL-2.0.txt`.
-- [ ] V5 With-go JAR: contains Go engine and plugin classes and the relocated sonar-go; `SSALv1.txt`
+- [x] V5 With-go JAR: contains Go engine and plugin classes and the relocated sonar-go; `SSALv1.txt`
       present; the build log contains the SSAL warning; `go` is in `Plugin-RequiredForLanguages`;
       `mvn deploy` skips it.
-- [ ] V5a `go` resolves analyzer-commons 2.14.0.3087 (`dependency:tree`), unless step 4.4 recorded a
+- [x] V5a `go` resolves analyzer-commons 2.14.0.3087 (`dependency:tree`), unless step 4.4 recorded a
       reason for the 2.30 override. Any override is in `go/pom.xml` only, with a comment.
-- [ ] V6 No duplicated source: `git ls-files '*.java' | xargs -n1 basename | sort | uniq -d`
+- [x] V6 No duplicated source: `git ls-files '*.java' | xargs -n1 basename | sort | uniq -d`
       shows no new duplicates compared with `main`, and there is no copy of a Java file under
       `distribution/`.
-- [ ] V7 No commented-out variant code (step 8.1/8.2 greps are empty).
-- [ ] V8 `engine` has no Go references; `pom.xml` has no `sonar-go-plugin` in `<dependencies>`.
-- [ ] V8a There is exactly one root POM (`ls pom*.xml` = `pom.xml`). Its profiles contain only
+- [x] V7 No commented-out variant code (step 8.1/8.2 greps are empty).
+- [x] V8 `engine` has no Go references; `pom.xml` has no `sonar-go-plugin` in `<dependencies>`.
+- [x] V8a There is exactly one root POM (`ls pom*.xml` = `pom.xml`). Its profiles contain only
       `<id>`, `<activation>` and `<modules>`, and the effective POM of every shared module is the
       same with no profile, `-Pwith-go` and `-Plib` (step 5.3).
-- [ ] V9 The shared modules' tests pass on the LGPL baseline and with the 8.22/5.29/2.30 overrides.
+- [x] V9 The shared modules' tests pass on the LGPL baseline and with the 8.22/5.29/2.30 overrides.
 - [ ] V10 `MissingAnalyzerTest`: a Java-only, a Python-only and a C#-only classpath each load the
       plugin without `NoClassDefFoundError` (plugin variant).
 - [ ] V11 e2e on SQ 26.1 (docker compose, fixture `/tmp/crypto-e2e`, user token):
@@ -1018,24 +1018,81 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
       - library JAR: **not tested** (Q11). The user tests it in the embedding tool.
 - [ ] V12 ~~The CBOM of the plugin and the library variant are identical~~ Dropped (Q11): no
       runtime test of the library.
-- [ ] V13 README, AGENTS.md and CONTRIBUTING.md name the three profiles and the command for each;
+- [x] V13 README, AGENTS.md and CONTRIBUTING.md name the three profiles and the command for each;
       the README has the SSAL warning for with-go.
-- [ ] V14 Final JAR names: `sonar-cryptography-plugin-<v>.jar`,
+- [x] V14 Final JAR names: `sonar-cryptography-plugin-<v>.jar`,
       `sonar-cryptography-plugin-with-go-<v>.jar`, `sonar-cryptography-lib-<v>.jar`.
-- [ ] V15 A dry run of `mvn deploy -Pplugin,lib` publishes the parent, the shared modules,
+- [x] V15 A dry run of `mvn deploy -Pplugin,lib` publishes the parent, the shared modules,
       `plugin-core`, `distribution`, `sonar-cryptography-plugin` and `sonar-cryptography-lib`
       exactly once each. A dry run of `mvn deploy -Pwith-go` publishes nothing for `go` or
       `sonar-cryptography-plugin-with-go`.
-- [ ] V16 The committed `bom.json` files are unchanged after `mvn deploy -Pplugin,lib` (dry run),
+- [x] V16 The committed `bom.json` files are unchanged after `mvn deploy -Pplugin,lib` (dry run),
       `mvn package -Plib` and `mvn package -Pwith-go` (git diff is empty). Only
       `mvn -Pplugin cyclonedx:makeAggregateBom` changes them.
-- [ ] V17 All three JARs contain `META-INF/third-party/EPL-2.0.txt` and
+- [x] V17 All three JARs contain `META-INF/third-party/EPL-2.0.txt` and
       `META-INF/third-party/notices/cbomkit-csharp-parser.txt`. The notice names the bundled parser
       version, and its source URL returns 200. There is exactly one `EPL-2.0.txt` in the source tree
       (`git ls-files '*EPL-2.0.txt'`).
-- [ ] V18 `google-java-format` is not a dependency of any module (`mvn dependency:tree
+- [x] V18 `google-java-format` is not a dependency of any module (`mvn dependency:tree
       -Dincludes=com.google.googlejavaformat` is empty with every profile). `mvn spotless:check` still
       works. The Guava in the library JAR is the version python-frontend 4.23 asks for.
+
+### Final pass (2026-11-03, committed HEAD `e8e2096d`)
+
+Run on a `git archive HEAD` export in `/tmp/sc-final` (scripts `/tmp/s6-final.sh`,
+`/tmp/s6-final-2.sh`, summary `/tmp/s6f-summary.txt`). **Nothing was published**: the only deploy
+was the dry run into a temporary file repository, with the GitHub Packages URL rewritten in the
+copy and a settings file without servers; the repository was deleted afterwards.
+
+- V1: `clean install` with `-Pplugin` 516 tests, `-Pwith-go` 568, `-Plib` 516; 0 failures, 0
+  errors; 0 Checkstyle violations; `spotless:check` passes with each profile. The two javac
+  warnings in `engine` (`SyntaxToken.line()`/`column()` deprecated for removal) are not
+  Checkstyle findings.
+- V2: all three JARs pass `verify_analyzer_packaging.py`. V14: the three final names as listed.
+- V3: 0 entries under `org/sonar/java/`, `org/sonar/python/`, `org/sonar/go/`,
+  `org/sonarsource/`; `Plugin-RequirePlugins: java:8.22.0.41895,python:5.14.2.29072`.
+- V4/V4a/V4b: sources of sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, analyzer-commons
+  2.14.0.3087, sslr-core 1.24.0.633 and jdt-package 1.3.0.89 (19 sources JARs); 0 `SSAL`/`SSALv1`
+  words in the JAR and all nested archives; 0 Go entries; no `Plugin-RequirePlugins`; 2,232
+  `org/eclipse/jdt/` classes, `EPL-2.0.txt`, jdt `about.html` and sources JAR present, jdt-package
+  in the notice; all 19 bundled SonarSource artifacts have all their classes (script asserts
+  kept == total).
+- V5: 9 `com/ibm/engine/language/go/` classes, 45 Go plugin classes, 270 relocated
+  `com/ibm/shaded/` classes, 0 unrelocated sonar-go/analyzer-commons entries, `SSALv1.txt`,
+  `go` in `Plugin-RequiredForLanguages`, the SSAL warning twice in the build log, and 2
+  "Skipping artifact deployment" in the dry run.
+- V5a: `go` resolves analyzer-commons 2.14.0.3087 only; no override in `go/pom.xml`.
+- V6: 17 duplicate Java basenames in HEAD and on `main`, none new; no Java file under
+  `distribution/`. V7: both greps empty.
+- V8: no Go dependency or import in `engine/` (the one match is a Javadoc sentence in
+  `CSharpScanContext` that mentions Go); no `sonar-go-plugin` in the root `<dependencies>`.
+- V8a: one root `pom.xml`; profiles contain only `id`, `activation` (plugin) and `modules`; the
+  effective POM of the 11 shared modules is byte-identical with no profile, `-Pwith-go` and
+  `-Plib`.
+- V9: with the 8.22/5.29/2.30 overrides, `-Pplugin` 516 and `-Pwith-go` 568 tests pass.
+- V10: see the open item below.
+- V13: README, AGENTS.md and CONTRIBUTING.md name the three profiles and their commands; the
+  README has the SSAL warning.
+- V15: `-Pplugin,lib` uploaded 54 files, all to the file repository (0 other uploads, 0
+  `maven.pkg.github.com`): `sonar-cryptography`, the 9 shared modules, `plugin-core`,
+  `distribution`, `sonar-cryptography-plugin` and `sonar-cryptography-lib` once each. `-Pwith-go`
+  added nothing for `go` or `sonar-cryptography-plugin-with-go`.
+- V16: the source tree, including every `bom.json`, is unchanged after the three builds and
+  after the dry runs.
+- V17: all three JARs have `EPL-2.0.txt` and the parser notice; the notice names 0.1.3, which
+  is the bundled version (`bundled-dependencies.txt`); the project URL and the Maven Central
+  sources JAR URL return 200; one `EPL-2.0.txt` in the tree.
+- V18: no `google-java-format` in `dependency:tree` with any profile; Guava in the library is
+  33.3.1-jre (`pom.properties` in the JAR), the version sonar-python 4.23's POM declares.
+
+Still open:
+- **V10, partly.** The committed `MissingAnalyzerTest` has two cases, without sonar-java
+  (Python and C#) and without sonar-python (Java and C#). The C#-only case (both hidden) is not
+  in it. Added in the copy only, it passes (3 of 3). To meet V10 as written, add that case to the
+  committed test.
+- **V11.** Not run: SonarQube is not running and the fixture `/tmp/crypto-e2e` no longer exists.
+  Needs `docker compose up`, a fixture and a user token.
+- V12: dropped (Q11).
 
 ## 7. Decisions (2026-10-30)
 
