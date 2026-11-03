@@ -102,6 +102,22 @@
                                         <include>**</include>
                                     </includes>
                                 </filter>
+                                <!-- sonar-java-plugin and spring-core, spring-jcl and
+                                     spring-expression (its dependencies) each have
+                                     META-INF/license.txt. At the top level it would clash with our
+                                     META-INF/LICENSE.txt on case-insensitive file systems. All
+                                     four copies are byte-identical (Apache-2.0 plus the Spring
+                                     subcomponent licences), and the dependency plugin keeps that
+                                     text under
+                                     META-INF/third-party/analyzers/sonar-java-plugin-*-jar/META-INF/.
+                                     Their notice.txt files are merged into META-INF/NOTICE by
+                                     the ApacheNoticeResourceTransformer. -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/license.txt</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>

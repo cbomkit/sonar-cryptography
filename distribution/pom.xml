@@ -104,6 +104,22 @@
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </configuration>
                         </execution>
+                        <!-- The artifacts the shade plugin can bundle, with their files. Read by
+                             distribution/src/test/python/verify_analyzer_packaging.py, which
+                             checks that every bundled artifact under a licence other than
+                             Apache, MIT or BSD is named in the notices with its licence text. -->
+                        <execution>
+                            <id>list-bundled-dependencies</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>list</goal>
+                            </goals>
+                            <configuration>
+                                <includeScope>runtime</includeScope>
+                                <outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+                                <outputFile>${project.build.directory}/bundled-dependencies.txt</outputFile>
+                            </configuration>
+                        </execution>
                         <execution>
                             <id>preserve-analyzer-notices</id>
                             <phase>generate-resources</phase>
