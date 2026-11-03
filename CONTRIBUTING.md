@@ -40,8 +40,44 @@ Execute the following command in the project directory:
 ```shell
 mvn clean package
 ```
-The `.jar` file will be stored in the target directory and also copied to
-`.SonarQube/plugins`.
+This builds the default `plugin` variant. The `.jar` file is stored in
+`distribution/plugin/target` and also copied to `.SonarQube/plugins`.
+
+The other variants are selected with a Maven profile (see the
+[README](README.md#build)):
+```shell
+# Plugin with Go support (bundles SSALv1-licensed sonar-go: private use only)
+mvn clean package -Pwith-go
+
+# Library for embedding in another tool (bundles the LGPL-3.0 analyzers)
+mvn clean package -Plib
+```
+Naming a profile turns the default `plugin` profile off. Do not combine `plugin`
+and `with-go`. The usual commands work unchanged for the default variant, for
+example `mvn test`, `mvn test -pl java` and `mvn spotless:apply`. For Go work, add
+the profile: `mvn test -pl go -am -Pwith-go`.
+
+### Profiles in the IDE
+
+The `go` module is part of the build only with the `with-go` profile, and
+`distribution/library` only with `lib`. To work on them in an IDE, enable the
+profile there:
+
+- **IntelliJ IDEA:** in the Maven tool window, open *Profiles*, tick `with-go`
+  (or `lib`) and reload the Maven projects.
+- **VS Code (Language Support for Java):** the Maven import has no profile
+  setting. Use a Maven settings file that activates the profile:
+  ```xml
+  <settings>
+    <activeProfiles>
+      <activeProfile>with-go</activeProfile>
+    </activeProfiles>
+  </settings>
+  ```
+  Point `java.configuration.maven.userSettings` at it, then run
+  *Java: Clean Java Language Server Workspace*. This file replaces your
+  `~/.m2/settings.xml` for the import, so copy any mirrors or servers you need
+  into it, and keep it out of the repository.
 
 ## Run the Plugin with SonarQube
 

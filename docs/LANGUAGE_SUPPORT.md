@@ -14,9 +14,12 @@ Defining those rules as part of a SonarQube plugin allows us to easily integrate
 
 The project is composed of the following modules:
 - The plugin: `plugin-core`
-- One module per supported language, like `java`, `python` and `go`
+- One module per supported language, like `java`, `python`, `csharp` and `go`
 - The detection engine: `engine`
 - Four other modules: `mapper`, `enricher`, `output` and `common`
+- The packaging of the three variants under `distribution/`: `plugin` (default), `plugin-with-go`
+  (adds the `go` module, profile `with-go`) and `library` (profile `lib`); see the
+  [README](../README.md#build)
 
 
 ```mermaid
@@ -36,15 +39,16 @@ flowchart TB
         PTRANS["translation/<br/>translator/ · reorganizer/"]
     end
 
-    subgraph GO["go"]
+    subgraph GO["go (profile with-go)"]
         direction TB
         GRULES["rules/detection/<br/>gocrypto/"]
         GTRANS["translation/"]
+        GENGINE["engine/language/go/"]
     end
 
     subgraph SHARED["shared modules"]
         direction LR
-        ENGINE["<b>engine</b><br/>language/: java/ · python/ · go/"]
+        ENGINE["<b>engine</b><br/>language/: java/ · python/ · csharp/"]
         MAPPER["<b>mapper</b><br/>mappers: jca/ · bc/ · pyca/ · gocrypto/ · ssl/"]
         OUTPUT["<b>output</b><br/>cyclonedx/ (CBOM)"]
         ENRICHER["<b>enricher</b>"]
@@ -60,14 +64,15 @@ flowchart TB
     GO --> SHARED
 ```
 
-*High level diagram showing the architecture of the various modules composing the Sonar Cryptography Plugin, shown here with its three language extensions (java, python and go). The `plugin-core` module directly depends on the language modules, which themselves depend on a set of shared modules. The extendable parts of the modules are: the engine language support (`engine/.../language/`), the library-specific mappers (in `mapper`), and the choice of output format (in `output`).*
+*High level diagram showing the architecture of the various modules composing the Sonar Cryptography Plugin, shown here with three of its language extensions (java, python and go; csharp is built the same way). The `plugin-core` module depends on the language modules packaged into the variant, which themselves depend on a set of shared modules. The `go` module also holds the Go part of the engine, because it uses sonar-go, which only the `with-go` variant bundles. The extendable parts of the modules are: the engine language support (`engine/.../language/`), the library-specific mappers (in `mapper`), and the choice of output format (in `output`).*
 
 ### The plugin
 
 The ([`plugin-core`](../plugin-core/)) module creates the single SonarQube plugin, for all supported languages, so that we have only one cryptography plugin (and not one per language). 
 
 Its main class is [`CryptographyPlugin`](../plugin-core/src/main/java/com/ibm/plugin/CryptographyPlugin.java) which implements the Sonar [`Plugin`](https://javadocs.sonarsource.org/10.3.0.1951/org/sonar/api/Plugin.html) interface, and registers all rules for all languages.
-This is done through the `addExtensions` method, and the extension classes to add vary depending on the language (they are usually mentioned in the documentation, or at least appear in the example plugins provided by Sonar – in the class implementing `Plugin`).
+It does not name the languages itself: each language module provides an [`ILanguageModule`](../output/src/main/java/com/ibm/output/ILanguageModule.java), found through Java's `ServiceLoader` by [`LanguageModules`](../plugin-core/src/main/java/com/ibm/plugin/LanguageModules.java), and the plugin adds the extensions each module returns (see [*Registering the language module*](#registering-the-language-module)).
+So a variant supports exactly the languages whose module is packaged into it.
 
 This module also defines the choice of output format for all the findings (in [`OutputFileJob`](../plugin-core/src/main/java/com/ibm/plugin/OutputFileJob.java)).
 Indeed, while any SonarQube plugin will natively report the detected cryptographic findings to the SonarQube instance, our plugin adds an output layer capable of exporting the results in any other format.
@@ -167,20 +172,23 @@ In the following, we will take the example of adding support for the Java langua
 
 ### Adding the language parser
 
-The first step is to add a dependency for your sonar language parser to the main `sonar-cryptography` [`pom.xml`](../pom.xml).
-You should find a parser for your language by searching the parser provided by Sonar directly ([see](https://github.com/search?q=topic%3Alanguage-team+org%3ASonarSource+&type=repositories)) or by searching for parsers created by the community, such as the one for C/C++ ([see](https://github.com/SonarOpenCommunity/sonar-cxx))
+The first step is to declare your sonar language parser. You should find a parser for your language by searching the parser provided by Sonar directly ([see](https://github.com/search?q=topic%3Alanguage-team+org%3ASonarSource+&type=repositories)) or by searching for parsers created by the community, such as the one for C/C++ ([see](https://github.com/SonarOpenCommunity/sonar-cxx))
 
-Then, first add its version under `<!-- language parser versions -->`:
+First add its version to the properties of the main `sonar-cryptography` [`pom.xml`](../pom.xml), next to the other analyzer versions:
 ```xml
-<sonar.java.version>8.22.0.41895</sonar.java.version>
+<sonar.java.version>8.6.0.37351</sonar.java.version>
 ```
 
-And add the dependency (using this version reference) under `<!-- language supporters -->`:
+> [!IMPORTANT]
+> Check the licence of the version you pick. The analyzer versions in `pom.xml` are the last LGPL-3.0 releases, because the `lib` variant bundles them (see the comment on `sonar.java.version`). Our main code may use only the analyzer's public API (`org.sonar.plugins.<language>.api`); Checkstyle's `IllegalImport` enforces this for Java and Python.
+
+Then add the dependency (using this version reference) to the `pom.xml` of your language module (created [below](#creating-a-new-language-module)), in `provided` scope, since SonarQube supplies the analyzer at runtime. The `go` module does this for sonar-go in [its `pom.xml`](../go/pom.xml); Java and Python, which several modules use, are declared in the main `pom.xml`:
 ```xml
 <dependency>
     <groupId>org.sonarsource.java</groupId>
     <artifactId>sonar-java-plugin</artifactId>
     <version>${sonar.java.version}</version>
+    <scope>provided</scope>
 </dependency>
 ```
 
@@ -188,11 +196,11 @@ And add the dependency (using this version reference) under `<!-- language suppo
 
 Now, open the [`pom.xml`](../distribution/pom.xml) of the `distribution` module, and look for the property `crypto.requiredForLanguages` (the `plugin-with-go` variant sets its own value in [its `pom.xml`](../distribution/plugin-with-go/pom.xml)).
 This is where you should specify the file extensions for which you want the plugin to run.
-In the case of Java, we want the Cryptography Plugin to run on `.java` and `.jsp` files, so we add these file extensions inside the tag, in addition to already existing ones (like `py`, `ipynb` and `go` below). 
+In the case of Java, we want the Cryptography Plugin to run on `.java` and `.jsp` files, so we add these file extensions inside the tag, in addition to already existing ones (like `py`, `ipynb` and `cs` below). 
 
 ```xml
-<!-- This line must specify all file extensions which should be scanned by the plugin -->
-<requiredForLanguages>java,jsp,py,ipynb,go</requiredForLanguages>
+<!-- All file extensions the plugin must run for. -->
+<crypto.requiredForLanguages>java,jsp,py,ipynb,cs</crypto.requiredForLanguages>
 ```
 
 ### Identifying the four classes to use in generics
@@ -214,7 +222,7 @@ To help you find these classes used to fill the four type parameters `R`, `T`, `
 | **Python** | org.sonar.plugins.python.api.**PythonCheck** | org.sonar.plugins.python.api.tree.**Tree** | org.sonar.plugins.python.api.symbols.**Symbol** | org.sonar.plugins.python.api.**PythonVisitorContext** |
 | **Go** | org.sonar.plugins.go.api.checks.**GoCheck** | org.sonar.plugins.go.api.**Tree** | org.sonar.go.symbols.**Symbol** | com.ibm.engine.language.go.**GoScanContext**[^1] |
 
-[^1]: The Go parser does not provide a publisher class comparable to `JavaFileScannerContext`, so the plugin defines its own class ([`GoScanContext`](../engine/src/main/java/com/ibm/engine/language/go/GoScanContext.java)) to fill the `P` type parameter — an example of the "create your own custom classes to patch this void" approach mentioned in the note above.
+[^1]: The Go parser does not provide a publisher class comparable to `JavaFileScannerContext`, so the plugin defines its own class ([`GoScanContext`](../go/src/main/java/com/ibm/engine/language/go/GoScanContext.java)) to fill the `P` type parameter — an example of the "create your own custom classes to patch this void" approach mentioned in the note above.
 
 ### Implementing the language-specific parts of the engine
 
@@ -253,7 +261,7 @@ This function will be used [later](#the-check-registrar-extension-point).
 
 ### Creating a new language module
 
-Now that the language analyzer has been registered in the main `pom.xml` and that the engine interfaces have been implemented, we can create a new module named like the language (like [`java`](../java/)).
+Now that the language analyzer has been declared and that the engine interfaces have been implemented, we can create a new module named like the language (like [`java`](../java/)).
 
 > [!IMPORTANT]  
 > This process depends on how the language analyzer APIs work: **carefully read the available documentation explaining how to create a SonarQube plugin for your language first**. This documentation should take precedence over the more general explanations that we will discuss next.
@@ -362,32 +370,58 @@ In this case, similarly to the Java case, you can create a directory for resourc
 In the Java case, these resource files have to be named with the name of the rule they describe ("Inventory" in our case).
 
 
-#### Registering the extension points
+#### Registering the language module
 
 Now that we have created our extension points, we need to register them at the plugin level.
-As explained [previously](#the-plugin), it should be done in the `addExtensions` method of [`CryptographyPlugin`](../plugin-core/src/main/java/com/ibm/plugin/CryptographyPlugin.java).
-For Java, we add the following lines:
+You do not edit `CryptographyPlugin` or `ScannerManager` for this. Instead, the language module implements [`ILanguageModule`](../output/src/main/java/com/ibm/output/ILanguageModule.java) and registers it as a Java service. For Java, this is [`JavaLanguageModule`](../java/src/main/java/com/ibm/plugin/JavaLanguageModule.java):
 ```java
-context.addExtensions(
-        // java
-        JavaScannerRuleDefinition.class,
-        JavaCheckRegistrar.class,
+public final class JavaLanguageModule implements ILanguageModule {
 
-        // ...
-)
-```
-Additionally, update the function `getOutputFile` of the [`ScannerManager`](../plugin-core/src/main/java/com/ibm/plugin/ScannerManager.java) of the plugin module, to add your aggregate of detections to the final list of detections that will be used for generating the CBOM.
-For Java, it looks like:
-```java
-public IOutputFile getOutputFile() {
-        List<INode> nodes = new ArrayList<>();
+    @Override
+    public String name() {
+        return "Java";
+    }
 
-        // java
-        nodes.addAll(JavaAggregator.getDetectedNodes());
+    @Override
+    public int order() {
+        return 10; // position in the CBOM; Python is 20, Go 30, C# 40
+    }
 
-        // ...
+    @Override
+    public boolean isAvailable() {
+        return Analyzers.JAVA; // is sonar-java loaded in this analysis?
+    }
+
+    @Override
+    public List<Object> serverExtensions() {
+        return List.of(JavaScannerRuleDefinition.class);
+    }
+
+    @Override
+    public List<Object> scannerExtensions() {
+        return List.of(JavaCheckRegistrar.class, JavaDetachedIssueSensor.class);
+    }
+
+    @Override
+    public List<INode> detectedNodes() {
+        return JavaAggregator.getDetectedNodes();
+    }
+
+    @Override
+    public void reset() {
+        JavaAggregator.reset();
+    }
 }
 ```
+and lists the class name in [`src/main/resources/META-INF/services/com.ibm.output.ILanguageModule`](../java/src/main/resources/META-INF/services/com.ibm.output.ILanguageModule):
+```
+com.ibm.plugin.JavaLanguageModule
+```
+`CryptographyPlugin` always adds the `serverExtensions()` (such as the rule definition), and adds the `scannerExtensions()` (such as the check registrar) only if `isAvailable()` is `true`. `ScannerManager` collects `detectedNodes()` of the available modules to build the CBOM.
+
+The class must load even when the language's analyzer is not installed: refer to the analyzer's API only in method bodies that run after `isAvailable()` returned `true`, never in fields or signatures. For an analyzer, `isAvailable()` checks whether one of its API classes can be loaded, like the flags in [`Analyzers`](../common/src/main/java/com/ibm/common/Analyzers.java); a module that needs no analyzer, like [`CSharpLanguageModule`](../csharp/src/main/java/com/ibm/plugin/CSharpLanguageModule.java), returns `true`.
+
+Finally, package the module into a variant: add it as a dependency of [`plugin-core`](../plugin-core/pom.xml) if every variant should contain it (like `java`, `python` and `csharp`), or of a single distribution module, like `go` in [`distribution/plugin-with-go`](../distribution/plugin-with-go/pom.xml). Add the module to the root `pom.xml` `<modules>`, or to the profile of that variant.
 ---
 
 When you reach this point, congrats! You now have completed all the steps to make our Sonar Cryptography Plugin support your programming language 🥳

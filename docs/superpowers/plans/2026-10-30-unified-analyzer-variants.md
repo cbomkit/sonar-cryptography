@@ -927,7 +927,7 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
   - [x] CI equivalent run locally in `/tmp/sc-copy`: `package -Pplugin` 516 tests, `-Pwith-go`
         568, `-Plib` 516, each variant passes the verify script; override `test` 516; all
         BUILD SUCCESS.
-  - [ ] User commits step 9.
+  - [x] User commits step 9 (`c1c1778e`).
 
 ### Step 10 — Documentation
 - README: build section (`mvn clean package`, `-Pwith-go`, `-Plib`; do not combine `plugin` and
@@ -943,6 +943,39 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
 - `docs/LANGUAGE_SUPPORT.md`: a new language registers an `ILanguageModule` service instead of
   editing `CryptographyPlugin` and `ScannerManager`.
 - Update repo memory `/memories/repo/sonar-java-unbundling.md` (Go is no longer "disabled").
+- Progress (2026-11-03):
+  - [x] README: version compatibility (2.0.0 per variant; 1.x rows bounded at 1.7.0),
+        installation (2.0.0 unreleased, build it; required analyzers; one variant only), Go
+        footnote, rule repositories and rules per variant (`sonar-cs-crypto` added), a build
+        section with the profile table, the `plugin`+`with-go` rule, the `.SonarQube/plugins`
+        copy, `mvn test -pl go -am -Pwith-go` and the verify script, a new section "Building the
+        plugin with Go support" with the SSAL warning box, and a licence section with one
+        paragraph per variant (the `sonar.java.version` pointer is back, in the library
+        paragraph).
+  - [x] AGENTS.md: module list with `distribution/`, a "Build Variants" paragraph (profiles,
+        SSAL, publishing disabled, public API only, LGPL compile versions) and the variant,
+        Go-test and verify commands.
+  - [x] CONTRIBUTING.md: build section per variant (JAR now in `distribution/plugin/target`)
+        and "Profiles in the IDE". F5 resolved: vscode-java has
+        `java.configuration.maven.userSettings` but no profile setting (`maven.profiles` does
+        not exist), so the guide uses a settings file with `<activeProfiles>`. Verified: with
+        such a file Maven activates only `with-go` (the default `plugin` turns off) and the
+        reactor contains `go` and `sonar-cryptography-plugin-with-go`.
+  - [x] `docs/LANGUAGE_SUPPORT.md`: registration through `ILanguageModule` and the service file
+        (replaces the `CryptographyPlugin`/`ScannerManager` edits), packaging the module into a
+        variant, analyzer dependency in `provided` scope with the licence note, current
+        `crypto.requiredForLanguages`, diagram (Go engine code in `go`), fixed `GoScanContext`
+        link.
+  - [x] `docs/TROUBLESHOOTING.md`: building copies one variant to `.SonarQube/plugins`.
+  - [x] Repo memory updated.
+  - Deviation: the plugin key is `crypto` (manifest `Plugin-Key`), not `sonar-crypto-plugin`
+    as Q1 says; the README said `sonar-crypto-plugin` since step 6 and now says `crypto`.
+  - Checks: no broken relative links in README, CONTRIBUTING, AGENTS and `docs/*.md`; the
+    documented `mvn test -pl go -am -Pwith-go` (52 go tests) and `mvn test -pl java` pass in
+    `/tmp/sc-copy`. V13 holds.
+  - Still open in §6: V11 (e2e on SQ 26.1 with the plugin and the with-go JAR) has not been run
+    on this branch; it needs the local SonarQube and a user token.
+  - [ ] User commits step 10.
 
 ## 6. Validation checklist (run after each relevant step; all must hold at the end)
 
