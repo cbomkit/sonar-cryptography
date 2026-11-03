@@ -1,28 +1,31 @@
-# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
-# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+# PUBLISHING IS DISABLED.
+#
+# Nothing is published for the time being: no upload to GitHub Packages, no
+# release assets. This workflow has no release trigger, no packages permission
+# and no deploy command. A manual run only prints a notice and fails.
+# See docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md, step 9.
+#
+# Intended release command, for when publishing is approved (do not enable
+# without that decision):
+#   mvn --batch-mode deploy -Pplugin,lib
+# It would publish the parent sonar-cryptography, the shared modules,
+# plugin-core, distribution (pom), sonar-cryptography-plugin and
+# sonar-cryptography-lib. sonar-cryptography-plugin-with-go (SSALv1) and go
+# are never published (maven.deploy.skip=true).
 
-name: Publish package to GitHub Packages
+name: Publish package to GitHub Packages (disabled)
 
 permissions:
   contents: read
-  packages: write
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
-    - name: Set up JDK
-      uses: actions/setup-java@v6
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    - name: Deploy to GitHub Packages
-      run: mvn --batch-mode deploy
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    - name: Publishing is disabled
+      run: |
+        echo "Publishing is disabled until the variant release is approved; see docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md step 9."
+        exit 1

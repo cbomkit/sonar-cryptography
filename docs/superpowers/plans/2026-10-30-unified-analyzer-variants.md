@@ -19,9 +19,11 @@ There is **one root `pom.xml`**. The variant is chosen with a Maven profile:
 The `with-go` profile is meant for users who build a custom plugin themselves. It must warn
 that the resulting JAR contains SSAL-licensed code that comes with use restrictions.
 
-Published to Maven and attached to releases: `sonar-cryptography-plugin` and `sonar-cryptography-lib`
-(plus the parent and the shared modules they depend on), in one run: `mvn deploy -Pplugin,lib`.
-`sonar-cryptography-plugin-with-go` is never published.
+Meant to be published later to Maven and attached to releases: `sonar-cryptography-plugin` and
+`sonar-cryptography-lib` (plus the parent and the shared modules they depend on), in one run:
+`mvn deploy -Pplugin,lib`. `sonar-cryptography-plugin-with-go` is never published.
+**For now nothing is published** (decided 2026-11-03): this plan only prepares and checks the
+release run with a local dry run into a file repository (step 9).
 
 **The library is for embedding in another tool**, not for installing in SonarQube (decision Q11).
 The plan **creates it untested**: it is built, packaged and licence-checked, but its runtime
@@ -111,8 +113,8 @@ behaviour is not tested here. The user tests it himself. See §6 for what is and
 
   - A bare `mvn` builds the default plugin. Naming any profile with `-P` switches the
     `activeByDefault` profile off, so `-Pwith-go` and `-Plib` build only their own variant.
-  - Profiles can be combined. `-Pplugin,lib` builds the shared modules once and both published
-    variants, which is what the release uses (step 9.2).
+  - Profiles can be combined. `-Pplugin,lib` builds the shared modules once and both variants
+    meant for publication, which is what a later release would use (step 9.2: local dry run only).
 - **Rule: a profile only adds `<modules>`.** It must not change versions, dependencies, scopes
   or plugin configuration that reach the shared modules. Otherwise the shared modules would be
   compiled differently per variant but published under the same coordinates. All variant
@@ -847,23 +849,85 @@ start. Go is still disabled at this point, so the test fixes below only concern 
   - [x] Gates in `/tmp/sc-copy`: `mvn -o clean install` 516 tests, `-Pwith-go` 568, `-Plib` 516,
         all BUILD SUCCESS; all three variants pass `verify_analyzer_packaging.py`; no build writes
         a `bom/` folder; `spotless:check` and `checkstyle:check` pass.
-  - [ ] User commits step 8.
+  - [x] User commits step 8 (`396253ad`).
 
-### Step 9 — CI and publishing
-- 9.1 `maven.yml`: a matrix over the profiles `plugin`, `with-go` and `lib`, running
-  `mvn -B clean package -P${{ matrix.profile }}` and then the verification script with the
-  matching `--variant`. Add one more job: `mvn -B test` with the 8.22/5.29/2.30 overrides.
-  Do not upload the with-go JAR as an artifact.
-- 9.2 `maven-publish.yml`: one run, `mvn --batch-mode deploy -Pplugin,lib`. The shared modules are
-  built and uploaded once, so GitHub Packages never sees a duplicate upload. Check this with a
-  dry run (`-DaltDeploymentRepository=local::file:/tmp/deploy-test`). Published artifacts: the
-  parent `sonar-cryptography`, the shared modules, `plugin-core`, `distribution` (pom),
-  `sonar-cryptography-plugin` and `sonar-cryptography-lib`. Release assets: the
-  `sonar-cryptography-plugin` and the `sonar-cryptography-lib` JAR. The `go` module and
-  `distribution/plugin-with-go` keep `maven.deploy.skip=true`, so even a mistaken `deploy -Pwith-go`
-  uploads nothing of the SSAL variant.
-- 9.3 `docker-compose.yaml` and the `.SonarQube/plugins` copy: only the last-built variant ends up
-  there. Each distribution module deletes the other variants' JARs first.
+### Step 9 — CI, and publishing disabled (local dry run only)
+**Nothing is published in this step, nor anywhere else in this plan.** No upload to GitHub
+Packages, Maven Central or any other repository, no release, no release assets, no tags pushed,
+and no workflow run that could deploy. Publishing is a separate, later decision by the user.
+The only deploy that may run is the local dry run in 9.3, into a file repository under `/tmp`.
+
+- 9.1 `maven.yml` (build and verify only):
+  - A matrix over the profiles `plugin`, `with-go` and `lib`, running
+    `mvn -B clean package -P${{ matrix.profile }}` and then the verification script with the
+    matching `--variant`. Keep the "working tree clean" check in every matrix job.
+  - One more job: `mvn -B test` with the 8.22/5.29/2.30 overrides.
+  - No `actions/upload-artifact` of any JAR (no variant is downloadable from CI for now).
+  - `permissions`: drop `packages: write`. Nothing in this workflow uploads packages.
+    `contents: write` stays only because the dependency submission needs it.
+  - The dependency submission runs in the `plugin` job only (as today, default variant); it
+    uploads the dependency graph, not packages.
+- 9.2 `maven-publish.yml` is disabled, so that it cannot publish, even when a release is created
+  or someone starts it by hand:
+  - Remove the `release: published` trigger; keep only `workflow_dispatch`.
+  - `permissions: contents: read` only (no `packages: write`), so a deploy to GitHub Packages
+    would be refused even if one ran.
+  - Replace the deploy step with a step that prints "Publishing is disabled until the variant
+    release is approved; see docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md
+    step 9" and exits 1. No `mvn deploy` in the file.
+  - Keep the intended release command as a comment only, for the later decision:
+    `mvn --batch-mode deploy -Pplugin,lib` (would publish the parent `sonar-cryptography`, the
+    shared modules, `plugin-core`, `distribution` (pom), `sonar-cryptography-plugin` and
+    `sonar-cryptography-lib`; release assets would be the plugin and the lib JAR).
+  - Leave `<distributionManagement>` in the root `pom.xml` unchanged; it is harmless without a
+    deploy run and needed later.
+- 9.3 Local dry run (the only deploy allowed). Run it in `/tmp/sc-copy`, never in the repo:
+  - Always pass a file repository: `mvn -B deploy -Pplugin,lib
+    -DaltDeploymentRepository=dry::file:///tmp/s9-deploy-dry-run`. Never run `mvn deploy` without
+    `-DaltDeploymentRepository=...file://...`: the default target is GitHub Packages.
+    In the log, confirm that every upload went to the file URL
+    (`grep -c 'Uploading to dry: file:///tmp/s9-deploy-dry-run'` > 0 and
+    `grep -c 'maven.pkg.github.com'` = 0).
+  - Online is needed only because the deploy plugin refuses `-o`; it only resolves dependencies.
+  - Check (V15): the parent, the 9 shared modules, `plugin-core`, `distribution`,
+    `sonar-cryptography-plugin` and `sonar-cryptography-lib` each appear exactly once under
+    `/tmp/s9-deploy-dry-run`; `-Pwith-go` (same file repository) adds nothing for `go` or
+    `sonar-cryptography-plugin-with-go` ("Skipping artifact deployment").
+  - Check (V16): no committed `bom.json` changes in the copy.
+  - Delete `/tmp/s9-deploy-dry-run` afterwards.
+- 9.4 `docker-compose.yaml` and the `.SonarQube/plugins` copy (local only): only the last-built
+  variant ends up there. Each distribution module deletes the other variants' JARs first.
+- 9.5 Grep after the step: `grep -rn "mvn.*deploy" .github/` finds only the comment in
+  `maven-publish.yml`; `grep -rn "packages: write\|release:" .github/workflows/` finds nothing.
+- Progress (2026-11-03). **Nothing was published.**
+  - [x] 9.1 `maven.yml`: job `build` is a matrix (`plugin`/`plugin`, `with-go`/`plugin-with-go`,
+        `lib`/`library`, `fail-fast: false`): package, verify script, clean-tree check. The
+        dependency submission runs only in the `plugin` job. New job `test-newer-analyzers`
+        (`mvn -B test` with 8.22.0.41895 / 5.29.0.35837 / 2.30.0.5193). `permissions:
+        contents: write` only; no artifact upload.
+  - [x] 9.2 `maven-publish.yml`: only `workflow_dispatch`, `permissions: contents: read`, one
+        step that prints the notice and exits 1. The release command is a comment only. Both
+        workflows parse as YAML.
+  - [x] 9.3 Dry run in `/tmp/sc-copy` (script `/tmp/s9-checks.sh`). Extra guard beyond the plan:
+        in the copy, the `<distributionManagement>` URL was rewritten to a local `file://` path
+        and Maven ran with a settings file without servers, so no upload could reach GitHub
+        even if `altDeploymentRepository` were ignored.
+        - `-Pplugin,lib`: 54 uploads, all to `dry: file:///tmp/s9-deploy-dry-run`; 0 other
+          uploads; 0 `maven.pkg.github.com`. Deployed once each: `sonar-cryptography`, the 9
+          shared modules, `plugin-core`, `distribution`, `sonar-cryptography-plugin`,
+          `sonar-cryptography-lib` (V15).
+        - `-Pwith-go`: 2 "Skipping artifact deployment"; no `go` or
+          `sonar-cryptography-plugin-with-go` in the repository (V15). It does redeploy the
+          shared modules, as a separate run would.
+        - No committed `bom.json` changed in the copy (V16). Dry-run repository deleted.
+  - [x] 9.4 Already done in step 6 (`copy-to-sonarqube` deletes the other variants' JARs; the
+        library does not copy). No change.
+  - [x] 9.5 Greps: only the comment in `maven-publish.yml` matches `mvn.*deploy`; no
+        `packages: write` and no `release:` in `.github/workflows/`.
+  - [x] CI equivalent run locally in `/tmp/sc-copy`: `package -Pplugin` 516 tests, `-Pwith-go`
+        568, `-Plib` 516, each variant passes the verify script; override `test` 516; all
+        BUILD SUCCESS.
+  - [ ] User commits step 9.
 
 ### Step 10 — Documentation
 - README: build section (`mvn clean package`, `-Pwith-go`, `-Plib`; do not combine `plugin` and
@@ -948,7 +1012,7 @@ start. Go is still disabled at this point, so the test fixes below only concern 
 | Q2 | SSAL gate for with-go | A warning is enough; no opt-in property. | D5 |
 | Q3 | Variant described by the committed `bom.json` | The default plugin variant. | 8.3, V16 |
 | Q4 | Parent POM name | ~~Rename to `pom-parent.xml`~~, superseded by Q6. | — |
-| Q5 | Publish the library | Yes: Maven and release asset. | §1, 9.2, V15 |
+| Q5 | Publish the library | Yes: Maven and release asset, **but not yet** (2026-11-03): nothing is published until the user decides; only a local dry run. | §1, 9.2, V15 |
 | Q6 | Three `pom-*.xml` files or profiles | One root `pom.xml` with the profiles `plugin` (default), `with-go` and `lib`. The profiles only select modules. | §1, D1, §4, step 5, 9.1, 9.2, V1, V8a |
 | Q7 | analyzer-commons version for Go | Try 2.14.0.3087 first; switch `go` to 2.30.0.5193 only if necessary. | §2, D5, 4.2, 4.4, V5a |
 | Q8 | jdt-package (EPL-2.0) in the library | Bundle its object code and its sources JAR like the other analyzer modules, and include `EPL-2.0.txt` (EPL §3.3(b)). `GPL-3.0.txt` stays, because LGPL-3.0 §4(b) requires a copy of the GPL. (Linking the jdt source instead of bundling it was considered and rejected.) | §1, D3, §4, 6.3, 7.1, V4a |
