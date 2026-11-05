@@ -188,7 +188,10 @@ unknown evidence and empty input. Exact RSA assertions exclude the erroneous gen
 encryption/decryption behaviors. Taxonomy tests require every emitted enum identifier
 to exist in the bundled JSON snapshot.
 
-Detection fixtures cover auth interfaces, SecureRandom and key wrapping. Pipeline and
+Each supported auth library has a separate detection test and source fixture, with
+exact call-location assertions and examples that configure or use its authentication
+API. Negative examples cover parser construction, unverified token decoding and plain
+header reads. Other detection fixtures cover SecureRandom and key wrapping. Pipeline and
 CBOM tests verify contextual evidence survives translation/enrichment, creates no
 crypto component, and contributes to sorted, deduplicated metadata. They also cover
 empty output, auth-only evidence and algorithms nested in protocol cipher suites.

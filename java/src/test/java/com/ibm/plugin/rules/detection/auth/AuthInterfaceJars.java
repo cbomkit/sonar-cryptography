@@ -23,8 +23,7 @@ import java.io.File;
 import java.util.List;
 
 public class AuthInterfaceJars {
-    // Pinned API jars handed to the analyzer so it can resolve the auth-interface types referenced
-    // in the detection test files (io.jsonwebtoken.Jwts, jakarta.servlet.http.HttpServletRequest).
+    // Pinned API jars let the analyzer resolve each library's authentication calls and arguments.
     // Mirrors the BouncyCastleJars convention: resolution is deterministic and self-contained,
     // independent of whatever Maven happens to place on the test runtime classpath.
     public static List<File> jars =
@@ -34,10 +33,13 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/nimbus-jose-jwt-9.40.jar"),
                     new File("src/test/resources/test-jars/java-jwt-4.4.0.jar"),
                     new File("src/test/resources/test-jars/spring-security-oauth2-jose-6.3.3.jar"),
+                    new File("src/test/resources/test-jars/spring-security-oauth2-core-6.3.3.jar"),
                     new File(
                             "src/test/resources/test-jars/spring-security-oauth2-resource-server-6.3.3.jar"),
                     new File("src/test/resources/test-jars/oauth2-oidc-sdk-11.13.jar"),
                     new File("src/test/resources/test-jars/opensaml-xmlsec-api-4.3.2.jar"),
+                    new File("src/test/resources/test-jars/opensaml-security-api-4.3.2.jar"),
+                    new File("src/test/resources/test-jars/opensaml-core-4.3.2.jar"),
                     new File("src/test/resources/test-jars/opensaml-saml-impl-4.3.2.jar"),
                     new File(
                             "src/test/resources/test-jars/spring-security-saml2-service-provider-6.3.3.jar"),
@@ -46,5 +48,6 @@ public class AuthInterfaceJars {
                     new File("src/test/resources/test-jars/jakarta.ws.rs-api-3.1.0.jar"),
                     new File("src/test/resources/test-jars/javax.ws.rs-api-2.1.1.jar"),
                     new File("src/test/resources/test-jars/spring-security-web-6.3.3.jar"),
-                    new File("src/test/resources/test-jars/pac4j-http-5.7.7.jar"));
+                    new File("src/test/resources/test-jars/pac4j-http-5.7.7.jar"),
+                    new File("src/test/resources/test-jars/pac4j-core-5.7.7.jar"));
 }
