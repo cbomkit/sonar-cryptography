@@ -24,12 +24,14 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * A detected contextual fact about the scanned code (e.g. an authentication interface such as JWT
- * or a servlet principal). NOT a cryptographic asset: the mapper model is the scan's intermediate
- * representation, not a crypto-asset registry. The output layer interprets this node to inform the
- * software-level behavior taxonomy and never emits it as a CBOM component. Generic by design so
- * future non-auth evidence reuses it. The {@code identifier} is a stable token (currently an {@code
- * AuthContext.Kind} name, e.g. "JWT").
+ * Stores evidence about how the scanned code uses a security API, such as verifying a JWT or
+ * reading the current user's identity.
+ *
+ * <p>The identifier names the kind of evidence, for example {@code "JWT"}. The detection location
+ * records where it was found in the source code.
+ *
+ * <p>This node follows the normal scan pipeline. The output uses it to describe the application's
+ * behavior in CBOM metadata.
  */
 public final class ContextualEvidence extends Property {
     @Nonnull private final String identifier;
