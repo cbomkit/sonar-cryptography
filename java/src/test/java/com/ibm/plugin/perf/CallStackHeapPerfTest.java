@@ -56,7 +56,8 @@ import org.sonar.plugins.java.api.tree.Tree;
  * <p>Excluded from the default build via {@code @Tag("performance")}. Run with: {@code mvn test -pl
  * java -DexcludedGroups= -Dtest=CallStackHeapPerfTest} (add {@code -Dperf.corpus.files=3000} for a
  * heavy soak). This does NOT reproduce the full-project ~7 GB keycloak number — that remains the
- * documented manual {@code mvn sonar:sonar} route in {@code docs/PERFORMANCE_TESTING.md}.
+ * documented manual {@code mvn sonar:sonar} route in {@code
+ * docs/superpowers/plans/2026-07-05-callstack-hooks-heap-reduction.md}.
  */
 @Tag("performance")
 class CallStackHeapPerfTest extends TestBase {
