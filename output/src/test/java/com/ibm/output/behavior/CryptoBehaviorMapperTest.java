@@ -85,6 +85,26 @@ class CryptoBehaviorMapperTest {
     }
 
     @Test
+    void encapsulateOnPublicKeyEncryptionYieldsWrapsKey() {
+        // Model RSA wrapping a key with the default PublicKeyEncryption kind.
+        final RSA rsa = new RSA(loc);
+        rsa.put(new Encapsulate(loc));
+
+        // An explicit wrapping operation must suppress generic encryption fallback behaviors.
+        assertThat(mapper.map(rsa)).containsExactly(CryptoBehavior.WRAPS_KEY);
+    }
+
+    @Test
+    void decapsulateOnPublicKeyEncryptionYieldsWrapsKey() {
+        // Model RSA unwrapping a key with the default PublicKeyEncryption kind.
+        final RSA rsa = new RSA(loc);
+        rsa.put(new Decapsulate(loc));
+
+        // An explicit unwrapping operation must suppress generic encryption fallback behaviors.
+        assertThat(mapper.map(rsa)).containsExactly(CryptoBehavior.WRAPS_KEY);
+    }
+
+    @Test
     void encapsulateOnKemYieldsExchangesKey() {
         final Algorithm kem = new Algorithm("ML-KEM", KeyEncapsulationMechanism.class, loc);
         kem.put(new Encapsulate(loc));
@@ -118,7 +138,7 @@ class CryptoBehaviorMapperTest {
     @Test
     void bareMacFallsBackToIntegrityOnly() {
         // authenticates is application-level and gated on auth-interface evidence; a bare MAC
-        // contributes only the integrity goal (spec 2026-07-13 §4).
+        // contributes only the integrity goal (spec §6).
         final HMAC hmac = new HMAC(loc);
         assertThat(mapper.map(hmac)).containsExactly(CryptoBehavior.ENSURES_INTEGRITY);
     }

@@ -29,11 +29,11 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 /**
- * Contributes application-level behaviors from detected auth-interface evidence (design 2026-07-13
- * §4). Crypto alone never asserts these: a MAC yields only {@code ensuresIntegrity} from the
- * mapper, and {@code authenticates} appears iff an auth interface was observed. SAML validates a
- * signed assertion (a bearer credential), so it also yields {@code validatesToken}; PRINCIPAL and
- * MTLS yield {@code usesIdentity} via the authenticated peer principal.
+ * Contributes application-level behaviors from detected auth-interface evidence (spec §6). Crypto
+ * alone never asserts these: a MAC yields only {@code ensuresIntegrity} from the mapper, and {@code
+ * authenticates} appears iff an auth interface was observed. SAML validates a signed assertion (a
+ * bearer credential), so it also yields {@code validatesToken}; PRINCIPAL and MTLS yield {@code
+ * usesIdentity} via the authenticated peer principal.
  */
 public final class AuthInterfaceRule implements IBehaviorRule {
 

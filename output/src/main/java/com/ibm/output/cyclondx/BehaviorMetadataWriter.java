@@ -37,8 +37,7 @@ public final class BehaviorMetadataWriter {
 
     public static final String BEHAVIOR_PROPERTY_NAME = "cbomkit:crypto:behavior";
 
-    // Intentional simplification of spec §4.4: use a fixed name because no scanned-software
-    // name is plumbed into getBom(); the ideal value would be the scanned project name.
+    // Use a fixed name because no scanned-software name is supplied to getBom().
     private static final String METADATA_COMPONENT_NAME = "application";
 
     private BehaviorMetadataWriter() {}

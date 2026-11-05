@@ -2,8 +2,8 @@
 
 This guide explains how to measure the plugin's runtime performance and heap usage,
 primarily by scanning a large real-world project (**Keycloak**) end-to-end through
-SonarQube. It exists to validate memory-sensitive engine work such as the call-stack
-AST-detach fix (see `docs/superpowers/plans/2026-07-05-callstack-hooks-heap-reduction.md`).
+SonarQube. It exists to validate memory-sensitive engine work such as detaching
+call-stack records from source ASTs so scanned files can be released from memory.
 
 There are two levels of testing:
 

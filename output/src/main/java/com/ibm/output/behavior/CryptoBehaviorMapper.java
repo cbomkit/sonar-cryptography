@@ -74,6 +74,7 @@ public final class CryptoBehaviorMapper {
                     node.is(BlockCipher.class)
                             || node.is(StreamCipher.class)
                             || node.is(Cipher.class)
+                            || node.is(PublicKeyEncryption.class)
                             || node.is(AuthenticatedEncryption.class)
                             || node.is(KeyWrap.class);
 

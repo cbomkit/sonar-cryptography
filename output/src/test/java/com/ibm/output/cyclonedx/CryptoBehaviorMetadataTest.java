@@ -93,7 +93,7 @@ class CryptoBehaviorMetadataTest {
     @Test
     void noMetadataComponentWhenNoBehaviorsDetected() {
         // A lone functionality node is not an Algorithm asset, so the mapper returns no behaviors
-        // and getBom() must not create a metadata.component (spec §6).
+        // and getBom() must not create a metadata.component (spec §4).
         final Bom bom = bomOf(List.of(new Encrypt(loc)));
         assertThat(bom.getMetadata().getComponent()).isNull();
     }
