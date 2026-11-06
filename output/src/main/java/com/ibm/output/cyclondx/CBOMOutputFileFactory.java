@@ -25,11 +25,23 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 public class CBOMOutputFileFactory implements IOutputFileFactory {
+    private final boolean behaviorsEnabled;
+
+    public CBOMOutputFileFactory() {
+        this(false);
+    }
+
+    public CBOMOutputFileFactory(boolean behaviorsEnabled) {
+        this.behaviorsEnabled = behaviorsEnabled;
+    }
+
     @Nonnull
     @Override
     public CBOMOutputFile createOutputFormat(@Nonnull List<INode> nodes) {
-        CBOMOutputFile outputFile = new CBOMOutputFile();
+        // Configure behavior collection before processing any detected nodes.
+        CBOMOutputFile outputFile = new CBOMOutputFile(behaviorsEnabled);
         outputFile.add(nodes);
+
         return outputFile;
     }
 }

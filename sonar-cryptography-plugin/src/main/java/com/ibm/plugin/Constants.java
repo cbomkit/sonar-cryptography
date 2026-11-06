@@ -25,6 +25,8 @@ public final class Constants {
 
     public static final String CBOM_OUTPUT_NAME_DEFAULT = "cbom";
 
+    public static final String BEHAVIORS_ENABLED = "sonar.cryptoScanner.behaviors";
+
     public static final String SUB_CATEGORY_GENERAL = "General";
 
     private Constants() {}
