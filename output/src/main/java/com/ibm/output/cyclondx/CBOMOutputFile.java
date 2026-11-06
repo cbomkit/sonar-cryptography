@@ -101,9 +101,15 @@ public class CBOMOutputFile implements IOutputFile {
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
 
+    private final boolean behaviorsEnabled;
     @Nonnull private final BehaviorCollector behaviorCollector = new BehaviorCollector();
 
     public CBOMOutputFile() {
+        this(false);
+    }
+
+    public CBOMOutputFile(boolean behaviorsEnabled) {
+        this.behaviorsEnabled = behaviorsEnabled;
         this.components = new HashMap<>();
         this.dependencies = new HashMap<>();
     }
@@ -132,7 +138,9 @@ public class CBOMOutputFile implements IOutputFile {
                         final IProperty property = (IProperty) node;
                         createRelatedCryptoMaterialComponent(parentBomRef, property);
                     } else if (node instanceof ContextualEvidence evidence) {
-                        this.behaviorCollector.observe(evidence);
+                        if (behaviorsEnabled) {
+                            this.behaviorCollector.observe(evidence);
+                        }
                     } else if (node.hasChildren()) {
                         add(parentBomRef, node.getChildren().values().stream().toList());
                     }
@@ -141,9 +149,12 @@ public class CBOMOutputFile implements IOutputFile {
 
     @Nullable private String createAlgorithmComponent(
             @Nullable String parentBomRef, @Nonnull Algorithm node) {
-        // Observe here so every algorithm path is covered: top-level via add(), nested
-        // recursion, and protocol/cipher-suite constituents via direct calls.
-        this.behaviorCollector.observe(node);
+        // Observe opted-in behaviors on every algorithm path, including cipher-suite constituents.
+        if (behaviorsEnabled) {
+            this.behaviorCollector.observe(node);
+        }
+
+        // Build the inventory component independently of experimental behavior annotations.
         Map<Class<? extends INode>, INode> children = node.getChildren();
         Component algorithm =
                 AlgorithmComponentBuilder.create()
@@ -341,8 +352,10 @@ public class CBOMOutputFile implements IOutputFile {
         scannerInfo.setServices(List.of(scannerService));
         metadata.setToolChoice(scannerInfo);
 
-        // Attach security behavior instances to the application metadata.
-        BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.getBehaviors());
+        // Attach security behavior instances only when this analysis opted in.
+        if (behaviorsEnabled) {
+            BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.getBehaviors());
+        }
 
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));

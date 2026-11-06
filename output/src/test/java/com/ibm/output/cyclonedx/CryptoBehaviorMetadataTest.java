@@ -40,6 +40,7 @@ import com.ibm.mapper.utils.DetectionLocation;
 import com.ibm.output.behavior.CryptoBehavior;
 import com.ibm.output.cyclondx.BehaviorMetadataWriter;
 import com.ibm.output.cyclondx.CBOMOutputFile;
+import com.ibm.output.cyclondx.CBOMOutputFileFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,8 @@ import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.parsers.JsonParser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class CryptoBehaviorMetadataTest {
 
@@ -59,9 +62,45 @@ class CryptoBehaviorMetadataTest {
     private final ObjectMapper json = new ObjectMapper();
 
     private Bom bomOf(List<INode> nodes) {
-        final CBOMOutputFile outputFile = new CBOMOutputFile();
+        // Behavior-specific tests opt in explicitly; the default output remains inventory-only.
+        final CBOMOutputFile outputFile = new CBOMOutputFile(true);
         nodes.forEach(node -> outputFile.add(List.of(node)));
+
         return outputFile.getBom();
+    }
+
+    @Test
+    void behaviorsAreDisabledByDefault() {
+        // Both crypto and auth evidence must leave metadata untouched without an opt-in.
+        final CBOMOutputFile outputFile = new CBOMOutputFile();
+        outputFile.add(List.of(new AES(loc), new ContextualEvidence("JWT", loc)));
+
+        final Bom bom = outputFile.getBom();
+        assertThat(bom.getMetadata().getComponent()).isNull();
+        assertThat(bom.getComponents()).extracting(Component::getName).containsExactly("AES");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void factoryAppliesBehaviorSettingWithoutChangingInventory(boolean enabled) {
+        // The factory passes the analysis setting through before collecting evidence.
+        final CBOMOutputFile outputFile =
+                new CBOMOutputFileFactory(enabled)
+                        .createOutputFormat(
+                                List.of(new AES(loc), new ContextualEvidence("JWT", loc)));
+
+        // Repeated serialization keeps the setting and the crypto inventory intact.
+        for (int attempt = 0; attempt < 2; attempt++) {
+            final Bom bom = outputFile.getBom();
+            assertThat(bom.getComponents()).extracting(Component::getName).containsExactly("AES");
+            if (enabled) {
+                assertThat(bom.getMetadata().getComponent().getProperties())
+                        .extracting(Property::getName)
+                        .containsExactly("cbomkit:behaviors");
+            } else {
+                assertThat(bom.getMetadata().getComponent()).isNull();
+            }
+        }
     }
 
     private JsonNode behaviorDocument(Component component) throws Exception {
