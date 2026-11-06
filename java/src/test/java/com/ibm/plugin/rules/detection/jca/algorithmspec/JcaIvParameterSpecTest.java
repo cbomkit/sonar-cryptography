@@ -30,6 +30,7 @@ import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.INode;
@@ -67,6 +68,12 @@ class JcaIvParameterSpecTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
         if (findingId == 0) {
             /*
              * Detection Store

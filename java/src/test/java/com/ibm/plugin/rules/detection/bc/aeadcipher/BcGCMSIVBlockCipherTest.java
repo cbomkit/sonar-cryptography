@@ -28,6 +28,7 @@ import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mode;
@@ -60,11 +61,17 @@ class BcGCMSIVBlockCipherTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
         /**
          * Optimally, we shouldn't have these direct detections of engines, as they appear in the
          * depending detection rules
          */
-        if (findingId == 1 || findingId == 3) {
+        if (findingId == 3 || findingId == 6) {
             return;
         }
 
@@ -95,7 +102,7 @@ class BcGCMSIVBlockCipherTest extends TestBase {
         assertThat(value0_1_1_1).isInstanceOf(MacSize.class);
         assertThat(value0_1_1_1.asString()).isEqualTo("128");
 
-        if (findingId != 0) {
+        if (findingId != 1) {
             DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_2 =
                     getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
             assertThat(store_2.getDetectionValues()).hasSize(1);
@@ -103,7 +110,7 @@ class BcGCMSIVBlockCipherTest extends TestBase {
             IValue<Tree> value0_2 = store_2.getDetectionValues().get(0);
             assertThat(value0_2).isInstanceOf(ValueAction.class);
             assertThat(value0_2.asString())
-                    .isEqualTo(findingId == 2 ? "RijndaelEngine" : "AESEngine");
+                    .isEqualTo(findingId == 4 ? "RijndaelEngine" : "AESEngine");
         }
 
         /*

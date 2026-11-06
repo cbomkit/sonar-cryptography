@@ -17,7 +17,7 @@ public class BcHandshakeKDFFunctionTestFile {
         // Generate sender's key pair
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenParams =
-                new ECKeyGenerationParameters(curveParams, new SecureRandom());
+                new ECKeyGenerationParameters(curveParams, new SecureRandom()); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         keyPairGenerator.init(keyGenParams);
 
         // Define the HandshakeKDFFunction using EthereumIESEngine
