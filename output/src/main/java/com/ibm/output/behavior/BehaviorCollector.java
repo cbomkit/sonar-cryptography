@@ -24,49 +24,49 @@ import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
-/**
- * The output layer's single entry point to the behavior subsystem. Feed every processed node to
- * {@link #observe(INode)} during collection; call {@link #inferBehaviors()} once at emission time
- * to run the rule registry over the collected {@link BehaviorSignals}. Total: unrecognized nodes
- * and identifiers are ignored, never errors.
- */
+/** Collects crypto and authentication behaviors for one scan. */
 public final class BehaviorCollector {
-
-    private static final List<IBehaviorRule> RULES =
-            List.of(new CryptoBehaviorRule(), new AuthInterfaceRule());
 
     @Nonnull private final CryptoBehaviorMapper mapper = new CryptoBehaviorMapper();
 
-    @Nonnull
-    private final Set<CryptoBehavior> cryptoBehaviors = EnumSet.noneOf(CryptoBehavior.class);
-
-    @Nonnull private final Set<AuthContext.Kind> authKinds = EnumSet.noneOf(AuthContext.Kind.class);
+    @Nonnull private final Set<CryptoBehavior> behaviors = EnumSet.noneOf(CryptoBehavior.class);
 
     public void observe(@Nonnull INode node) {
+        // Add behaviors from the detected crypto asset or authentication API.
         if (node instanceof Algorithm) {
-            this.cryptoBehaviors.addAll(this.mapper.map(node));
+            this.behaviors.addAll(this.mapper.map(node));
         } else if (node instanceof ContextualEvidence evidence) {
-            // ContextualEvidence carries a generic identifier; only the ones naming an
-            // auth-interface kind are behavior signals. Unknown identifiers are skipped.
-            try {
-                this.authKinds.add(AuthContext.Kind.valueOf(evidence.identifier()));
-            } catch (IllegalArgumentException ignored) {
-                // not an auth-interface evidence identifier we model
-            }
+            this.behaviors.addAll(authBehaviors(evidence.identifier()));
         }
     }
 
+    /** Returns a snapshot of the behaviors collected so far. */
     @Nonnull
-    public Set<CryptoBehavior> inferBehaviors() {
-        final BehaviorSignals signals = new BehaviorSignals(this.cryptoBehaviors, this.authKinds);
-        final Set<CryptoBehavior> result = EnumSet.noneOf(CryptoBehavior.class);
-        for (IBehaviorRule rule : RULES) {
-            result.addAll(rule.apply(signals));
+    public Set<CryptoBehavior> getBehaviors() {
+        return Set.copyOf(this.behaviors);
+    }
+
+    @Nonnull
+    private static Set<CryptoBehavior> authBehaviors(@Nonnull String identifier) {
+        // Ignore evidence that does not name a known auth kind.
+        final AuthContext.Kind kind;
+        try {
+            kind = AuthContext.Kind.valueOf(identifier);
+        } catch (IllegalArgumentException ignored) {
+            return Set.of();
         }
-        return result;
+
+        // Map the detected auth API to its application behaviors.
+        return switch (kind) {
+            case JWT, OAUTH, SAML ->
+                    Set.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+            case PRINCIPAL, MTLS ->
+                    Set.of(CryptoBehavior.AUTHENTICATES, CryptoBehavior.USES_IDENTITY);
+            case API_KEY -> Set.of(CryptoBehavior.AUTHENTICATES);
+            case NONE -> Set.of();
+        };
     }
 }

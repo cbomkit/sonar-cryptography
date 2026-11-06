@@ -28,11 +28,7 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.Property;
 
-/**
- * Experimental: serializes the scan-wide crypto behavior summary as one namespaced property on a
- * synthetic {@code metadata.component}. The only CycloneDX-specific part of the behavior subsystem
- * — inference lives in {@code com.ibm.output.behavior}.
- */
+/** Writes the scan's crypto behaviors to CBOM metadata. */
 public final class BehaviorMetadataWriter {
 
     public static final String BEHAVIOR_PROPERTY_NAME = "cbomkit:crypto:behavior";

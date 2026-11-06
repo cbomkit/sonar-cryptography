@@ -342,7 +342,7 @@ public class CBOMOutputFile implements IOutputFile {
         metadata.setToolChoice(scannerInfo);
 
         // Experimental: attach the scan-wide crypto behavior summary to metadata.component.
-        BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.inferBehaviors());
+        BehaviorMetadataWriter.attachIfPresent(metadata, this.behaviorCollector.getBehaviors());
 
         bom.setMetadata(metadata);
         bom.setComponents(new ArrayList<>(this.components.values()));

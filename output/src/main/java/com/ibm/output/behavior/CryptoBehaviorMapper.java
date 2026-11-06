@@ -56,12 +56,8 @@ import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 
 /**
- * Derives {@link CryptoBehavior}s for a detected cryptographic asset. Operation-first: every {@code
- * OPERATIONS} row whose {@code Functionality} child is present and whose guard holds contributes.
- * If no operation matched, the ordered {@code FALLBACKS} table infers plausible behaviors from the
- * primitive kind (first matching kind wins). Never throws; unmappable input yields an empty set.
- * Note: {@code authenticates} is deliberately never derived here — it is an application-level
- * behavior gated on auth-interface evidence (see {@code AuthInterfaceRule}).
+ * Maps detected crypto operations to behaviors. If no operation matches, uses the asset's primitive
+ * kind. Authentication behaviors are collected separately.
  */
 final class CryptoBehaviorMapper {
 

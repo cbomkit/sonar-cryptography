@@ -28,6 +28,7 @@ import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Collections;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BehaviorCollectorTest {
@@ -40,14 +41,14 @@ class BehaviorCollectorTest {
     @Test
     void macAloneYieldsIntegrityButNotAuthenticates() {
         collector.observe(new HMAC(loc));
-        assertThat(collector.inferBehaviors()).containsOnly(CryptoBehavior.ENSURES_INTEGRITY);
+        assertThat(collector.getBehaviors()).containsOnly(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void macPlusJwtEvidenceAuthenticatesAndValidatesToken() {
         collector.observe(new HMAC(loc));
         collector.observe(new ContextualEvidence("JWT", loc));
-        assertThat(collector.inferBehaviors())
+        assertThat(collector.getBehaviors())
                 .containsOnly(
                         CryptoBehavior.AUTHENTICATES,
                         CryptoBehavior.VALIDATES_TOKEN,
@@ -57,26 +58,119 @@ class BehaviorCollectorTest {
     @Test
     void jwtEvidenceAloneYieldsTokenBehaviors() {
         collector.observe(new ContextualEvidence("JWT", loc));
-        assertThat(collector.inferBehaviors())
+        assertThat(collector.getBehaviors())
                 .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
+    void oauthEvidenceAloneYieldsTokenBehaviors() {
+        collector.observe(new ContextualEvidence("OAUTH", loc));
+        assertThat(collector.getBehaviors())
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
+    void samlEvidenceAloneYieldsTokenBehaviors() {
+        collector.observe(new ContextualEvidence("SAML", loc));
+        assertThat(collector.getBehaviors())
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
+    void principalEvidenceYieldsIdentityBehaviors() {
+        collector.observe(new ContextualEvidence("PRINCIPAL", loc));
+        assertThat(collector.getBehaviors())
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.USES_IDENTITY);
+    }
+
+    @Test
+    void mtlsEvidenceYieldsIdentityBehaviors() {
+        collector.observe(new ContextualEvidence("MTLS", loc));
+        assertThat(collector.getBehaviors())
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.USES_IDENTITY);
+    }
+
+    @Test
+    void apiKeyEvidenceYieldsAuthenticatesOnly() {
+        collector.observe(new ContextualEvidence("API_KEY", loc));
+        assertThat(collector.getBehaviors()).containsOnly(CryptoBehavior.AUTHENTICATES);
+    }
+
+    @Test
+    void emptyScanHasNoBehaviors() {
+        assertThat(collector.getBehaviors()).isEmpty();
+    }
+
+    @Test
+    void multipleAuthKindsContributeTheirCombinedBehaviors() {
+        // Collect token validation and identity access from the same scan.
+        collector.observe(new ContextualEvidence("JWT", loc));
+        collector.observe(new ContextualEvidence("PRINCIPAL", loc));
+
+        // Shared behaviors appear once in the result.
+        assertThat(collector.getBehaviors())
+                .containsOnly(
+                        CryptoBehavior.AUTHENTICATES,
+                        CryptoBehavior.VALIDATES_TOKEN,
+                        CryptoBehavior.USES_IDENTITY);
+    }
+
+    @Test
+    void repeatedEvidenceDoesNotDuplicateBehaviors() {
+        // A scan can find the same auth API at several locations.
+        collector.observe(new ContextualEvidence("JWT", loc));
+        collector.observe(new ContextualEvidence("JWT", loc));
+
+        // The summary contains each behavior once.
+        assertThat(collector.getBehaviors())
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+    }
+
+    @Test
+    void laterEvidenceDoesNotChangeAnEarlierSnapshot() {
+        // Save the summary before more evidence arrives.
+        collector.observe(new ContextualEvidence("JWT", loc));
+        final Set<CryptoBehavior> snapshot = collector.getBehaviors();
+
+        // Add another auth kind to the ongoing scan.
+        collector.observe(new ContextualEvidence("PRINCIPAL", loc));
+
+        // The saved result stays stable while a new snapshot includes the new behavior.
+        assertThat(snapshot)
+                .containsOnly(CryptoBehavior.AUTHENTICATES, CryptoBehavior.VALIDATES_TOKEN);
+        assertThat(collector.getBehaviors())
+                .containsOnly(
+                        CryptoBehavior.AUTHENTICATES,
+                        CryptoBehavior.VALIDATES_TOKEN,
+                        CryptoBehavior.USES_IDENTITY);
     }
 
     @Test
     void unknownEvidenceIdentifierIsIgnored() {
         collector.observe(new ContextualEvidence("NOT_A_KIND", loc));
-        assertThat(collector.inferBehaviors()).isEmpty();
+        assertThat(collector.getBehaviors()).isEmpty();
+    }
+
+    @Test
+    void unknownEvidenceKeepsPreviouslyCollectedBehaviors() {
+        // Collect a known crypto asset followed by unrelated evidence.
+        collector.observe(new HMAC(loc));
+        collector.observe(new ContextualEvidence("NOT_A_KIND", loc));
+
+        // Unrecognized evidence leaves the existing summary intact.
+        assertThat(collector.getBehaviors()).containsOnly(CryptoBehavior.ENSURES_INTEGRITY);
     }
 
     @Test
     void noneKindEvidenceIsNotAPrimary() {
         collector.observe(new ContextualEvidence("NONE", loc));
-        assertThat(collector.inferBehaviors()).isEmpty();
+        assertThat(collector.getBehaviors()).isEmpty();
     }
 
     @Test
     void nonAssetNodesAreIgnored() {
         collector.observe(new Encrypt(loc));
-        assertThat(collector.inferBehaviors()).isEmpty();
+        assertThat(collector.getBehaviors()).isEmpty();
     }
 
     @Test
@@ -84,7 +178,7 @@ class BehaviorCollectorTest {
         final AES aes = new AES(loc);
         aes.put(new Encrypt(loc));
         collector.observe(aes);
-        assertThat(collector.inferBehaviors())
+        assertThat(collector.getBehaviors())
                 .containsOnly(CryptoBehavior.ENCRYPTS_DATA, CryptoBehavior.ENSURES_CONFIDENTIALITY);
     }
 }

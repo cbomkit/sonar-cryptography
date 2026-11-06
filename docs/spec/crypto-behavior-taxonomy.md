@@ -19,7 +19,7 @@ CycloneDX behavior field. The snapshot defines the available identifiers;
 
 ## 2. Scope
 
-The PR adds behavior inference and serialization in `output`, contextual evidence in
+The PR adds behavior collection and serialization in `output`, contextual evidence in
 `engine` and `mapper`, Java authentication detection, and curated Java PRNG and
 key-wrap detection. Crypto behavior mapping applies to algorithm nodes from any
 supported language. Authentication detection is Java-only in this PR.
@@ -36,33 +36,32 @@ enrichment pipeline. Java auth rules produce an `AuthContext` finding;
 through the same pipeline and retains its detection location, but never becomes a
 cryptographic component in the CBOM.
 
-The output subsystem has five responsibilities:
+The output uses three behavior classes and a metadata writer:
 
 | Component | Responsibility |
 |---|---|
+| `CryptoBehavior` | Define the supported behavior identifiers. |
 | `CryptoBehaviorMapper` | Map each algorithm's operations and primitive kind to crypto behaviors. |
-| `BehaviorCollector` | Observe algorithms and contextual evidence, retaining scan-wide sets. |
-| `BehaviorSignals` | Snapshot the crypto-derived behaviors and observed auth kinds for inference. |
-| `IBehaviorRule` | Contribute behaviors through the ordered registry: `CryptoBehaviorRule` passes crypto behaviors through; `AuthInterfaceRule` contributes auth behaviors. |
-| `BehaviorMetadataWriter` | Serialize the inferred set into CycloneDX metadata. |
+| `BehaviorCollector` | Add crypto and auth behaviors directly to one set as evidence arrives. |
+| `BehaviorMetadataWriter` | Write a snapshot of the collected behaviors into CycloneDX metadata. |
 
 `CBOMOutputFile` observes contextual evidence during node dispatch and algorithms when
 creating their components. The algorithm path also covers nested assets and protocol
-cipher-suite constituents. At `getBom()`, the collector unions rule contributions
-and the writer attaches the resulting property.
+cipher-suite constituents. At `getBom()`, the collector returns a snapshot of the
+collected behaviors and the writer attaches the resulting property.
 
 Evidence belongs to the output instance for one scan. Unknown contextual identifiers,
 the `NONE` auth kind and unrelated nodes contribute no behaviors. Auth-only scans can
 produce metadata without producing crypto components; their evidence nodes remain
 part of aggregated scan results and statistics.
 
-The mapper, signals and rules are package-private in `com.ibm.output.behavior`.
+The mapper is package-private in `com.ibm.output.behavior`.
 `BehaviorCollector` and `CryptoBehavior` are public so the CycloneDX writer can use them.
 
 ## 4. Output contract
 
 Emit exactly one `cbomkit:crypto:behavior` property on `bom.metadata.component` when
-the inferred set is non-empty. Its value contains full `security:cryptography:*`
+the collected set is non-empty. Its value contains full `security:cryptography:*`
 identifiers, deduplicated, sorted lexicographically and joined with commas, without
 spaces. The metadata component has type `application` and the fixed name
 `application`, since the scanned project name is not supplied to the writer.
@@ -87,7 +86,7 @@ For example, an RSA key-wrap operation contributes:
 ```
 
 This is a metadata excerpt. A complete CBOM also contains its detected crypto assets.
-When inference produces no behaviors, omit the property and do not create a metadata
+When no behaviors are collected, omit the property and do not create a metadata
 component solely for this feature. Auth evidence uses the same property and format as
 crypto-derived behaviors.
 
