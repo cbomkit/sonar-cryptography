@@ -56,6 +56,9 @@ the `NONE` auth kind and unrelated nodes contribute no behaviors. Auth-only scan
 produce metadata without producing crypto components; their evidence nodes remain
 part of aggregated scan results and statistics.
 
+The mapper, signals and rules are package-private in `com.ibm.output.behavior`.
+`BehaviorCollector` and `CryptoBehavior` are public so the CycloneDX writer can use them.
+
 ## 4. Output contract
 
 Emit exactly one `cbomkit:crypto:behavior` property on `bom.metadata.component` when

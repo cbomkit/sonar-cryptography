@@ -63,7 +63,7 @@ import javax.annotation.Nonnull;
  * Note: {@code authenticates} is deliberately never derived here — it is an application-level
  * behavior gated on auth-interface evidence (see {@code AuthInterfaceRule}).
  */
-public final class CryptoBehaviorMapper {
+final class CryptoBehaviorMapper {
 
     private static final Predicate<INode> ANY = node -> true;
 
@@ -214,7 +214,7 @@ public final class CryptoBehaviorMapper {
                             CryptoBehavior.GENERATES_RANDOM_VALUE));
 
     @Nonnull
-    public Set<CryptoBehavior> map(@Nonnull INode node) {
+    Set<CryptoBehavior> map(@Nonnull INode node) {
         final Set<CryptoBehavior> behaviors = EnumSet.noneOf(CryptoBehavior.class);
         if (!(node instanceof Algorithm)) {
             return behaviors;

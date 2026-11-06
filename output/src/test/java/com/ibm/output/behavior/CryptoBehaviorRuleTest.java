@@ -17,13 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.output.behavior.rules;
+package com.ibm.output.behavior;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.model.context.AuthContext;
-import com.ibm.output.behavior.BehaviorSignals;
-import com.ibm.output.behavior.CryptoBehavior;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 

@@ -17,19 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.output.behavior.rules;
+package com.ibm.output.behavior;
 
 import com.ibm.engine.model.context.AuthContext;
-import com.ibm.output.behavior.BehaviorSignals;
-import com.ibm.output.behavior.CryptoBehavior;
-import com.ibm.output.behavior.IBehaviorRule;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
 /** Maps detected authentication APIs to application behaviors in the CBOM. */
-public final class AuthInterfaceRule implements IBehaviorRule {
+final class AuthInterfaceRule implements IBehaviorRule {
 
     // NONE adds no behaviors.
     private static final Map<AuthContext.Kind, Set<CryptoBehavior>> CONTRIBUTIONS =

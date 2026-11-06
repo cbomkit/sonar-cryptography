@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
  * can justify. Rules are independent — contributing nothing is normal — and the collector unions
  * their results. Implementations must be total and side-effect free.
  */
-public interface IBehaviorRule {
+interface IBehaviorRule {
 
     @Nonnull
     Set<CryptoBehavior> apply(@Nonnull BehaviorSignals signals);

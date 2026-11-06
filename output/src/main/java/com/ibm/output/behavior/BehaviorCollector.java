@@ -23,8 +23,6 @@ import com.ibm.engine.model.context.AuthContext;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.ContextualEvidence;
 import com.ibm.mapper.model.INode;
-import com.ibm.output.behavior.rules.AuthInterfaceRule;
-import com.ibm.output.behavior.rules.CryptoBehaviorRule;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;

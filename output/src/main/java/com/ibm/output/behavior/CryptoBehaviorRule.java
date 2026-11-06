@@ -17,11 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.output.behavior.rules;
+package com.ibm.output.behavior;
 
-import com.ibm.output.behavior.BehaviorSignals;
-import com.ibm.output.behavior.CryptoBehavior;
-import com.ibm.output.behavior.IBehaviorRule;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -30,7 +27,7 @@ import javax.annotation.Nonnull;
  * assets) through unchanged. The mapper never derives application-level behaviors, so no gating is
  * needed here.
  */
-public final class CryptoBehaviorRule implements IBehaviorRule {
+final class CryptoBehaviorRule implements IBehaviorRule {
 
     @Override
     @Nonnull

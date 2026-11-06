@@ -29,10 +29,10 @@ import javax.annotation.Nonnull;
  * component here, one observe branch in {@link BehaviorCollector}, and one rule; nothing else
  * changes.
  */
-public record BehaviorSignals(
+record BehaviorSignals(
         @Nonnull Set<CryptoBehavior> cryptoBehaviors, @Nonnull Set<AuthContext.Kind> authKinds) {
 
-    public BehaviorSignals {
+    BehaviorSignals {
         cryptoBehaviors = Set.copyOf(cryptoBehaviors);
         authKinds = Set.copyOf(authKinds);
     }
