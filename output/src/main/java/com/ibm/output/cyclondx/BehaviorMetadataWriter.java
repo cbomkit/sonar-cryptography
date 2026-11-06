@@ -39,8 +39,8 @@ public final class BehaviorMetadataWriter {
     public static final String BEHAVIOR_PROPERTY_NAME = "cbomkit:behaviors";
 
     // Use a fixed name because no scanned-software name is supplied to getBom().
-    private static final String METADATA_COMPONENT_NAME = "application";
-    private static final String APPLICATION_BOM_REF = "urn:cbomkit:application";
+    private static final String METADATA_COMPONENT_NAME = "scanned-application";
+    private static final String APPLICATION_BOM_REF = "scanned-application";
 
     private BehaviorMetadataWriter() {}
 

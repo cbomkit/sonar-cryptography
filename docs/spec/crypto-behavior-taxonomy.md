@@ -76,8 +76,8 @@ deduplicated across the scan. Instance IDs stay the same when the same applicati
 and behavior appear in later output.
 
 Reuse the existing metadata component, its `bom-ref` and its properties. If the
-component is missing, create one with type `application` and name `application`.
-If its reference is missing or blank, use `urn:cbomkit:application`. Repeated writes
+component is missing, create one with type `application` and name `scanned-application`.
+If its reference is missing or blank, use `scanned-application`. Repeated writes
 replace this feature's property without duplicating it or removing other properties.
 
 For an RSA key-wrap operation, the JSON string decodes to:
@@ -86,9 +86,9 @@ For an RSA key-wrap operation, the JSON string decodes to:
 {
   "instances": [
     {
-      "bom-ref": "urn:cbomkit:behavior:f5f5ab80-3c22-36a3-b94e-a3436b6e0eea",
+      "bom-ref": "urn:cbomkit:behavior:0fa582a4-f737-3ec0-ab52-0f2070a36bae",
       "behavior": "security:cryptography:wrapsKey",
-      "actors": ["urn:cbomkit:application"]
+      "actors": ["scanned-application"]
     }
   ]
 }

@@ -84,7 +84,8 @@ class CryptoBehaviorMetadataTest {
         final Component metaComponent = bom.getMetadata().getComponent();
         assertThat(metaComponent).isNotNull();
         assertThat(metaComponent.getType()).isEqualTo(Component.Type.APPLICATION);
-        assertThat(metaComponent.getBomRef()).isNotBlank();
+        assertThat(metaComponent.getName()).isEqualTo("scanned-application");
+        assertThat(metaComponent.getBomRef()).isEqualTo("scanned-application");
         assertThat(metaComponent.getProperties()).hasSize(1);
         final JsonNode document = behaviorDocument(metaComponent);
         final JsonNode instances = document.get("instances");
@@ -217,7 +218,7 @@ class CryptoBehaviorMetadataTest {
         // An existing component without a reference can still act in the behavior model.
         BehaviorMetadataWriter.attachIfPresent(metadata, Set.of(CryptoBehavior.WRAPS_KEY));
 
-        assertThat(application.getBomRef()).isNotBlank();
+        assertThat(application.getBomRef()).isEqualTo("scanned-application");
         assertThat(application.getName()).isEqualTo("checkout-api");
         assertThat(
                         behaviorDocument(application)
