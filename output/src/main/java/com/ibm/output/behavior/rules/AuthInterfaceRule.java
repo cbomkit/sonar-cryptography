@@ -28,16 +28,10 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
-/**
- * Contributes application-level behaviors from detected auth-interface evidence (spec §6). Crypto
- * alone never asserts these: a MAC yields only {@code ensuresIntegrity} from the mapper, and {@code
- * authenticates} appears iff an auth interface was observed. SAML validates a signed assertion (a
- * bearer credential), so it also yields {@code validatesToken}; PRINCIPAL and MTLS yield {@code
- * usesIdentity} via the authenticated peer principal.
- */
+/** Maps detected authentication APIs to application behaviors in the CBOM. */
 public final class AuthInterfaceRule implements IBehaviorRule {
 
-    // NONE is deliberately absent: it is the "no auth context" marker, never a primary.
+    // NONE adds no behaviors.
     private static final Map<AuthContext.Kind, Set<CryptoBehavior>> CONTRIBUTIONS =
             Map.of(
                     AuthContext.Kind.JWT,
