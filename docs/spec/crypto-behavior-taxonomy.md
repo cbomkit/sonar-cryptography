@@ -1,14 +1,14 @@
-# Experimental crypto behavior taxonomy
+# Experimental security behavior annotations
 
 PR: [#494](https://github.com/cbomkit/sonar-cryptography/pull/494)
 
 ## 1. Purpose
 
-Add a scan-wide summary of what the analyzed software does cryptographically to its
-CBOM: encrypting data, wrapping keys, hashing passwords, validating tokens, and other
-behaviors supported by detected evidence. The existing crypto inventory remains the
-source for crypto operations; contextual authentication evidence supplies application
-behaviors that crypto primitives alone cannot establish.
+Add security behavior annotations to CBOMs using a shared vocabulary. The initial
+scope is the `security:cryptography:*` family: encrypting data, wrapping keys, hashing
+passwords, validating tokens and other supported behaviors. These annotations describe
+the scanned application's behavior alongside its crypto inventory. Crypto operations
+and authentication API usage detected in source code supply the evidence.
 
 Identifiers come from the bundled snapshot of the CycloneDX `2.0-dev-threatmodeling`
 taxonomy in
@@ -43,7 +43,7 @@ The output uses three behavior classes and a metadata writer:
 | `CryptoBehavior` | Define the supported behavior identifiers. |
 | `CryptoBehaviorMapper` | Map each algorithm's operations and primitive kind to crypto behaviors. |
 | `BehaviorCollector` | Add crypto and auth behaviors directly to one set as evidence arrives. |
-| `BehaviorMetadataWriter` | Write a snapshot of the collected behaviors into CycloneDX metadata. |
+| `BehaviorMetadataWriter` | Write behavior instances that reference the application in CycloneDX metadata. |
 
 `CBOMOutputFile` observes contextual evidence during node dispatch and algorithms when
 creating their components. The algorithm path also covers nested assets and protocol
@@ -60,35 +60,50 @@ The mapper is package-private in `com.ibm.output.behavior`.
 
 ## 4. Output contract
 
-Emit exactly one `cbomkit:crypto:behavior` property on `bom.metadata.component` when
-the collected set is non-empty. Its value contains full `security:cryptography:*`
-identifiers, deduplicated, sorted lexicographically and joined with commas, without
-spaces. The metadata component has type `application` and the fixed name
-`application`, since the scanned project name is not supplied to the writer.
+Keep the CBOM at CycloneDX 1.6. When behaviors are present, write one
+`cbomkit:behaviors` property on `bom.metadata.component`. Its value is a JSON string
+with an `instances` array, following the draft 2.0 behavior container shape. This is
+a custom property, not a native CycloneDX 2.0 blueprint.
 
-For example, an RSA key-wrap operation contributes:
+Each instance contains:
+
+- `bom-ref`: a stable identifier for this actor and behavior, derived as a name-based UUID.
+- `behavior`: the full taxonomy identifier, such as `security:cryptography:wrapsKey`.
+- `actors`: the `bom-ref` of the scanned application, which performs the behavior.
+
+Write one instance per collected behavior, sorted by taxonomy identifier. The set is
+deduplicated across the scan. Instance IDs stay the same when the same application
+and behavior appear in later output.
+
+Reuse the existing metadata component, its `bom-ref` and its properties. If the
+component is missing, create one with type `application` and name `application`.
+If its reference is missing or blank, use `urn:cbomkit:application`. Repeated writes
+replace this feature's property without duplicating it or removing other properties.
+
+For an RSA key-wrap operation, the JSON string decodes to:
 
 ```json
 {
-  "metadata": {
-    "component": {
-      "type": "application",
-      "name": "application",
-      "properties": [
-        {
-          "name": "cbomkit:crypto:behavior",
-          "value": "security:cryptography:wrapsKey"
-        }
-      ]
+  "instances": [
+    {
+      "bom-ref": "urn:cbomkit:behavior:f5f5ab80-3c22-36a3-b94e-a3436b6e0eea",
+      "behavior": "security:cryptography:wrapsKey",
+      "actors": ["urn:cbomkit:application"]
     }
-  }
+  ]
 }
 ```
 
-This is a metadata excerpt. A complete CBOM also contains its detected crypto assets.
-When no behaviors are collected, omit the property and do not create a metadata
-component solely for this feature. Auth evidence uses the same property and format as
-crypto-derived behaviors.
+The property value is escaped as a string in the serialized 1.6 document. Crypto
+assets remain in the existing component inventory; the actor points to the application.
+
+Leave `acknowledgment` unset: static detection alone does not establish an explicitly
+declared behavior or runtime execution. Omit triggers, targets and graphs because the
+current scan does not collect those relationships or ordered flows.
+
+When no behaviors are collected, leave metadata unchanged and do not create a
+component or property solely for this feature. Auth evidence uses the same instance
+format as crypto-derived behaviors.
 
 ## 5. Crypto behavior mapping
 
@@ -179,8 +194,9 @@ MACs contribute integrity and generic KDFs approximate derivation as `generatesK
 Deferred work includes per-asset attribution, confidence scoring, auth detection in
 other languages, annotation/import/dependency evidence, key-store lifecycle behaviors,
 certificate/PKI and code-signing behaviors, and data-at-rest/in-transit distinctions.
-First-class CycloneDX behavior fields can replace the experimental property when an
-appropriate standard format is adopted.
+Detailed actor/target relationships and behavior graphs remain deferred. Native
+CycloneDX blueprint and behavior fields can replace the experimental property when
+an appropriate standard format is adopted.
 
 ## 8. Validation
 
@@ -195,8 +211,11 @@ exact call-location assertions and examples that configure or use its authentica
 API. Negative examples cover parser construction, unverified token decoding and plain
 header reads. Other detection fixtures cover SecureRandom and key wrapping. Pipeline and
 CBOM tests verify contextual evidence survives translation/enrichment, creates no
-crypto component, and contributes to sorted, deduplicated metadata. They also cover
-empty output, auth-only evidence and algorithms nested in protocol cipher suites.
+crypto component, and contributes to sorted behavior instances with valid application
+references. They also cover empty output, auth-only evidence, stable and distinct
+instance IDs, preservation of existing metadata, repeated writes and algorithms nested
+in protocol cipher suites. Serialized output is validated against the CycloneDX 1.6
+schema, and the property value is checked as a JSON string.
 
 Run `mvn -pl java,output -am test spotless:check checkstyle:check` for the affected
 pipeline, and `mvn clean package` for the full build.
