@@ -17,6 +17,13 @@ The feature uses an experimental, tool-specific property rather than a standard
 CycloneDX behavior field. The snapshot defines the available identifiers;
 `CryptoBehavior` represents the subset the plugin emits.
 
+Behavior annotations are disabled by default. The boolean SonarQube setting
+`sonar.cryptoScanner.behaviors`, labeled **Behaviors (experimental)**, enables them
+globally or for an individual project. It can also be set in `sonar-project.properties`
+or passed as `-Dsonar.cryptoScanner.behaviors=true` to the scanner. When unset or
+`false`, behavior collection and metadata writing are skipped; the crypto inventory
+is still generated.
+
 ## 2. Scope
 
 The PR adds behavior collection and serialization in `output`, contextual evidence in

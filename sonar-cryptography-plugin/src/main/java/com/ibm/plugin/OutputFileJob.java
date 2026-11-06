@@ -37,12 +37,19 @@ public class OutputFileJob implements PostJob {
 
     @Override
     public void execute(PostJobContext postJobContext) {
+        // Resolve output settings for this analysis, with experimental behaviors disabled by
+        // default.
         final String cbomFilename =
                 postJobContext
                         .config()
                         .get(Constants.CBOM_OUTPUT_NAME)
                         .orElse(Constants.CBOM_OUTPUT_NAME_DEFAULT);
-        ScannerManager scannerManager = new ScannerManager(new CBOMOutputFileFactory());
+        final boolean behaviorsEnabled =
+                postJobContext.config().getBoolean(Constants.BEHAVIORS_ENABLED).orElse(false);
+        ScannerManager scannerManager =
+                new ScannerManager(new CBOMOutputFileFactory(behaviorsEnabled));
+
+        // Write the CBOM and report the results of the analysis.
         if (scannerManager.hasResults()) {
             final File cbom = new File(cbomFilename + ".json");
             scannerManager.getOutputFile().saveTo(cbom);
@@ -51,6 +58,8 @@ public class OutputFileJob implements PostJob {
         } else {
             LOGGER.info("No cryptography assets were detected. CBOM will not be generated.");
         }
+
+        // Report retained scan state before releasing it for the next analysis.
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(scannerManager.heapAttribution().format());
         }
