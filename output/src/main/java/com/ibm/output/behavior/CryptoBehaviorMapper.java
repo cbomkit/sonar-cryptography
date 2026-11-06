@@ -82,11 +82,13 @@ final class CryptoBehaviorMapper {
                     node.is(PasswordBasedKeyDerivationFunction.class)
                             || node.is(PasswordBasedEncryption.class);
 
+    /** Maps a detected operation to behaviors when the asset matches the condition. */
     private record OperationMapping(
             @Nonnull Class<? extends INode> operation,
             @Nonnull Predicate<INode> when,
             @Nonnull Set<CryptoBehavior> behaviors) {}
 
+    /** Maps a primitive kind to behaviors when no operation mapping applies. */
     private record FallbackMapping(
             @Nonnull Class<? extends INode> primitive, @Nonnull Set<CryptoBehavior> behaviors) {}
 
