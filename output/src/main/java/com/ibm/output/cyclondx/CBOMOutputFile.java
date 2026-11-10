@@ -72,6 +72,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -87,6 +88,8 @@ import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
+import org.cyclonedx.model.component.crypto.AlgorithmProperties;
+import org.cyclonedx.model.component.crypto.CryptoProperties;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
 import org.slf4j.Logger;
@@ -253,6 +256,106 @@ public class CBOMOutputFile implements IOutputFile {
         addComponentAndDependencies(rcm, optionalId.get(), parentBomRef, node);
     }
 
+    /**
+     * Merges one component into another when both carry the same identity.
+     *
+     * <p>Two detections become the same component when they print the same name, and the name holds
+     * only part of what a detection knows ({@code Algorithm.asString}). So two call sites can share
+     * an identity while differing in everything the name leaves out. The clearest case is a cipher
+     * created twice from the same string, once to encrypt and once to decrypt: the direction is not
+     * part of the name, both land here, and until this merge existed only the component found first
+     * survived and so the second direction was dropped and the inventory claimed the code never
+     * encrypts.
+     *
+     * <p>What is merged is deliberately narrow: the list-valued properties, and a whole
+     * sub-property object where the kept component has none at all. A list is safe to union because
+     * the component stands for all of its occurrences together, and collectively they do perform
+     * every function any of them performs.
+     *
+     * <p>Single-valued properties are deliberately <em>not</em> filled in from the other component,
+     * even when the kept one has none. They describe one call site's configuration, and a component
+     * covering several would then state something about occurrences that never said it.
+     */
+    private static void mergeCryptoProperties(
+            @Nonnull Component kept, @Nonnull Component incoming) {
+        final CryptoProperties from = incoming.getCryptoProperties();
+        if (from == null) {
+            return;
+        }
+        if (kept.getCryptoProperties() == null) {
+            kept.setCryptoProperties(from);
+            return;
+        }
+        final CryptoProperties into = kept.getCryptoProperties();
+
+        final AlgorithmProperties source = from.getAlgorithmProperties();
+        if (source == null) {
+            return;
+        }
+        if (into.getAlgorithmProperties() == null) {
+            into.setAlgorithmProperties(source);
+            return;
+        }
+        final AlgorithmProperties target = into.getAlgorithmProperties();
+        // Only ever written when the union has something in it, so a property neither component
+        // stated is left exactly as it was rather than being replaced by null or an empty list.
+        replaceIfNotEmpty(
+                target::setCryptoFunctions,
+                union(target.getCryptoFunctions(), source.getCryptoFunctions()));
+        replaceIfNotEmpty(
+                target::setCertificationLevel,
+                union(target.getCertificationLevel(), source.getCertificationLevel()));
+    }
+
+    private static <T> void replaceIfNotEmpty(
+            @Nonnull Consumer<List<T>> setter, @Nullable List<T> value) {
+        if (value != null && !value.isEmpty()) {
+            setter.accept(value);
+        }
+    }
+
+    /**
+     * Union of two lists, keeping the order in which values were first seen and dropping repeats.
+     * Returns {@code null} for two empty inputs so that a property nobody stated stays absent from
+     * the CBOM rather than appearing as an empty list.
+     */
+    @Nullable private static <T> List<T> union(@Nullable List<T> first, @Nullable List<T> second) {
+        final List<T> result = new ArrayList<>();
+        Stream.concat(
+                        first == null ? Stream.empty() : first.stream(),
+                        second == null ? Stream.empty() : second.stream())
+                .filter(value -> !result.contains(value))
+                .forEach(result::add);
+        return result.isEmpty() ? null : result;
+    }
+
+    private static void mergeOccurrences(@Nonnull Component kept, @Nonnull Component incoming) {
+        if (incoming.getEvidence() == null) {
+            return;
+        }
+        if (kept.getEvidence() == null) {
+            kept.setEvidence(incoming.getEvidence());
+            return;
+        }
+        final List<Occurrence> merged =
+                Stream.concat(
+                                kept.getEvidence().getOccurrences().stream(),
+                                incoming.getEvidence().getOccurrences().stream())
+                        .filter(
+                                com.ibm.output.cyclondx.builder.Utils.distinctByKey(
+                                        o ->
+                                                o.getLocation()
+                                                        + " "
+                                                        + o.getLine()
+                                                        + " "
+                                                        + o.getOffset()
+                                                        + " "
+                                                        + o.getAdditionalContext()
+                                                        + " "))
+                        .toList();
+        kept.getEvidence().setOccurrences(merged);
+    }
+
     private void addComponentAndDependencies(
             @Nonnull final Component component,
             @Nonnull String componentId,
@@ -263,25 +366,10 @@ public class CBOMOutputFile implements IOutputFile {
         } else {
             this.components.computeIfPresent(
                     componentId,
-                    (id, c) -> {
-                        final List<Occurrence> merge =
-                                Stream.concat(
-                                                c.getEvidence().getOccurrences().stream(),
-                                                component.getEvidence().getOccurrences().stream())
-                                        .filter(
-                                                com.ibm.output.cyclondx.builder.Utils.distinctByKey(
-                                                        o ->
-                                                                o.getLocation()
-                                                                        + " "
-                                                                        + o.getLine()
-                                                                        + " "
-                                                                        + o.getOffset()
-                                                                        + " "
-                                                                        + o.getAdditionalContext()
-                                                                        + " "))
-                                        .toList();
-                        c.getEvidence().setOccurrences(merge);
-                        return c;
+                    (id, kept) -> {
+                        mergeOccurrences(kept, component);
+                        mergeCryptoProperties(kept, component);
+                        return kept;
                     });
         }
 
