@@ -47,8 +47,12 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetRfc2898DeriveBytes;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSHA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSHA3;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSlhDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetTls;
 import com.ibm.plugin.rules.detection.dotnet.DotNetTripleDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetX25519DiffieHellman;
+import com.ibm.plugin.rules.detection.fodicom.FoDicom;
+import com.ibm.plugin.rules.detection.mailkit.MailKit;
+import com.ibm.plugin.rules.detection.npgsql.Npgsql;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -85,7 +89,11 @@ public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
                         RuleSets.rulesOf(DotNetAlgorithmFactory.class).stream(),
                         RuleSets.rulesOf(DotNetCertificateKeys.class).stream(),
                         RuleSets.rulesOf(DotNetIncrementalHash.class).stream(),
-                        RuleSets.rulesOf(DotNetCngKey.class).stream())
+                        RuleSets.rulesOf(DotNetCngKey.class).stream(),
+                        RuleSets.rulesOf(DotNetTls.class).stream(),
+                        RuleSets.rulesOf(MailKit.class).stream(),
+                        RuleSets.rulesOf(Npgsql.class).stream(),
+                        RuleSets.rulesOf(FoDicom.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

@@ -39,6 +39,10 @@ build/
 
 ### Add binaries for testing ###
 !go/build/
+# The dcm4che jars are fetched into java/target/test-jars by java/pom.xml instead of being
+# checked in -- dcm4che is MPL/GPL/LGPL, and a copy here would be redistribution. This guards
+# against one being added back by hand.
+java/src/test/resources/test-jars/dcm4che-*.jar
 
 ### Generated scan output ###
 cbom.json

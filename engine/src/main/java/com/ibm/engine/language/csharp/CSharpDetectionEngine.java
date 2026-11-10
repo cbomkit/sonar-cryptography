@@ -44,6 +44,7 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -295,6 +296,19 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             List<ResolvedValue<Object, CSharpTree>> resolved =
                     resolveValuesInInnerScope(
                             Object.class, expression, detectable.getiValueFactory());
+            if (resolved.isEmpty()
+                    && detectable.getiValueFactory().isPresenceBased()
+                    && !(expression instanceof CSharpLiteralTree)) {
+                // The parameter says something by being there rather than by its value, so the
+                // factory is called once for the bound expression. A literal is excluded: the only
+                // literal that reaches such a parameter is `null`, and for fo-dicom's TLS handlers
+                // null is precisely the argument that means the opposite.
+                final ResolvedValue<Object, CSharpTree> presence =
+                        new ResolvedValue<>(expression, expression);
+                detectionStore.onReceivingNewDetection(
+                        new ValueDetection<>(presence, detectable, parentTree, parentTree));
+                return;
+            }
             if (resolved.isEmpty()) {
                 resolveValuesInOuterScope(expression, detectable);
                 // A parameter that declares both a value factory and depending rules falls back to
@@ -393,7 +407,7 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
 
         if (tree instanceof CSharpBinaryExpressionTree binary) {
-            return resolveBinaryExpression(clazz, binary, resolving);
+            return resolveBinaryExpression(clazz, binary, valueFactory, resolving);
         }
 
         if (tree instanceof CSharpMethodInvocationTree invocation
@@ -511,7 +525,20 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     private <O> List<ResolvedValue<O, CSharpTree>> resolveBinaryExpression(
             @Nonnull Class<O> clazz,
             @Nonnull CSharpBinaryExpressionTree binary,
+            @Nullable IValueFactory<CSharpTree> valueFactory,
             @Nonnull Set<Object> resolving) {
+        if ("|".equals(binary.getOperator())) {
+            // A flags enum written as `A | B` is a set, not a sum: `SslProtocols.Tls12 |
+            // SslProtocols.Tls13` offers both versions and has to arrive as both values. The
+            // arithmetic below cannot say that -- it folds two numbers into one -- and `|` was
+            // never among the operators it folds, so nothing that resolved before changes.
+            final List<ResolvedValue<O, CSharpTree>> members = new ArrayList<>();
+            members.addAll(resolveValues(clazz, binary.getLeft(), valueFactory, resolving));
+            members.addAll(resolveValues(clazz, binary.getRight(), valueFactory, resolving));
+            if (!members.isEmpty()) {
+                return members;
+            }
+        }
         Optional<Integer> left = resolveIntOperand(binary.getLeft(), resolving);
         Optional<Integer> right = resolveIntOperand(binary.getRight(), resolving);
         if (left.isEmpty() || right.isEmpty()) {

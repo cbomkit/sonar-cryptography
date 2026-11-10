@@ -47,6 +47,7 @@ import com.ibm.plugin.translation.translator.contexts.CSharpDigestContextTransla
 import com.ibm.plugin.translation.translator.contexts.CSharpKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpMacContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpPRNGContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.CSharpProtocolContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpSignatureContextTranslator;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +116,8 @@ public class CSharpTranslator
         }
 
         if (detectionValueContext.is(ProtocolContext.class)) {
-            return Optional.empty();
+            return new CSharpProtocolContextTranslator()
+                    .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 
         if (detectionValueContext.is(KeyDerivationFunctionContext.class)) {

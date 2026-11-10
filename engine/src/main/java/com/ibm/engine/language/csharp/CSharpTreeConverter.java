@@ -1167,6 +1167,22 @@ public final class CSharpTreeConverter {
             return null; // the lambda itself never contributes a value (see class javadoc)
         }
 
+        if (unwrapped instanceof CSharpParser.Inclusive_or_expressionContext or
+                && or.exclusive_or_expression().size() >= 2) {
+            // A flags enum written as `A | B`, which is how .NET states a set of TLS versions:
+            // `SslProtocols.Tls12 | SslProtocols.Tls13`. Folded right to left so a longer chain
+            // keeps every member; the engine resolves such an expression to all of its members
+            // rather than to one number, because that is what a flags value means.
+            CSharpTree combined =
+                    convertArithmeticOrPrimary(
+                            or.exclusive_or_expression(or.exclusive_or_expression().size() - 1),
+                            scope);
+            for (int i = or.exclusive_or_expression().size() - 2; i >= 0; i--) {
+                CSharpTree left = convertArithmeticOrPrimary(or.exclusive_or_expression(i), scope);
+                combined = combineBinary(or, left, "|", combined, scope);
+            }
+            return combined;
+        }
         if (unwrapped instanceof CSharpParser.Primary_expressionContext primary) {
             if (isCollectionExpression(primary)) {
                 // The grammar makes a collection expression a primary expression, so it never
@@ -1213,9 +1229,10 @@ public final class CSharpTreeConverter {
 
     /**
      * Recognizes a flat two-operand {@code +}/{@code -}/{@code *}/{@code /}/{@code %} expression
-     * (e.g. {@code 256 / 8}); anything more complex (three-or-more-term chains, other operators)
-     * falls through to a best-effort search for a single primary expression anywhere inside, same
-     * as the pre-refactor fallback behaviour.
+     * (e.g. {@code 256 / 8}) and a {@code |} chain, which is how a flags enum is written; anything
+     * more complex (three-or-more-term arithmetic chains, other operators) falls through to a
+     * best-effort search for a single primary expression anywhere inside, same as the pre-refactor
+     * fallback behaviour.
      */
     @Nullable private CSharpTree convertArithmeticOrPrimary(
             @Nonnull ParseTree node, @Nonnull CSharpScope scope) {
@@ -1297,10 +1314,46 @@ public final class CSharpTreeConverter {
             return;
         }
         if (body.throwable_expression() != null) {
+            // An expression-bodied lambda whose body is an assignment is still a body that
+            // assigns: `options => options.SslProtocols = SslProtocols.Tls13` sets a property,
+            // which is how a one-line Kestrel or HttpClient configuration callback is written.
+            // The synthetic `set_<Property>` invocation only exists when the assignment is
+            // visited as a statement, so it is collected like one instead of being reduced to
+            // the call sites it contains -- an assignment of a constant contains none at all,
+            // which is why this used to produce nothing.
+            CSharpParser.ExpressionContext expression = body.throwable_expression().expression();
+            if (expression != null
+                    && unwrapSingleChildChain(expression)
+                            instanceof CSharpParser.AssignmentContext assignment) {
+                collectAsBody(assignment, bodyScope);
+                return;
+            }
             emitCallSitesWithoutValue(body.throwable_expression(), bodyScope);
         } else {
             emitCallSitesWithoutValue(body.non_assignment_expression(), bodyScope);
         }
+    }
+
+    /**
+     * Visits one parse tree as if it were the whole of a body, so that the statement-level rewrites
+     * -- the synthetic property setters above all -- apply to it.
+     */
+    private void collectAsBody(
+            @Nonnull org.antlr.v4.runtime.ParserRuleContext context, @Nonnull CSharpScope scope) {
+        StatementCollector collector = new StatementCollector(scope);
+        List<CSharpTree> previousSink = chainCallSink;
+        chainCallSink = collector.mutableStatements();
+        try {
+            collector.visit(context);
+        } finally {
+            chainCallSink = previousSink;
+        }
+        bodies.add(
+                new CSharpBlockTree(
+                        context.getStart().getLine(),
+                        context.getStart().getCharPositionInLine(),
+                        collector.getStatements(),
+                        scope));
     }
 
     /**
@@ -1754,7 +1807,13 @@ public final class CSharpTreeConverter {
                         ? objCreationCtx.object_or_collection_initializer()
                         : (objExpr != null ? objExpr.object_or_collection_initializer() : null);
         if (initializer != null) {
-            emitObjectInitializerSetters(assignedIdentifier, initializer, scope);
+            // Without a variable the type itself is the receiver. `new
+            // SslClientAuthenticationOptions
+            // { EnabledSslProtocols = SslProtocols.None }` handed straight to a handshake is the
+            // normal way these options are written -- Npgsql does it exactly so -- and dropping
+            // the setters there would lose the only place the versions are named.
+            emitObjectInitializerSetters(
+                    assignedIdentifier != null ? assignedIdentifier : typeName, initializer, scope);
         }
 
         return creation;
@@ -1767,9 +1826,9 @@ public final class CSharpTreeConverter {
      * <p>Only simple {@code Property = value} entries are emitted. A nested initializer ({@code
      * Inner = { ... }}) or an indexed entry ({@code [key] = value}) carries no property name that a
      * rule could match, and a collection initializer has no property names at all, so both are
-     * skipped. Nothing is emitted when the creation is not assigned to a variable (e.g. it is
-     * passed straight into another call), since there would be no receiver name to attach the
-     * setters to.
+     * skipped. A creation that is not assigned to a variable -- passed straight into another call,
+     * or returned -- uses its own type name as the receiver, which is what a rule matching on the
+     * type would expect anyway.
      */
     private void emitObjectInitializerSetters(
             @Nullable String receiver,

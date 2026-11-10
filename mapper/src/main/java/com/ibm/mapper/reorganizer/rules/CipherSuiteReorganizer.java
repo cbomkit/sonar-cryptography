@@ -25,7 +25,6 @@ import com.ibm.mapper.model.protocol.TLS;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -36,6 +35,14 @@ public final class CipherSuiteReorganizer {
         // nothing
     }
 
+    /**
+     * A suite on its own becomes the protocol that offers it.
+     *
+     * <p>The returned list replaces the roots of the whole tree, so only this suite's root may be
+     * exchanged. Returning the new protocol alone would drop every other root, and one call offers
+     * several suites: {@code setEnabledCipherSuites} and dcm4che's {@code setTlsCipherSuites} both
+     * take a list, and each entry arrives here as its own root.
+     */
     @Nonnull
     public static final IReorganizerRule ADD_TLS_PROTOCOL_AS_PARENT_NODE =
             new ReorganizerRuleBuilder()
@@ -47,10 +54,32 @@ public final class CipherSuiteReorganizer {
                                 if (node instanceof CipherSuite cipherSuite) {
                                     final TLS tls = new TLS(cipherSuite.getDetectionContext());
                                     tls.put(cipherSuite);
-                                    return new ArrayList<>(Collections.singleton(tls));
+                                    final List<INode> newRoots = new ArrayList<>(roots);
+                                    final int index = indexOfSameNode(newRoots, node);
+                                    if (index < 0) {
+                                        newRoots.add(tls);
+                                    } else {
+                                        newRoots.set(index, tls);
+                                    }
+                                    return newRoots;
                                 }
                                 return roots;
                             });
+
+    /**
+     * The position of {@code node} itself, compared by identity.
+     *
+     * <p>Two calls can name the same suite, and equal suites would otherwise collapse onto one
+     * position and leave the other root untouched forever.
+     */
+    private static int indexOfSameNode(@Nonnull List<INode> nodes, @Nonnull INode node) {
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i) == node) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     @Nonnull
     public static final IReorganizerRule REPLACE_TLS_WITH_VERSIONED_CHILD =
