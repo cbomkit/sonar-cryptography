@@ -100,13 +100,26 @@ to start your first scan.
 | Property                   | Default | Scope   | Description                                                                   |
 |----------------------------|---------|---------|-------------------------------------------------------------------------------|
 | `sonar.cryptoScanner.cbom` | `cbom`  | Project | Filename (without extension) of the generated CBOM, written as `<name>.json`. |
+| `sonar.cryptoScanner.behaviors` | `false` | Global / Project | Enable **Behaviors (experimental)**: security behavior annotations in the generated CBOM. |
 
-The property can be set in the SonarQube UI under *Project Settings → General*, or passed to the
+These properties can be set in the SonarQube UI under *Project Settings → General*, or passed to the
 scanner directly:
 
 ```bash
 sonar-scanner -Dsonar.cryptoScanner.cbom=my-cbom
 ```
+
+To opt in to experimental behavior annotations, enable *Behaviors (experimental)* in SonarQube's
+global or project settings, or set `sonar.cryptoScanner.behaviors=true` in `sonar-project.properties`
+or as a scanner argument:
+
+```bash
+sonar-scanner -Dsonar.cryptoScanner.behaviors=true
+```
+
+With the setting unset or `false`, the CBOM contains the crypto inventory without the
+`cbomkit:behaviors` property. This feature uses a draft CycloneDX taxonomy and may change in future
+versions. See the [behavior annotations specification](docs/spec/crypto-behavior-taxonomy.md).
 
 ### Visualizing your CBOM
 
