@@ -164,6 +164,41 @@ final class CSharpTypeInference {
                     "DefaultTlsInitiator", "ITlsInitiator",
                     "DefaultTlsAcceptor", "ITlsAcceptor");
 
+    /**
+     * The enums and structs of {@link #KNOWN_NAMED_TYPES}, which cannot be subtypes of each other.
+     * Two different names from this set are never compatible, for example {@code
+     * RSASignaturePadding} and {@code HashAlgorithmName}. The class types ({@code RSA}, {@code
+     * AsymmetricAlgorithm}, ...) are left out because one can be a subtype of another.
+     */
+    @Nonnull
+    private static final Set<String> DISJOINT_VALUE_TYPES =
+            Set.of(
+                    "HashAlgorithmName",
+                    "ECCurve",
+                    "ECParameters",
+                    "RSAParameters",
+                    "DSAParameters",
+                    "RSASignaturePadding",
+                    "RSAEncryptionPadding",
+                    "RSASignaturePaddingMode",
+                    "RSAEncryptionPaddingMode",
+                    "PaddingMode",
+                    "CipherMode",
+                    "DataProtectionScope",
+                    "MemoryProtectionScope",
+                    "CngAlgorithm",
+                    "CngKeyBlobFormat",
+                    "CngKeyCreationParameters",
+                    "CspParameters",
+                    "DSASignatureFormat",
+                    "CngKey",
+                    "MLKemAlgorithm",
+                    "MLDsaAlgorithm",
+                    "SlhDsaAlgorithm",
+                    "CompositeMLDsaAlgorithm",
+                    "KeyDerivationPrf",
+                    "ECDiffieHellmanPublicKey");
+
     private CSharpTypeInference() {
         // utility
     }
@@ -181,8 +216,9 @@ final class CSharpTypeInference {
      * rule set is built to avoid — so this side may be stricter.
      *
      * <p>Strictness is nonetheless confined to pairs where both sides are recognized: a primitive
-     * category against a different primitive category, or a primitive category against a name in
-     * {@link #KNOWN_NAMED_TYPES}. Everything else is reported as possibly compatible.
+     * category against a different primitive category, a primitive category against a name in
+     * {@link #KNOWN_NAMED_TYPES}, or two different names in {@link #DISJOINT_VALUE_TYPES}.
+     * Everything else is reported as possibly compatible.
      */
     static boolean isDefinitelyIncompatible(@Nonnull String actual, @Nonnull String expected) {
         String a = normalize(actual);
@@ -191,6 +227,9 @@ final class CSharpTypeInference {
             return false;
         }
         if (!isAssignable(a, e)) {
+            return true;
+        }
+        if (DISJOINT_VALUE_TYPES.contains(a) && DISJOINT_VALUE_TYPES.contains(e)) {
             return true;
         }
         boolean aPrimitive = isPrimitiveCategory(a);
@@ -296,9 +335,9 @@ final class CSharpTypeInference {
             return null;
         }
         if (variable.declaredType() != null) {
-            return variable.declaredType(); // explicit `Type x = ...` (or a parameter/const)
+            return variable.declaredType();
         }
-        return infer(variable.initializer()); // `var x = ...` — infer from the initializer
+        return infer(variable.initializer());
     }
 
     /**
@@ -329,13 +368,10 @@ final class CSharpTypeInference {
                 isIntLike(a) || isStringLike(a) || isByteSpanLike(a) || isBoolLike(a);
         boolean eKnownCategory =
                 isIntLike(e) || isStringLike(e) || isByteSpanLike(e) || isBoolLike(e);
-        if (aKnownCategory && eKnownCategory) {
-            return false;
-        }
         // At least one side is an unrecognized (likely enum/struct/class) type name — different
         // spellings could still be the same type via `using` aliases or nesting we cannot see, so
         // stay permissive rather than risk a false negative.
-        return true;
+        return !aKnownCategory || !eKnownCategory;
     }
 
     @Nonnull

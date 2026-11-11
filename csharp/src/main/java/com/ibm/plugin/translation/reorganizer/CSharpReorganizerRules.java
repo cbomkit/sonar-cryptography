@@ -51,6 +51,7 @@ public final class CSharpReorganizerRules {
         return Stream.concat(
                         Stream.of(
                                 SignatureReorganizer.MERGE_SIGNATURE_PARENT_AND_CHILD,
+                                SignatureReorganizer.ROOT_SIGN_ONTO_ITS_ALGORITHM,
                                 KeyDerivationReorganizer.moveModeFromParentToNode(
                                         BlockCipher.class),
                                 KeyDerivationReorganizer.moveModeFromParentToNode(
