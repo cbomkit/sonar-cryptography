@@ -15,6 +15,11 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- dcm4che publishes to its own repository; the whole org/dcm4che group is a 404 on
+             Maven Central. Declared as a plain URL for the antrun fetch below rather than as a
+             <repository>, so Maven's dependency resolution never depends on this host. -->
+        <dcm4che.version>5.35.2</dcm4che.version>
+        <dcm4che.repository>https://maven.dcm4che.org</dcm4che.repository>
     </properties>
 
     <dependencies>
@@ -67,4 +72,46 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- The dcm4che jars the Dcm4che* tests need on the verifier classpath. They are
+                     fetched rather than checked in: dcm4che is MPL 1.1 / GPL 2.0 / LGPL 2.1, and
+                     carrying the binary in this Apache-2.0 repository would be redistributing it,
+                     which brings a source-availability obligation with it. Downloading it here
+                     means the developer and CI obtain it from dcm4che directly and this project
+                     redistributes nothing. The same pattern already fetches the pinned sonar-go
+                     release tree in sonar-cryptography-plugin/pom.xml.
+
+                     ignoreerrors keeps an offline or blocked build green: the download is skipped,
+                     Dcm4cheJars.available() returns false, and the two dcm4che test classes report
+                     as skipped rather than failing. Their content is pinned by the SHA-256 digests
+                     in Dcm4cheJars, so a partial or substituted download counts as absent. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>fetch-dcm4che-test-jars</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/test-jars"/>
+                                <get src="${dcm4che.repository}/org/dcm4che/dcm4che-net/${dcm4che.version}/dcm4che-net-${dcm4che.version}.jar"
+                                     dest="${project.build.directory}/test-jars/dcm4che-net-${dcm4che.version}.jar"
+                                     skipexisting="true" ignoreerrors="true" maxtime="60" retries="3"/>
+                                <get src="${dcm4che.repository}/org/dcm4che/dcm4che-core/${dcm4che.version}/dcm4che-core-${dcm4che.version}.jar"
+                                     dest="${project.build.directory}/test-jars/dcm4che-core-${dcm4che.version}.jar"
+                                     skipexisting="true" ignoreerrors="true" maxtime="60" retries="3"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

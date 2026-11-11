@@ -38,6 +38,16 @@ public final class ProtocolFactory<T> implements IValueFactory<T> {
         this.constant = constant;
     }
 
+    /**
+     * A constant protocol says the same thing for every input, so it can be stated from the
+     * argument's presence alone. Without a constant the factory reads the resolved string and has
+     * nothing to say about an argument it cannot resolve.
+     */
+    @Override
+    public boolean isPresenceBased() {
+        return constant != null;
+    }
+
     @Override
     @Nonnull
     public Optional<IValue<T>> apply(ResolvedValue<Object, T> objectTResolvedValue) {

@@ -1192,6 +1192,22 @@ public final class CSharpTreeConverter {
             return null; // the lambda itself never contributes a value (see class javadoc)
         }
 
+        if (unwrapped instanceof CSharpParser.Inclusive_or_expressionContext or
+                && or.exclusive_or_expression().size() >= 2) {
+            // A flags enum written as `A | B`, which is how .NET states a set of TLS versions:
+            // `SslProtocols.Tls12 | SslProtocols.Tls13`. Folded right to left so a longer chain
+            // keeps every member; the engine resolves such an expression to all of its members
+            // rather than to one number, because that is what a flags value means.
+            CSharpTree combined =
+                    convertArithmeticOrPrimary(
+                            or.exclusive_or_expression(or.exclusive_or_expression().size() - 1),
+                            scope);
+            for (int i = or.exclusive_or_expression().size() - 2; i >= 0; i--) {
+                CSharpTree left = convertArithmeticOrPrimary(or.exclusive_or_expression(i), scope);
+                combined = combineBinary(or, left, "|", combined, scope);
+            }
+            return combined;
+        }
         if (unwrapped instanceof CSharpParser.Primary_expressionContext primary) {
             if (isCollectionExpression(primary)) {
                 // The grammar makes a collection expression a primary expression, so it never
@@ -1238,9 +1254,10 @@ public final class CSharpTreeConverter {
 
     /**
      * Recognizes a flat two-operand {@code +}/{@code -}/{@code *}/{@code /}/{@code %} expression
-     * (e.g. {@code 256 / 8}); anything more complex (three-or-more-term chains, other operators)
-     * falls through to a best-effort search for a single primary expression anywhere inside, same
-     * as the pre-refactor fallback behaviour.
+     * (e.g. {@code 256 / 8}) and a {@code |} chain, which is how a flags enum is written; anything
+     * more complex (three-or-more-term arithmetic chains, other operators) falls through to a
+     * best-effort search for a single primary expression anywhere inside, same as the pre-refactor
+     * fallback behaviour.
      */
     @Nullable private CSharpTree convertArithmeticOrPrimary(
             @Nonnull ParseTree node, @Nonnull CSharpScope scope) {
@@ -1322,10 +1339,46 @@ public final class CSharpTreeConverter {
             return;
         }
         if (body.throwable_expression() != null) {
+            // An expression-bodied lambda whose body is an assignment is still a body that
+            // assigns: `options => options.SslProtocols = SslProtocols.Tls13` sets a property,
+            // which is how a one-line Kestrel or HttpClient configuration callback is written.
+            // The synthetic `set_<Property>` invocation only exists when the assignment is
+            // visited as a statement, so it is collected like one instead of being reduced to
+            // the call sites it contains -- an assignment of a constant contains none at all,
+            // which is why this used to produce nothing.
+            CSharpParser.ExpressionContext expression = body.throwable_expression().expression();
+            if (expression != null
+                    && unwrapSingleChildChain(expression)
+                            instanceof CSharpParser.AssignmentContext assignment) {
+                collectAsBody(assignment, bodyScope);
+                return;
+            }
             emitCallSitesWithoutValue(body.throwable_expression(), bodyScope);
         } else {
             emitCallSitesWithoutValue(body.non_assignment_expression(), bodyScope);
         }
+    }
+
+    /**
+     * Visits one parse tree as if it were the whole of a body, so that the statement-level rewrites
+     * -- the synthetic property setters above all -- apply to it.
+     */
+    private void collectAsBody(
+            @Nonnull org.antlr.v4.runtime.ParserRuleContext context, @Nonnull CSharpScope scope) {
+        StatementCollector collector = new StatementCollector(scope);
+        List<CSharpTree> previousSink = chainCallSink;
+        chainCallSink = collector.mutableStatements();
+        try {
+            collector.visit(context);
+        } finally {
+            chainCallSink = previousSink;
+        }
+        bodies.add(
+                new CSharpBlockTree(
+                        context.getStart().getLine(),
+                        context.getStart().getCharPositionInLine(),
+                        collector.getStatements(),
+                        scope));
     }
 
     /**
@@ -1727,10 +1780,17 @@ public final class CSharpTreeConverter {
             @Nonnull CSharpScope scope) {
         CSharpParser.Type_Context typeCtx = objCreationCtx.type_();
 
+        // An array initializer is an array form in its own right. Without it, `new T[] { a, b }`
+        // and `new[] { a, b }` fell through to the object-creation path and became an opaque
+        // creation of type "T[]" with no arguments, so their elements were invisible: neither a
+        // rank specifier (which sits inside type_ for the explicit form) nor an expression_list
+        // (which only the sized form `new T[n]` has) is present for them.
         boolean isArrayForm =
                 (objCreationCtx.expression_list() != null
                                 && !objCreationCtx.expression_list().expression().isEmpty())
-                        || !objCreationCtx.rank_specifier().isEmpty();
+                        || !objCreationCtx.rank_specifier().isEmpty()
+                        || objCreationCtx.array_initializer() != null
+                        || isArrayTypeWithCollectionInitializer(objCreationCtx, typeCtx);
         if (isArrayForm) {
             return convertArrayCreation(objCreationCtx, typeCtx, scope);
         }
@@ -1779,7 +1839,13 @@ public final class CSharpTreeConverter {
                         ? objCreationCtx.object_or_collection_initializer()
                         : (objExpr != null ? objExpr.object_or_collection_initializer() : null);
         if (initializer != null) {
-            emitObjectInitializerSetters(assignedIdentifier, initializer, scope);
+            // Without a variable the type itself is the receiver. `new
+            // SslClientAuthenticationOptions
+            // { EnabledSslProtocols = SslProtocols.None }` handed straight to a handshake is the
+            // normal way these options are written -- Npgsql does it exactly so -- and dropping
+            // the setters there would lose the only place the versions are named.
+            emitObjectInitializerSetters(
+                    assignedIdentifier != null ? assignedIdentifier : typeName, initializer, scope);
         }
 
         return creation;
@@ -1792,9 +1858,9 @@ public final class CSharpTreeConverter {
      * <p>Only simple {@code Property = value} entries are emitted. A nested initializer ({@code
      * Inner = { ... }}) or an indexed entry ({@code [key] = value}) carries no property name that a
      * rule could match, and a collection initializer has no property names at all, so both are
-     * skipped. Nothing is emitted when the creation is not assigned to a variable (e.g. it is
-     * passed straight into another call), since there would be no receiver name to attach the
-     * setters to.
+     * skipped. A creation that is not assigned to a variable -- passed straight into another call,
+     * or returned -- uses its own type name as the receiver, which is what a rule matching on the
+     * type would expect anyway.
      */
     private void emitObjectInitializerSetters(
             @Nullable String receiver,
@@ -1899,15 +1965,76 @@ public final class CSharpTreeConverter {
         int col = ctx.getStart().getCharPositionInLine();
 
         if (init.OPEN_BRACE() != null) {
-            // stackalloc T[] { a, b, c } — the element count is the length
+            // stackalloc T[] { a, b, c } — the element count is the length, and the elements
+            // themselves are kept so a non-size factory can read the values (see
+            // CSharpArrayCreationTree#getElements).
             int count = init.expression().size();
-            return new CSharpArrayCreationTree(line, col, elementType, null, count, scope);
+            List<CSharpTree> elements = new ArrayList<>();
+            for (CSharpParser.ExpressionContext element : init.expression()) {
+                CSharpTree converted = convertExpression(element, scope);
+                if (converted != null) {
+                    elements.add(converted);
+                }
+            }
+            return new CSharpArrayCreationTree(
+                    line, col, elementType, null, count, elements, scope);
         }
         if (!init.expression().isEmpty()) {
             CSharpTree length = convertExpression(init.expression(0), scope);
             return new CSharpArrayCreationTree(line, col, elementType, length, -1, scope);
         }
         return new CSharpArrayCreationTree(line, col, elementType, null, -1, scope);
+    }
+
+    /**
+     * Whether {@code new T[] { a, b }} is being looked at -- the explicit-element-type array, which
+     * reaches here in a shape of its own.
+     *
+     * <p>The parser puts the brackets inside {@code type_}, so the type reads {@code T[]} and
+     * {@code rank_specifier()} is empty, and it parses the braces as an {@code
+     * object_or_collection_initializer} rather than an {@code array_initializer}. Without this
+     * check the creation therefore fell through to the object-creation path and became an opaque
+     * creation of type {@code "T[]"}, whose braces were walked for call sites only: the elements
+     * were never offered as values of an array, so {@code new TlsCipherSuite[] { ... }} yielded the
+     * policy it was passed to and not one of its suites, while the implicit {@code new[] { ... }}
+     * yielded both.
+     *
+     * <p>The type has to carry a rank specifier for this to apply. A collection initializer on a
+     * non-array type is a genuine collection -- {@code new List<T> { a, b }} -- and keeps its
+     * existing treatment, because a list is not resolved element-wise anywhere.
+     */
+    private static boolean isArrayTypeWithCollectionInitializer(
+            @Nonnull CSharpParser.ObjectCreationExpressionContext ctx,
+            @Nullable CSharpParser.Type_Context typeCtx) {
+        if (typeCtx == null || typeCtx.rank_specifier().isEmpty()) {
+            return false;
+        }
+        CSharpParser.Object_or_collection_initializerContext initializer =
+                ctx.object_or_collection_initializer();
+        return initializer != null && initializer.collection_initializer() != null;
+    }
+
+    /**
+     * The element expressions of a collection initializer that belongs to an array creation.
+     *
+     * <p>The same values {@link #convertArrayElements} reads out of an {@code array_initializer},
+     * reached through the other of the two shapes the parser produces for a braced array.
+     */
+    @Nonnull
+    private List<CSharpTree> convertCollectionElements(
+            @Nonnull CSharpParser.Collection_initializerContext collection,
+            @Nonnull CSharpScope scope) {
+        List<CSharpTree> elements = new ArrayList<>();
+        for (CSharpParser.Element_initializerContext element : collection.element_initializer()) {
+            if (element.non_assignment_expression() != null) {
+                CSharpTree converted =
+                        convertArithmeticOrPrimary(element.non_assignment_expression(), scope);
+                if (converted != null) {
+                    elements.add(converted);
+                }
+            }
+        }
+        return elements;
     }
 
     @Nonnull
@@ -1926,9 +2053,53 @@ public final class CSharpTreeConverter {
         }
         if (ctx.array_initializer() != null) {
             int count = ctx.array_initializer().variable_initializer().size();
-            return new CSharpArrayCreationTree(line, col, elementType, null, count, scope);
+            return new CSharpArrayCreationTree(
+                    line,
+                    col,
+                    elementType,
+                    null,
+                    count,
+                    convertArrayElements(ctx.array_initializer(), scope),
+                    scope);
+        }
+        if (isArrayTypeWithCollectionInitializer(ctx, typeCtx)) {
+            CSharpParser.Collection_initializerContext collection =
+                    ctx.object_or_collection_initializer().collection_initializer();
+            return new CSharpArrayCreationTree(
+                    line,
+                    col,
+                    elementType,
+                    null,
+                    collection.element_initializer().size(),
+                    convertCollectionElements(collection, scope),
+                    scope);
         }
         return new CSharpArrayCreationTree(line, col, elementType, null, -1, scope);
+    }
+
+    /**
+     * The element expressions of a braced array initializer.
+     *
+     * <p>An element that is itself an array initializer ({@code new int[][] { {1}, {2} }}) is
+     * skipped rather than flattened: a nested array is not a value of the outer array's element
+     * type, and flattening would present a jagged array's contents as if they were one list.
+     */
+    @Nonnull
+    private List<CSharpTree> convertArrayElements(
+            @Nonnull CSharpParser.Array_initializerContext initializer,
+            @Nonnull CSharpScope scope) {
+        List<CSharpTree> elements = new ArrayList<>();
+        for (CSharpParser.Variable_initializerContext element :
+                initializer.variable_initializer()) {
+            if (element.expression() == null) {
+                continue;
+            }
+            CSharpTree converted = convertExpression(element.expression(), scope);
+            if (converted != null) {
+                elements.add(converted);
+            }
+        }
+        return elements;
     }
 
     // -----------------------------------------------------------------------
@@ -2013,7 +2184,15 @@ public final class CSharpTreeConverter {
         int line = literalCtx.getStart().getLine();
         int col = literalCtx.getStart().getCharPositionInLine();
 
-        if (literalCtx.INTEGER_LITERAL() != null) {
+        // The lexer has three integer tokens and all three are integers. Testing only
+        // INTEGER_LITERAL let a hex or binary literal fall through to the string branch at the
+        // bottom, so `aes.KeySize = 0x100` resolved to the text "0x100" instead of 256 and the key
+        // length was silently lost. Nothing else had to change: parseIntOrNull in
+        // CSharpDetectionEngine already strips the 0x/0b prefix, the digit separators and the
+        // u/l suffixes.
+        if (literalCtx.INTEGER_LITERAL() != null
+                || literalCtx.HEX_INTEGER_LITERAL() != null
+                || literalCtx.BIN_INTEGER_LITERAL() != null) {
             return new CSharpLiteralTree(line, col, CSharpLiteralTree.Kind.INTEGER, text);
         }
         if (literalCtx.REAL_LITERAL() != null) {

@@ -122,9 +122,33 @@ public final class CipherSuiteMapper implements IMapper {
         return Optional.of(cipherSuite);
     }
 
+    /**
+     * The prefix JSSE keeps for the suites it inherited from SSLv3.
+     *
+     * <p>Java names those with {@code SSL_} where IANA names them {@code TLS_}, and the rest of the
+     * name is identical: {@code SSL_RSA_WITH_NULL_SHA} is {@code TLS_RSA_WITH_NULL_SHA}. The
+     * spelling matters because it is the one that appears in source -- dcm4che declares its three
+     * {@code Connection} constants with it, and the two its own tools pass as literals are the null
+     * cipher and 3DES, which are exactly the suites an inventory is read for.
+     */
+    private static final String JSSE_LEGACY_PREFIX = "SSL_";
+
+    private static final String IANA_PREFIX = "TLS_";
+
+    @Nonnull
+    private static Optional<JsonCipherSuite> findByJsseLegacyName(@Nonnull String identifier) {
+        if (!identifier.startsWith(JSSE_LEGACY_PREFIX)) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(
+                JsonCipherSuites.CIPHER_SUITES.get(
+                        IANA_PREFIX + identifier.substring(JSSE_LEGACY_PREFIX.length())));
+    }
+
     @Nonnull
     public static Optional<JsonCipherSuite> findCipherSuite(@Nonnull final String identifier) {
         return Optional.ofNullable(JsonCipherSuites.CIPHER_SUITES.get(identifier))
+                .or(() -> findByJsseLegacyName(identifier))
                 .or(
                         () -> {
                             Collection<JsonCipherSuite> suites =

@@ -44,6 +44,7 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -295,6 +296,19 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
             List<ResolvedValue<Object, CSharpTree>> resolved =
                     resolveValuesInInnerScope(
                             Object.class, expression, detectable.getiValueFactory());
+            if (resolved.isEmpty()
+                    && detectable.getiValueFactory().isPresenceBased()
+                    && !(expression instanceof CSharpLiteralTree)) {
+                // The parameter says something by being there rather than by its value, so the
+                // factory is called once for the bound expression. A literal is excluded: the only
+                // literal that reaches such a parameter is `null`, and for fo-dicom's TLS handlers
+                // null is precisely the argument that means the opposite.
+                final ResolvedValue<Object, CSharpTree> presence =
+                        new ResolvedValue<>(expression, expression);
+                detectionStore.onReceivingNewDetection(
+                        new ValueDetection<>(presence, detectable, parentTree, parentTree));
+                return;
+            }
             if (resolved.isEmpty()) {
                 resolveValuesInOuterScope(expression, detectable);
                 // A parameter that declares both a value factory and depending rules falls back to
@@ -383,17 +397,31 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
 
         if (tree instanceof CSharpArrayCreationTree arrayCreation) {
-            // Mirrors the Java engine's NEW_ARRAY handling: an array's length/element-count is
-            // resolved as an Integer regardless of which factory asked — G2 (above) is what stops a
-            // SizeFactory from ever seeing a String, and every other factory either wants an
-            // Integer
-            // too or simply ignores an argument it did not ask for (e.g. a constant-valued
-            // ModeFactory("CBC") does not look at the resolved value at all).
-            return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            // Mirrors the Java engine's NEW_ARRAY handling, which branches on the asking factory:
+            // a SizeFactory wants the array's length, everything else wants the values in it.
+            //
+            // Returning the length to every factory, as this did before, meant a collection
+            // argument could never be read -- `new[] { TlsCipherSuite.TLS_AES_256_GCM_SHA384, ...
+            // }`
+            // resolved to the Integer 2. That is why the C# side had no rule able to read a list of
+            // cipher suites while the Java side has had `setEnabledCipherSuites(String[])` all
+            // along.
+            if (valueFactory instanceof SizeFactory<?>) {
+                return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            }
+            final List<ResolvedValue<O, CSharpTree>> elements = new ArrayList<>();
+            for (CSharpTree element : arrayCreation.getElements()) {
+                elements.addAll(resolveValues(clazz, element, valueFactory, resolving));
+            }
+            // An array with no readable elements falls back to the length, so a factory that does
+            // want a count still gets one from `new byte[32]`.
+            return elements.isEmpty()
+                    ? resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving)
+                    : elements;
         }
 
         if (tree instanceof CSharpBinaryExpressionTree binary) {
-            return resolveBinaryExpression(clazz, binary, resolving);
+            return resolveBinaryExpression(clazz, binary, valueFactory, resolving);
         }
 
         if (tree instanceof CSharpMethodInvocationTree invocation
@@ -511,7 +539,20 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     private <O> List<ResolvedValue<O, CSharpTree>> resolveBinaryExpression(
             @Nonnull Class<O> clazz,
             @Nonnull CSharpBinaryExpressionTree binary,
+            @Nullable IValueFactory<CSharpTree> valueFactory,
             @Nonnull Set<Object> resolving) {
+        if ("|".equals(binary.getOperator())) {
+            // A flags enum written as `A | B` is a set, not a sum: `SslProtocols.Tls12 |
+            // SslProtocols.Tls13` offers both versions and has to arrive as both values. The
+            // arithmetic below cannot say that -- it folds two numbers into one -- and `|` was
+            // never among the operators it folds, so nothing that resolved before changes.
+            final List<ResolvedValue<O, CSharpTree>> members = new ArrayList<>();
+            members.addAll(resolveValues(clazz, binary.getLeft(), valueFactory, resolving));
+            members.addAll(resolveValues(clazz, binary.getRight(), valueFactory, resolving));
+            if (!members.isEmpty()) {
+                return members;
+            }
+        }
         Optional<Integer> left = resolveIntOperand(binary.getLeft(), resolving);
         Optional<Integer> right = resolveIntOperand(binary.getRight(), resolving);
         if (left.isEmpty() || right.isEmpty()) {

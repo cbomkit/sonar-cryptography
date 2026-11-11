@@ -23,6 +23,8 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleDetectionRules;
+import com.ibm.plugin.rules.detection.dcm4che.Dcm4cheConnectionTls;
+import com.ibm.plugin.rules.detection.dcm4che.Dcm4cheDicom;
 import com.ibm.plugin.rules.detection.jca.JcaDetectionRules;
 import com.ibm.plugin.rules.detection.ssl.SSLDetectionRules;
 import java.util.List;
@@ -38,7 +40,9 @@ public final class JavaDetectionRules extends DetectionRuleSet<Tree> {
         return Stream.of(
                         RuleSets.rulesOf(JcaDetectionRules.class).stream(),
                         RuleSets.rulesOf(BouncyCastleDetectionRules.class).stream(),
-                        RuleSets.rulesOf(SSLDetectionRules.class).stream())
+                        RuleSets.rulesOf(SSLDetectionRules.class).stream(),
+                        RuleSets.rulesOf(Dcm4cheConnectionTls.class).stream(),
+                        RuleSets.rulesOf(Dcm4cheDicom.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }
