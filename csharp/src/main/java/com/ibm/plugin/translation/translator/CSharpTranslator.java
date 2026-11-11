@@ -46,6 +46,7 @@ import com.ibm.plugin.translation.translator.contexts.CSharpCipherContextTransla
 import com.ibm.plugin.translation.translator.contexts.CSharpDigestContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpMacContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.CSharpOpenSslContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpPRNGContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpProtocolContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.CSharpSignatureContextTranslator;
@@ -73,6 +74,17 @@ public class CSharpTranslator
                 getDetectionContextFrom(value.getLocation(), bundleIdentifier, filePath);
         if (detectionLocation == null) {
             return Optional.empty();
+        }
+
+        // OpenSSL reached through P/Invoke is a flat set of static extern functions, so its rules
+        // span five of the contexts below while sharing one vocabulary and one set of constant
+        // tables. They are routed by the context property their rule sets all carry rather than by
+        // the context class, which keeps all of OpenSSL in one translator instead of adding a case
+        // to each of five. See OpenSslDetectionRules#CONTEXT_KEY.
+        if (detectionValueContext.contains(
+                com.ibm.plugin.rules.detection.openssl.OpenSslDetectionRules.CONTEXT_KEY)) {
+            return new CSharpOpenSslContextTranslator()
+                    .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
 
         if (detectionValueContext.is(CipherContext.class)) {

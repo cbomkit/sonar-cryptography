@@ -47,7 +47,15 @@ public final class Utils {
                 .findFirst();
     }
 
-    public static <T> @Nonnull Predicate<T> distinctByKey(
+    // @Nonnull sits before the modifiers, not after the type parameter. javax.annotation.Nonnull
+    // declares no @Target, so by JLS 9.6.4.1 it is applicable in declaration contexts only -- and
+    // `<T> @Nonnull Predicate<T>` is a *type* context. javac accepts it anyway; the Eclipse
+    // compiler does not, and emits a class that throws "Unresolved compilation problem" when
+    // called. An IDE Java language server (VSCode's redhat.java, IntelliJ with a Maven output
+    // directory) compiles into target/classes alongside Maven, so that poisoned class then fails
+    // Maven's own tests with an error pointing at code that compiles perfectly well.
+    @Nonnull
+    public static <T> Predicate<T> distinctByKey(
             @Nonnull Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;

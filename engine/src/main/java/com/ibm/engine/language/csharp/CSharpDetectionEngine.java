@@ -397,13 +397,27 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
 
         if (tree instanceof CSharpArrayCreationTree arrayCreation) {
-            // Mirrors the Java engine's NEW_ARRAY handling: an array's length/element-count is
-            // resolved as an Integer regardless of which factory asked — G2 (above) is what stops a
-            // SizeFactory from ever seeing a String, and every other factory either wants an
-            // Integer
-            // too or simply ignores an argument it did not ask for (e.g. a constant-valued
-            // ModeFactory("CBC") does not look at the resolved value at all).
-            return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            // Mirrors the Java engine's NEW_ARRAY handling, which branches on the asking factory:
+            // a SizeFactory wants the array's length, everything else wants the values in it.
+            //
+            // Returning the length to every factory, as this did before, meant a collection
+            // argument could never be read -- `new[] { TlsCipherSuite.TLS_AES_256_GCM_SHA384, ...
+            // }`
+            // resolved to the Integer 2. That is why the C# side had no rule able to read a list of
+            // cipher suites while the Java side has had `setEnabledCipherSuites(String[])` all
+            // along.
+            if (valueFactory instanceof SizeFactory<?>) {
+                return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            }
+            final List<ResolvedValue<O, CSharpTree>> elements = new ArrayList<>();
+            for (CSharpTree element : arrayCreation.getElements()) {
+                elements.addAll(resolveValues(clazz, element, valueFactory, resolving));
+            }
+            // An array with no readable elements falls back to the length, so a factory that does
+            // want a count still gets one from `new byte[32]`.
+            return elements.isEmpty()
+                    ? resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving)
+                    : elements;
         }
 
         if (tree instanceof CSharpBinaryExpressionTree binary) {

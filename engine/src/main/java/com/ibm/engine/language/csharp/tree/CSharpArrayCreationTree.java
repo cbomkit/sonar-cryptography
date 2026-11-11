@@ -19,6 +19,7 @@
  */
 package com.ibm.engine.language.csharp.tree;
 
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -54,6 +55,17 @@ public final class CSharpArrayCreationTree implements CSharpTree {
      */
     private final int initializerElementCount;
 
+    /**
+     * The converted element expressions of a braced initializer, empty when the array has none (a
+     * sized array, or an initializer whose elements are themselves arrays).
+     *
+     * <p>Kept beside the count because the two answer different questions and the asking value
+     * factory decides which one it wants: a {@code SizeFactory} wants the length, everything else
+     * wants the values. The Java engine has always made that distinction; this is what lets the C#
+     * engine make it too.
+     */
+    @Nonnull private final List<CSharpTree> elements;
+
     @Nullable private final CSharpScope scope;
 
     public CSharpArrayCreationTree(
@@ -63,12 +75,37 @@ public final class CSharpArrayCreationTree implements CSharpTree {
             @Nullable CSharpTree lengthExpression,
             int initializerElementCount,
             @Nullable CSharpScope scope) {
+        this(
+                line,
+                column,
+                elementType,
+                lengthExpression,
+                initializerElementCount,
+                List.of(),
+                scope);
+    }
+
+    public CSharpArrayCreationTree(
+            int line,
+            int column,
+            @Nullable String elementType,
+            @Nullable CSharpTree lengthExpression,
+            int initializerElementCount,
+            @Nonnull List<CSharpTree> elements,
+            @Nullable CSharpScope scope) {
         this.line = line;
         this.column = column;
         this.elementType = elementType;
         this.lengthExpression = lengthExpression;
         this.initializerElementCount = initializerElementCount;
+        this.elements = List.copyOf(elements);
         this.scope = scope;
+    }
+
+    /** The element expressions of a braced initializer; empty when there are none. */
+    @Nonnull
+    public List<CSharpTree> getElements() {
+        return elements;
     }
 
     @Override

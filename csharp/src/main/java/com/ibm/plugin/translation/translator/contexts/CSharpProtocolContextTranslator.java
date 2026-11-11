@@ -20,11 +20,13 @@
 package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.model.CipherSuite;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
+import com.ibm.mapper.mapper.ssl.CipherSuiteMapper;
 import com.ibm.mapper.mapper.ssl.SSLVersionMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Protocol;
@@ -79,8 +81,29 @@ public final class CSharpProtocolContextTranslator {
             return switch (kind) {
                 case "MAILKIT" -> secureSocketOptions(protocol.asString(), detectionLocation);
                 case "SSL_MODE" -> sslMode(protocol.asString(), detectionLocation);
+                case "SCHANNEL_PACKAGE" -> schannelPackage(protocol.asString(), detectionLocation);
+                case "SCHANNEL_PROTOCOLS" ->
+                        schannelProtocol(protocol.asString(), detectionLocation);
                 default -> dotNetProtocol(protocol.asString(), detectionLocation);
             };
+        }
+
+        if (value instanceof CipherSuite<CSharpTree> cipherSuite) {
+            // The members of TlsCipherSuite are spelled exactly like the IANA registry entries, so
+            // the name goes straight into the project's existing table and comes back as the key
+            // exchange, cipher and digest it is made of.
+            //
+            // The table is also the guard, and it has to be consulted separately: CipherSuiteMapper
+            // falls back to a bare CipherSuite named after whatever string it was given, which is
+            // reasonable for the Java rules (there the argument is a suite name the developer wrote
+            // out) but not here. This rule reads an enum member through an ANY-typed parameter, so
+            // a member of some unrelated enum would otherwise become a cipher suite named after
+            // itself. Only a name the registry knows is accepted.
+            return CipherSuiteMapper.findCipherSuite(cipherSuite.get()).isPresent()
+                    ? new CipherSuiteMapper()
+                            .parse(cipherSuite.get(), detectionLocation)
+                            .map(n -> n)
+                    : Optional.empty();
         }
 
         if (value instanceof OperationMode<CSharpTree> operationMode && !kind.isEmpty()) {
@@ -170,6 +193,110 @@ public final class CSharpProtocolContextTranslator {
         return switch (name) {
             case "Require", "Required", "VerifyCA", "VerifyFull" ->
                     Optional.of(new TLS(detectionLocation));
+            default -> Optional.empty();
+        };
+    }
+
+    /**
+     * Whether an SSPI security-package name is Schannel's, in which case the call speaks TLS.
+     *
+     * <p>{@code AcquireCredentialsHandle} is matched on an {@code ANY} receiver and acquires
+     * credentials for every security package Windows has, so the package name is the whole guard.
+     * Schannel answers to two names, {@code UNISP_NAME} ("Microsoft Unified Security Protocol
+     * Provider") and {@code SCHANNEL_NAME} ("Schannel"), each with an {@code _A}/{@code _W}
+     * spelling; both the constant's name and its literal value are accepted, because a member
+     * access arrives as the member's name while a string constant arrives as the string. Anything
+     * else -- {@code "Negotiate"}, {@code "Kerberos"}, {@code "NTLM"}, {@code "CredSSP"}, or a name
+     * that is not a package at all -- is not TLS and reports nothing.
+     *
+     * <p>No version is claimed. The package name says which protocol family is spoken, never which
+     * version of it.
+     */
+    @Nonnull
+    private static Optional<INode> schannelPackage(
+            @Nonnull String name, @Nonnull DetectionLocation detectionLocation) {
+        return switch (name) {
+            case "UNISP_NAME",
+                    "UNISP_NAME_A",
+                    "UNISP_NAME_W",
+                    "Microsoft Unified Security Protocol Provider",
+                    "SCHANNEL_NAME",
+                    "SCHANNEL_NAME_A",
+                    "SCHANNEL_NAME_W",
+                    "Schannel" ->
+                    Optional.of(new TLS(detectionLocation));
+            default -> Optional.empty();
+        };
+    }
+
+    /**
+     * The protocol an {@code SP_PROT_*} flag name stands for, or nothing when the name is not one
+     * of them.
+     *
+     * <p>This reads {@code SCHANNEL_CRED.grbitEnabledProtocols} only, which is an allow-list. The
+     * identically-spelled flags also appear in {@code TLS_PARAMETERS.grbitDisabledProtocols}, where
+     * they mean the opposite; no rule reads that field, and that is deliberate -- a disabled
+     * protocol is not a protocol in use, so there is nothing for it to become.
+     *
+     * <p>The flag names are a closed set and that set is the guard, for the same reason it is on
+     * the .NET side: the assignment is matched on an {@code ANY} receiver and arrives here with
+     * whatever name its argument resolved to, which need not be a flag at all. A client-side flag
+     * and its server-side twin name the same protocol version -- the direction is a property of the
+     * endpoint, not of the cryptography -- so both map to one version, as does the {@code server |
+     * client} alias.
+     *
+     * <p>{@code SP_PROT_NONE} is zero, which the documentation defines as "Schannel selects the
+     * protocol"; it states TLS without a version, exactly as {@code SslProtocols.None} does. SSL 2
+     * and SSL 3 keep their own names rather than becoming a nameless TLS, and DTLS likewise, so a
+     * reader sees what was actually offered.
+     *
+     * <p>Two groups of flags name DTLS without naming a version: {@code SP_PROT_DTLS_CLIENT}/{@code
+     * _SERVER} and {@code SP_PROT_DTLS1_X_*}. The first pair is an alias of DTLS 1.0 in the header,
+     * but its name does not say so, and a version is not something to read out of an alias, so both
+     * groups report a bare {@code DTLS}.
+     *
+     * <p>Two further groups of real flags deliberately yield nothing at all. {@code SP_PROT_PCT1_*}
+     * is Private Communications Technology, which Schannel has not supported since Windows 2000, so
+     * a request for it cannot describe anything the code does. And the whole-range masks ({@code
+     * SP_PROT_ALL}, {@code SP_PROT_UNI_*}, {@code ClientProtocolMask}) enumerate nothing specific,
+     * so nothing specific is recorded.
+     *
+     * <p>A flag written as a number rather than a name also lands here, as the literal's own source
+     * text, and falls through to nothing. That is deliberate; {@code Schannel}'s rule for the field
+     * explains why the numbers are not decoded.
+     */
+    @Nonnull
+    private static Optional<INode> schannelProtocol(
+            @Nonnull String name, @Nonnull DetectionLocation detectionLocation) {
+        return switch (name) {
+            case "SP_PROT_TLS1_3_CLIENT", "SP_PROT_TLS1_3_SERVER", "SP_PROT_TLS1_3" ->
+                    versioned("TLSv1.3", detectionLocation);
+            case "SP_PROT_TLS1_2_CLIENT", "SP_PROT_TLS1_2_SERVER", "SP_PROT_TLS1_2" ->
+                    versioned("TLSv1.2", detectionLocation);
+            case "SP_PROT_TLS1_1_CLIENT", "SP_PROT_TLS1_1_SERVER", "SP_PROT_TLS1_1" ->
+                    versioned("TLSv1.1", detectionLocation);
+            case "SP_PROT_TLS1_0_CLIENT",
+                    "SP_PROT_TLS1_0_SERVER",
+                    "SP_PROT_TLS1_0",
+                    "SP_PROT_TLS1_CLIENT",
+                    "SP_PROT_TLS1_SERVER",
+                    "SP_PROT_TLS1" ->
+                    versioned("TLSv1.0", detectionLocation);
+            case "SP_PROT_SSL3_CLIENT", "SP_PROT_SSL3_SERVER", "SP_PROT_SSL3" ->
+                    Optional.of(new Protocol("SSLv3", detectionLocation));
+            case "SP_PROT_SSL2_CLIENT", "SP_PROT_SSL2_SERVER", "SP_PROT_SSL2" ->
+                    Optional.of(new Protocol("SSLv2", detectionLocation));
+            case "SP_PROT_DTLS1_2_CLIENT", "SP_PROT_DTLS1_2_SERVER", "SP_PROT_DTLS1_2" ->
+                    Optional.of(new Protocol("DTLSv1.2", detectionLocation));
+            case "SP_PROT_DTLS1_0_CLIENT", "SP_PROT_DTLS1_0_SERVER", "SP_PROT_DTLS1_0" ->
+                    Optional.of(new Protocol("DTLSv1.0", detectionLocation));
+            case "SP_PROT_DTLS_CLIENT",
+                    "SP_PROT_DTLS_SERVER",
+                    "SP_PROT_DTLS1_X_CLIENT",
+                    "SP_PROT_DTLS1_X_SERVER",
+                    "SP_PROT_DTLS1_X" ->
+                    Optional.of(new Protocol("DTLS", detectionLocation));
+            case "SP_PROT_NONE" -> Optional.of(new TLS(detectionLocation));
             default -> Optional.empty();
         };
     }
