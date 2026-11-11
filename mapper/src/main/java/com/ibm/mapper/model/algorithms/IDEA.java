@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -64,5 +66,11 @@ public final class IDEA extends Algorithm implements BlockCipher {
 
     public IDEA(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull IDEA idea) {
         super(idea, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.IDEA);
     }
 }

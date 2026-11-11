@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyLength;
@@ -27,6 +28,7 @@ import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -84,5 +86,11 @@ public final class RC2 extends Algorithm implements BlockCipher, KeyWrap {
 
     public RC2(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RC2 rc2) {
         super(rc2, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.RC2);
     }
 }

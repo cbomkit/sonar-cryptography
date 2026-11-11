@@ -19,10 +19,12 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.curves.Edwards25519;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -51,5 +53,11 @@ public final class Ed25519 extends EdDSA implements Signature {
         this.put(new Edwards25519(detectionLocation));
         this.put(new SHA2(512, detectionLocation));
         this.put(new Oid("1.3.101.112", detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.EDDSA);
     }
 }

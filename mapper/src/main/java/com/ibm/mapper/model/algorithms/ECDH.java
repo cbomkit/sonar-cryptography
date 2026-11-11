@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -55,5 +57,11 @@ public final class ECDH extends Algorithm implements KeyAgreement {
     public ECDH(@Nonnull EllipticCurve ellipticCurve) {
         this(ellipticCurve.getDetectionContext());
         this.put(ellipticCurve);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ECDH);
     }
 }

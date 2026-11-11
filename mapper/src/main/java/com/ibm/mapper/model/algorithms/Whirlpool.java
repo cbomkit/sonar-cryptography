@@ -20,11 +20,13 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -54,5 +56,11 @@ public final class Whirlpool extends Algorithm implements MessageDigest {
         this.put(new DigestSize(512, detectionLocation));
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new NumberOfIterations(10, detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.WHIRLPOOL);
     }
 }

@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyAgreement;
@@ -73,6 +74,24 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
             }
         }
         return this.name;
+    }
+
+    /**
+     * RSA signatures are PKCS#1 v1.5 (RSA-PSS is {@link RSAssaPSS}); RSA encryption is OAEP when
+     * OAEP padding is present and PKCS#1 v1.5 otherwise. RSA as key agreement has no family.
+     */
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        if (this.is(Signature.class)) {
+            return Optional.of(AlgorithmFamily.RSASSA_PKCS1);
+        } else if (this.is(PublicKeyEncryption.class)) {
+            return Optional.of(
+                    this.hasChildOfType(Padding.class).map(OAEP.class::isInstance).orElse(false)
+                            ? AlgorithmFamily.RSAES_OAEP
+                            : AlgorithmFamily.RSAES_PKCS1);
+        }
+        return Optional.empty();
     }
 
     public RSA(@Nonnull DetectionLocation detectionLocation) {

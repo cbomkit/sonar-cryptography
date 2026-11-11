@@ -20,11 +20,13 @@
 package com.ibm.mapper.model.algorithms.blake;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -73,5 +75,11 @@ public final class BLAKE2b extends Algorithm implements MessageDigest {
 
     public BLAKE2b(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull BLAKE2b blake) {
         super(blake, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.BLAKE2);
     }
 }

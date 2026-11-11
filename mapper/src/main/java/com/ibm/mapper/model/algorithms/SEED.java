@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.IPrimitive;
@@ -28,6 +29,7 @@ import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.Mode;
 import com.ibm.mapper.model.Padding;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -79,5 +81,11 @@ public final class SEED extends Algorithm implements BlockCipher, KeyWrap {
 
     public SEED(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull SEED seed) {
         super(seed, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SEED);
     }
 }

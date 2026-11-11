@@ -19,9 +19,11 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -55,5 +57,11 @@ public final class ECMQV extends MQV {
             @Nonnull EllipticCurve ellipticCurve, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(ellipticCurve);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.MQV);
     }
 }

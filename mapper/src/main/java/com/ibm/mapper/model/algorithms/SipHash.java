@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -56,5 +58,11 @@ public final class SipHash extends Algorithm implements Mac {
 
     public SipHash(@Nonnull DetectionLocation detectionLocation) {
         this(64, detectionLocation);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SIPHASH);
     }
 }

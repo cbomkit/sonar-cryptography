@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class Algorithm implements IAlgorithm, Cloneable {
     @Nonnull protected Map<Class<? extends INode>, INode> children;
@@ -32,6 +33,7 @@ public class Algorithm implements IAlgorithm, Cloneable {
     @Nonnull protected final DetectionLocation detectionLocation;
     @Nonnull protected final String name;
     @Nonnull protected final NodeOrigin origin;
+    @Nullable protected final AlgorithmFamily family;
 
     public Algorithm(
             @Nonnull IAlgorithm algorithm, @Nonnull final Class<? extends IPrimitive> asKind) {
@@ -40,6 +42,7 @@ public class Algorithm implements IAlgorithm, Cloneable {
         this.detectionLocation = algorithm.getDetectionContext();
         this.kind = asKind;
         this.origin = algorithm.getOrigin();
+        this.family = algorithm.getFamily().orElse(null);
     }
 
     public Algorithm(
@@ -59,6 +62,7 @@ public class Algorithm implements IAlgorithm, Cloneable {
         this.detectionLocation = detectionLocation;
         this.kind = asKind;
         this.origin = origin;
+        this.family = null;
     }
 
     @Override
@@ -78,6 +82,12 @@ public class Algorithm implements IAlgorithm, Cloneable {
     @Nonnull
     public String getName() {
         return name;
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.ofNullable(family);
     }
 
     @Nonnull

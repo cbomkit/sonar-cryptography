@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.ParameterSetIdentifier;
@@ -87,5 +88,11 @@ public final class MLDSA extends Algorithm implements Signature {
         this.put(
                 new ParameterSetIdentifier(
                         String.valueOf(parameterSetIdentifier), preHash.getDetectionContext()));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ML_DSA);
     }
 }

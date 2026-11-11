@@ -23,10 +23,12 @@ import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.EllipticCurve;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.IAlgorithm;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.KeyEncapsulationMechanism;
+import com.ibm.mapper.model.KeyWrap;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
@@ -92,7 +94,7 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     protected AlgorithmComponentBuilder() {
         this.component = new Component();
         this.cryptoProperties = new CryptoProperties();
-        this.algorithmProperties = new AlgorithmProperties();
+        this.algorithmProperties = new AlgorithmProperties17();
     }
 
     @SuppressWarnings("java:S107")
@@ -233,6 +235,12 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
             primitives = Primitive.KEM;
         } else if (primitive.is(ExtendableOutputFunction.class)) {
             primitives = Primitive.XOF;
+        } else if (primitive.is(KeyWrap.class)) {
+            // serialized as key-wrap, see AlgorithmProperties17
+            primitives = Primitive.OTHER;
+            if (this.algorithmProperties instanceof AlgorithmProperties17 properties17) {
+                properties17.setKeyWrap(true);
+            }
         } else {
             primitives = Primitive.OTHER;
         }
@@ -291,7 +299,11 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
     public @Nonnull IAlgorithmComponentBuilder curve(@Nullable INode curve) {
         this.curve = curve;
         if (curve instanceof EllipticCurve ellipticCurve) {
+            // 'curve' is deprecated in CycloneDX 1.7 but kept for consumers of 1.6; only
+            // registry identifiers may be emitted as 'ellipticCurve'
             this.algorithmProperties.setCurve(ellipticCurve.asString());
+            CycloneDxRegistry.ellipticCurve(ellipticCurve)
+                    .ifPresent(this.algorithmProperties::setEllipticCurve);
         }
         return new AlgorithmComponentBuilder(
                 component,
@@ -414,6 +426,12 @@ public class AlgorithmComponentBuilder implements IAlgorithmComponentBuilder {
 
         if (parameterSetIdentifier != null) {
             this.algorithmProperties.setParameterSetIdentifier(parameterSetIdentifier.asString());
+        }
+        if (algorithm instanceof IAlgorithm iAlgorithm) {
+            iAlgorithm
+                    .getFamily()
+                    .flatMap(CycloneDxRegistry::algorithmFamily)
+                    .ifPresent(this.algorithmProperties::setAlgorithmFamily);
         }
         this.cryptoProperties.setAssetType(AssetType.ALGORITHM);
         this.cryptoProperties.setAlgorithmProperties(this.algorithmProperties);

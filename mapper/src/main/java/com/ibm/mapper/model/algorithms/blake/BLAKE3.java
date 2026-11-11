@@ -20,11 +20,13 @@
 package com.ibm.mapper.model.algorithms.blake;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.KeyDerivationFunction;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -61,5 +63,11 @@ public final class BLAKE3 extends Algorithm implements MessageDigest, KeyDerivat
 
     public BLAKE3(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull BLAKE3 blake) {
         super(blake, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.BLAKE3);
     }
 }

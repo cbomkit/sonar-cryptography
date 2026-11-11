@@ -20,8 +20,10 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.PasswordBasedKeyDerivationFunction;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -47,5 +49,11 @@ public final class Scrypt extends Algorithm implements PasswordBasedKeyDerivatio
 
     public Scrypt(@Nonnull DetectionLocation detectionLocation) {
         super(NAME, PasswordBasedKeyDerivationFunction.class, detectionLocation);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.SCRYPT);
     }
 }

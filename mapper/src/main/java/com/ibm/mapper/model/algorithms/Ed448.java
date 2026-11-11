@@ -19,11 +19,13 @@
  */
 package com.ibm.mapper.model.algorithms;
 
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Signature;
 import com.ibm.mapper.model.algorithms.shake.SHAKE;
 import com.ibm.mapper.model.curves.Edwards448;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -52,5 +54,11 @@ public final class Ed448 extends EdDSA implements Signature {
         this.put(new Edwards448(detectionLocation));
         this.put(new SHAKE(256, detectionLocation));
         this.put(new Oid("1.3.101.113", detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.EDDSA);
     }
 }

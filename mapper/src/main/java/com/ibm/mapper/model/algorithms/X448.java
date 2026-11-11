@@ -20,10 +20,12 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.KeyAgreement;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.curves.Curve448;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -51,5 +53,11 @@ public final class X448 extends Algorithm implements KeyAgreement {
         super(NAME, KeyAgreement.class, detectionLocation);
         this.put(new Curve448(detectionLocation));
         this.put(new Oid("1.3.101.111", detectionLocation));
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ECDH);
     }
 }

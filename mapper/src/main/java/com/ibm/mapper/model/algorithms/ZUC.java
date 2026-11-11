@@ -20,6 +20,7 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AlgorithmFamily;
 import com.ibm.mapper.model.ClassicalBitSecurityLevel;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.IPrimitive;
@@ -77,5 +78,11 @@ public final class ZUC extends Algorithm implements StreamCipher, Mac {
 
     public ZUC(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull ZUC zuc) {
         super(zuc, asKind);
+    }
+
+    @Nonnull
+    @Override
+    public Optional<AlgorithmFamily> getFamily() {
+        return Optional.of(AlgorithmFamily.ZUC);
     }
 }
