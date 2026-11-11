@@ -44,7 +44,7 @@ public class CipherUtil {
             password = sb.toString();
         }
         try {
-            SecureRandom random = new SecureRandom();
+            SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
             DESKeySpec desKey = new DESKeySpec(password.getBytes(Utils.DEFAULT_CHARSET));
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES"); // Noncompliant {{(SecretKey) DES}}
             SecretKey securekey = keyFactory.generateSecret(desKey);
@@ -76,7 +76,7 @@ public class CipherUtil {
             password = sb.toString();
         }
         try {
-            SecureRandom random = new SecureRandom();
+            SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
             DESKeySpec desKey = new DESKeySpec(password.getBytes(Utils.DEFAULT_CHARSET));
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES"); // Noncompliant {{(SecretKey) DES}}
             SecretKey securekey = keyFactory.generateSecret(desKey);

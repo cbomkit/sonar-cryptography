@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 public class CipherAction<T> extends AbstractValue<T> implements IAction<T> {
     public enum Action {
         WRAP,
+        UNWRAP,
         HASH,
         ENCRYPT,
         DECRYPT,

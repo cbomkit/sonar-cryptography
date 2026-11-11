@@ -28,6 +28,7 @@ import com.ibm.engine.model.OperationMode;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mode;
@@ -60,11 +61,18 @@ class BcGCMBlockCipherTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // Restored SecureRandom key-generation scaffolding is detected as a PRNG asset and
+        // surfaces as its own finding (ids 0, 3, 6, 9) that this cipher test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
+
         /**
          * Optimally, we shouldn't have these direct detections of engines, as they appear in the
          * depending detection rules
          */
-        if (findingId == 0 || findingId == 2 || findingId == 4 || findingId == 6) {
+        if (findingId == 1 || findingId == 4 || findingId == 7 || findingId == 10) {
             return;
         }
 
@@ -101,7 +109,7 @@ class BcGCMBlockCipherTest extends TestBase {
         assertThat(store_2.getDetectionValueContext()).isInstanceOf(CipherContext.class);
         IValue<Tree> value0_2 = store_2.getDetectionValues().get(0);
         assertThat(value0_2).isInstanceOf(ValueAction.class);
-        if (findingId == 1 || findingId == 5) {
+        if (findingId == 2 || findingId == 8) {
             assertThat(value0_2.asString()).isEqualTo("AESFastEngine");
         } else {
             assertThat(value0_2.asString()).isEqualTo("AESEngine");
