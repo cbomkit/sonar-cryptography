@@ -71,8 +71,9 @@ public final class KMAC extends Algorithm implements MessageDigest {
     }
 
     /**
-     * The parameter set identifier (128 or 256) denotes the security strength only. The output
-     * length is independent of it and its default differs between libraries, so it is not modelled.
+     * Identifies the KMAC128 or KMAC256 variant and its underlying cSHAKE function. Output length
+     * is a separate parameter and cannot be inferred from the variant, so this constructor leaves
+     * it unspecified.
      */
     public KMAC(int parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
         /* KMAC is a hash function mostly used as a MAC */
