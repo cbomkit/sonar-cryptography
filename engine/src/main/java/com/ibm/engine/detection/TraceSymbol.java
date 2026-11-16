@@ -43,6 +43,7 @@ public final class TraceSymbol<S> {
         DIFFERENT,
         NO_SYMBOL,
         SYMBOL,
+        ASSIGNED_SYMBOL,
         SYMBOL_IGNORED
     }
 
@@ -61,6 +62,11 @@ public final class TraceSymbol<S> {
     @Nonnull
     public static <S> TraceSymbol<S> createFrom(@Nullable S symbol) {
         return new TraceSymbol<>(symbol, State.SYMBOL);
+    }
+
+    @Nonnull
+    public static <S> TraceSymbol<S> createAssignedFrom(@Nullable S symbol) {
+        return new TraceSymbol<>(symbol, State.ASSIGNED_SYMBOL);
     }
 
     @Nonnull
