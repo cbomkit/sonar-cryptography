@@ -31,12 +31,14 @@ import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
+import com.ibm.mapper.model.algorithms.KMAC;
 import com.ibm.mapper.model.algorithms.MGF1;
 import com.ibm.mapper.model.algorithms.PBKDF2;
 import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import com.ibm.mapper.model.algorithms.SHA;
 import com.ibm.mapper.model.algorithms.SHA2;
+import com.ibm.mapper.model.algorithms.TupleHash;
 import com.ibm.mapper.model.curves.Secp256r1;
 import com.ibm.mapper.model.curves.Secp384r1;
 import com.ibm.mapper.model.functionality.Decrypt;
@@ -409,5 +411,42 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
                 });
+    }
+
+    @Test
+    void kmacParameterSetIdentifierIsSecurityStrength() {
+        for (final int strength : new int[] {128, 256}) {
+            this.assertsNode(
+                    () -> new KMAC(strength, detectionLocation),
+                    bom -> {
+                        final Component component = componentByName(bom, "KMAC" + strength);
+                        final AlgorithmProperties algorithmProperties =
+                                component.getCryptoProperties().getAlgorithmProperties();
+                        assertThat(algorithmProperties.getParameterSetIdentifier())
+                                .isEqualTo(String.valueOf(strength));
+                    });
+        }
+    }
+
+    @Test
+    void tupleHashParameterSetIdentifierIsSecurityStrength() {
+        for (final int strength : new int[] {128, 256}) {
+            this.assertsNode(
+                    () -> new TupleHash(strength, detectionLocation),
+                    bom -> {
+                        final Component component = componentByName(bom, "TupleHash" + strength);
+                        final AlgorithmProperties algorithmProperties =
+                                component.getCryptoProperties().getAlgorithmProperties();
+                        assertThat(algorithmProperties.getParameterSetIdentifier())
+                                .isEqualTo(String.valueOf(strength));
+                    });
+        }
+    }
+
+    private static Component componentByName(final org.cyclonedx.model.Bom bom, final String name) {
+        return bom.getComponents().stream()
+                .filter(c -> name.equals(c.getName()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("component not found: " + name));
     }
 }

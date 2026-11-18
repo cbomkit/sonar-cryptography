@@ -19,6 +19,8 @@
  */
 package com.ibm.plugin.translation.translator.contexts;
 
+import com.ibm.engine.model.Algorithm;
+import com.ibm.engine.model.DigestSize;
 import com.ibm.engine.model.IValue;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
@@ -28,6 +30,7 @@ import com.ibm.mapper.mapper.pyca.PycaDigestMapper;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.utils.DetectionLocation;
+import com.ibm.plugin.translation.model.Sha512Truncation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.python.api.tree.Tree;
@@ -41,7 +44,20 @@ public final class PycaDigestContextTranslator implements IContextTranslation<Tr
             @Nonnull IValue<Tree> value,
             @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (value instanceof ValueAction<Tree> || value instanceof com.ibm.engine.model.Algorithm) {
+        if (value instanceof DigestSize<Tree> digestSize) {
+            if (detectionContext.get("preHash").filter("SHA512"::equals).isPresent()) {
+                // Detected truncation option (e.g. SHA512.new(truncate="256")): keep it apart
+                // from the intrinsic digest size of SHA-512. A reorganizer rule consumes it.
+                // Unsupported values are ignored, so the marker never stays unconsumed.
+                if (!Sha512Truncation.isSupported(digestSize.getValue())) {
+                    return Optional.empty();
+                }
+                return Optional.of(new Sha512Truncation(digestSize.getValue(), detectionLocation));
+            }
+            return Optional.of(
+                    new com.ibm.mapper.model.DigestSize(digestSize.getValue(), detectionLocation));
+        }
+        if (value instanceof ValueAction<Tree> || value instanceof Algorithm) {
             final PycaDigestMapper pycaDigestMapper = new PycaDigestMapper();
             return pycaDigestMapper
                     .parse(value.asString(), detectionLocation)

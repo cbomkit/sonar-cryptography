@@ -36,6 +36,12 @@ public class InitializationVectorSizeFactory<T> extends SizeFactory<T> implement
         super(interpretAsUnitType);
     }
 
+    public InitializationVectorSizeFactory(
+            @Nonnull Size.UnitType interpretAsUnitType,
+            @Nonnull StringInterpretation stringInterpretation) {
+        super(interpretAsUnitType, stringInterpretation);
+    }
+
     @Nonnull
     @Override
     public Optional<IValue<T>> apply(@Nonnull ResolvedValue<Object, T> objectTResolvedValue) {

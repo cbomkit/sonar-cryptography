@@ -20,9 +20,11 @@
 package com.ibm.mapper.model.algorithms;
 
 import com.ibm.mapper.model.Algorithm;
-import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.ExtendableOutputFunction;
+import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.ParameterSetIdentifier;
 import com.ibm.mapper.utils.DetectionLocation;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -51,8 +53,25 @@ public final class TupleHash extends Algorithm implements ExtendableOutputFuncti
         super(NAME, ExtendableOutputFunction.class, detectionLocation);
     }
 
-    public TupleHash(int digestSize, @Nonnull DetectionLocation detectionLocation) {
+    /** Returns a name of the form "TupleHashXXX" where XXX is the parameter set identifier */
+    @Override
+    @Nonnull
+    public String asString() {
+        final StringBuilder builtName = new StringBuilder(this.name);
+        final Optional<INode> parameterSetIdentifier =
+                this.hasChildOfType(ParameterSetIdentifier.class);
+        parameterSetIdentifier.ifPresent(node -> builtName.append(node.asString()));
+        return builtName.toString();
+    }
+
+    /**
+     * The parameter set identifier (128 or 256) denotes the security strength of the variant, not
+     * the digest length.
+     */
+    public TupleHash(int parameterSetIdentifier, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
-        this.put(new DigestSize(digestSize, detectionLocation));
+        this.put(
+                new ParameterSetIdentifier(
+                        String.valueOf(parameterSetIdentifier), detectionLocation));
     }
 }

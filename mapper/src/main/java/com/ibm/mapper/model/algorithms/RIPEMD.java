@@ -22,6 +22,7 @@ package com.ibm.mapper.model.algorithms;
 import com.ibm.mapper.model.Algorithm;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
+import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
@@ -71,5 +72,9 @@ public final class RIPEMD extends Algorithm implements MessageDigest {
     public RIPEMD(int digestSize, @Nonnull DetectionLocation detectionLocation) {
         this(detectionLocation);
         this.put(new DigestSize(digestSize, detectionLocation));
+    }
+
+    public RIPEMD(@Nonnull final Class<? extends IPrimitive> asKind, @Nonnull RIPEMD ripemd) {
+        super(ripemd, asKind);
     }
 }

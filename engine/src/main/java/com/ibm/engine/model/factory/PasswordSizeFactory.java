@@ -35,6 +35,12 @@ public class PasswordSizeFactory<T> extends SizeFactory<T> implements IValueFact
         super(interpretAsUnitType);
     }
 
+    public PasswordSizeFactory(
+            @Nonnull Size.UnitType interpretAsUnitType,
+            @Nonnull StringInterpretation stringInterpretation) {
+        super(interpretAsUnitType, stringInterpretation);
+    }
+
     @Nonnull
     @Override
     public Optional<IValue<T>> apply(@Nonnull ResolvedValue<Object, T> objectTResolvedValue) {

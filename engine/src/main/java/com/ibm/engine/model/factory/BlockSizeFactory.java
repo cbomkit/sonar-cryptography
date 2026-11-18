@@ -35,6 +35,12 @@ public class BlockSizeFactory<T> extends SizeFactory<T> implements IValueFactory
         super(interpretAsUnitType);
     }
 
+    public BlockSizeFactory(
+            @Nonnull Size.UnitType interpretAsUnitType,
+            @Nonnull StringInterpretation stringInterpretation) {
+        super(interpretAsUnitType, stringInterpretation);
+    }
+
     @Nonnull
     @Override
     public Optional<IValue<T>> apply(@Nonnull ResolvedValue<Object, T> objectTResolvedValue) {
