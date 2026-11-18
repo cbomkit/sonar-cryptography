@@ -77,11 +77,17 @@ public class X25519Test extends TestBase {
             assertThat(root.getChildren().get(KeyGeneration.class).asString())
                     .isEqualTo("KEYGENERATION");
             assertThat(root.getChildren().get(PublicKey.class)).isNotNull();
-            assertThat(root.getChildren().get(PublicKey.class).asString())
-                    .isEqualTo("EC-Curve25519");
+            assertThat(root.getChildren().get(PublicKey.class).asString()).isEqualTo("x25519");
             assertThat(root.getChildren().get(PrivateKey.class)).isNotNull();
-            assertThat(root.getChildren().get(PrivateKey.class).asString())
-                    .isEqualTo("EC-Curve25519");
+            assertThat(root.getChildren().get(PrivateKey.class).asString()).isEqualTo("x25519");
+            // both keys must carry the specific X25519 algorithm and OID (RFC 8410)
+            for (Class<? extends INode> keyKind : List.of(PublicKey.class, PrivateKey.class)) {
+                INode keyAlgorithm =
+                        root.getChildren().get(keyKind).getChildren().get(KeyAgreement.class);
+                assertThat(keyAlgorithm).isInstanceOf(X25519.class);
+                assertThat(keyAlgorithm.getChildren().get(Oid.class).asString())
+                        .isEqualTo("1.3.101.110");
+            }
         }
     }
 }

@@ -109,17 +109,29 @@ public final class KeyAgreementReorganizer {
     // ── helpers ──────────────────────────────────────────────────────────────
 
     /**
-     * Returns {@code true} when {@code ecdh} has a {@code keyKind} child whose own {@code
-     * PublicKeyEncryption} child contains an {@link EllipticCurve} child that is an instance of
-     * {@code curveKind}.
+     * Returns {@code true} when {@code ecdh} has a {@code keyKind} child that carries an {@link
+     * EllipticCurve} that is an instance of {@code curveKind}. Keys can store their algorithm
+     * either under {@code PublicKeyEncryption} (imported keys) or under {@code KeyAgreement}
+     * (generated Curve25519/448 keys), so both representations are checked.
      */
     private static boolean hasCurveInKey(
             @Nonnull INode ecdh,
             @Nonnull Class<? extends INode> keyKind,
             @Nonnull Class<? extends EllipticCurve> curveKind) {
         return ecdh.hasChildOfType(keyKind)
-                .flatMap(key -> key.hasChildOfType(PublicKeyEncryption.class))
-                .flatMap(pke -> pke.hasChildOfType(EllipticCurve.class))
+                .filter(
+                        key ->
+                                hasCurveUnder(key, PublicKeyEncryption.class, curveKind)
+                                        || hasCurveUnder(key, KeyAgreement.class, curveKind))
+                .isPresent();
+    }
+
+    private static boolean hasCurveUnder(
+            @Nonnull INode key,
+            @Nonnull Class<? extends INode> algorithmKind,
+            @Nonnull Class<? extends EllipticCurve> curveKind) {
+        return key.hasChildOfType(algorithmKind)
+                .flatMap(algorithm -> algorithm.hasChildOfType(EllipticCurve.class))
                 .filter(curveKind::isInstance)
                 .isPresent();
     }

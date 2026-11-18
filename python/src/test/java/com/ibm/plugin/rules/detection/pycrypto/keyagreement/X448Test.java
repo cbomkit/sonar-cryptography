@@ -77,10 +77,17 @@ public class X448Test extends TestBase {
             assertThat(root.getChildren().get(KeyGeneration.class).asString())
                     .isEqualTo("KEYGENERATION");
             assertThat(root.getChildren().get(PublicKey.class)).isNotNull();
-            assertThat(root.getChildren().get(PublicKey.class).asString()).isEqualTo("EC-Curve448");
+            assertThat(root.getChildren().get(PublicKey.class).asString()).isEqualTo("x448");
             assertThat(root.getChildren().get(PrivateKey.class)).isNotNull();
-            assertThat(root.getChildren().get(PrivateKey.class).asString())
-                    .isEqualTo("EC-Curve448");
+            assertThat(root.getChildren().get(PrivateKey.class).asString()).isEqualTo("x448");
+            // both keys must carry the specific X448 algorithm and OID (RFC 8410)
+            for (Class<? extends INode> keyKind : List.of(PublicKey.class, PrivateKey.class)) {
+                INode keyAlgorithm =
+                        root.getChildren().get(keyKind).getChildren().get(KeyAgreement.class);
+                assertThat(keyAlgorithm).isInstanceOf(X448.class);
+                assertThat(keyAlgorithm.getChildren().get(Oid.class).asString())
+                        .isEqualTo("1.3.101.111");
+            }
         }
     }
 }

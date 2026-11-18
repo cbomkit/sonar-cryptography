@@ -29,8 +29,8 @@ import com.ibm.mapper.model.algorithms.Ed448;
 import com.ibm.mapper.model.algorithms.ElGamal;
 import com.ibm.mapper.model.algorithms.Fernet;
 import com.ibm.mapper.model.algorithms.RSA;
-import com.ibm.mapper.model.curves.Curve25519;
-import com.ibm.mapper.model.curves.Curve448;
+import com.ibm.mapper.model.algorithms.X25519;
+import com.ibm.mapper.model.algorithms.X448;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -50,10 +50,8 @@ public final class PycaKeyBasedAlgorithmMapper implements IMapper {
             case "DSA" -> Optional.of(new DSA(detectionLocation));
             case "DH" -> Optional.of(new DH(detectionLocation));
             case "EC" -> Optional.of(new EllipticCurveAlgorithm(detectionLocation));
-            case "CURVE25519" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Curve25519(detectionLocation)));
-            case "CURVE448" ->
-                    Optional.of(new EllipticCurveAlgorithm(new Curve448(detectionLocation)));
+            case "CURVE25519" -> Optional.of(new X25519(detectionLocation));
+            case "CURVE448" -> Optional.of(new X448(detectionLocation));
             case "ED25519" -> Optional.of(new Ed25519(detectionLocation));
             case "ED448" -> Optional.of(new Ed448(detectionLocation));
             case "ELGAMAL" -> Optional.of(new ElGamal(detectionLocation));
