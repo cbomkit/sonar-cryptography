@@ -48,6 +48,12 @@ public class PKCS1v15Test extends TestBase {
                 "src/test/files/rules/detection/pycrypto/cipher/PKCS1v15TestFile.py", this);
     }
 
+    @Test
+    void testKey() {
+        PythonCheckVerifier.verify(
+                "src/test/files/rules/detection/pycrypto/cipher/PKCS1v15KeyTestFile.py", this);
+    }
+
     @Override
     public void asserts(
             int findingId,

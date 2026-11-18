@@ -29,6 +29,7 @@ import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.rule.IBundle;
 import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.mapper.pyca.PycaCipherMapper;
+import com.ibm.mapper.mapper.pyca.PycaDigestMapper;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.INode;
@@ -88,6 +89,14 @@ public final class PycaCipherContextTranslator implements IContextTranslation<Tr
                             Optional.of(new AES(new CCM(detectionLocation), detectionLocation));
                     default -> Optional.empty();
                 };
+            }
+            if (detectionContext.get("kind").filter("pycrypto-oaep"::equals).isPresent()) {
+                // PKCS1_OAEP.new(..., hashAlgo=SHA256): the hash is a digest, not a cipher
+                final Optional<? extends INode> digest =
+                        new PycaDigestMapper().parse(value.asString(), detectionLocation);
+                if (digest.isPresent()) {
+                    return digest.map(i -> i);
+                }
             }
             return pycaCipherMapper.parse(value.asString(), detectionLocation).map(i -> i);
         } else if (value instanceof ValueAction<Tree>) {

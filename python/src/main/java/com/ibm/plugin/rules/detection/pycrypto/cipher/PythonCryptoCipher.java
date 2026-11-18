@@ -243,8 +243,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectExactTypes("Crypto.Cipher.PKCS1_OAEP", "Cryptodome.Cipher.PKCS1_OAEP")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1_OAEP"))
-                    .withMethodParameter(
-                            ANY) // Crypto.PublicKey.RSAkey or Cryptodome.PublicKey.RSAkey
+                    .withNamedMethodParameter(
+                            "key", ANY) // Crypto.PublicKey.RSAkey or Cryptodome.PublicKey.RSAkey
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
                     .addDependingDetectionRules(RuleSets.rulesOf(PythonCryptoRSA.class))
@@ -254,7 +254,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .withOptionalNamedMethodParameter("mgfunc", ANY)
                     .withOptionalNamedMethodParameter("label", ANY)
                     .withOptionalNamedMethodParameter("randfunc", ANY)
-                    .buildForContext(new CipherContext())
+                    // the kind lets the translator map hashAlgo through the digest mapper
+                    .buildForContext(new CipherContext(Map.of("kind", "pycrypto-oaep")))
                     .inBundle(() -> "PyCrypto")
                     .withDependingDetectionRules(List.of(ENCRYPT, DECRYPT));
 
@@ -264,8 +265,8 @@ public final class PythonCryptoCipher extends DetectionRuleSet<Tree> {
                     .forObjectExactTypes("Crypto.Cipher.PKCS1_v1_5", "Cryptodome.Cipher.PKCS1_v1_5")
                     .forMethods("new")
                     .shouldBeDetectedAs(new ValueActionFactory<>("PKCS1_v1_5"))
-                    .withMethodParameter(
-                            ANY) // Crypto.PublicKey.RSAkey or Cryptodome.PublicKey.RSAkey
+                    .withNamedMethodParameter(
+                            "key", ANY) // Crypto.PublicKey.RSAkey or Cryptodome.PublicKey.RSAkey
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
                     .addDependingDetectionRules(RuleSets.rulesOf(PythonCryptoRSA.class))
