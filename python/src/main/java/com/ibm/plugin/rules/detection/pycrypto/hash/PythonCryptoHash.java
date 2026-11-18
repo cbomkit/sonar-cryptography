@@ -24,6 +24,7 @@ import static com.ibm.engine.detection.MethodMatcher.ANY;
 import com.ibm.engine.model.Size.UnitType;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.factory.DigestSizeFactory;
+import com.ibm.engine.model.factory.StringInterpretation;
 import com.ibm.engine.model.factory.ValueActionFactory;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
@@ -76,7 +77,9 @@ public final class PythonCryptoHash extends DetectionRuleSet<Tree> {
                     .shouldBeDetectedAs(new ValueActionFactory<>("SHA512"))
                     .withOptionalNamedMethodParameter("data", ANY)
                     .withOptionalNamedMethodParameter("truncate", "str")
-                    .shouldBeDetectedAs(new DigestSizeFactory<>(UnitType.BIT))
+                    .shouldBeDetectedAs(
+                            new DigestSizeFactory<>(
+                                    UnitType.BIT, StringInterpretation.NUMERIC_VALUE))
                     .asChildOfParameterWithId(-1)
                     .buildForContext(new DigestContext(Map.of("preHash", "SHA512")))
                     .inBundle(() -> "PyCrypto")

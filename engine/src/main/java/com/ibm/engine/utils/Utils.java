@@ -118,11 +118,7 @@ public final class Utils {
         if (resolvedValue.value() instanceof Integer i) {
             return Optional.of(i);
         } else if (resolvedValue.value() instanceof String str) {
-            try {
-                return Optional.of(Integer.parseInt(str));
-            } catch (NumberFormatException e) {
-                return Optional.of(Utils.byteSizeToBitSize(str.getBytes().length));
-            }
+            return Optional.of(Utils.byteSizeToBitSize(str.getBytes().length));
         } else {
             return Optional.empty();
         }
