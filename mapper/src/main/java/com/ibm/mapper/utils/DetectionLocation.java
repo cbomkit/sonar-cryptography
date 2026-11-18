@@ -20,12 +20,48 @@
 package com.ibm.mapper.utils;
 
 import com.ibm.engine.rule.IBundle;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import javax.annotation.Nonnull;
 
+/**
+ * Where a finding was made.
+ *
+ * <p>{@code properties} are free-form string facts about the finding that the CBOM writer carries
+ * into the output (see {@code com.ibm.output.cyclondx.DetectionProperties} for the keys in use).
+ * Language modules leave them empty; the detections translator fills them from a detections
+ * document. The map is copied into an immutable, key-sorted map.
+ */
 public record DetectionLocation(
         @Nonnull String filePath,
         @Nonnull Integer lineNumber,
         @Nonnull Integer offSet,
         @Nonnull List<String> keywords,
-        @Nonnull IBundle bundle) {}
+        @Nonnull IBundle bundle,
+        @Nonnull Map<String, String> properties) {
+
+    public DetectionLocation {
+        properties =
+                properties == null || properties.isEmpty()
+                        ? Map.of()
+                        : Collections.unmodifiableMap(new TreeMap<>(properties));
+    }
+
+    /** A location without properties, as every source scan creates it. */
+    public DetectionLocation(
+            @Nonnull String filePath,
+            @Nonnull Integer lineNumber,
+            @Nonnull Integer offSet,
+            @Nonnull List<String> keywords,
+            @Nonnull IBundle bundle) {
+        this(filePath, lineNumber, offSet, keywords, bundle, Map.of());
+    }
+
+    /** A copy of this location with the given properties instead of the current ones. */
+    @Nonnull
+    public DetectionLocation withProperties(@Nonnull Map<String, String> newProperties) {
+        return new DetectionLocation(filePath, lineNumber, offSet, keywords, bundle, newProperties);
+    }
+}

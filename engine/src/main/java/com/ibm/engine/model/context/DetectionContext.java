@@ -45,6 +45,12 @@ public abstract class DetectionContext {
         return kind.equals(type());
     }
 
+    /** Every property of this context, unmodifiable; the contract the external scanners carry. */
+    @Nonnull
+    public Map<String, String> properties() {
+        return properties;
+    }
+
     public boolean contains(@Nonnull String key) {
         return properties.containsKey(key);
     }
