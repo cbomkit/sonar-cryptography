@@ -57,6 +57,12 @@ public class PBKDF2Test extends TestBase {
                 "src/test/files/rules/detection/pycrypto/kdf/PBKDF2TestFile.py", this);
     }
 
+    @Test
+    void testPositional() {
+        PythonCheckVerifier.verify(
+                "src/test/files/rules/detection/pycrypto/kdf/PBKDF2PositionalTestFile.py", this);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void asserts(

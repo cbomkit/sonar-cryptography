@@ -81,6 +81,7 @@ public final class PythonCryptoKDF extends DetectionRuleSet<Tree> {
                     .withOptionalNamedMethodParameter("count", "int")
                     .shouldBeDetectedAs(new IterationCountFactory<>())
                     .asChildOfParameterWithId(-1)
+                    .withOptionalNamedMethodParameter("prf", ANY)
                     .withOptionalNamedMethodParameter("hmac_hash_module", ANY)
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
