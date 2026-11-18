@@ -17,30 +17,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ibm.mapper.reorganizer.rules;
+package com.ibm.plugin.translation.reorganizer;
 
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.algorithms.SHA2;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.builder.ReorganizerRuleBuilder;
+import com.ibm.plugin.translation.model.Sha512Truncation;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
-public final class MessageDigestReorganizer {
+public final class PythonDigestReorganizer {
 
-    private MessageDigestReorganizer() {
+    private PythonDigestReorganizer() {
         // private
     }
 
+    private static Optional<Sha512Truncation> truncationOf(@Nonnull INode node) {
+        return node.hasChildOfType(Sha512Truncation.class)
+                .filter(Sha512Truncation.class::isInstance)
+                .map(Sha512Truncation.class::cast)
+                .filter(truncation -> Sha512Truncation.isSupported(truncation.getValue()));
+    }
+
     /**
-     * Handles {@code SHA512.new(truncate=N)}: when a SHA-512 {@link MessageDigest} node carries a
-     * {@link DigestSize} child whose value differs from 512 (the truncation value), replace the
-     * node with a {@code SHA2(N, SHA2(512, ...))} structure, mirroring the JCA pattern for {@code
-     * "SHA-512/224"} / {@code "SHA-512/256"}.
+     * Handles {@code SHA512.new(truncate="224" | "256")}: a SHA-512 node carrying a {@link
+     * Sha512Truncation} marker is replaced by {@code SHA2(N, SHA2(512))}, i.e. SHA-512/224 or
+     * SHA-512/256. The marker is consumed and the plain SHA-512 node is not left behind.
      */
     @Nonnull
     public static final IReorganizerRule WRAP_SHA512_TRUNCATED =
@@ -48,49 +56,38 @@ public final class MessageDigestReorganizer {
                     .createReorganizerRule("WRAP_SHA512_TRUNCATED")
                     .forNodeKind(MessageDigest.class)
                     .withDetectionCondition(
-                            (node, parent, roots) -> {
-                                if (!"SHA-512".equals(node.asString())) {
-                                    return false;
-                                }
-                                return node.hasChildOfType(DigestSize.class)
-                                        .filter(ds -> !"512".equals(ds.asString()))
-                                        .isPresent();
-                            })
+                            (node, parent, roots) ->
+                                    node instanceof SHA2
+                                            && "SHA-512".equals(node.asString())
+                                            && truncationOf(node).isPresent())
                     .perform(
                             (node, parent, roots) -> {
-                                if (!(node instanceof SHA2 sha2Node)) {
+                                final Optional<Sha512Truncation> truncation = truncationOf(node);
+                                if (truncation.isEmpty() || !(node instanceof SHA2 sha512)) {
                                     return roots;
                                 }
-                                final Optional<INode> digestSizeOpt =
-                                        sha2Node.hasChildOfType(DigestSize.class);
-                                if (digestSizeOpt.isEmpty()) {
-                                    return roots;
-                                }
-                                final int truncateSize =
-                                        ((DigestSize) digestSizeOpt.get()).getValue();
-                                final SHA2 preHash512 =
-                                        new SHA2(512, sha2Node.getDetectionContext());
                                 final SHA2 truncated =
                                         new SHA2(
-                                                truncateSize,
-                                                preHash512,
-                                                sha2Node.getDetectionContext());
+                                                truncation.get().getValue(),
+                                                new SHA2(512, sha512.getDetectionContext()),
+                                                sha512.getDetectionContext());
 
-                                // Copy remaining children (BlockSize, OID, Digest, …) onto the
-                                // new truncated node, skipping DigestSize (already set by SHA2
-                                // constructor) and the SHA2(512) pre-hash.
-                                sha2Node.getChildren().values().stream()
+                                // Transfer unrelated children (e.g. functionalities). The digest
+                                // size, the nested pre-hash and the OID of SHA-512 must not
+                                // override the ones of the variant; the marker is consumed.
+                                sha512.getChildren().values().stream()
                                         .filter(child -> !(child instanceof DigestSize))
                                         .filter(child -> !(child instanceof MessageDigest))
+                                        .filter(child -> !(child instanceof Oid))
+                                        .filter(child -> !(child instanceof Sha512Truncation))
                                         .forEach(truncated::put);
 
                                 if (parent != null) {
                                     parent.put(truncated);
                                     return roots;
                                 }
-                                // Root node replacement
                                 final List<INode> newRoots = new LinkedList<>(roots);
-                                newRoots.replaceAll(r -> r == node ? truncated : r);
+                                newRoots.replaceAll(root -> root == node ? truncated : root);
                                 return newRoots;
                             });
 }

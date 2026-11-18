@@ -29,7 +29,6 @@ import com.ibm.mapper.model.functionality.Verify;
 import com.ibm.mapper.reorganizer.IReorganizerRule;
 import com.ibm.mapper.reorganizer.rules.KeyAgreementReorganizer;
 import com.ibm.mapper.reorganizer.rules.KeyDerivationReorganizer;
-import com.ibm.mapper.reorganizer.rules.MessageDigestReorganizer;
 import com.ibm.mapper.reorganizer.rules.PaddingReorganizer;
 import com.ibm.mapper.reorganizer.rules.SignatureReorganizer;
 import java.util.List;
@@ -45,7 +44,7 @@ public final class PythonReorganizerRules {
     @Nonnull
     public static List<IReorganizerRule> rules() {
         return Stream.of(
-                        MessageDigestReorganizer.WRAP_SHA512_TRUNCATED,
+                        PythonDigestReorganizer.WRAP_SHA512_TRUNCATED,
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(
                                 Verify.class, ProbabilisticSignatureScheme.class),
                         SignatureReorganizer.moveNodesFromUnderFunctionalityUnderParent(

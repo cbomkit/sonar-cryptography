@@ -32,6 +32,7 @@ import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
+import com.ibm.plugin.translation.model.Sha512Truncation;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,8 @@ public class SHA512Test extends TestBase {
         INode md = nodes.get(0);
         assertThat(md).isInstanceOf(MessageDigest.class);
         assertThat(md.getChildren()).hasSize(4);
+        // the temporary marker must not reach the output, at any depth
+        assertThat(nodes).noneMatch(node -> containsNodeOfKind(node, Sha512Truncation.class));
         assertThat(md.asString()).isEqualTo("SHA-512");
 
         INode blockSize = md.getChildren().get(BlockSize.class);
