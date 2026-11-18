@@ -24,13 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ibm.engine.detection.DetectionStore;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.algorithms.MD5;
 import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.plugin.TestBase;
 import java.util.List;
@@ -59,8 +62,16 @@ public class HMACTest extends TestBase {
 
         assertThat(detectionStore.getDetectionValues()).hasSize(1);
         assertThat(detectionStore.getDetectionValueContext()).isInstanceOf(MacContext.class);
-        assertThat(detectionStore.getChildren()).isEmpty();
-        IValue<Tree> value = detectionStore.getDetectionValues().get(0);
+        IValue<Tree> macValue = detectionStore.getDetectionValues().get(0);
+        assertThat(macValue).isInstanceOf(ValueAction.class);
+        assertThat(macValue.asString()).isEqualTo("HMAC");
+
+        // the digestmod is detected as a child of the HMAC detection
+        assertThat(detectionStore.getChildren()).hasSize(1);
+        DetectionStore<PythonCheck, Tree, Symbol, PythonVisitorContext> digestStore =
+                detectionStore.getChildren().get(0);
+        assertThat(digestStore.getDetectionValues()).hasSize(1);
+        IValue<Tree> value = digestStore.getDetectionValues().get(0);
         assertThat(value).isInstanceOf(Algorithm.class);
         assertThat(value.asString()).isEqualTo("SHA256");
 
@@ -73,6 +84,10 @@ public class HMACTest extends TestBase {
         INode digest = mac.getChildren().get(MessageDigest.class);
         assertThat(digest).isNotNull();
         assertThat(digest.asString()).isEqualTo("SHA-256");
+        // the detected digestmod replaces the MD5 default of HMAC.new
+        assertThat(digest).isNotInstanceOf(MD5.class);
+        assertThat(digest.getOrigin()).isEqualTo(NodeOrigin.DETECTED);
+        assertThat(containsNodeOfKind(mac, MD5.class)).isFalse();
         assertThat(digest.getChildren()).hasSize(4);
 
         assertThat(digest.getChildren().get(Digest.class)).isNotNull();

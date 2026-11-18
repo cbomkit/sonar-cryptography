@@ -57,18 +57,22 @@ public final class PythonCryptoMac extends DetectionRuleSet<Tree> {
                     .inBundle(() -> "PyCrypto")
                     .withoutDependingDetectionRules();
 
+    // The HMAC node is created for every call; digestmod is optional and defaults to MD5 in
+    // PyCryptodome (deprecated since 4.0, still applied with a DeprecationWarning). The default is
+    // applied in the translator when no digestmod is detected.
     private static final IDetectionRule<Tree> HMAC =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
                     .forObjectTypes("Crypto.Hash.HMAC", "Cryptodome.Hash.HMAC")
                     .forMethods("new")
+                    .shouldBeDetectedAs(new ValueActionFactory<>("HMAC"))
                     .withNamedMethodParameter("key", ANY)
                     .withOptionalNamedMethodParameter("msg", ANY)
                     .withOptionalNamedMethodParameter(
                             "digestmod", ANY) // Crypto.Hash.* or Cryptodome.Hash.*
                     .shouldBeDetectedAs(new AlgorithmFactory<>())
                     .asChildOfParameterWithId(-1)
-                    .buildForContext(new MacContext(Map.of("kind", "hmac")))
+                    .buildForContext(new MacContext(Map.of("kind", "pycrypto-hmac")))
                     .inBundle(() -> "PyCrypto")
                     .withoutDependingDetectionRules();
 
