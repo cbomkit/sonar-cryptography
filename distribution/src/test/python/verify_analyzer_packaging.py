@@ -1,4 +1,4 @@
-"""Verify the licences, legal files, sources and contents of a variant JAR.
+"""Verify the licences, legal files, source links and contents of a variant JAR.
 
 Usage:
     verify_analyzer_packaging.py --variant {plugin,plugin-with-go,library} JAR
@@ -9,10 +9,14 @@ The checks follow the variants plan
 * plugin: no SonarSource analyzer is bundled; Java and Python come from SonarQube
   (Plugin-RequirePlugins), there is no Go and no SSAL text.
 * plugin-with-go: as plugin, plus a relocated sonar-go with its SSALv1 text,
-  legal files, sources JAR and complete release source.
+  legal files and links to its sources JAR and complete release source; the
+  LGPL-3.0 analyzer-commons modules sonar-go embeds are named with their
+  sources links and the LGPL-3.0 and GPL-3.0 texts.
 * library: the LGPL-3.0 sonar-java and sonar-python (and the EPL-2.0
-  jdt-package) are bundled whole with their legal files and sources; no Go, no
-  Plugin-RequirePlugins and no SSAL text.
+  jdt-package) are bundled whole with their legal files and links to their
+  sources JARs; no Go, no Plugin-RequirePlugins and no SSAL text.
+
+No variant bundles analyzer sources: the notices link to them instead.
 
 For every variant, every bundled third-party artifact whose licence is not
 Apache, MIT or BSD must be named in the notices, and its licence text must be in
@@ -35,7 +39,7 @@ SOURCES_DIR = THIRD_PARTY + "analyzer-sources/"
 LEGAL_DIR = THIRD_PARTY + "analyzers/"
 NOTICES_DIR = THIRD_PARTY + "notices/"
 SERVICE = "META-INF/services/com.ibm.output.ILanguageModule"
-SOURCES_NAME = re.compile(r"^(?P<artifact>.+)-(?P<version>\d[\w.]*)-sources\.jar$")
+MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/"
 # "SSAL" is matched as a word and case-sensitively: lower-case "ssal" is a common
 # Hungarian suffix, and Unicode data files contain names such as "WASSALLAM".
 FORBIDDEN = re.compile(rb"\bSSAL(v1)?\b|(?i:source[- ]available licen[cs]e)")
@@ -106,6 +110,13 @@ def pom_path(repository, group, artifact, version):
     return (
         repository / group.replace(".", "/") / artifact / version
         / (artifact + "-" + version + ".pom")
+    )
+
+
+def sources_url(group, artifact, version):
+    return (
+        MAVEN_CENTRAL + group.replace(".", "/") + "/" + artifact + "/" + version
+        + "/" + artifact + "-" + version + "-sources.jar"
     )
 
 
@@ -231,6 +242,7 @@ class Checker:
         )
         self.resources = DISTRIBUTION / self.config["directory"] / "src/main/resources" / THIRD_PARTY
         self.shared = DISTRIBUTION / "src/shared-resources" / THIRD_PARTY
+        self.lgpl = DISTRIBUTION / "src/lgpl-resources" / THIRD_PARTY
         self.passed = []
 
     def ok(self, message):
@@ -264,6 +276,11 @@ class Checker:
         assert "${" not in self.all_notices, "Unresolved Maven properties in the notices"
         self.ok("LICENSE.txt and notices")
 
+        assert not any(name.startswith(SOURCES_DIR) or name.endswith(("-sources.jar", "-source.zip")) for name in self.names), (
+            "Sources bundled"
+        )
+        self.ok("no bundled sources")
+
         assert self.manifest.get("Plugin-Key") == "crypto", "Plugin-Key"
         plugin_class = self.manifest.get("Plugin-Class")
         assert plugin_class == "com.ibm.plugin.CryptographyPlugin", "Plugin-Class " + str(plugin_class)
@@ -296,10 +313,7 @@ class Checker:
             version = next(v for g, a, v, _ in self.dependencies if a == "cbomkit-csharp-parser")
         notice = self.zip.read(NOTICES_DIR + "cbomkit-csharp-parser.txt").decode()
         assert "cbomkit-csharp-parser " + version in notice, "Parser notice names another version"
-        url = (
-            "https://repo.maven.apache.org/maven2/io/github/fynnth/cbomkit-csharp-parser/"
-            + version + "/cbomkit-csharp-parser-" + version + "-sources.jar"
-        )
+        url = sources_url("io.github.fynnth", "cbomkit-csharp-parser", version)
         assert url in notice, "Parser source URL missing"
         assert "https://github.com/fynnth/cbomkit-csharp-parser" in notice, "Parser project missing"
         assert "EPL-2.0" in self.notice and "notices/cbomkit-csharp-parser.txt" in self.notice, (
@@ -374,10 +388,10 @@ class Checker:
     def check_plugin(self):
         self.check_no_analyzer_internals()
         self.check_require_plugins()
-        assert not any(name.startswith((SOURCES_DIR, LEGAL_DIR)) for name in self.names), (
-            "Analyzer sources or legal files bundled"
+        assert not any(name.startswith(LEGAL_DIR) for name in self.names), (
+            "Analyzer legal files bundled"
         )
-        self.ok("no analyzer classes, sources or legal files")
+        self.ok("no analyzer classes or legal files")
         self.check_no_go()
         self.check_no_forbidden_text()
 
@@ -393,6 +407,7 @@ class Checker:
         self.ok("relocated sonar-go, Go engine and plugin classes, go in RequiredForLanguages")
         assert_same(self.zip, THIRD_PARTY + "SSALv1.txt", self.resources / "SSALv1.txt")
         self.check_go_sources()
+        self.check_go_embedded_lgpl()
 
     def check_go_sources(self):
         version = root_property("sonar.go.version")
@@ -403,9 +418,10 @@ class Checker:
         assert coordinate in self.notice, "Missing coordinate " + coordinate
         assert revision in self.notice and origin in self.notice, "Missing Go source provenance"
         directory = self.repository / "org/sonarsource/go" / artifact / version
-        source_name = artifact + "-" + version + "-sources.jar"
-        assert source_name in self.notice, "Missing source URL " + source_name
-        assert_same(self.zip, SOURCES_DIR + source_name, directory / source_name)
+        url = sources_url("org.sonarsource.go", artifact, version)
+        assert url in self.notice, "Missing sources URL " + url
+        archive = "https://codeload.github.com/SonarSource/sonar-go/zip/" + revision
+        assert archive in self.notice, "Missing release source URL " + archive
         prefix = LEGAL_DIR + artifact + "-" + version + "-jar/"
         assert prefix in self.notice, "Wrong legal-file directory in the notice"
         with ZipFile(directory / (artifact + "-" + version + ".jar")) as original:
@@ -416,74 +432,67 @@ class Checker:
             assert legal_files, "No upstream legal files: " + artifact
             for name in legal_files:
                 assert self.zip.read(prefix + name) == original.read(name), "Changed " + prefix + name
-        archive_name = "sonar-go-" + version + "-" + revision + "-source.zip"
-        archive = self.zip.read(SOURCES_DIR + archive_name)
-        with ZipFile(BytesIO(archive)) as source:
-            assert source.comment.decode() == revision, "Wrong Go source revision"
-            root = "sonar-go-" + revision + "/"
-            for path in (
-                "LICENSE.txt",
-                "sonar-go-commons/src/main/java/org/sonar/go/converter/GoConverter.java",
-                "sonar-go-to-slang/main.go",
-                "sonar-go-to-slang/goparser.go",
-                "sonar-go-to-slang/generate_source.go",
-                "sonar-go-to-slang/mapping_generated.go",
-                "sonar-go-to-slang/go.mod",
-                "sonar-go-to-slang/go.sum",
-                "sonar-go-to-slang/make.sh",
-                "build-logic/common/build.gradle.kts",
-            ):
-                assert source.read(root + path), "Missing Go release source: " + path
-            with ZipFile(directory / source_name) as published:
-                java_files = [name for name in published.namelist() if name.endswith(".java")]
-                assert java_files, "No published Go Java sources to compare"
-                for name in java_files:
-                    assert source.read(root + "sonar-go-plugin/src/main/java/" + name) == published.read(name), (
-                        "Go release source mismatch: " + name
-                    )
-        self.ok("SSALv1.txt, sonar-go legal files, sources JAR and complete release source")
+        self.ok("SSALv1.txt, sonar-go legal files, links to the sources JAR and complete release source")
+
+    def check_go_embedded_lgpl(self):
+        """sonar-go embeds other modules' classes; its own legal files give their licences.
+
+        The Maven POMs do not show them, so check_bundled_licences cannot see them.
+        """
+        version = root_property("sonar.go.version")
+        embedded_version = root_property("sonar.go.analyzer-commons.version")
+        jar = self.repository / "org/sonarsource/go/sonar-go-plugin" / version / ("sonar-go-plugin-" + version + ".jar")
+        prefix = "licenses/THIRD_PARTY_LICENSES/"
+        lgpl = []
+        with ZipFile(jar) as original:
+            for name in original.namelist():
+                if not name.startswith(prefix) or name.endswith("/"):
+                    continue
+                text = original.read(name).decode(errors="replace")
+                if re.search(r"LESSER GENERAL PUBLIC|\bLGPL", text):
+                    lgpl.append(name[len(prefix):-len("-LICENSE.txt")])
+        assert lgpl, "sonar-go embeds no LGPL module any more: update the notice"
+        for coordinate in lgpl:
+            group, artifact = coordinate.rsplit(".", 1)
+            assert group == "org.sonarsource.analyzer-commons", "Unexpected embedded LGPL module " + coordinate
+            url = sources_url(group, artifact, embedded_version)
+            assert url in self.notice, "Sources URL not in the notice: " + url
+        for text in ("LGPL-3.0.txt", "GPL-3.0.txt"):
+            assert_same(self.zip, THIRD_PARTY + text, self.lgpl / text)
+        assert "LGPL-3.0" in self.notice, "LGPL-3.0 not named in the notice"
+        self.ok(
+            "LGPL-3.0 modules embedded in sonar-go (" + ", ".join(sorted(a.rsplit(".", 1)[1] for a in lgpl))
+            + " " + embedded_version + ") named with sources links, LGPL-3.0.txt and GPL-3.0.txt"
+        )
 
     def check_library(self):
         assert "Plugin-RequirePlugins" not in self.manifest, "Plugin-RequirePlugins in the library"
         self.ok("no Plugin-RequirePlugins")
         self.check_no_go()
         for text in ("LGPL-3.0.txt", "GPL-3.0.txt"):
-            assert_same(self.zip, THIRD_PARTY + text, self.resources / text)
+            assert_same(self.zip, THIRD_PARTY + text, self.lgpl / text)
         self.ok("LGPL-3.0.txt and GPL-3.0.txt")
 
-        # Every bundled sources JAR: allowed licence, unchanged, named in the notice.
-        sources = {}
-        for name in self.names:
-            match = SOURCES_NAME.match(name[len(SOURCES_DIR):]) if name.startswith(SOURCES_DIR) else None
-            if not match:
-                continue
-            artifact, version = match["artifact"], match["version"]
-            matches = list((self.repository / "org/sonarsource").glob("*/" + artifact + "/" + version))
-            assert len(matches) == 1, "Cannot locate " + artifact + ":" + version
-            directory = matches[0]
-            family = licence_family(pom_licence(self.repository, directory / (artifact + "-" + version + ".pom")))
-            expected = "EPL" if artifact == "jdt-package" else "LGPL"
-            assert family == expected, artifact + " licence is " + str(family) + ", expected " + expected
-            assert self.zip.read(name) == (directory / (artifact + "-" + version + "-sources.jar")).read_bytes(), (
-                "Changed source JAR: " + name
-            )
-            assert re.search(r"\b" + re.escape(artifact) + r"\b", self.notice), "Not in the notice: " + artifact
-            assert version in self.notice, "Version not in the notice: " + artifact + " " + version
-            sources[artifact] = version
-        assert sources, "No analyzer sources bundled"
-
-        # Every bundled SonarSource artifact: all classes kept, sources bundled (F7, V4b).
+        # Every bundled SonarSource artifact: all classes kept, LGPL (EPL for jdt-package) and
+        # its sources JAR linked from the notice (F7, V4b).
         bundled = [b for b in self.bundled_dependencies() if b[0].startswith("org.sonarsource.")]
+        assert bundled, "No SonarSource artifacts bundled"
+        linked = {}
         for group, artifact, version, _, total, kept in bundled:
             assert kept == total, artifact + ": " + str(kept) + " of " + str(total) + " classes bundled"
-            assert sources.get(artifact) == version, "Bundled without sources: " + artifact
-        self.ok(str(len(bundled)) + " SonarSource artifacts bundled whole, each with its sources")
+            family = licence_family(pom_licence(self.repository, pom_path(self.repository, group, artifact, version)))
+            expected = "EPL" if artifact == "jdt-package" else "LGPL"
+            assert family == expected, artifact + " licence is " + str(family) + ", expected " + expected
+            url = sources_url(group, artifact, version)
+            assert url in self.notice, "Sources URL not in the notice: " + url
+            linked[artifact] = version
+        self.ok(str(len(bundled)) + " SonarSource artifacts bundled whole, each with a sources link")
 
         for language in ("java", "python"):
             version = root_property("sonar." + language + ".version")
             artifact = "sonar-" + language + "-plugin"
-            assert sources.get(artifact) == version, "Missing sources: " + artifact
-            assert sources.get(language + "-frontend") == version, "Missing " + language + "-frontend sources"
+            assert linked.get(artifact) == version, "Not bundled: " + artifact
+            assert linked.get(language + "-frontend") == version, "Not bundled: " + language + "-frontend"
             directory = self.repository / "org/sonarsource" / language / artifact / version
             prefix = LEGAL_DIR + artifact + "-" + version + "-jar/"
             with ZipFile(directory / (artifact + "-" + version + ".jar")) as original:
@@ -497,7 +506,28 @@ class Checker:
         assert any(n.startswith("org/eclipse/jdt/") for n in self.names), "No jdt classes"
         assert re.search(r"jdt-package[\s\S]*EPL-2\.0", self.notice), "jdt-package not listed as EPL-2.0"
         self.ok("sonar-java and sonar-python legal files and frontends, jdt-package (EPL-2.0)")
+        self.check_embedded_tomcat()
         self.check_no_forbidden_text()
+
+    def check_embedded_tomcat(self):
+        """sonar-java-plugin embeds Tomcat (and its CDDL schemas) without Tomcat's legal files."""
+        info = "org/apache/catalina/util/ServerInfo.properties"
+        assert info in self.name_set, "No embedded Tomcat: update the library notice and pom"
+        version = re.search(r"^server\.number=(\d+\.\d+\.\d+)", self.zip.read(info).decode(), re.M)[1]
+        assert re.search(r"Apache Tomcat\s+" + re.escape(version) + r"\b", self.notice), (
+            "Embedded Tomcat " + version + " not named in the notice"
+        )
+        assert "CDDL" in self.notice, "CDDL schemas not named in the notice"
+        for artifact in ("tomcat-embed-core", "tomcat-embed-el", "tomcat-embed-jasper"):
+            jar = self.repository / "org/apache/tomcat/embed" / artifact / version / (artifact + "-" + version + ".jar")
+            prefix = LEGAL_DIR + artifact + "-" + version + "-jar/"
+            with ZipFile(jar) as original:
+                for name in ("META-INF/LICENSE", "META-INF/NOTICE"):
+                    assert self.zip.read(prefix + name) == original.read(name), "Changed or missing " + prefix + name
+        assert b"COMMON DEVELOPMENT AND DISTRIBUTION LICENSE" in self.zip.read(
+            LEGAL_DIR + "tomcat-embed-core-" + version + "-jar/META-INF/LICENSE"
+        ), "No CDDL text in Tomcat's LICENSE"
+        self.ok("embedded Apache Tomcat " + version + ": named in the notice, LICENSE (with CDDL) and NOTICE kept")
 
     def run(self):
         self.check_common()

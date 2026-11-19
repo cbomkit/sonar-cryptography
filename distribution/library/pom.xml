@@ -20,6 +20,11 @@
         <crypto.pluginName>Sonar Crypto Plugin (library)</crypto.pluginName>
         <!-- jdt-package (EPL-2.0) is in group org.sonarsource.java. -->
         <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.analyzer-commons,org.sonarsource.sslr</sonar.analyzer.groups>
+        <crypto.lgplResources>${project.basedir}/../src/lgpl-resources</crypto.lgplResources>
+        <!-- The Apache Tomcat that sonar-java-plugin ${sonar.java.version} embeds (java-jsp
+             depends on it; org/apache/catalina/util/ServerInfo.properties in the plugin JAR).
+             Update with sonar.java.version. -->
+        <tomcat.embedded.version>9.0.96</tomcat.embedded.version>
         <!-- The committed BOMs describe the default plugin variant only. -->
         <cyclonedx.skip>true</cyclonedx.skip>
     </properties>
@@ -56,6 +61,43 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- sonar-java-plugin embeds Apache Tomcat classes and the Java EE schemas
+                         that come with Tomcat (CDDL-1.0), but not Tomcat's LICENSE and NOTICE.
+                         The Tomcat artifacts are excluded as dependencies (the classes are
+                         already in the plugin JAR), so their legal files are taken from the
+                         artifacts themselves. -->
+                    <execution>
+                        <id>preserve-embedded-tomcat-notices</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-core</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-core-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-el</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-el-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-jasper</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-jasper-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>META-INF/LICENSE,META-INF/NOTICE</includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <!-- No requirePlugins: the analyzers are bundled. -->
             <plugin>

@@ -1,6 +1,6 @@
 # Plan: one branch, three build variants (plugin / plugin-with-go / library)
 
-Date: 2026-10-30 · Status: **proposed, decisions recorded (§7), not started** · Target branch: `chore/analyzer-variants`
+Date: 2026-10-30 · Status: **executed (steps 0–10, committed), V11 open; sources unbundled 2026-11-19 (Q12)** · Target branch: `chore/analyzer-variants`
 
 ## 1. Goal
 
@@ -13,7 +13,7 @@ There is **one root `pom.xml`**. The variant is chosen with a Maven profile:
 | Command                      | Profile                      | Artifact                                      | sonar-java / sonar-python                                 | Go                             | Licence of bundled analyzer code |
 |------------------------------|------------------------------|-----------------------------------------------|-----------------------------------------------------------|--------------------------------|----------------------------------|
 | `mvn clean package`          | `plugin` (active by default) | `sonar-cryptography-plugin-<v>.jar`           | `provided` (the server's own analyzers, `requirePlugins`) | no                             | none bundled                     |
-| `mvn clean package -Pwith-go`| `with-go`                    | `sonar-cryptography-plugin-with-go-<v>.jar`   | `provided` (the server's own analyzers)                   | **bundled** (sonar-go, shaded) | **SSALv1** (sonar-go and the analyzer-commons classes it embeds) |
+| `mvn clean package -Pwith-go`| `with-go`                    | `sonar-cryptography-plugin-with-go-<v>.jar`   | `provided` (the server's own analyzers)                   | **bundled** (sonar-go, shaded) | **SSALv1** (sonar-go); LGPL-3.0 (the analyzer-commons classes it embeds, Q13) |
 | `mvn clean package -Plib`    | `lib`                        | `sonar-cryptography-lib-<v>.jar`              | **bundled** LGPL 8.6.0.37351 / 4.23.0.17664 (shaded)      | no                             | LGPL-3.0, EPL-2.0 (jdt)          |
 
 The `with-go` profile is meant for users who build a custom plugin themselves. It must warn
@@ -100,7 +100,7 @@ behaviour is not tested here. The user tests it himself. See §6 for what is and
       <modules><module>distribution/plugin</module></modules>
     </profile>
     <profile>
-      <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go and the analyzer-commons classes it embeds). -->
+      <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go). -->
       <id>with-go</id>
       <modules><module>go</module><module>distribution/plugin-with-go</module></modules>
     </profile>
@@ -162,7 +162,7 @@ compiling against an older API and running on the server's newer analyzer is saf
   packaging configuration: sonar-packaging (key `sonar-crypto-plugin`, `pluginClass`, `jreMinVersion`,
   `sonarLintSupported`, `skipDependenciesPackaging`), shade (`minimizeJar`, signature-file filter,
   `ApacheNoticeResourceTransformer`, **`ServicesResourceTransformer`**), dependency-plugin unpack of
-  legal files and sources JARs (driven by `${sonar.analyzer.groups}`), the `LICENSE.txt` resource and
+  legal files (driven by `${sonar.analyzer.groups}`; no sources JARs, Q12), the `LICENSE.txt` resource and
   the `.SonarQube/plugins` copy. It reads its variant parameters from properties:
   `crypto.requiredForLanguages`, `crypto.requirePlugins`, `sonar.analyzer.groups`.
 - **Legal files shared by all three variants (decision Q9)** live once, in
@@ -174,12 +174,12 @@ compiling against an older API and running on the server's newer analyzer is saf
   - `notices/cbomkit-csharp-parser.txt`: the notice section for the C# parser. Each variant's
     `THIRD-PARTY-NOTICES.txt` refers to it. It says the parser is made available under the EPL-2.0
     (see `META-INF/third-party/EPL-2.0.txt`), that the JAR contains it in object code form, and
-    where its source is (EPL §3.2(b)): the Maven Central sources JAR for
+    where its source is (EPL §3.1(a)): the Maven Central sources JAR for
     `${cbomkit.csharp.parser.version}` and https://github.com/fynnth/cbomkit-csharp-parser.
     The resource is filtered.
-  - Its sources JAR is **not** bundled. No EPL source form is shipped for the parser, so §3.3(b)
-    does not apply to it. The library still ships `EPL-2.0.txt` for the jdt sources (Q8), and the
-    shared file covers that too.
+  - Its sources JAR is **not** bundled. No EPL source form is shipped for the parser, so §3.2(b)
+    does not apply to it. The same holds for jdt-package in the library (Q8, Q12); the shared
+    `EPL-2.0.txt` is the licence text the notices of both refer to.
   - The parser version moves into the root property `cbomkit.csharp.parser.version`, used by
     `engine/pom.xml` and the notice, so the two cannot drift.
 - Three small children, each with only dependencies, properties and its own legal resources:
@@ -191,9 +191,9 @@ compiling against an older API and running on the server's newer analyzer is saf
     analyzers), with the same `requirePlugins=java:${sonar.java.minVersion},python:${sonar.python.minVersion}`
     and the same `Analyzers` guards. Only `sonar-go-plugin` is at `compile` scope and bundled; languages `java,jsp,py,ipynb,go,cs`; groups `org.sonarsource.go` only.
     sonar-go declares no analyzer-commons or sslr dependency; its analyzer-commons classes are
-    embedded in its own JAR (§2), so no other SonarSource group is resolved. The build also adds
-    the antrun download of the complete sonar-go
-    release tree (from `main`); SSAL warning (D5).
+    embedded in its own JAR (§2), so no other SonarSource group is resolved. The notice links to
+    the sonar-go sources JAR and the complete release tree; neither is bundled (Q12). SSAL
+    warning (D5).
   - `distribution/library/`: java/python at `compile` scope (bundled); no `requirePlugins`; languages
     `java,jsp,py,ipynb,cs`; groups `org.sonarsource.java,org.sonarsource.python,org.sonarsource.analyzer-commons,org.sonarsource.sslr`.
     **Shading keeps the bundled analyzers whole (finding F7).** Our code uses only the public
@@ -207,12 +207,11 @@ compiling against an older API and running on the server's newer analyzer is saf
     **jdt-package (EPL-2.0), decision Q8:**
     - Its object code is in the JAR: shading copies in sonar-java's transitive dependency, about
       2,169 `org/eclipse/jdt/` classes.
-    - Its sources JAR **is** bundled like those of the other analyzer modules (group
-      `org.sonarsource.java`, about 8 MB).
-    - Because the JAR distributes EPL code in source form, EPL §3.3(b) requires a copy of the
-      licence. jdt-package does not bring one: its `about.html` only links to the EPL, and
-      `about_files/LICENSE-2.0.txt` is the Apache licence. The shared `EPL-2.0.txt` (Q9) provides it,
-      and `THIRD-PARTY-NOTICES.txt` refers to it (EPL §3.2 for the object code).
+    - Its sources JAR is **not** bundled (Q12). `THIRD-PARTY-NOTICES.txt` links to it on Maven
+      Central, which tells recipients where the source is (EPL §3.1(a)).
+    - jdt-package brings no copy of the licence: its `about.html` only links to the EPL, and
+      `about_files/LICENSE-2.0.txt` is the Apache licence. The shared `EPL-2.0.txt` (Q9) provides
+      it, and `THIRD-PARTY-NOTICES.txt` refers to it.
     - Its original legal files (`about.html`, `about_files/`) are also unpacked into
       `META-INF/third-party/analyzers/jdt-package-<version>-jar/`.
 - Why three distribution modules rather than one module whose dependencies change per profile:
@@ -256,14 +255,15 @@ compiling against an older API and running on the server's newer analyzer is saf
   Go module does not compile or its tests fail with 2.14 does `go/pom.xml` override
   `sonar.analyzer-commons.version` to 2.30.0.5193. The override is local to `go`, so the shared
   modules (D1 rule) and the library are unaffected. Either way, the with-go JAR contains the
-  analyzer-commons classes that sonar-go embeds (§2), so the SSAL warning stays.
+  analyzer-commons classes that sonar-go embeds (§2). sonar-go's own legal files give these as
+  LGPL-3.0 (version 2.21.0.4626, Q13); the SSAL warning is for sonar-go itself.
 - Warnings for SSAL:
   1. An XML comment on the `with-go` profile in `pom.xml` and at the top of
      `distribution/plugin-with-go/pom.xml`.
   2. A build-time warning: an antrun `<echo level="warning">` in phase `validate` of
      `distribution/plugin-with-go`, printed at the start and repeated after `package`. It names
-     sonar-go `${sonar.go.version}` and the analyzer-commons classes it embeds as SSALv1 (plus
-     analyzer-commons 2.30 if step 4.4 needed the override), says the JAR is for private
+     sonar-go `${sonar.go.version}` as SSALv1 and the analyzer-commons classes it embeds as
+     LGPL-3.0 (Q13; first written as SSALv1), says the JAR is for private
      use under the SSAL terms only and must not be redistributed or offered as a service, and points
      to `META-INF/third-party/SSALv1.txt`.
   3. In the JAR: `SSALv1.txt` (restored from `main`) and a `THIRD-PARTY-NOTICES.txt` section for
@@ -606,10 +606,11 @@ start. Go is still disabled at this point, so the test fixes below only concern 
   (`LGPL-3.0.txt`, `GPL-3.0.txt`), `THIRD-PARTY-NOTICES.txt` (including its jdt-package section and
   the `EPL-2.0:` entry in "Licence texts"), `sonar.analyzer.groups`, no `requirePlugins`.
   `EPL-2.0.txt` comes from the shared resources (Q9). Keep `GPL-3.0.txt` (LGPL-3.0 §4(b)) and
-  `EPL-2.0.txt` (EPL §3.3(b), because the jdt sources are bundled); neither is redundant (Q8).
+  `EPL-2.0.txt` (the licence text the jdt-package and parser notices refer to); neither is
+  redundant (Q8).
   Add the shade `<filters>` that keep the bundled analyzers whole (D3, F7), and check V4b.
-- 6.4 Create `distribution/plugin-with-go`: restore `SSALv1.txt` and main's sonar-go notice section and
-  antrun source download; add the relocations, the warnings (D5) and deploy skip.
+- 6.4 Create `distribution/plugin-with-go`: restore `SSALv1.txt` and main's sonar-go notice section
+  (with links to the sources, Q12); add the relocations, the warnings (D5) and deploy skip.
 - 6.5 Create `distribution/plugin`: a notice that says no SonarSource analyzer is bundled and lists
   the required installed analyzers and their minimum versions.
 - 6.6 Artifact IDs and final names (decided): `sonar-cryptography-plugin`,
@@ -680,11 +681,11 @@ start. Go is still disabled at this point, so the test fixes below only concern 
           sonar-java-plugin 8103/8103, jdt-package 3848/3848, python-frontend 588/588,
           sslr-core 183/183).
         - V4: no `Plugin-RequirePlugins`, 0 Go entries, Guava 33.3.1-jre. The 19 bundled sources
-          JARs contain 0 "SSAL" matches. In the classes and resources, 2 files match: Unicode
+          JARs contain 0 "SSAL" matches. *(Superseded by Q12: no sources are bundled any more.)* In the classes and resources, 2 files match: Unicode
           data files (`ucd/…`) containing "WASSALLAM". These are false positives; step 7's
           check must match "SSAL" as a word, not as a substring.
         - V4a: 2,232 `org/eclipse/jdt/` classes, `jdt-package-1.3.0.89-sources.jar`,
-          `analyzers/jdt-package-1.3.0.89-jar/about.html`, `EPL-2.0.txt`.
+          `analyzers/jdt-package-1.3.0.89-jar/about.html`, `EPL-2.0.txt`. *(Superseded by Q12: no sources are bundled any more.)*
         - JAR 63.1 MB; `Minimized 45075 -> 39385`.
         Note for step 7: the library JAR contains both `META-INF/LICENSE.txt` (ours) and
         `META-INF/license.txt` (from a dependency, also Apache). They differ only in case, which
@@ -696,7 +697,7 @@ start. Go is still disabled at this point, so the test fixes below only concern 
         - Legal files: `SSALv1.txt` moved here with `git mv`. `THIRD-PARTY-NOTICES.txt` started
           from `main`'s text, moved with `git mv`, and is rewritten: sonar-go section, Java and
           Python used from SonarQube, the C# parser, the relocations and the SSAL warning.
-        - The antrun source download.
+        - The antrun source download. *(Superseded by Q12: no sources are bundled any more.)*
         - Relocations: `org.sonar.go`, `org.sonar.plugins.go` and
           `org.sonarsource.analyzer.commons` → `com.ibm.shaded.…`.
         - The SSAL warning (`<echo level="warning">`) in `validate`, and again in `package`
@@ -705,7 +706,7 @@ start. Go is still disabled at this point, so the test fixes below only concern 
         JAR (28.8 MB): 0 unrelocated `org/sonar/{java,python,go,plugins/go}` or
         `org/sonarsource` entries. 263 + 7 relocated sonar-go and analyzer-commons classes,
         11 `com/ibm/engine/language/go/` classes, the five native `sonar-go-to-slang-*`
-        binaries, `SSALv1.txt`, the sonar-go sources JAR and source ZIP, and
+        binaries, `SSALv1.txt`, the sonar-go sources JAR and source ZIP (both removed by Q12), and
         `analyzers/sonar-go-plugin-1.32.0.5128-jar/`. The service file lists Java, Python, C#
         and Go. `CryptoGoSensor` and `GoLanguageSupport` reference only `com/ibm/shaded/…`
         (0 unrelocated references).
@@ -760,15 +761,17 @@ start. Go is still disabled at this point, so the test fixes below only concern 
   one script with `--variant {plugin,plugin-with-go,library}`. Move it to `distribution/src/test/python/`.
   - `plugin`: no `org/sonar/java/`, `org/sonar/python/`, `org/sonar/go/`,
     `org/sonarsource/analyzer/commons/` entries. `Plugin-RequirePlugins` contains java and python.
-    No `analyzer-sources/`. No "SSAL".
+    No "SSAL".
   - `plugin-with-go`: Go classes present (relocated), no java/python internals. `SSALv1.txt` and
-    the sonar-go notice are present, and the sources ZIP and JAR are present. `go` is in
-    `Plugin-RequiredForLanguages`.
-  - `library`: today's downgrade checks (LGPL POM licences, legal files and sources per bundled
-    module, no "SSAL" matched case-sensitively), no Go entries, no `Plugin-RequirePlugins`.
-    jdt-package is checked like the other modules (sources JAR present, EPL via
-    `OTHER_LICENCES`), and `LICENCE_TEXTS` stays `("LGPL-3.0.txt", "GPL-3.0.txt", "EPL-2.0.txt")`.
-  - **All variants** (Q9, Q10):
+    the sonar-go notice are present, and the notice has the URLs of the sources JAR and the
+    complete release ZIP (Q12). `go` is in `Plugin-RequiredForLanguages`.
+  - `library`: today's downgrade checks (LGPL POM licences, legal files per bundled module, no
+    "SSAL" matched case-sensitively), no Go entries, no `Plugin-RequirePlugins`. Every bundled
+    SonarSource module's Maven Central sources-JAR URL is in the notice (Q12). jdt-package is
+    checked like the other modules (sources URL in the notice, EPL), and the licence texts are
+    `LGPL-3.0.txt`, `GPL-3.0.txt` and `EPL-2.0.txt`.
+  - **All variants** (Q9, Q10, Q12):
+    - No sources are bundled: no `analyzer-sources/`, `*-sources.jar` or `*-source.zip` entries.
     - `EPL-2.0.txt` and `notices/cbomkit-csharp-parser.txt` are present. The notice names the
       parser version that is actually bundled (read from its `META-INF/maven/.../pom.properties`,
       or from the build's dependency list) and contains the source URL.
@@ -811,7 +814,7 @@ start. Go is still disabled at this point, so the test fixes below only concern 
         plugin distribution/plugin/target/sonar-cryptography-plugin-*.jar`.
   - [x] V2: all three variants pass. plugin: 21 bundled third-party artifacts, 1 not
         Apache/MIT/BSD (the C# parser). plugin-with-go: 23, 2 (adds sonar-go). library: passes,
-        including 19 SonarSource artifacts bundled whole with their sources.
+        including 19 SonarSource artifacts bundled whole with their sources. *(Superseded by Q12: no sources are bundled any more.)*
   - [x] Gates in `/tmp/sc-copy`: `mvn -o clean install` 516 tests, `-Pwith-go` 568, `-Plib` 516,
         all BUILD SUCCESS; `spotless:check` passes.
   - [x] User commits step 7 (`9b3d35a5`).
@@ -989,16 +992,18 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
       `org/sonar/go/` or `org/sonarsource/`; the manifest has
       `Plugin-RequirePlugins: java:8.22.0.41895,python:5.14.2.29072`.
 - [x] V4 `sonar-cryptography-lib` JAR: bundled sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, commons 2.14.0.3087,
-      sslr 1.24; 0 "SSAL" matches; no Go classes; no `Plugin-RequirePlugins`.
+      sslr 1.24; 0 "SSAL" matches; no Go classes; no `Plugin-RequirePlugins`; no bundled sources,
+      and the notice links to each bundled module's Maven Central sources JAR (Q12).
 - [x] V4b `sonar-cryptography-lib` JAR keeps the bundled analyzers whole (F7): for every bundled
       `org.sonarsource.{java,python,analyzer-commons,sslr}` artifact, all of its classes are in the
       JAR (same per-artifact count as in the audit of 2026-11-02, but expecting 100 %).
 - [x] V4a `sonar-cryptography-lib` JAR and jdt-package: `org/eclipse/jdt/` classes,
-      `analyzer-sources/jdt-package-*-sources.jar`, `META-INF/third-party/EPL-2.0.txt` and
-      `analyzers/jdt-package-*-jar/about.html` are present; `THIRD-PARTY-NOTICES.txt` lists
-      jdt-package as EPL-2.0 and refers to `EPL-2.0.txt`.
+      `META-INF/third-party/EPL-2.0.txt` and `analyzers/jdt-package-*-jar/about.html` are present;
+      `THIRD-PARTY-NOTICES.txt` lists jdt-package as EPL-2.0, refers to `EPL-2.0.txt` and links to
+      the jdt-package sources JAR (Q12).
 - [x] V5 With-go JAR: contains Go engine and plugin classes and the relocated sonar-go; `SSALv1.txt`
-      present; the build log contains the SSAL warning; `go` is in `Plugin-RequiredForLanguages`;
+      present; no bundled sources, and the notice links to the sonar-go sources JAR and release ZIP
+      (Q12); the build log contains the SSAL warning; `go` is in `Plugin-RequiredForLanguages`;
       `mvn deploy` skips it.
 - [x] V5a `go` resolves analyzer-commons 2.14.0.3087 (`dependency:tree`), unless step 4.4 recorded a
       reason for the 2.30 override. Any override is in `go/pom.xml` only, with a comment.
@@ -1054,7 +1059,7 @@ copy and a settings file without servers; the repository was deleted afterwards.
 - V2: all three JARs pass `verify_analyzer_packaging.py`. V14: the three final names as listed.
 - V3: 0 entries under `org/sonar/java/`, `org/sonar/python/`, `org/sonar/go/`,
   `org/sonarsource/`; `Plugin-RequirePlugins: java:8.22.0.41895,python:5.14.2.29072`.
-- V4/V4a/V4b: sources of sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, analyzer-commons
+- V4/V4a/V4b (sources bundled at the time; removed by Q12, see the follow-up below): sources of sonar-java 8.6.0.37351, sonar-python 4.23.0.17664, analyzer-commons
   2.14.0.3087, sslr-core 1.24.0.633 and jdt-package 1.3.0.89 (19 sources JARs); 0 `SSAL`/`SSALv1`
   words in the JAR and all nested archives; 0 Go entries; no `Plugin-RequirePlugins`; 2,232
   `org/eclipse/jdt/` classes, `EPL-2.0.txt`, jdt `about.html` and sources JAR present, jdt-package
@@ -1093,6 +1098,63 @@ copy and a settings file without servers; the repository was deleted afterwards.
 - V18: no `google-java-format` in `dependency:tree` with any profile; Guava in the library is
   33.3.1-jre (`pom.properties` in the JAR), the version sonar-python 4.23's POM declares.
 
+### Follow-up (2026-11-19): sources linked instead of bundled (Q12)
+
+- Removed the `include-analyzer-sources` execution (`distribution/pom.xml`, and its `none`
+  override in `distribution/plugin/pom.xml`) and the `include-go-release-source` antrun
+  execution (`distribution/plugin-with-go/pom.xml`).
+- The library notice lists the Maven Central sources-JAR URL of all 19 bundled modules and the
+  release source trees of sonar-java, sonar-python, sonar-analyzer-commons and sslr. The with-go
+  notice points to the sonar-go sources JAR and the complete release ZIP.
+- `verify_analyzer_packaging.py`: no sources in any variant; every bundled SonarSource
+  artifact's sources URL in the notice. The comparison of the bundled release ZIP with the
+  published Go sources is gone with the ZIP; the `Implementation-Build` check of the pinned
+  revision stays.
+- Checked: `mvn -o clean package -DskipTests` with no profile, `-Plib` and `-Pwith-go`; all three
+  JARs pass the script. Every URL in the two notices returns 200.
+
+### Follow-up (2026-11-19): LGPL-3.0 code in the with-go JAR (Q13)
+
+- Found while checking whether the plugin notices need LGPL: the default plugin bundles no
+  LGPL code (its 21 bundled artifacts are Apache, MIT, BSD and the EPL parser; sonar-java,
+  sonar-python and sonar-plugin-api are `provided`). The with-go JAR does: sonar-go 1.32
+  embeds classes of sonar-analyzer-commons and sonar-xml-parsing 2.21.0.4626
+  (`gradle/libs.versions.toml` at the pinned revision; POM licence "GNU LGPL 3"), and its
+  `licenses/THIRD_PARTY_LICENSES/` gives both as LGPL-3.0. After `minimizeJar`, 7 of them stay
+  (relocated): `TokenLocation` and six `package-info` classes. The notice, the warnings and
+  the README called them SSALv1.
+- `verify_analyzer_packaging.py` did not catch it: it reads licences from Maven POMs, and
+  these classes come in inside the sonar-go JAR.
+- Fixed: `LGPL-3.0.txt` and `GPL-3.0.txt` moved with `git mv` to
+  `distribution/src/lgpl-resources/`, added by `distribution/pom.xml` through
+  `crypto.lgplResources`, which the library and with-go set. The with-go notice has a
+  "Bundled with sonar-go (LGPL-3.0)" section with the modules, the version (root property
+  `sonar.go.analyzer-commons.version`) and their sources links, and lists both texts. Warnings
+  in `pom.xml`, `distribution/plugin-with-go/pom.xml` and the README no longer call the
+  analyzer-commons classes SSALv1. New script check `check_go_embedded_lgpl`: every LGPL module
+  in sonar-go's `THIRD_PARTY_LICENSES` has its sources URL in the notice, and both texts are
+  in the JAR. It fails when a URL is removed from the notice.
+- Checked: all three variants build and pass the script.
+
+### Follow-up (2026-11-19): Apache Tomcat inside sonar-java-plugin (Q14)
+
+- Checked the library for the same problem. Its LGPL side is complete: every non-SonarSource
+  bundled artifact is permissive or the EPL parser, and the 19 SonarSource modules are in the
+  notice with their sources links. sonar-python-plugin embeds nothing that is not also a
+  resolved dependency. But sonar-java-plugin 8.6.0.37351 embeds Apache Tomcat 9.0.96
+  (tomcat-embed-core, -el, -jasper, used by java-jsp): 720 classes, plus 40 Java EE schema files
+  under `javax/servlet/resources/` that Tomcat distributes under CDDL-1.0. The library POM
+  excludes `org.apache.tomcat.embed:*` as a dependency, so neither the dependency plugin nor
+  the script saw them, and Tomcat's LICENSE and NOTICE (Apache-2.0 §4(d)) were missing.
+- Fixed: `distribution/library/pom.xml` unpacks `META-INF/LICENSE` and `META-INF/NOTICE` of the
+  three Tomcat artifacts (property `tomcat.embedded.version`) into
+  `META-INF/third-party/analyzers/tomcat-embed-*-9.0.96-jar/`; the notice has an "Embedded in
+  sonar-java-plugin" section with Tomcat, the CDDL schemas, the project and the release source.
+  New script check `check_embedded_tomcat` reads the version from the embedded
+  `ServerInfo.properties` and compares the legal files with the Tomcat JARs.
+- Checked: `mvn clean package -DskipTests -Plib` (online once, to fetch the Tomcat JARs) passes
+  the script.
+
 Still open:
 - **V11.** Not run: SonarQube is not running and the fixture `/tmp/crypto-e2e` no longer exists.
   Needs `docker compose up`, a fixture and a user token.
@@ -1109,12 +1171,15 @@ Still open:
 | Q5 | Publish the library | Yes: Maven and release asset, **but not yet** (2026-11-03): nothing is published until the user decides; only a local dry run. | §1, 9.2, V15 |
 | Q6 | Three `pom-*.xml` files or profiles | One root `pom.xml` with the profiles `plugin` (default), `with-go` and `lib`. The profiles only select modules. | §1, D1, §4, step 5, 9.1, 9.2, V1, V8a |
 | Q7 | analyzer-commons version for Go | Try 2.14.0.3087 first; switch `go` to 2.30.0.5193 only if necessary. | §2, D5, 4.2, 4.4, V5a |
-| Q8 | jdt-package (EPL-2.0) in the library | Bundle its object code and its sources JAR like the other analyzer modules, and include `EPL-2.0.txt` (EPL §3.3(b)). `GPL-3.0.txt` stays, because LGPL-3.0 §4(b) requires a copy of the GPL. (Linking the jdt source instead of bundling it was considered and rejected.) | §1, D3, §4, 6.3, 7.1, V4a |
+| Q8 | jdt-package (EPL-2.0) in the library | Bundle its object code like the other analyzer modules, and include `EPL-2.0.txt`. `GPL-3.0.txt` stays, because LGPL-3.0 §4(b) requires a copy of the GPL. ~~Also bundle its sources JAR (which needs the licence text, EPL §3.2(b)).~~ Superseded by Q12: its sources JAR is linked from the notice, not bundled. | §1, D3, §4, 6.3, 7.1, V4a |
 | Q9 | EPL-2.0 C# parser in all variants | Add a notice section with an EPL statement and source links, and `EPL-2.0.txt`, to all three JARs. Both files live once, in the shared distribution resources. The parser's sources are not bundled. | §2, D3, §4, 6.3, 6.7, 7.1, V17 |
 | Q10 | google-java-format on the compile classpath | Remove the dependency; Spotless keeps its own copy. | §2, 3.6, 7.1, V18 |
 | Q11 | Purpose and testing of the library | It is for embedding in another tool. Build it untested: only the build, packaging and licence checks (V1, V2, V4, V4a, V4b, V14, V15, V17, V18) apply to it. No e2e scan, no CBOM comparison, no consumer test; the user tests it himself. | §1, V11, V12, §8, F1 |
+| Q12 | Analyzer sources in the JARs (2026-11-19) | Do not bundle any sources. The `include-analyzer-sources` (dependency plugin) and `include-go-release-source` (antrun) executions are removed, so no JAR has `META-INF/third-party/analyzer-sources/`. Each variant's `THIRD-PARTY-NOTICES.txt` links instead to every bundled module's Maven Central sources JAR and to the release source tree on GitHub (for sonar-go also the complete release ZIP). `verify_analyzer_packaging.py` checks that no sources are bundled and that every bundled SonarSource artifact's sources URL is in the notice. | D3, 6.3, step 7, V4, V4a, V4b |
+| Q13 | LGPL-3.0 classes inside sonar-go (2026-11-19) | sonar-go embeds sonar-analyzer-commons and sonar-xml-parsing 2.21.0.4626, LGPL-3.0 by sonar-go's own legal files. The with-go notice names them as LGPL-3.0 with their sources links, and the JAR has `LGPL-3.0.txt` and `GPL-3.0.txt` (shared with the library in `distribution/src/lgpl-resources/`). The default plugin bundles no LGPL code and needs no LGPL notice. | §1, D5, step 7, V5 |
+| Q14 | Apache Tomcat inside sonar-java-plugin (2026-11-19) | The library keeps Tomcat 9.0.96's LICENSE (with the CDDL text for the Java EE schemas) and NOTICE, unpacked from the Tomcat artifacts, and names Tomcat and the CDDL schemas in its notice. The script checks both. | D3, step 7, V4 |
 
-No open questions remain in this table; see the open findings in §9.
+No open questions remain in this table; see the open findings in §9. §9 records the plan review of 2026-11-02, before execution.
 
 ## 8. Risks
 

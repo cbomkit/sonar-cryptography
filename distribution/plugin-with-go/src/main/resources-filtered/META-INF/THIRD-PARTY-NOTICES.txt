@@ -26,13 +26,13 @@ sonar-go ${sonar.go.version}
     https://codeload.github.com/SonarSource/sonar-go/zip/${sonar.go.source.revision}
   Public source revision: ${sonar.go.source.revision}
   GitOrigin-RevId / plugin Implementation-Build: ${sonar.go.source.origin-revision}
-  Published plugin sources:
+  Sources JAR (Maven Central):
     https://repo.maven.apache.org/maven2/org/sonarsource/go/sonar-go-plugin/${sonar.go.version}/sonar-go-plugin-${sonar.go.version}-sources.jar
   Original legal files: META-INF/third-party/analyzers/sonar-go-plugin-${sonar.go.version}-jar/
 
-The sonar-go JAR embeds classes of sonar-analyzer-commons and other
-third-party libraries. Their licences are listed in licenses/THIRD_PARTY_LICENSES/
-within the original-legal-files directory above.
+The sonar-go JAR embeds classes of sonar-analyzer-commons (see below) and of
+other third-party libraries. Their licences are listed in
+licenses/THIRD_PARTY_LICENSES/ within the original-legal-files directory above.
 
 sonar-go and its source are available under the SSALv1. The licence text is
 included at META-INF/third-party/SSALv1.txt; sonar-go's own copy is preserved in
@@ -40,7 +40,24 @@ licenses/LICENSE.txt within its original-legal-files directory. The two texts
 differ only in the named SonarSource legal entity; consult the component's own
 text. Individual files and embedded third-party components may have other
 licences; retain and consult their original notices. Copyright statements are
-preserved in the source JAR and the original legal files.
+preserved in the sources and the original legal files.
+
+Bundled with sonar-go (LGPL-3.0)
+
+sonar-go embeds classes of the following SonarSource modules, which are
+licensed under the GNU Lesser General Public License, version 3 (LGPL-3.0).
+sonar-go's own legal files give them as LGPL-3.0, in
+licenses/THIRD_PARTY_LICENSES/org.sonarsource.analyzer-commons.*-LICENSE.txt.
+The version is the one sonar-go ${sonar.go.version} is built with.
+
+sonar-analyzer-commons ${sonar.go.analyzer-commons.version}
+  Project: https://github.com/SonarSource/sonar-analyzer-commons
+  Release source tree: https://github.com/SonarSource/sonar-analyzer-commons/tree/${sonar.go.analyzer-commons.version}
+  Modules (group org.sonarsource.analyzer-commons, version ${sonar.go.analyzer-commons.version}):
+    sonar-analyzer-commons, sonar-xml-parsing
+  Sources JARs (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-analyzer-commons/${sonar.go.analyzer-commons.version}/sonar-analyzer-commons-${sonar.go.analyzer-commons.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-xml-parsing/${sonar.go.analyzer-commons.version}/sonar-xml-parsing-${sonar.go.analyzer-commons.version}-sources.jar
 
 Bundled in object code form
 
@@ -52,23 +69,27 @@ version, its source code and the terms under which it is distributed.
 
 Licence texts
 
-  SSALv1:  META-INF/third-party/SSALv1.txt
-  EPL-2.0: META-INF/third-party/EPL-2.0.txt
+  SSALv1:   META-INF/third-party/SSALv1.txt
+  LGPL-3.0: META-INF/third-party/LGPL-3.0.txt
+  GPL-3.0:  META-INF/third-party/GPL-3.0.txt (LGPL-3.0 adds permissions to it)
+  EPL-2.0:  META-INF/third-party/EPL-2.0.txt
 
 Obtaining source
 
-Extract the source JAR from META-INF/third-party/analyzer-sources/ in this JAR.
-It is the unmodified sources classifier published on Maven Central for
-sonar-go-plugin ${sonar.go.version}. It can also be fetched from
-https://repo.maven.apache.org/maven2/ using the Maven coordinate above.
+The sources are not included in this JAR. The unmodified sources JAR published
+on Maven Central for sonar-go-plugin ${sonar.go.version} can be downloaded from
+the "Sources JAR" URL above.
 
-The Go plugin source JAR omits the native Go-to-Slang bridge and shaded modules.
-The complete release tree is additionally included in the same directory as
-sonar-go-${sonar.go.version}-${sonar.go.source.revision}-source.zip.
-It includes the native bridge, generated-source inputs, GoConverter and the
-build scripts. The public commit's GitOrigin-RevId matches Implementation-Build
-in the original plugin JAR; its published Java sources match the source JAR.
-Original legal notices remain within the complete release archive.
+The Go plugin sources JAR omits the native Go-to-Slang bridge and shaded
+modules. The complete release tree, including the native bridge,
+generated-source inputs, GoConverter and the build scripts, can be downloaded
+from the "Complete release source" URL above. The public commit's
+GitOrigin-RevId matches Implementation-Build in the original plugin JAR; its
+published Java sources match the sources JAR. Original legal notices remain
+within the complete release archive.
+
+The sources of the LGPL-3.0 modules can be downloaded from the URLs given with
+them above.
 
 Packaging
 
@@ -78,10 +99,12 @@ org.sonar.go, org.sonar.plugins.go and org.sonarsource.analyzer.commons are
 relocated to com.ibm.shaded.org.sonar.go, com.ibm.shaded.org.sonar.plugins.go
 and com.ibm.shaded.org.sonarsource.analyzer.commons, so that they do not clash
 with the sonar-go plugin installed in SonarQube. No other change is made.
-Analyzer source archives and the namespaced legal files are copied without
-change. The build configuration is distribution/plugin-with-go/pom.xml and
-distribution/pom.xml in the matching Sonar Cryptography Plugin release at
-https://github.com/cbomkit/sonar-cryptography.
+The namespaced legal files are copied without change. The build configuration
+is distribution/plugin-with-go/pom.xml and distribution/pom.xml in the matching
+Sonar Cryptography Plugin release at
+https://github.com/cbomkit/sonar-cryptography. To use a modified version of an
+LGPL-3.0 module, rebuild sonar-go and then this plugin from that source with the
+modified module.
 
 This notice documents redistribution materials. It does not grant additional
 rights or establish that the plugin's functionality or every downstream use

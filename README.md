@@ -277,7 +277,7 @@ The `--variant` values are `plugin`, `plugin-with-go` and `library`.
 > [!WARNING]
 > The `with-go` variant contains code licensed under the
 > [Sonar Source-Available License v1.0](https://www.sonarsource.com/license/ssal-1-0-0/)
-> (SSALv1): sonar-go and the sonar-analyzer-commons classes it embeds. Build it only for
+> (SSALv1): sonar-go. Build it only for
 > private use under the SSAL terms; do not redistribute it or offer it as a service. It is
 > never published, and the build prints this warning at the start and after packaging.
 
@@ -285,7 +285,10 @@ The `--variant` values are `plugin`, `plugin-with-go` and `library`.
 mvn clean package -Pwith-go
 ```
 
-The JAR contains the SSAL licence text and sonar-go's sources under `META-INF/third-party/`.
+The JAR contains the SSAL licence text under `META-INF/third-party/`, and its
+`META-INF/THIRD-PARTY-NOTICES.txt` links to sonar-go's sources. sonar-go embeds
+classes of sonar-analyzer-commons, which are LGPL-3.0; the JAR has the LGPL-3.0
+and GPL-3.0 texts for them, and the notice links to their sources.
 It needs the same Java and Python analyzers in SonarQube as the default plugin. The bundled
 sonar-go classes are relocated, so they do not clash with the sonar-go that SonarQube itself
 ships.
@@ -403,14 +406,19 @@ sonar-python 4.23, sonar-analyzer-commons 2.14 and sslr 1.24 under the
 (with the GPL-3.0 text it refers to), and jdt-package, the Eclipse JDT compiler
 used by sonar-java, under the EPL-2.0. These are the last LGPL-3.0 releases of
 the analyzers; see the comment on `sonar.java.version` in [`pom.xml`](pom.xml).
-The original legal files of the bundled modules are kept under
-`META-INF/third-party/analyzers/`, and each module's unmodified Maven Central
-sources JAR under `META-INF/third-party/analyzer-sources/`.
+sonar-java also embeds Apache Tomcat (Apache-2.0) with Java EE schemas under
+the CDDL-1.0. The original legal files of the bundled modules, and Tomcat's, are
+kept under `META-INF/third-party/analyzers/`. The sources are not bundled:
+`META-INF/THIRD-PARTY-NOTICES.txt` links to each module's unmodified sources JAR
+on Maven Central and to each release's source tree on GitHub.
 
 **Plugin with Go (`sonar-cryptography-plugin-with-go`, `-Pwith-go`).** It
-bundles sonar-go and the sonar-analyzer-commons classes it embeds under the
+bundles sonar-go under the
 [Sonar Source-Available License v1.0](https://www.sonarsource.com/license/ssal-1-0-0/),
-with sonar-go's sources.
+and the classes of sonar-analyzer-commons that sonar-go embeds, under the
+LGPL-3.0. Its notice links to the sources of both: sonar-go's sources JAR on
+Maven Central and its complete release source on GitHub, and the
+sonar-analyzer-commons sources JARs.
 
 > [!WARNING]
 > The `with-go` variant contains SSALv1-licensed code. Build it only for

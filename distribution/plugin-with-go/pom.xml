@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  WARNING: this module builds a JAR that contains SSALv1-licensed code: sonar-go and the
-  sonar-analyzer-commons classes it embeds (Sonar Source-Available License v1.0, see
-  src/main/resources/META-INF/third-party/SSALv1.txt). The JAR is for private use under the SSAL
+  WARNING: this module builds a JAR that contains SSALv1-licensed code: sonar-go (Sonar
+  Source-Available License v1.0, see src/main/resources/META-INF/third-party/SSALv1.txt). It also
+  contains the sonar-analyzer-commons classes that sonar-go embeds, which are LGPL-3.0. The JAR is for private use under the SSAL
   terms only. Do not redistribute it or offer it as a service. It is never deployed or published.
   Build it with: mvn clean package -Pwith-go
 -->
@@ -27,13 +27,15 @@
         <crypto.pluginName>Sonar Crypto Plugin (with Go)</crypto.pluginName>
         <crypto.requiredForLanguages>java,jsp,py,ipynb,go,cs</crypto.requiredForLanguages>
         <!-- sonar-go declares no other SonarSource dependency; the analyzer-commons classes it
-             uses are embedded in its own JAR. -->
+             uses are embedded in its own JAR. Its licenses/THIRD_PARTY_LICENSES/ gives them as
+             LGPL-3.0, hence the LGPL and GPL texts. -->
         <sonar.analyzer.groups>org.sonarsource.go</sonar.analyzer.groups>
         <!-- SSALv1: never deployed or published. -->
         <maven.deploy.skip>true</maven.deploy.skip>
+        <crypto.lgplResources>${project.basedir}/../src/lgpl-resources</crypto.lgplResources>
         <!-- The committed BOMs describe the default plugin variant only. -->
         <cyclonedx.skip>true</cyclonedx.skip>
-        <crypto.ssal.warning>This build packages ${project.build.finalName}.jar, which contains SSALv1-licensed code: sonar-go ${sonar.go.version} and the sonar-analyzer-commons classes it embeds (Sonar Source-Available License v1.0, see META-INF/third-party/SSALv1.txt in the JAR). It is for private use under the SSAL terms only. Do not redistribute it or offer it as a service.</crypto.ssal.warning>
+        <crypto.ssal.warning>This build packages ${project.build.finalName}.jar, which contains SSALv1-licensed code: sonar-go ${sonar.go.version} (Sonar Source-Available License v1.0, see META-INF/third-party/SSALv1.txt in the JAR), with classes of sonar-analyzer-commons that sonar-go embeds under the LGPL-3.0. It is for private use under the SSAL terms only. Do not redistribute it or offer it as a service.</crypto.ssal.warning>
     </properties>
 
     <dependencies>
@@ -113,23 +115,6 @@
                         <configuration>
                             <target>
                                 <echo level="warning" message="WARNING: ${crypto.ssal.warning}"/>
-                            </target>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>include-go-release-source</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <!-- The Maven Go sources omit the native bridge and shaded
-                                     modules. Include the complete, pinned release tree. -->
-                                <mkdir dir="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources"/>
-                                <get src="https://codeload.github.com/SonarSource/sonar-go/zip/${sonar.go.source.revision}"
-                                     dest="${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources/sonar-go-${sonar.go.version}-${sonar.go.source.revision}-source.zip"
-                                     skipexisting="true" maxtime="60" retries="3"/>
                             </target>
                         </configuration>
                     </execution>

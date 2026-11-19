@@ -37,9 +37,8 @@
                 <module>distribution/plugin</module>
             </modules>
         </profile>
-        <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go and the
-             analyzer-commons classes it embeds). For private use under the SSAL terms only; never
-             publish it. -->
+        <!-- WARNING: builds a JAR that contains SSALv1-licensed code (sonar-go). For private
+             use under the SSAL terms only; never publish it. -->
         <profile>
             <id>with-go</id>
             <modules>
@@ -96,6 +95,9 @@
              the public commit must match the plugin JAR's Implementation-Build. -->
         <sonar.go.source.revision>a7de104eea09927509592bf68fa7ac69a7ecc075</sonar.go.source.revision>
         <sonar.go.source.origin-revision>f05477beb84a17dfed5c3ffbe57038b1fa260702</sonar.go.source.origin-revision>
+        <!-- The analyzer-commons version sonar-go ${sonar.go.version} embeds (its
+             gradle/libs.versions.toml); named in the with-go notice. Update with sonar.go.version. -->
+        <sonar.go.analyzer-commons.version>2.21.0.4626</sonar.go.analyzer-commons.version>
         <!-- Minimum analyzer versions required at runtime (Plugin-RequirePlugins). These are
              independent of the compile-time versions above: SonarQube refuses to load the plugin
              if an installed analyzer is older. Baseline = versions bundled with SonarQube 26.1. -->

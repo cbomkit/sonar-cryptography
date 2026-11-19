@@ -22,10 +22,15 @@
         <crypto.pluginName>Sonar Crypto Plugin</crypto.pluginName>
         <!-- All file extensions the plugin must run for. -->
         <crypto.requiredForLanguages>java,jsp,py,ipynb,cs</crypto.requiredForLanguages>
-        <!-- The SonarSource groups whose legal files and sources JARs are bundled. Only the
-             variants that bundle an analyzer use the dependency plugin; an empty value would
-             select every group. -->
+        <!-- The SonarSource groups whose legal files are bundled. Their sources are not bundled:
+             the notices link to them. Only the variants that bundle an analyzer use the
+             dependency plugin; an empty value would select every group. -->
         <sonar.analyzer.groups />
+
+        <!-- The LGPL-3.0 and GPL-3.0 texts, for the variants that bundle LGPL-3.0 code (library
+             and plugin-with-go). They set it to ${project.basedir}/../src/lgpl-resources; the
+             default names a directory that does not exist, so nothing is added. -->
+        <crypto.lgplResources>${project.basedir}/src/no-lgpl-resources</crypto.lgplResources>
 
         <sonar.jreMinVersion>17</sonar.jreMinVersion>
     </properties>
@@ -40,7 +45,7 @@
                 <directory>src/main/resources-filtered</directory>
                 <filtering>true</filtering>
             </resource>
-            <!-- Legal files and sources of the bundled analyzers, see the dependency plugin. -->
+            <!-- Legal files of the bundled analyzers, see the dependency plugin. -->
             <resource>
                 <directory>${project.build.directory}/analyzer-resources</directory>
             </resource>
@@ -58,6 +63,9 @@
                     <include>META-INF/third-party/notices/**</include>
                 </includes>
                 <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${crypto.lgplResources}</directory>
             </resource>
             <resource>
                 <directory>${maven.multiModuleProjectDirectory}</directory>
@@ -134,22 +142,6 @@
                                 <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
                                 <includes>**/*LICENSE*,**/*NOTICE*,**/*license*,**/*notice*,**/license/**,**/licenses/**,about_files/**,about.html</includes>
                                 <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers</outputDirectory>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>include-analyzer-sources</id>
-                            <phase>generate-resources</phase>
-                            <goals>
-                                <goal>copy-dependencies</goal>
-                            </goals>
-                            <configuration>
-                                <!-- Plugin sources alone omit the frontends. Include the sources
-                                     of every resolved analyzer module. -->
-                                <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
-                                <includeScope>runtime</includeScope>
-                                <classifier>sources</classifier>
-                                <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
-                                <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzer-sources</outputDirectory>
                             </configuration>
                         </execution>
                     </executions>

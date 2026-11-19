@@ -35,14 +35,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
-                    <!-- No analyzer is bundled, so there are no analyzer legal files or sources
-                         to copy (an empty group list would select every group). -->
+                    <!-- No analyzer is bundled, so there are no analyzer legal files to copy
+                         (an empty group list would select every group). -->
                     <execution>
                         <id>preserve-analyzer-notices</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>include-analyzer-sources</id>
                         <phase>none</phase>
                     </execution>
                 </executions>
