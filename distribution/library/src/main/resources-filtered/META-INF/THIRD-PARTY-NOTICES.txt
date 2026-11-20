@@ -109,10 +109,11 @@ available from its release source tree.
 
 Packaging
 
-The modules above are combined with this plugin using the Maven Shade plugin.
-The SonarSource modules are included whole; of the other dependencies, classes
-this plugin and the bundled modules do not use are left out (minimizeJar).
-Package names are not relocated. The bundled components are not modified.
+The modules above are combined with this library using the Maven Shade plugin.
+The SonarSource modules are included whole and unmodified, with one exception:
+their embedded copy of Jackson is left out. Jackson and CycloneDX core are not
+bundled; they are Maven dependencies of this library. Package names are not
+relocated.
 The build configuration is distribution/library/pom.xml and
 distribution/pom.xml in the matching release at
 https://github.com/cbomkit/sonar-cryptography. To use a modified version of an

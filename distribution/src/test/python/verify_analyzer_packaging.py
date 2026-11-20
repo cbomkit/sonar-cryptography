@@ -14,7 +14,8 @@ The checks follow the variants plan
   sources links and the LGPL-3.0 and GPL-3.0 texts.
 * library: the LGPL-3.0 sonar-java and sonar-python (and the EPL-2.0
   jdt-package) are bundled whole with their legal files and links to their
-  sources JARs; no Go, no Plugin-RequirePlugins and no SSAL text.
+  sources JARs; no Go and no SSAL text. It is a plain JAR: no plugin manifest
+  entries and no plugin class.
 
 No variant bundles analyzer sources: the notices link to them instead.
 
@@ -39,6 +40,7 @@ SOURCES_DIR = THIRD_PARTY + "analyzer-sources/"
 LEGAL_DIR = THIRD_PARTY + "analyzers/"
 NOTICES_DIR = THIRD_PARTY + "notices/"
 SERVICE = "META-INF/services/com.ibm.output.ILanguageModule"
+PLUGIN_CLASS = "com.ibm.plugin.CryptographyPlugin"
 MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/"
 # "SSAL" is matched as a word and case-sensitively: lower-case "ssal" is a common
 # Hungarian suffix, and Unicode data files contain names such as "WASSALLAM".
@@ -75,6 +77,11 @@ VARIANTS = {
         "directory": "library",
         "languages": ["Java", "Python", "C#"],
         "relocations": {},
+        # A plain JAR for embedding: no plugin manifest entries and no plugin class.
+        "sonarqube_plugin": False,
+        # Jackson embedded in sonar-python-plugin is left to the embedding tool's version
+        # (distribution/library/pom.xml).
+        "unbundled": ("com/fasterxml/jackson/",),
     },
 }
 LANGUAGE_CLASSES = {
@@ -281,10 +288,15 @@ class Checker:
         )
         self.ok("no bundled sources")
 
-        assert self.manifest.get("Plugin-Key") == "crypto", "Plugin-Key"
-        plugin_class = self.manifest.get("Plugin-Class")
-        assert plugin_class == "com.ibm.plugin.CryptographyPlugin", "Plugin-Class " + str(plugin_class)
-        assert plugin_class.replace(".", "/") + ".class" in self.name_set, "Plugin class missing"
+        if self.config.get("sonarqube_plugin", True):
+            assert self.manifest.get("Plugin-Key") == "crypto", "Plugin-Key"
+            plugin_class = self.manifest.get("Plugin-Class")
+            assert plugin_class == PLUGIN_CLASS, "Plugin-Class " + str(plugin_class)
+            assert plugin_class.replace(".", "/") + ".class" in self.name_set, "Plugin class missing"
+        else:
+            entries = [key for key in self.manifest if key.startswith(("Plugin-", "Sonar"))]
+            assert not entries, "Plugin manifest entries: " + ", ".join(entries)
+            assert PLUGIN_CLASS.replace(".", "/") + ".class" not in self.name_set, "Plugin class bundled"
         services = [
             line.strip()
             for line in self.zip.read(SERVICE).decode().splitlines()
@@ -294,7 +306,10 @@ class Checker:
         assert sorted(services) == sorted(expected), "Language modules " + str(services)
         for service in services:
             assert service.replace(".", "/") + ".class" in self.name_set, "Missing " + service
-        self.ok("manifest, plugin class and language modules " + ", ".join(self.config["languages"]))
+        self.ok(
+            ("manifest, plugin class" if self.config.get("sonarqube_plugin", True) else "no plugin manifest or plugin class")
+            + " and language modules " + ", ".join(self.config["languages"])
+        )
 
         assert not any(name.startswith("com/google/googlejavaformat/") for name in self.names), (
             "google-java-format bundled"
@@ -466,8 +481,6 @@ class Checker:
         )
 
     def check_library(self):
-        assert "Plugin-RequirePlugins" not in self.manifest, "Plugin-RequirePlugins in the library"
-        self.ok("no Plugin-RequirePlugins")
         self.check_no_go()
         for text in ("LGPL-3.0.txt", "GPL-3.0.txt"):
             assert_same(self.zip, THIRD_PARTY + text, self.lgpl / text)
@@ -478,7 +491,12 @@ class Checker:
         bundled = [b for b in self.bundled_dependencies() if b[0].startswith("org.sonarsource.")]
         assert bundled, "No SonarSource artifacts bundled"
         linked = {}
-        for group, artifact, version, _, total, kept in bundled:
+        unbundled = self.config.get("unbundled", ())
+        assert not any(name.startswith(unbundled) for name in self.names if is_class(name)), (
+            "Classes bundled that must stay external: " + ", ".join(unbundled)
+        )
+        for group, artifact, version, file, total, kept in bundled:
+            total -= sum(1 for name in classes_of(file) if name.startswith(unbundled))
             assert kept == total, artifact + ": " + str(kept) + " of " + str(total) + " classes bundled"
             family = licence_family(pom_licence(self.repository, pom_path(self.repository, group, artifact, version)))
             expected = "EPL" if artifact == "jdt-package" else "LGPL"

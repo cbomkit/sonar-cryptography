@@ -68,8 +68,8 @@ Version 2.0.0 is not released yet. To try it, build the JAR yourself (see [Build
 install `sonar-cryptography-plugin-<version>.jar` in the same way. This variant bundles no
 SonarSource analyzer: it uses the Java and Python analyzers already installed in SonarQube, and
 SonarQube does not load it unless both are installed in the versions listed under
-[Version compatibility](#version-compatibility). All variants have the plugin key `crypto`, so
-install only one of them.
+[Version compatibility](#version-compatibility). Both plugin variants have the plugin key
+`crypto`, so install only one of them.
 
 ## Using
 
@@ -237,8 +237,9 @@ The build produces one of three variants, selected by a Maven profile:
   SonarQube and has no Go support.
 - **`with-go`** is the plugin with Go support. It bundles the SSAL-licensed sonar-go; see
   [below](#building-the-plugin-with-go-support).
-- **`lib`** is meant to be embedded in another tool, not installed in SonarQube. It bundles the
-  last LGPL-3.0 releases of the Java and Python analyzers and has no Go support.
+- **`lib`** is meant to be embedded in another tool, not installed in SonarQube: it is a plain
+  JAR without the plugin class. It bundles the last LGPL-3.0 releases of the Java and Python
+  analyzers and has no Go support.
 
 Naming a profile with `-P` turns the default `plugin` profile off, so `-Pwith-go` and `-Plib`
 build only their own variant; `-Pplugin,lib` builds both. Do not combine `plugin` and `with-go`:
@@ -425,5 +426,6 @@ sonar-analyzer-commons sources JARs.
 > private use under the SSAL terms; do not redistribute it or offer it as a
 > service. It is never published.
 
-All three use the plugin key `crypto`, so only one of them can be installed in a
-SonarQube instance at a time.
+The two plugin variants use the plugin key `crypto`, so only one of them can be
+installed in a SonarQube instance at a time. The library is a plain JAR, not a
+SonarQube plugin: it has no plugin manifest entries and no plugin class.

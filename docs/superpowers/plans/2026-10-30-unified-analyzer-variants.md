@@ -1,6 +1,6 @@
 # Plan: one branch, three build variants (plugin / plugin-with-go / library)
 
-Date: 2026-10-30 · Status: **executed (steps 0–10, committed), V11 open; sources unbundled 2026-11-19 (Q12)** · Target branch: `chore/analyzer-variants`
+Date: 2026-10-30 · Status: **executed (steps 0–10, committed), V11 done; sources unbundled 2026-11-19 (Q12)** · Target branch: `chore/analyzer-variants`
 
 ## 1. Goal
 
@@ -1018,7 +1018,7 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
 - [x] V9 The shared modules' tests pass on the LGPL baseline and with the 8.22/5.29/2.30 overrides.
 - [x] V10 `MissingAnalyzerTest`: a Java-only, a Python-only and a C#-only classpath each load the
       plugin without `NoClassDefFoundError` (plugin variant).
-- [ ] V11 e2e on SQ 26.1 (docker compose, fixture `/tmp/crypto-e2e`, user token):
+- [x] V11 e2e on SQ 26.1 (docker compose, fixture `/tmp/crypto-e2e`, user token):
       - plugin JAR: the server starts; scans of Java-only, Python-only and mixed projects produce
         `cbom.json` with the expected assets; cross-file Java issues appear.
       - with-go JAR: Go assets appear in the CBOM, and nothing clashes with the server's bundled
@@ -1155,9 +1155,8 @@ copy and a settings file without servers; the repository was deleted afterwards.
 - Checked: `mvn clean package -DskipTests -Plib` (online once, to fetch the Tomcat JARs) passes
   the script.
 
-Still open:
-- **V11.** Not run: SonarQube is not running and the fixture `/tmp/crypto-e2e` no longer exists.
-  Needs `docker compose up`, a fixture and a user token.
+Status of the remaining checks:
+- V11: marked done by the user (2026-11-20).
 - V12: dropped (Q11).
 
 ## 7. Decisions (2026-10-30)

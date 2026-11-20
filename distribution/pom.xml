@@ -12,8 +12,9 @@
     <!-- Shared packaging configuration of the three variants. The variants are its children:
          distribution/plugin (profile plugin), distribution/plugin-with-go (profile with-go) and
          distribution/library (profile lib). They contain no code: each one shades plugin-core and
-         the language modules into a SonarQube plugin JAR and adds its own legal files.
-         All three use plugin key sonar-crypto-plugin, so only one can be installed at a time. -->
+         the language modules into one JAR and adds its own legal files. The two plugin variants
+         are SonarQube plugin JARs with plugin key crypto, so only one can be installed at a time;
+         the library is a plain JAR without the plugin class. -->
     <artifactId>distribution</artifactId>
     <packaging>pom</packaging>
 
