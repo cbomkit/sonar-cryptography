@@ -12,7 +12,7 @@ public class BcBlockCipherMacTestFile {
         byte[] input = "Hello, BouncyCastle!".getBytes();
 
         try {
-            byte[] mac = calculateMac(new AESEngine(), 128, key, input); // Noncompliant {{AES}}
+            byte[] mac = calculateMac(new AESEngine(), 128, key, input); // Noncompliant {{(BlockCipher) AES}}
             System.out.println("MAC: " + Hex.toHexString(mac));
         } catch (Exception e) {
             e.printStackTrace();
@@ -22,7 +22,7 @@ public class BcBlockCipherMacTestFile {
     public static byte[] calculateMac(
             BlockCipher cipher, int macSizeInBits, byte[] key, byte[] input) throws Exception {
         BlockCipherMac mac =
-                new BlockCipherMac(cipher, macSizeInBits); // Noncompliant {{BlockCipherMac}}
+                new BlockCipherMac(cipher, macSizeInBits); // Noncompliant {{(Mac) AES}}
         CipherParameters params = new KeyParameter(key);
 
         mac.init(params);
