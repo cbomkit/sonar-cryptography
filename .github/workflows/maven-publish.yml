@@ -1,31 +1,74 @@
-# PUBLISHING IS DISABLED.
+# Publishes a release.
 #
-# Nothing is published for the time being: no upload to GitHub Packages, no
-# release assets. This workflow has no release trigger, no packages permission
-# and no deploy command. A manual run only prints a notice and fails.
-# See docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md, step 9.
+# Runs when a release is published, or by hand for an existing release tag
+# (for example to retry a failed run). It builds the default plugin and the
+# library from the tag, then:
+#   - attaches the plugin JAR to the GitHub release, where the README tells
+#     users to download it. The plugin is not deployed to any Maven repository;
+#   - deploys the library with `mvn deploy -Plib` to GitHub Packages (the
+#     `github` repository in pom.xml's distributionManagement), together with
+#     the parent pom, the distribution pom, plugin-core and the shared modules
+#     it depends on.
 #
-# Intended release command, for when publishing is approved (do not enable
-# without that decision):
-#   mvn --batch-mode deploy -Pplugin,lib
-# It would publish the parent sonar-cryptography, the shared modules,
-# plugin-core, distribution (pom), sonar-cryptography-plugin and
-# sonar-cryptography-lib. sonar-cryptography-plugin-with-go (SSALv1) and go
-# are never published (maven.deploy.skip=true).
+# The with-go variant bundles SSALv1-licensed sonar-go. Its JAR is for private
+# use only: it is not built here, and go and plugin-with-go also set
+# maven.deploy.skip=true.
 
-name: Publish package to GitHub Packages (disabled)
+name: Publish release
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to publish'
+        required: true
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
-    - name: Publishing is disabled
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ env.TAG }}
+    # setup-java writes a settings.xml with server id `github` that reads
+    # GITHUB_ACTOR and GITHUB_TOKEN, which the deploy step provides.
+    - name: Set up JDK 17
+      uses: actions/setup-java@v6
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    # Releases are tagged with the plain project version (for example 1.7.0).
+    # Stop before building if pom.xml still has another version, such as a
+    # -SNAPSHOT, so a wrongly versioned package is never published.
+    - name: Check the project version matches the tag
       run: |
-        echo "Publishing is disabled until the variant release is approved; see docs/superpowers/plans/2026-10-30-unified-analyzer-variants.md step 9."
-        exit 1
+        version=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+        if [ "$version" != "${TAG#v}" ]; then
+          echo "pom.xml version $version does not match release tag $TAG"
+          exit 1
+        fi
+    - name: Build with Maven
+      run: mvn -B clean package -Pplugin,lib
+    - name: Verify analyzer redistribution materials
+      run: |
+        python3 distribution/src/test/python/verify_analyzer_packaging.py --variant plugin distribution/plugin/target/sonar-cryptography-plugin-*.jar
+        python3 distribution/src/test/python/verify_analyzer_packaging.py --variant library distribution/library/target/sonar-cryptography-lib-*.jar
+    # Tests already ran in the build step.
+    - name: Deploy the library to GitHub Packages
+      run: mvn -B deploy -Plib -DskipTests
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Attach the plugin JAR to the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release upload "$TAG" distribution/plugin/target/sonar-cryptography-plugin-*.jar --clobber

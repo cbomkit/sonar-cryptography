@@ -19,11 +19,12 @@ There is **one root `pom.xml`**. The variant is chosen with a Maven profile:
 The `with-go` profile is meant for users who build a custom plugin themselves. It must warn
 that the resulting JAR contains SSAL-licensed code that comes with use restrictions.
 
-Meant to be published later to Maven and attached to releases: `sonar-cryptography-plugin` and
-`sonar-cryptography-lib` (plus the parent and the shared modules they depend on), in one run:
-`mvn deploy -Pplugin,lib`. `sonar-cryptography-plugin-with-go` is never published.
-**For now nothing is published** (decided 2026-11-03): this plan only prepares and checks the
-release run with a local dry run into a file repository (step 9).
+Publishing (decided 2026-11-21, Q15, step 9.6): when a GitHub release is published,
+`maven-publish.yml` attaches the `sonar-cryptography-plugin` JAR to the release (the plugin is not
+deployed to any Maven repository) and deploys `sonar-cryptography-lib` with `mvn deploy -Plib` to
+GitHub Packages, with the parent and the modules it depends on.
+`sonar-cryptography-plugin-with-go` is never published. Until 2026-11-21 nothing was published
+(decided 2026-11-03); steps 9.1–9.5 record that state.
 
 **The library is for embedding in another tool**, not for installing in SonarQube (decision Q11).
 The plan **creates it untested**: it is built, packaged and licence-checked, but its runtime
@@ -931,6 +932,29 @@ The only deploy that may run is the local dry run in 9.3, into a file repository
         568, `-Plib` 516, each variant passes the verify script; override `test` 516; all
         BUILD SUCCESS.
   - [x] User commits step 9 (`c1c1778e`).
+- 9.6 Publishing enabled (2026-11-21, Q15; supersedes 9.2 and 9.5). `maven.yml` is unchanged
+  (9.1 still holds: no JAR upload from CI). `maven-publish.yml` ("Publish release"):
+  - Triggers: `release: published`, and `workflow_dispatch` with a required `tag` input to retry a
+    release. `permissions: contents: write` (release asset) and `packages: write` (deploy).
+  - One job: check out the tag; fail unless the `pom.xml` version equals the tag (leading `v`
+    stripped), so a `-SNAPSHOT` is never published; `mvn -B clean package -Pplugin,lib`; the
+    verify script for `plugin` and `library`; `mvn -B deploy -Plib -DskipTests`;
+    `gh release upload "$TAG" distribution/plugin/target/sonar-cryptography-plugin-*.jar
+    --clobber`.
+  - The plugin goes only to the release, where the README tells users to download it. Releases
+    1.4.4–1.6.1 had the JAR uploaded by hand (uploader is a user, not `github-actions[bot]`);
+    1.7.0 has none. The `mvn deploy` on `main` published the plugin to GitHub Packages, which
+    nothing uses.
+  - with-go is not built in this workflow and still has `maven.deploy.skip=true`.
+  - Progress (2026-11-21). Nothing was published.
+    - [x] Workflow parses as YAML; `help:evaluate` prints the project version.
+    - [x] Dry run `mvn -B deploy -Plib -DskipTests -DaltDeploymentRepository=dry::file:///tmp/...`
+          deploys once each: `sonar-cryptography`, `distribution`, the 9 shared modules,
+          `plugin-core` and `sonar-cryptography-lib`; not `sonar-cryptography-plugin`, `go` or
+          `sonar-cryptography-plugin-with-go`. Dry-run repository deleted.
+    - [x] `gh` is preinstalled on the Ubuntu 24.04 and 26.04 runner images (GitHub CLI 2.104.0).
+    - [x] AGENTS.md publishing sentence updated.
+    - [ ] First real release run (needs a release whose tag equals the `pom.xml` version).
 
 ### Step 10 — Documentation
 - README: build section (`mvn clean package`, `-Pwith-go`, `-Plib`; do not combine `plugin` and
@@ -1167,7 +1191,7 @@ Status of the remaining checks:
 | Q2 | SSAL gate for with-go | A warning is enough; no opt-in property. | D5 |
 | Q3 | Variant described by the committed `bom.json` | The default plugin variant. | 8.3, V16 |
 | Q4 | Parent POM name | ~~Rename to `pom-parent.xml`~~, superseded by Q6. | — |
-| Q5 | Publish the library | Yes: Maven and release asset, **but not yet** (2026-11-03): nothing is published until the user decides; only a local dry run. | §1, 9.2, V15 |
+| Q5 | Publish the library | Yes: Maven and release asset, **but not yet** (2026-11-03): nothing is published until the user decides; only a local dry run. Superseded by Q15. | §1, 9.2, V15 |
 | Q6 | Three `pom-*.xml` files or profiles | One root `pom.xml` with the profiles `plugin` (default), `with-go` and `lib`. The profiles only select modules. | §1, D1, §4, step 5, 9.1, 9.2, V1, V8a |
 | Q7 | analyzer-commons version for Go | Try 2.14.0.3087 first; switch `go` to 2.30.0.5193 only if necessary. | §2, D5, 4.2, 4.4, V5a |
 | Q8 | jdt-package (EPL-2.0) in the library | Bundle its object code like the other analyzer modules, and include `EPL-2.0.txt`. `GPL-3.0.txt` stays, because LGPL-3.0 §4(b) requires a copy of the GPL. ~~Also bundle its sources JAR (which needs the licence text, EPL §3.2(b)).~~ Superseded by Q12: its sources JAR is linked from the notice, not bundled. | §1, D3, §4, 6.3, 7.1, V4a |
@@ -1177,6 +1201,7 @@ Status of the remaining checks:
 | Q12 | Analyzer sources in the JARs (2026-11-19) | Do not bundle any sources. The `include-analyzer-sources` (dependency plugin) and `include-go-release-source` (antrun) executions are removed, so no JAR has `META-INF/third-party/analyzer-sources/`. Each variant's `THIRD-PARTY-NOTICES.txt` links instead to every bundled module's Maven Central sources JAR and to the release source tree on GitHub (for sonar-go also the complete release ZIP). `verify_analyzer_packaging.py` checks that no sources are bundled and that every bundled SonarSource artifact's sources URL is in the notice. | D3, 6.3, step 7, V4, V4a, V4b |
 | Q13 | LGPL-3.0 classes inside sonar-go (2026-11-19) | sonar-go embeds sonar-analyzer-commons and sonar-xml-parsing 2.21.0.4626, LGPL-3.0 by sonar-go's own legal files. The with-go notice names them as LGPL-3.0 with their sources links, and the JAR has `LGPL-3.0.txt` and `GPL-3.0.txt` (shared with the library in `distribution/src/lgpl-resources/`). The default plugin bundles no LGPL code and needs no LGPL notice. | §1, D5, step 7, V5 |
 | Q14 | Apache Tomcat inside sonar-java-plugin (2026-11-19) | The library keeps Tomcat 9.0.96's LICENSE (with the CDDL text for the Java EE schemas) and NOTICE, unpacked from the Tomcat artifacts, and names Tomcat and the CDDL schemas in its notice. The script checks both. | D3, step 7, V4 |
+| Q15 | Publishing (2026-11-21) | On a published GitHub release: the plugin JAR is attached to the release (no Maven deploy of the plugin); the library is deployed to GitHub Packages with `mvn deploy -Plib`. with-go is never published. | §1, 9.6 |
 
 No open questions remain in this table; see the open findings in §9. §9 records the plan review of 2026-11-02, before execution.
 
