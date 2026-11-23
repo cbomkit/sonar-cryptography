@@ -101,19 +101,6 @@ public final class OpenSslCipher extends DetectionRuleSet<CSharpTree> {
     }
 
     /**
-     * Every {@code const EVP_CIPHER *EVP_<name>(void)} the table knows, in one rule.
-     *
-     * <p>One rule rather than one per function, because the value that tells them apart is the
-     * method name itself, which the finding already carries: a detection's {@code
-     * DetectionLocation} is built from the matched invocation and its first keyword is that
-     * invocation's method name (see {@code CSharpTranslator#getDetectionContextFrom}; the CBOM
-     * writer uses the same keyword as a finding's additional context). {@code
-     * CSharpOpenSslContextTranslator} looks that name up in {@link OpenSslApi}, which is also where
-     * this rule takes its method names from, so the matched set and the translated set cannot
-     * diverge. Writing out 146 near-identical rules would say nothing more and would be 146 rules
-     * evaluated against every statement of every C# file in a scan.
-     */
-    /**
      * One rule per function, built in a loop from the same table the translator reads -- every
      * EVP_CIPHER function OpenSSL ships, each carrying its own name as the action constant. Written
      * this way rather than as one rule over the whole name list so that the matched function
