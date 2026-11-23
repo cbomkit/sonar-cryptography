@@ -935,6 +935,9 @@ public final class CSharpTreeConverter {
                 if (isStatementWorthy(initializerTree)) {
                     statements.add(initializerTree);
                 }
+                if (initializerTree == null) {
+                    initializerTree = targetTypedCreation(initCtx.expression());
+                }
             }
             currentScope.define(
                     name,
@@ -1033,6 +1036,9 @@ public final class CSharpTreeConverter {
                 CSharpTree value = convertExpression(rhs, currentScope, name);
                 if (isStatementWorthy(value)) {
                     statements.add(value);
+                }
+                if (value == null) {
+                    value = targetTypedCreation(rhs);
                 }
                 currentScope.recordAssignment(name, value);
                 return null;
@@ -1148,6 +1154,43 @@ public final class CSharpTreeConverter {
     /** Whether a child of a member-access chain is the null-forgiving operator {@code !}. */
     private static boolean isNullForgiving(@Nullable ParseTree child) {
         return child instanceof TerminalNode terminal && "!".equals(terminal.getText());
+    }
+
+    /**
+     * Whether an expression is a target-typed creation, {@code new()} or {@code new(args)} (C# 9).
+     * Its type is not written, so {@link #convertObjectCreationFromStart} reports no creation for
+     * it, but it certainly produces an object -- which is all a presence-based parameter asks (see
+     * {@code CSharpDetectionEngine#isCreatedObject}). An anonymous object, an array form and a
+     * creation followed by a member access or call are not this shape.
+     */
+    private static boolean isTargetTypedCreation(@Nonnull CSharpParser.ExpressionContext expr) {
+        if (!(unwrapSingleChildChain(expr)
+                        instanceof CSharpParser.Primary_expressionContext primary)
+                || primary.getChildCount() != 1
+                || !(primary.primary_expression_start()
+                        instanceof CSharpParser.ObjectCreationExpressionContext creation)) {
+            return false;
+        }
+        final boolean otherForm =
+                creation.anonymous_object_initializer() != null
+                        || !creation.rank_specifier().isEmpty()
+                        || creation.array_initializer() != null;
+        return creation.type_() == null && !otherForm;
+    }
+
+    /**
+     * The value recorded for a local whose initializer or assignment did not convert: a marker for
+     * a target-typed creation, otherwise {@code null} as before.
+     */
+    @Nullable private static CSharpTree targetTypedCreation(@Nonnull CSharpParser.ExpressionContext expr) {
+        if (!isTargetTypedCreation(expr)) {
+            return null;
+        }
+        return new CSharpUnknownTree(
+                expr.getStart().getLine(),
+                expr.getStart().getCharPositionInLine(),
+                expr.getText(),
+                true);
     }
 
     /** Only invocation/creation/synthetic-setter trees are worth scanning as a "statement". */
@@ -2142,7 +2185,8 @@ public final class CSharpTreeConverter {
                     new CSharpUnknownTree(
                             expr.getStart().getLine(),
                             expr.getStart().getCharPositionInLine(),
-                            expr.getText());
+                            expr.getText(),
+                            isTargetTypedCreation(expr));
         }
         // A crypto creation written as an argument of another call is a call site in its own
         // right: `new Wrapper(RSA.Create(2048))` and `Register(RSA.Create(2048))` are how wrapper

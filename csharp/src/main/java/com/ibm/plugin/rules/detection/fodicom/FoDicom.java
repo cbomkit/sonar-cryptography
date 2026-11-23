@@ -62,10 +62,14 @@ import javax.annotation.Nonnull;
  * </ul>
  *
  * <p>A non-null initiator is itself the statement -- fo-dicom's own documentation says TLS is off
- * exactly when it is null -- so the presence of an argument in that slot reports TLS, and no
- * further value is read from it. A written {@code null} resolves to no value at all and reports
- * nothing, which is the same answer. An initiator a consumer wrote themselves still binds by
- * position; only a value that cannot be a {@code bool} ever reaches this parameter.
+ * exactly when it is null -- so an object in that slot reports TLS, and no further value is read
+ * from it. The engine only takes the argument for an object when it is one for certain: a creation
+ * ({@code new DefaultTlsInitiator()}, target-typed {@code new()}) or a local assigned once from
+ * one. A written {@code null}, {@code default}, a local holding null, and an initiator that arrives
+ * as a method parameter, field or call result may all be null, so they report DICOM with nothing
+ * beneath -- the same answer as a {@code useTls} flag passed in as a parameter. An initiator class
+ * a consumer wrote themselves still binds by position; only a value that cannot be a {@code bool}
+ * ever reaches this parameter.
  *
  * <p>This matters because the two cases are otherwise indistinguishable in the output: before,
  * {@code Create(host, port, tlsInitiator, ...)} and {@code Create(host, port, false, ...)} both

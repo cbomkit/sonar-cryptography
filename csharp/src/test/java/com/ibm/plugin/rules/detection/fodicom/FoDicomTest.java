@@ -44,10 +44,13 @@ import org.junit.jupiter.api.Test;
  * directly, and the {@code ITlsInitiator} by being there at all, since fo-dicom's documentation
  * says TLS is off exactly when the initiator is null.
  *
- * <p>Two counter-checks guard the slot from either side. A written {@code null} must not read as
- * TLS, and a decision that arrives as a method parameter is not knowable, so that connection is
- * reported as DICOM with nothing beneath rather than as either secured or unsecured. The flag cases
- * also prove the calling AE title never slides into the initiator slot: were it to, every unsecured
+ * <p>Counter-checks guard the slot from either side. Only an initiator that certainly is an object
+ * -- constructed in the argument, or a local assigned once from a creation -- reads as TLS. A
+ * written {@code null}, {@code default}, a local holding null, a reassigned local, a conditional, a
+ * call result and an initiator handed in as a method parameter may all be null; like a {@code
+ * useTls} flag handed in as a parameter, they are not knowable, so those connections are reported
+ * as DICOM with nothing beneath rather than as either secured or unsecured. The flag cases also
+ * prove the calling AE title never slides into the initiator slot: were it to, every unsecured
  * association in the fixture would read as TLS.
  */
 class FoDicomTest extends TestBase {
@@ -63,19 +66,30 @@ class FoDicomTest extends TestBase {
                         "DICOM", // Create(..., false, ...)
                         "DICOM+TLS", // Create(..., true, ...)
                         "DICOM", // host and AE titles from fields, useTls still false
-                        "DICOM+TLS", // the ITlsInitiator overload
+                        "DICOM", // an ITlsInitiator parameter: may be null, like useTls below
                         "DICOM+TLS", // a DefaultTlsInitiator held in a var
                         "DICOM+TLS", // a DefaultTlsInitiator constructed in the argument
-                        "DICOM+TLS", // a consumer's own ITlsInitiator implementation
+                        "DICOM", // a consumer's own initiator class, as a parameter
+                        "DICOM+TLS", // a consumer's own initiator class, constructed
+                        "DICOM+TLS", // a target-typed new() held in a local
+                        "DICOM", // a local holding null
+                        "DICOM", // tlsInitiator: default
+                        "DICOM", // default(ITlsInitiator)
+                        "DICOM", // (ITlsInitiator)null
+                        "DICOM", // a call result: may be null (known recall gap)
+                        "DICOM", // a local assigned twice, once with null
+                        "DICOM", // a conditional with a null branch
                         "DICOM", // a written null: fo-dicom reads that as TLS off
                         "DICOM+TLS", // keyword arguments out of order
-                        "DICOM+TLS", // new DicomClient(...) with an initiator
+                        "DICOM+TLS", // new DicomClient(...) with a constructed initiator
+                        "DICOM", // new DicomClient(...) with an initiator parameter
                         "DICOM", // new DicomClient(...) with a written null
                         "DICOM", // useTls is a method parameter: nothing invented
                         // The listening side.
                         "DICOM", // a server on the plaintext port
                         "DICOM", // the port from a field, so no parameter may be demanded
-                        "DICOM+TLS", // tlsAcceptor: as a keyword, past a keyword logger
+                        "DICOM+TLS", // tlsAcceptor: a constructed local, past a keyword logger
+                        "DICOM", // tlsAcceptor: a parameter, which may be null
                         "DICOM+TLS", // a DefaultTlsAcceptor built in the argument
                         // No entry for the injected-factory call: a receiver held in a variable is
                         // matched by its text, not its declared type, so that call site yields

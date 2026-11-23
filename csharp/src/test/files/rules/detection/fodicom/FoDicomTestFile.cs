@@ -35,32 +35,100 @@ public class FoDicomUsage
     }
 
     /*
-     * The sibling overload. A non-null initiator is the statement that TLS is on -- fo-dicom's own
-     * documentation says TLS is off exactly when it is null -- so this has to read as TLS and not
-     * as a bare DICOM association.
+     * Counter-check, the sibling overload with the initiator handed in. A non-null initiator is the
+     * statement that TLS is on -- fo-dicom's own documentation says TLS is off exactly when it is
+     * null -- but a parameter may be null, so this is DICOM with nothing beneath, exactly like the
+     * useTls flag handed in as a parameter below.
      */
     public void InitiatorOverload(ITlsInitiator tlsInitiator)
     {
         var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
     }
 
-    /* The form fo-dicom's own tests write: the concrete class, held in a var. */
+    /* The form fo-dicom's own tests write: the concrete class, held in a var. TLS. */
     public void ConcreteInitiator()
     {
         var tlsInitiator = new DefaultTlsInitiator();
         var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
     }
 
-    /* Constructed in the argument itself. */
+    /* Constructed in the argument itself. TLS. */
     public void InlineInitiator()
     {
         var client = DicomClientFactory.Create("pacs.example.org", 2762, new DefaultTlsInitiator(), "SCU", "STORESCP");
     }
 
-    /* An initiator a consumer wrote themselves still occupies the slot. */
+    /* Counter-check: a consumer's own initiator class, but handed in, so it may be null. */
     public void OwnInitiator(MyTlsInitiator tlsInitiator)
     {
         var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
+    }
+
+    /* A consumer's own initiator class, constructed: the slot is not restricted to fo-dicom's. TLS. */
+    public void OwnInitiatorConstructed()
+    {
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, new MyTlsInitiator(), "SCU", "STORESCP");
+    }
+
+    /* A target-typed creation held in a local: the type is not written, but it is an object. TLS. */
+    public void TargetTypedInitiator()
+    {
+        DefaultTlsInitiator tlsInitiator = new();
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
+    }
+
+    /* Counter-check: a local holding null is a written null one step removed. */
+    public void NullVariable()
+    {
+        ITlsInitiator tlsInitiator = null;
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
+    }
+
+    /* Counter-check: the default literal of a reference type is null. */
+    public void DefaultLiteral()
+    {
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator: default, "SCU", "STORESCP");
+    }
+
+    /* Counter-check: so is default(T). */
+    public void DefaultOfType()
+    {
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, default(ITlsInitiator), "SCU", "STORESCP");
+    }
+
+    /* Counter-check: a cast null is still null. */
+    public void CastNull()
+    {
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, (ITlsInitiator)null, "SCU", "STORESCP");
+    }
+
+    /*
+     * Counter-check: a call result may be null. This one is not, and losing it is a known recall
+     * gap -- the engine does not look into what a method returns for this question.
+     */
+    public void InitiatorFromCall()
+    {
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, CreateInitiator(), "SCU", "STORESCP");
+    }
+
+    private static ITlsInitiator CreateInitiator() => new DefaultTlsInitiator();
+
+    /* Counter-check: a local assigned twice -- here once with null -- holds no single object. */
+    public void ReassignedVariable(bool secure)
+    {
+        ITlsInitiator tlsInitiator = new DefaultTlsInitiator();
+        if (!secure)
+        {
+            tlsInitiator = null;
+        }
+        var client = DicomClientFactory.Create("pacs.example.org", 2762, tlsInitiator, "SCU", "STORESCP");
+    }
+
+    /* Counter-check: a conditional is only an object on one branch. */
+    public void ConditionalInitiator(bool secure)
+    {
+        var client = DicomClientFactory.Create(
+            "pacs.example.org", 2762, secure ? new DefaultTlsInitiator() : null, "SCU", "STORESCP");
     }
 
     /*
@@ -80,10 +148,19 @@ public class FoDicomUsage
     }
 
     /*
-     * The constructor behind the factory. No flag overload exis s, so the initiator is the only
+     * The constructor behind the factory. No flag overload exists, so the initiator is the only
      * statement there is -- and it is called with all nine arguments.
      */
-    public void ConstructorWithInitiator(ITlsInitiator tlsInitiator, DicomClientOptions clientOptions,
+    public void ConstructorWithInitiator(DicomClientOptions clientOptions,
+        DicomServiceOptions serviceOptions, ILoggerFactory loggerFactory,
+        IAdvancedDicomClientConnectionFactory advancedFactory)
+    {
+        var client = new DicomClient("pacs.example.org", 2762, new DefaultTlsInitiator(), "SCU", "STORESCP",
+            clientOptions, serviceOptions, loggerFactory, advancedFactory);
+    }
+
+    /* Counter-check: the same constructor with the initiator handed in, which may be null. */
+    public void ConstructorWithInitiatorParameter(ITlsInitiator tlsInitiator, DicomClientOptions clientOptions,
         DicomServiceOptions serviceOptions, ILoggerFactory loggerFactory,
         IAdvancedDicomClientConnectionFactory advancedFactory)
     {
@@ -125,9 +202,17 @@ public class FoDicomUsage
 
     /*
      * The form fo-dicom's own TLS test writes, and the only TLS server call in fo-dicom and its
-     * sample repository: the acceptor as a keyword argument, past a keyword logger.
+     * sample repository: the acceptor as a keyword argument, past a keyword logger. TLS.
      */
-    public void TlsServerKeywordAcceptor(string ipAddress, int port, ITlsAcceptor tlsAcceptor, ILogger logger)
+    public void TlsServerKeywordAcceptor(string ipAddress, int port, ILogger logger)
+    {
+        var tlsAcceptor = new DefaultTlsAcceptor("./cert.p12", "pw");
+        var server = DicomServerFactory.Create<DicomCEchoProvider, DicomServer<DicomCEchoProvider>>(
+            ipAddress, port, logger: logger, tlsAcceptor: tlsAcceptor);
+    }
+
+    /* Counter-check: the same call with the acceptor handed in, which may be null. */
+    public void TlsServerAcceptorParameter(string ipAddress, int port, ITlsAcceptor tlsAcceptor, ILogger logger)
     {
         var server = DicomServerFactory.Create<DicomCEchoProvider, DicomServer<DicomCEchoProvider>>(
             ipAddress, port, logger: logger, tlsAcceptor: tlsAcceptor);

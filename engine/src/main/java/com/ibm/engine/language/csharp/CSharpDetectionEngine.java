@@ -37,6 +37,7 @@ import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
 import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
 import com.ibm.engine.language.csharp.tree.CSharpScope;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.language.csharp.tree.CSharpUnknownTree;
 import com.ibm.engine.language.csharp.tree.CSharpVariable;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.SizeFactory;
@@ -293,22 +294,28 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (parameter.is(DetectableParameter.class)) {
             DetectableParameter<CSharpTree> detectable =
                     (DetectableParameter<CSharpTree>) parameter;
+            if (detectable.getiValueFactory().isPresenceBased()) {
+                // The parameter says something by holding an object rather than by its value, so
+                // the factory is called once for the bound expression -- but only when the
+                // expression certainly is an object. For fo-dicom's TLS handlers null is precisely
+                // the argument that means the opposite, and it arrives in more shapes than a
+                // written literal: `default`, a local holding null, a parameter or call result that
+                // may be null. None of those is a statement, and reading one as TLS would be a
+                // guess. The value is not resolved first: a member access resolves to its own name
+                // and would otherwise reach the factory as a "value".
+                if (isCreatedObject(expression)) {
+                    final ResolvedValue<Object, CSharpTree> presence =
+                            new ResolvedValue<>(expression, expression);
+                    detectionStore.onReceivingNewDetection(
+                            new ValueDetection<>(presence, detectable, parentTree, parentTree));
+                } else if (!parameter.getDetectionRules().isEmpty()) {
+                    dispatchDependingParameter(parameter, expression);
+                }
+                return;
+            }
             List<ResolvedValue<Object, CSharpTree>> resolved =
                     resolveValuesInInnerScope(
                             Object.class, expression, detectable.getiValueFactory());
-            if (resolved.isEmpty()
-                    && detectable.getiValueFactory().isPresenceBased()
-                    && !(expression instanceof CSharpLiteralTree)) {
-                // The parameter says something by being there rather than by its value, so the
-                // factory is called once for the bound expression. A literal is excluded: the only
-                // literal that reaches such a parameter is `null`, and for fo-dicom's TLS handlers
-                // null is precisely the argument that means the opposite.
-                final ResolvedValue<Object, CSharpTree> presence =
-                        new ResolvedValue<>(expression, expression);
-                detectionStore.onReceivingNewDetection(
-                        new ValueDetection<>(presence, detectable, parentTree, parentTree));
-                return;
-            }
             if (resolved.isEmpty()) {
                 resolveValuesInOuterScope(expression, detectable);
                 // A parameter that declares both a value factory and depending rules falls back to
@@ -330,6 +337,39 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         } else if (!parameter.getDetectionRules().isEmpty()) {
             dispatchDependingParameter(parameter, expression);
         }
+    }
+
+    /**
+     * Whether an argument certainly holds an object, which is what a presence-based parameter (see
+     * {@link IValueFactory#isPresenceBased}) needs before it may report anything: an object
+     * creation ({@code new T(...)}, also cast or parenthesised, and the target-typed {@code
+     * new()}), or a local variable assigned exactly once, from such a creation.
+     *
+     * <p>Everything else may be null and so says nothing: a {@code null} or {@code default}
+     * literal, a local initialised with one, a reassigned local, a method parameter, a field, a
+     * call result, a conditional. A parameter that every call site in the file fills with a
+     * creation is still refused -- the converter records the agreed argument as its initializer,
+     * but a caller outside the file is invisible here.
+     */
+    private static boolean isCreatedObject(@Nonnull CSharpTree expression) {
+        if (isCreationExpression(expression)) {
+            return true;
+        }
+        if (!(expression instanceof CSharpIdentifierTree identifier)
+                || identifier.getScope() == null) {
+            return false;
+        }
+        final CSharpVariable variable = identifier.getScope().lookup(identifier.getName());
+        return variable != null
+                && variable.kind() == CSharpVariable.Kind.LOCAL
+                && variable.assignmentCount() == 1
+                && variable.initializer() != null
+                && isCreationExpression(variable.initializer());
+    }
+
+    private static boolean isCreationExpression(@Nonnull CSharpTree expression) {
+        return expression instanceof CSharpObjectCreationTree
+                || (expression instanceof CSharpUnknownTree unknown && unknown.isObjectCreation());
     }
 
     private void dispatchDependingParameter(

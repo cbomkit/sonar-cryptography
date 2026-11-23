@@ -37,7 +37,9 @@ public interface IValueFactory<T> extends Function<ResolvedValue<Object, T>, Opt
      * documents TLS as off exactly when the initiator is null, so an initiator in that slot is the
      * statement whatever object it happens to be. Such a factory ignores its input and returns a
      * constant, and the engine then calls it once for the expression that was bound, instead of
-     * never calling it at all.
+     * never calling it at all -- but only when that expression certainly is an object: a creation,
+     * or a local assigned once from one. An argument that may be null ({@code null}, {@code
+     * default}, a parameter, a field, a call result) is not a statement and reports nothing.
      *
      * <p>A factory may only answer yes when its answer does not depend on the input, and only where
      * the parameter is typed tightly enough that nothing else can bind there: the argument binder's
