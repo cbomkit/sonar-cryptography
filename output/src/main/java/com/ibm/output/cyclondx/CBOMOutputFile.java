@@ -74,6 +74,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -89,9 +92,11 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
+import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Service;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
+import org.cyclonedx.model.component.crypto.ProtocolProperties;
 import org.cyclonedx.model.component.crypto.enums.AssetType;
 import org.cyclonedx.model.component.crypto.enums.CryptoFunction;
 import org.cyclonedx.model.component.evidence.Occurrence;
@@ -106,6 +111,12 @@ public class CBOMOutputFile implements IOutputFile {
     @Nonnull private final Map<String, Component> components;
     @Nonnull private final Map<String, Dependency> dependencies;
 
+    /**
+     * Per component id, the distinct values of each detection property seen over all occurrences
+     * merged into that component (see {@link DetectionProperties}).
+     */
+    @Nonnull private final Map<String, Map<String, SortedSet<String>>> componentProperties;
+
     private final boolean behaviorsEnabled;
     @Nonnull private final BehaviorCollector behaviorCollector = new BehaviorCollector();
 
@@ -117,6 +128,7 @@ public class CBOMOutputFile implements IOutputFile {
         this.behaviorsEnabled = behaviorsEnabled;
         this.components = new HashMap<>();
         this.dependencies = new HashMap<>();
+        this.componentProperties = new HashMap<>();
     }
 
     @Override
@@ -194,7 +206,8 @@ public class CBOMOutputFile implements IOutputFile {
         if (optionalId.isEmpty()) {
             return null;
         }
-        addComponentAndDependencies(algorithm, optionalId.get(), parentBomRef, node);
+        addComponentAndDependencies(
+                algorithm, optionalId.get(), parentBomRef, node, node.getDetectionContext());
         return this.components.get(optionalId.get()).getBomRef();
     }
 
@@ -225,13 +238,16 @@ public class CBOMOutputFile implements IOutputFile {
         if (optionalId.isEmpty()) {
             return;
         }
-        addComponentAndDependencies(protocol, optionalId.get(), parentBomRef, node);
+        addComponentAndDependencies(
+                protocol, optionalId.get(), parentBomRef, node, node.getDetectionContext());
 
-        Dependency protocolDependency = dependencies.get(protocol.getBomRef());
+        // the component kept under this name: the one just built, or the one it was merged into
+        final Component kept = this.components.get(optionalId.get());
+        Dependency protocolDependency = dependencies.get(kept.getBomRef());
         if (protocolDependency != null) {
             List<String> cryptoRefs =
                     protocolDependency.getDependencies().stream().map(Dependency::getRef).toList();
-            protocol.getCryptoProperties().getProtocolProperties().setCryptoRefArray(cryptoRefs);
+            kept.getCryptoProperties().getProtocolProperties().setCryptoRefArray(cryptoRefs);
         }
     }
 
@@ -250,7 +266,8 @@ public class CBOMOutputFile implements IOutputFile {
         if (optionalId.isEmpty()) {
             return;
         }
-        addComponentAndDependencies(protocol, optionalId.get(), parentBomRef, node);
+        addComponentAndDependencies(
+                protocol, optionalId.get(), parentBomRef, node, node.getDetectionContext());
     }
 
     private void createRelatedCryptoMaterialComponent(
@@ -275,7 +292,7 @@ public class CBOMOutputFile implements IOutputFile {
         if (optionalId.isEmpty()) {
             return;
         }
-        addComponentAndDependencies(rcm, optionalId.get(), parentBomRef, node);
+        addComponentAndDependencies(rcm, optionalId.get(), parentBomRef, node, detectionLocation);
     }
 
     /**
@@ -394,7 +411,8 @@ public class CBOMOutputFile implements IOutputFile {
             @Nonnull final Component component,
             @Nonnull String componentId,
             @Nullable String parentBomRef,
-            @Nonnull INode node) {
+            @Nonnull INode node,
+            @Nonnull DetectionLocation detectionLocation) {
         if (components.get(componentId) == null) {
             this.components.putIfAbsent(componentId, component);
         } else {
@@ -405,10 +423,17 @@ public class CBOMOutputFile implements IOutputFile {
                         mergeCryptoProperties(kept, component);
                         return kept;
                     });
+            final Component kept = this.components.get(componentId);
+            if (kept != component) {
+                mergeDiscarded(kept, component);
+            }
         }
 
         Component componentIdentify = this.components.get(componentId);
-        if (parentBomRef != null) {
+        mergeProperties(componentId, componentIdentify, detectionLocation);
+        // a protocol whose cipher suite is reported as that same protocol (a TLS suite under a TLS)
+        // must not depend on itself
+        if (parentBomRef != null && !parentBomRef.equals(componentIdentify.getBomRef())) {
             Dependency newDependency = new Dependency(componentIdentify.getBomRef());
             if (dependencies.get(parentBomRef) == null) {
                 Dependency parent = new Dependency(parentBomRef);
@@ -427,6 +452,93 @@ public class CBOMOutputFile implements IOutputFile {
         if (node.hasChildren()) {
             add(componentIdentify.getBomRef(), node.getChildren().values().stream().toList());
         }
+    }
+
+    /**
+     * {@code discarded} was built for a name that already has a component, {@code kept}, and only
+     * its occurrences were merged. Builders that register dependencies while building (a protocol's
+     * cipher-suite algorithms) did so under the discarded component's bom-ref, which is in no
+     * component: move those dependencies to {@code kept}, and keep the cipher suites the discarded
+     * protocol listed (by name, first one wins), so neither a dangling {@code ref} nor a lost suite
+     * remains.
+     */
+    private void mergeDiscarded(@Nonnull Component kept, @Nonnull Component discarded) {
+        final Dependency orphan = this.dependencies.remove(discarded.getBomRef());
+        if (orphan != null && orphan.getDependencies() != null) {
+            for (Dependency dependency : orphan.getDependencies()) {
+                if (dependency.getRef().equals(kept.getBomRef())) {
+                    continue;
+                }
+                final Dependency target =
+                        this.dependencies.computeIfAbsent(kept.getBomRef(), Dependency::new);
+                target.addDependency(new Dependency(dependency.getRef()));
+            }
+        }
+        if (kept.getCryptoProperties() == null || discarded.getCryptoProperties() == null) {
+            return;
+        }
+        final ProtocolProperties keptProtocol = kept.getCryptoProperties().getProtocolProperties();
+        final ProtocolProperties discardedProtocol =
+                discarded.getCryptoProperties().getProtocolProperties();
+        if (keptProtocol == null
+                || discardedProtocol == null
+                || discardedProtocol.getCipherSuites() == null) {
+            return;
+        }
+        final List<org.cyclonedx.model.component.crypto.CipherSuite> suites =
+                keptProtocol.getCipherSuites() == null
+                        ? new ArrayList<>()
+                        : new ArrayList<>(keptProtocol.getCipherSuites());
+        for (org.cyclonedx.model.component.crypto.CipherSuite suite :
+                discardedProtocol.getCipherSuites()) {
+            if (suites.stream().noneMatch(s -> Objects.equals(s.getName(), suite.getName()))) {
+                suites.add(suite);
+            }
+        }
+        keptProtocol.setCipherSuites(suites);
+        if (keptProtocol.getCryptoRefArray() != null) {
+            final Dependency keptDependency = this.dependencies.get(kept.getBomRef());
+            if (keptDependency != null) {
+                keptProtocol.setCryptoRefArray(
+                        keptDependency.getDependencies().stream().map(Dependency::getRef).toList());
+            }
+        }
+    }
+
+    /**
+     * Adds the location's detection properties to the value sets of the component and rewrites the
+     * component's {@code properties}: one {@link Property} per key, its value the sorted distinct
+     * values joined by {@link DetectionProperties#VALUE_SEPARATOR}. A component none of whose
+     * occurrences has properties gets no {@code properties} at all.
+     */
+    private void mergeProperties(
+            @Nonnull String componentId,
+            @Nonnull Component component,
+            @Nonnull DetectionLocation detectionLocation) {
+        if (detectionLocation.properties().isEmpty()) {
+            return;
+        }
+        final Map<String, SortedSet<String>> values =
+                this.componentProperties.computeIfAbsent(componentId, id -> new TreeMap<>());
+        detectionLocation
+                .properties()
+                .forEach(
+                        (key, value) -> {
+                            if (DetectionProperties.COMPONENT_FACTS.contains(key)) {
+                                values.computeIfAbsent(key, k -> new TreeSet<>()).add(value);
+                            }
+                        });
+        if (values.isEmpty()) {
+            return;
+        }
+        final List<Property> properties = new ArrayList<>();
+        values.forEach(
+                (key, set) ->
+                        properties.add(
+                                new Property(
+                                        key,
+                                        String.join(DetectionProperties.VALUE_SEPARATOR, set))));
+        component.setProperties(properties);
     }
 
     @Nonnull
@@ -490,8 +602,20 @@ public class CBOMOutputFile implements IOutputFile {
         occurrence.setLocation(detectionLocation.filePath());
         occurrence.setLine(detectionLocation.lineNumber());
         occurrence.setOffset(detectionLocation.offSet());
-        if (!detectionLocation.keywords().isEmpty()) {
-            occurrence.setAdditionalContext(detectionLocation.keywords().get(0));
+        final String keyword =
+                detectionLocation.keywords().isEmpty() ? null : detectionLocation.keywords().get(0);
+        final String facts = DetectionProperties.occurrenceContext(detectionLocation.properties());
+        if (facts.isEmpty()) {
+            if (keyword != null) {
+                occurrence.setAdditionalContext(keyword);
+            }
+        } else if (keyword == null
+                || keyword.equals(
+                        detectionLocation.properties().get(DetectionProperties.RULE_ID))) {
+            // the detections translator passes the rule id as keyword; it is already in the facts
+            occurrence.setAdditionalContext(facts);
+        } else {
+            occurrence.setAdditionalContext(keyword + "; " + facts);
         }
         return occurrence;
     }
