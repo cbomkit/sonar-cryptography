@@ -95,6 +95,12 @@ public final class CSharpCipherContextTranslator
                         default -> Optional.empty();
                     };
             if (result.isPresent()) {
+                // AesGcm and AesCcm fix their mode by class, so their rules state it in the
+                // context (mode=GCM / mode=CCM) rather than through an argument.
+                detectionContext
+                        .get("mode")
+                        .flatMap(mode -> new JcaModeMapper().parse(mode, detectionLocation))
+                        .ifPresent(mode -> result.get().put(mode));
                 return result;
             }
             // Try operation mode

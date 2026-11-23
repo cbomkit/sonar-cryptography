@@ -20,16 +20,20 @@
 package com.ibm.output.cyclondx.builder;
 
 import com.ibm.mapper.model.Algorithm;
+import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Identifier;
+import com.ibm.mapper.model.MessageDigest;
 import com.ibm.mapper.model.Protocol;
 import com.ibm.mapper.model.collections.CipherSuiteCollection;
 import com.ibm.mapper.model.protocol.IKE;
 import com.ibm.mapper.model.protocol.IPSec;
 import com.ibm.mapper.model.protocol.TLS;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
@@ -122,6 +126,13 @@ public class ProtocolComponentBuilder implements IProtocolComponentBuilder {
                 component, cryptoProperties, protocolProperties, algorithmComponentBuilder);
     }
 
+    private void addRef(@Nonnull Set<String> refs, @Nonnull Algorithm algorithm) {
+        final String ref = this.algorithmComponentBuilder.apply(component.getBomRef(), algorithm);
+        if (ref != null) {
+            refs.add(ref);
+        }
+    }
+
     @Nonnull
     @Override
     public IProtocolComponentBuilder cipherSuites(@Nullable INode node) {
@@ -142,16 +153,36 @@ public class ProtocolComponentBuilder implements IProtocolComponentBuilder {
                         .getAssetCollection()
                         .ifPresent(
                                 assetCollection -> {
-                                    final List<String> algorithmRefs = new ArrayList<>();
+                                    // A suite's key exchange and authentication are often the
+                                    // same algorithm (RSA in TLS_RSA_WITH_...), and components
+                                    // are merged by name, so both resolve to one ref: list it
+                                    // once.
+                                    final Set<String> algorithmRefs = new LinkedHashSet<>();
                                     for (final INode asset : assetCollection.getCollection()) {
                                         if (asset instanceof Algorithm algorithm) {
-                                            final String ref =
-                                                    this.algorithmComponentBuilder.apply(
-                                                            component.getBomRef(), algorithm);
-                                            algorithmRefs.add(ref);
+                                            addRef(algorithmRefs, algorithm);
+                                            // CipherSuiteMapper puts the suite's MAC/PRF hash
+                                            // under the authentication algorithm, where it would
+                                            // only be a dependency of that algorithm; it is an
+                                            // algorithm of the suite itself. An AEAD's own MAC
+                                            // (Poly1305 of ChaCha20-Poly1305) is part of the
+                                            // cipher, not the suite's hash.
+                                            algorithm
+                                                    .hasChildOfType(MessageDigest.class)
+                                                    .filter(
+                                                            hash ->
+                                                                    !algorithm.is(
+                                                                            AuthenticatedEncryption
+                                                                                    .class))
+                                                    .filter(Algorithm.class::isInstance)
+                                                    .ifPresent(
+                                                            hash ->
+                                                                    addRef(
+                                                                            algorithmRefs,
+                                                                            (Algorithm) hash));
                                         }
                                     }
-                                    suite.setAlgorithms(algorithmRefs);
+                                    suite.setAlgorithms(new ArrayList<>(algorithmRefs));
                                 });
                 // identifiers
                 cipherSuite

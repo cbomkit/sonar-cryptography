@@ -46,7 +46,13 @@ import javax.annotation.Nonnull;
  */
 public final class RSAssaPSS extends Algorithm implements ProbabilisticSignatureScheme {
 
+    /** The name of RSASSA-PSS, also used by {@link RSA} for a key that signs with PSS. */
+    static final String NAME = "RSA-PSS";
+
+    /** The value of the plain padding node that records a PSS signature padding. */
+    static final String PSS_PADDING = "PSS";
+
     public RSAssaPSS(@Nonnull DetectionLocation detectionLocation) {
-        super("RSA-PSS", ProbabilisticSignatureScheme.class, detectionLocation);
+        super(NAME, ProbabilisticSignatureScheme.class, detectionLocation);
     }
 }

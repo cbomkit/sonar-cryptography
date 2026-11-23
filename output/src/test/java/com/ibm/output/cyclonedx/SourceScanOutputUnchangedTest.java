@@ -73,6 +73,11 @@ import org.junit.jupiter.api.Test;
  * DetectionLocation#properties} was introduced; only the random parts (serial number, timestamp,
  * bom-refs) and the order of the dependency list (kept in a hash map keyed by random bom-refs) are
  * normalised.
+ *
+ * <p>Re-recorded deliberately once since: the cipher suite now also lists its MAC/PRF hash (SHA-256
+ * of {@code ..._SHA256}, which the model keeps under the DSA), so the suite's {@code algorithms}
+ * and the TLS component's {@code dependsOn} each gained that one ref. Nothing else changed.
+ * Re-record with {@code -DrecordGolden=<path>}.
  */
 class SourceScanOutputUnchangedTest {
 

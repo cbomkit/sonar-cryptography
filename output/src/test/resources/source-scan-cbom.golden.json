@@ -143,7 +143,7 @@
         "type" : "tls",
         "cipherSuites" : [ {
           "name" : "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
-          "algorithms" : [ "uuid-4", "uuid-2", "uuid-3" ],
+          "algorithms" : [ "uuid-4", "uuid-2", "uuid-3", "uuid-7" ],
           "identifiers" : [ "0x00", "0x6A" ]
         } ]
       }
@@ -212,6 +212,6 @@
     "dependsOn" : [ "uuid-7" ]
   }, {
     "ref" : "uuid-8",
-    "dependsOn" : [ "uuid-4", "uuid-2", "uuid-3" ]
+    "dependsOn" : [ "uuid-4", "uuid-2", "uuid-3", "uuid-7" ]
   } ]
 }

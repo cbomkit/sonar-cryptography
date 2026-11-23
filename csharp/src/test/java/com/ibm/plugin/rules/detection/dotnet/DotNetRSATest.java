@@ -99,14 +99,16 @@ class DotNetRSATest extends TestBase {
 
         INode oid = node.getChildren().get(Oid.class);
         assertThat(oid).isNotNull();
-        // RSAES-OAEP has an OID of its own. Once the padding sits on the algorithm rather than
-        // under the operation, the enricher recognises the combination and the component carries
-        // 1.2.840.113549.1.1.7 instead of the generic RSA OID.
+        // RSAES-OAEP and RSASSA-PSS have OIDs of their own. Once the padding sits on the
+        // algorithm rather than under the operation, the enricher recognises the combination and
+        // the component carries 1.2.840.113549.1.1.7 or .10 instead of the generic RSA OID.
         assertThat(oid.asString())
                 .isEqualTo(
                         node.asString().contains("OAEP")
                                 ? "1.2.840.113549.1.1.7"
-                                : "1.2.840.113549.1.1.1");
+                                : node.asString().equals("RSA-PSS")
+                                        ? "1.2.840.113549.1.1.10"
+                                        : "1.2.840.113549.1.1.1");
 
         switch (findingId) {
             // RSA.Create() and the three parameterless constructors
@@ -147,9 +149,17 @@ class DotNetRSATest extends TestBase {
             // Bitwarden pattern
             case 23 -> assertKeySize(node, 2048);
             // SignData(data, 0, 32, SHA384, Pss): hash and padding at indices three and four
-            case 24 -> assertOperation(node, Sign.class, "PSS", "SHA-384");
+            case 24 -> {
+                // PSS is not a CycloneDX padding, so the name carries it
+                assertThat(node.asString()).isEqualTo("RSA-PSS");
+                assertOperation(node, Sign.class, "PSS", "SHA-384");
+            }
             // VerifyData(data, 0, 32, signature, SHA384, Pkcs1): the six-parameter form
-            case 25 -> assertOperation(node, Verify.class, "PKCS1", "SHA-384");
+            case 25 -> {
+                // absence: a PKCS#1 v1.5 signature does not read as PSS
+                assertThat(node.asString()).isEqualTo("RSA");
+                assertOperation(node, Verify.class, "PKCS1", "SHA-384");
+            }
             // SignData(data, padding: Pss, hashAlgorithm: SHA512): keywords in reverse order
             case 26 -> assertOperation(node, Sign.class, "PSS", "SHA-512");
             // Encrypt(data, RSAEncryptionPadding.OaepSHA512)

@@ -22,6 +22,7 @@ package com.ibm.enricher.algorithm;
 import com.ibm.enricher.IEnricher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Oid;
+import com.ibm.mapper.model.algorithms.RSA;
 import com.ibm.mapper.model.algorithms.RSAssaPSS;
 import javax.annotation.Nonnull;
 
@@ -31,6 +32,12 @@ public class RSAssaPSSEnricher implements IEnricher {
         if (node instanceof RSAssaPSS rsaSsaPSS) {
             rsaSsaPSS.put(new Oid("1.2.840.113549.1.1.10", rsaSsaPSS.getDetectionContext()));
             return rsaSsaPSS;
+        }
+        // An RSA key that signs with PSS is named RSA-PSS (see RSA#asString), and carries the
+        // RSASSA-PSS OID like the RSAssaPSS node of an unlinked PSS signature does.
+        if (node instanceof RSA rsa && rsa.hasPssPadding()) {
+            rsa.put(new Oid("1.2.840.113549.1.1.10", rsa.getDetectionContext()));
+            return rsa;
         }
         return node;
     }

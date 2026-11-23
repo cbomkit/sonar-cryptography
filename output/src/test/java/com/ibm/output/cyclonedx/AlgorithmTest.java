@@ -21,6 +21,7 @@ package com.ibm.output.cyclonedx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.EllipticCurveAlgorithm;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Oid;
@@ -29,6 +30,7 @@ import com.ibm.mapper.model.PasswordLength;
 import com.ibm.mapper.model.PrivateKey;
 import com.ibm.mapper.model.PublicKeyEncryption;
 import com.ibm.mapper.model.SaltLength;
+import com.ibm.mapper.model.algorithms.AES;
 import com.ibm.mapper.model.algorithms.DSA;
 import com.ibm.mapper.model.algorithms.ECDH;
 import com.ibm.mapper.model.algorithms.MGF1;
@@ -44,7 +46,9 @@ import com.ibm.mapper.model.functionality.Digest;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Sign;
+import com.ibm.mapper.model.mode.GCM;
 import com.ibm.mapper.model.padding.OAEP;
+import com.ibm.mapper.model.padding.PKCS1;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
@@ -409,5 +413,105 @@ class AlgorithmTest extends TestBase {
                     assertThat(algorithmProperties.getCurve()).isEqualTo("secp384r1");
                     assertThat(cryptoProperties.getOid()).isEqualTo("1.3.132.1.12");
                 });
+    }
+
+    /**
+     * AES carries a default block size of 128. It must not stand in for the parameter set, which
+     * CycloneDX readers take as the key size: an AES-GCM whose key length is unknown read as
+     * AES-128.
+     */
+    @Test
+    void aesWithoutKeyLengthHasNoParameterSetFromItsDefaultBlockSize() {
+        this.assertsNode(
+                () -> new AES(new GCM(detectionLocation), detectionLocation),
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("AES-GCM");
+                    final AlgorithmProperties properties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(properties.getMode())
+                            .isEqualTo(org.cyclonedx.model.component.crypto.enums.Mode.GCM);
+                    // absence: the default block size 128 is not a parameter set
+                    assertThat(properties.getParameterSetIdentifier()).isNull();
+                });
+    }
+
+    @Test
+    void aesWithKeyLengthUsesItAsParameterSet() {
+        this.assertsNode(
+                () -> new AES(256, new GCM(detectionLocation), detectionLocation),
+                bom -> {
+                    final Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("AES-256-GCM");
+                    assertThat(
+                                    component
+                                            .getCryptoProperties()
+                                            .getAlgorithmProperties()
+                                            .getParameterSetIdentifier())
+                            .isEqualTo("256");
+                });
+    }
+
+    /** A block size that was detected, not defaulted, still names the parameter set. */
+    @Test
+    void detectedBlockSizeStillNamesTheParameterSet() {
+        this.assertsNode(
+                () -> {
+                    final AES aes = new AES(detectionLocation);
+                    aes.put(new BlockSize(128, detectionLocation));
+                    return aes;
+                },
+                bom ->
+                        assertThat(
+                                        bom.getComponents()
+                                                .get(0)
+                                                .getCryptoProperties()
+                                                .getAlgorithmProperties()
+                                                .getParameterSetIdentifier())
+                                .isEqualTo("128"));
+    }
+
+    /**
+     * An RSA key that signs with PSS: CycloneDX 1.6 has no PSS padding, so the padding is "other"
+     * and the name has to say PSS, as the RSA-PSS component of an unlinked PSS signature does. The
+     * key length remains the parameter set.
+     */
+    @Test
+    void rsaKeySigningWithPssIsNamedRsaPss() {
+        this.assertsNode(
+                () -> {
+                    final RSA rsa = new RSA(3072, detectionLocation);
+                    rsa.put(new com.ibm.mapper.model.Padding("PSS", detectionLocation));
+                    rsa.put(new Sign(detectionLocation));
+                    return rsa;
+                },
+                bom -> {
+                    assertThat(bom.getComponents()).hasSize(1);
+                    final Component component = bom.getComponents().get(0);
+                    assertThat(component.getName()).isEqualTo("RSA-PSS");
+                    final AlgorithmProperties properties =
+                            component.getCryptoProperties().getAlgorithmProperties();
+                    assertThat(properties.getParameterSetIdentifier()).isEqualTo("3072");
+                    assertThat(properties.getPadding()).isEqualTo(Padding.OTHER);
+                    assertThat(properties.getCryptoFunctions())
+                            .containsExactly(CryptoFunction.SIGN);
+                    // absence: no bare RSA-3072 that hides the PSS behind "other"
+                    assertThat(bom.getComponents())
+                            .extracting(Component::getName)
+                            .doesNotContain("RSA-3072");
+                });
+    }
+
+    /** Absence: a PKCS#1 v1.5 padding keeps the key-length name. */
+    @Test
+    void rsaKeyWithPkcs1PaddingKeepsItsKeyLengthName() {
+        this.assertsNode(
+                () -> {
+                    final RSA rsa = new RSA(3072, detectionLocation);
+                    rsa.put(new PKCS1(detectionLocation));
+                    return rsa;
+                },
+                bom -> assertThat(bom.getComponents().get(0).getName()).isEqualTo("RSA-3072"));
     }
 }
