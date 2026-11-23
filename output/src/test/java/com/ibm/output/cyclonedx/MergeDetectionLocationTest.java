@@ -28,15 +28,20 @@ import com.ibm.mapper.model.functionality.Decrypt;
 import com.ibm.mapper.model.functionality.Encrypt;
 import com.ibm.mapper.model.functionality.KeyGeneration;
 import com.ibm.mapper.model.functionality.Tag;
+import com.ibm.mapper.model.padding.ISO9796Padding;
 import com.ibm.mapper.model.padding.PKCS1;
 import com.ibm.mapper.utils.DetectionLocation;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.cyclonedx.model.Component;
+import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
 import org.cyclonedx.model.component.crypto.enums.AssetType;
 import org.cyclonedx.model.component.crypto.enums.CryptoFunction;
+import org.cyclonedx.model.component.crypto.enums.Padding;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.junit.jupiter.api.Test;
 
@@ -86,110 +91,137 @@ class MergeDetectionLocationTest extends TestBase {
     }
 
     /**
-     * Two call sites that differ only in what they do with the cipher share a component, because
-     * the direction is not part of the name. Both directions have to survive that.
-     *
-     * <p>Reported against nagilum/cryptocsharp, whose {@code Cryptography.cs} creates an RSA on
-     * line 171 to decrypt and on line 207 to encrypt: the CBOM listed both lines under one
-     * component and claimed it only ever decrypts. The same holds in Java for a {@code
-     * Cipher.getInstance("RSA/ECB/OAEPPadding")} used once in each direction.
+     * A cipher created twice from the same string, once to decrypt and once to encrypt, is one
+     * component, because the direction is not part of the name. Both directions must survive.
      */
     @Test
     void keepsBothDirectionsOfACipherUsedTwice() {
         this.assertsNodes(
-                () -> {
-                    final DetectionLocation second =
-                            new DetectionLocation(
-                                    "test2.java", 2, 2, Collections.emptyList(), bundle);
-                    final INode decrypting = new AES(detectionLocation);
-                    decrypting.put(new Decrypt(detectionLocation));
-                    final INode encrypting = new AES(second);
-                    encrypting.put(new Encrypt(second));
-                    return List.of(decrypting, encrypting);
-                },
+                () -> List.of(aesWith(Decrypt::new), aesWith(Encrypt::new)),
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(1);
                     final Component component = bom.getComponents().get(0);
                     assertThat(component.getName()).isEqualTo("AES");
                     assertThat(component.getEvidence().getOccurrences()).hasSize(2);
-                    assertThat(
-                                    component
-                                            .getCryptoProperties()
-                                            .getAlgorithmProperties()
-                                            .getCryptoFunctions())
+                    assertThat(algorithmProperties(component).getCryptoFunctions())
                             .containsExactlyInAnyOrder(
                                     CryptoFunction.DECRYPT, CryptoFunction.ENCRYPT);
                 });
     }
 
     /**
-     * A single-valued property is never carried over from one call site to another.
-     *
-     * <p>{@code RSA.asString()} puts only an OAEP padding into the name, so an RSA that states
-     * PKCS#1 and an RSA that states no padding at all are one component. Filling the empty field
-     * from the other would attach a padding to a line that does not use one — in bitwarden/server
-     * exactly that happens, where four of five occurrences named {@code RSA} pass {@code
-     * RSASignaturePadding.Pkcs1} and the fifth only retrieves the key. The field stays empty
-     * instead, because one component cannot describe both and guessing which to show is worse.
+     * {@code RSA.asString()} names only an OAEP padding, so an RSA with PKCS#1 and one without a
+     * padding are one component. The padding is stated by only one of them, so it is cleared, in
+     * either order.
      */
     @Test
-    void doesNotCarrySingleValuedPropertiesBetweenCallSites() {
+    void clearsPaddingStatedByOnlyOneCallSite() {
+        for (List<Function<DetectionLocation, INode>> order :
+                List.of(
+                        List.<Function<DetectionLocation, INode>>of(this::rsa, this::rsaPkcs1),
+                        List.<Function<DetectionLocation, INode>>of(this::rsaPkcs1, this::rsa))) {
+            this.assertsNodes(
+                    () -> build(order),
+                    bom -> {
+                        assertThat(bom.getComponents()).hasSize(1);
+                        final Component component = bom.getComponents().get(0);
+                        assertThat(component.getName()).isEqualTo("RSA");
+                        assertThat(component.getEvidence().getOccurrences()).hasSize(2);
+                        assertThat(algorithmProperties(component).getPadding())
+                                .as("a padding stated by only one of the two call sites")
+                                .isNull();
+                        assertThat(component.getCryptoProperties().getOid())
+                                .as("the OID both state")
+                                .isEqualTo("1.2.840.113549.1.1.1");
+                    });
+        }
+    }
+
+    @Test
+    void clearsPaddingTheCallSitesDisagreeOn() {
+        for (List<Function<DetectionLocation, INode>> order :
+                List.of(
+                        List.<Function<DetectionLocation, INode>>of(
+                                this::rsaPkcs1, this::rsaIso9796),
+                        List.<Function<DetectionLocation, INode>>of(
+                                this::rsaIso9796, this::rsaPkcs1))) {
+            this.assertsNodes(
+                    () -> build(order),
+                    bom -> {
+                        assertThat(bom.getComponents()).hasSize(1);
+                        assertThat(algorithmProperties(bom.getComponents().get(0)).getPadding())
+                                .isNull();
+                    });
+        }
+    }
+
+    @Test
+    void keepsPaddingAllCallSitesAgreeOn() {
         this.assertsNodes(
-                () -> {
-                    final DetectionLocation second =
-                            new DetectionLocation(
-                                    "test2.java", 2, 2, Collections.emptyList(), bundle);
-                    final INode withoutPadding = new RSA(detectionLocation);
-                    final INode withPadding = new RSA(second);
-                    withPadding.put(new PKCS1(second));
-                    return List.of(withoutPadding, withPadding);
-                },
+                () -> build(List.of(this::rsaPkcs1, this::rsaPkcs1, this::rsaPkcs1)),
                 bom -> {
                     assertThat(bom.getComponents()).hasSize(1);
                     final Component component = bom.getComponents().get(0);
-                    assertThat(component.getName()).isEqualTo("RSA");
-                    assertThat(component.getEvidence().getOccurrences()).hasSize(2);
-                    assertThat(
-                                    component
-                                            .getCryptoProperties()
-                                            .getAlgorithmProperties()
-                                            .getPadding())
-                            .as("a padding stated by only one of the two call sites")
-                            .isNull();
+                    assertThat(component.getEvidence().getOccurrences()).hasSize(3);
+                    assertThat(algorithmProperties(component).getPadding())
+                            .isEqualTo(Padding.PKCS1V15);
                 });
     }
 
     /**
-     * Three call sites with different, partly overlapping function sets end up with the union of
-     * all three, and the result does not depend on the order they arrive in.
-     *
-     * <p>Merging is pairwise -- every further component is folded into the one already stored -- so
-     * the question is whether folding repeatedly can lose something. It cannot: a union is
-     * associative, commutative and idempotent, so folding N sets one at a time gives the same
-     * answer as taking all N at once, whatever the order. This pins that, because the pairwise
-     * shape is what makes it easy to doubt.
+     * Merging is pairwise, so a padding cleared by the second detection must stay cleared when a
+     * third one states it again, whatever the order.
      */
     @Test
-    void unionsFunctionsAcrossThreeCallSitesRegardlessOfOrder() {
-        final List<List<INode>> orders =
+    void clearedPaddingStaysClearedAcrossThreeCallSites() {
+        final Function<DetectionLocation, INode> pkcs1 = this::rsaPkcs1;
+        final Function<DetectionLocation, INode> none = this::rsa;
+        for (List<Function<DetectionLocation, INode>> order :
                 List.of(
-                        List.of(aesWith(ENCRYPT, DECRYPT), aesWith(KEYGEN), aesWith(DECRYPT, TAG)),
-                        List.of(aesWith(DECRYPT, TAG), aesWith(ENCRYPT, DECRYPT), aesWith(KEYGEN)),
-                        List.of(aesWith(KEYGEN), aesWith(DECRYPT, TAG), aesWith(ENCRYPT, DECRYPT)));
-
-        for (List<INode> order : orders) {
+                        List.of(pkcs1, none, pkcs1),
+                        List.of(none, pkcs1, pkcs1),
+                        List.of(pkcs1, pkcs1, none))) {
             this.assertsNodes(
-                    () -> order,
+                    () -> build(order),
                     bom -> {
                         assertThat(bom.getComponents()).hasSize(1);
                         final Component component = bom.getComponents().get(0);
                         assertThat(component.getEvidence().getOccurrences()).hasSize(3);
-                        assertThat(
-                                        component
-                                                .getCryptoProperties()
-                                                .getAlgorithmProperties()
-                                                .getCryptoFunctions())
-                                .as("the union of all three, in any arrival order")
+                        assertThat(algorithmProperties(component).getPadding()).isNull();
+                    });
+        }
+    }
+
+    /** Three call sites with overlapping function sets give the union, in any arrival order. */
+    @Test
+    void unionsFunctionsAcrossThreeCallSitesRegardlessOfOrder() {
+        final List<Supplier<List<INode>>> orders =
+                List.of(
+                        () ->
+                                List.of(
+                                        aesWith(Encrypt::new, Decrypt::new),
+                                        aesWith(KeyGeneration::new),
+                                        aesWith(Decrypt::new, Tag::new)),
+                        () ->
+                                List.of(
+                                        aesWith(Decrypt::new, Tag::new),
+                                        aesWith(Encrypt::new, Decrypt::new),
+                                        aesWith(KeyGeneration::new)),
+                        () ->
+                                List.of(
+                                        aesWith(KeyGeneration::new),
+                                        aesWith(Decrypt::new, Tag::new),
+                                        aesWith(Encrypt::new, Decrypt::new)));
+
+        for (Supplier<List<INode>> order : orders) {
+            final List<INode> nodes = order.get();
+            this.assertsNodes(
+                    () -> nodes,
+                    bom -> {
+                        assertThat(bom.getComponents()).hasSize(1);
+                        final Component component = bom.getComponents().get(0);
+                        assertThat(component.getEvidence().getOccurrences()).hasSize(3);
+                        assertThat(algorithmProperties(component).getCryptoFunctions())
                                 .containsExactlyInAnyOrder(
                                         CryptoFunction.ENCRYPT,
                                         CryptoFunction.DECRYPT,
@@ -199,29 +231,52 @@ class MergeDetectionLocationTest extends TestBase {
         }
     }
 
-    private static final String ENCRYPT = "encrypt";
-    private static final String DECRYPT = "decrypt";
-    private static final String KEYGEN = "keygen";
-    private static final String TAG = "tag";
-
-    /** An AES at its own location, carrying the named functionalities and nothing else. */
     @Nonnull
-    private INode aesWith(@Nonnull String... functionalities) {
-        final DetectionLocation location =
-                new DetectionLocation(
-                        "test" + nextLine + ".java", nextLine, nextLine, List.of(), bundle);
-        nextLine++;
+    private static AlgorithmProperties algorithmProperties(@Nonnull Component component) {
+        return component.getCryptoProperties().getAlgorithmProperties();
+    }
+
+    /** One node per factory, each at its own location. */
+    @Nonnull
+    private List<INode> build(@Nonnull List<Function<DetectionLocation, INode>> factories) {
+        return factories.stream().map(factory -> factory.apply(nextLocation())).toList();
+    }
+
+    @Nonnull
+    private INode rsa(@Nonnull DetectionLocation location) {
+        return new RSA(location);
+    }
+
+    @Nonnull
+    private INode rsaPkcs1(@Nonnull DetectionLocation location) {
+        final INode rsa = new RSA(location);
+        rsa.put(new PKCS1(location));
+        return rsa;
+    }
+
+    @Nonnull
+    private INode rsaIso9796(@Nonnull DetectionLocation location) {
+        final INode rsa = new RSA(location);
+        rsa.put(new ISO9796Padding(location));
+        return rsa;
+    }
+
+    /** An AES at its own location, carrying the given functionalities and nothing else. */
+    @SafeVarargs
+    @Nonnull
+    private INode aesWith(@Nonnull Function<DetectionLocation, INode>... functionalities) {
+        final DetectionLocation location = nextLocation();
         final INode aes = new AES(location);
-        for (String functionality : functionalities) {
-            aes.put(
-                    switch (functionality) {
-                        case ENCRYPT -> new Encrypt(location);
-                        case DECRYPT -> new Decrypt(location);
-                        case KEYGEN -> new KeyGeneration(location);
-                        default -> new Tag(location);
-                    });
+        for (Function<DetectionLocation, INode> functionality : functionalities) {
+            aes.put(functionality.apply(location));
         }
         return aes;
+    }
+
+    @Nonnull
+    private DetectionLocation nextLocation() {
+        final int line = nextLine++;
+        return new DetectionLocation("test" + line + ".java", line, line, List.of(), bundle);
     }
 
     private int nextLine = 10;

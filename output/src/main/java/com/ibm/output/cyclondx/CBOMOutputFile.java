@@ -69,10 +69,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -90,6 +90,8 @@ import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
 import org.cyclonedx.model.component.crypto.AlgorithmProperties;
 import org.cyclonedx.model.component.crypto.CryptoProperties;
+import org.cyclonedx.model.component.crypto.enums.AssetType;
+import org.cyclonedx.model.component.crypto.enums.CryptoFunction;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
 import org.slf4j.Logger;
@@ -257,68 +259,80 @@ public class CBOMOutputFile implements IOutputFile {
     }
 
     /**
-     * Merges one component into another when both carry the same identity.
+     * Merges the crypto properties of {@code incoming} into {@code kept}, which share a name.
      *
-     * <p>Two detections become the same component when they print the same name, and the name holds
-     * only part of what a detection knows ({@code Algorithm.asString}). So two call sites can share
-     * an identity while differing in everything the name leaves out. The clearest case is a cipher
-     * created twice from the same string, once to encrypt and once to decrypt: the direction is not
-     * part of the name, both land here, and until this merge existed only the component found first
-     * survived and so the second direction was dropped and the inventory claimed the code never
-     * encrypts.
-     *
-     * <p>What is merged is deliberately narrow: the list-valued properties, and a whole
-     * sub-property object where the kept component has none at all. A list is safe to union because
-     * the component stands for all of its occurrences together, and collectively they do perform
-     * every function any of them performs.
-     *
-     * <p>Single-valued properties are deliberately <em>not</em> filled in from the other component,
-     * even when the kept one has none. They describe one call site's configuration, and a component
-     * covering several would then state something about occurrences that never said it.
+     * <p>{@code cryptoFunctions} become the union, since together the occurrences perform every
+     * function any of them performs. A single-valued property is kept only if both state the same
+     * value and is cleared otherwise. A cleared value never comes back, so the result does not
+     * depend on the order of the detections. Nothing is shared with {@code incoming}.
      */
-    private static void mergeCryptoProperties(
-            @Nonnull Component kept, @Nonnull Component incoming) {
+    static void mergeCryptoProperties(@Nonnull Component kept, @Nonnull Component incoming) {
         final CryptoProperties from = incoming.getCryptoProperties();
-        if (from == null) {
+        CryptoProperties into = kept.getCryptoProperties();
+        if (into == null) {
+            if (from == null) {
+                return;
+            }
+            into = new CryptoProperties();
+            into.setAssetType(from.getAssetType());
+            kept.setCryptoProperties(into);
+        } else if (from != null && from.getAssetType() != into.getAssetType()) {
+            // different kinds of asset under one name: nothing to compare
             return;
         }
-        if (kept.getCryptoProperties() == null) {
-            kept.setCryptoProperties(from);
+        if (into.getAssetType() != AssetType.ALGORITHM) {
             return;
         }
-        final CryptoProperties into = kept.getCryptoProperties();
+        into.setOid(
+                from == null || !Objects.equals(into.getOid(), from.getOid())
+                        ? null
+                        : into.getOid());
 
-        final AlgorithmProperties source = from.getAlgorithmProperties();
-        if (source == null) {
-            return;
-        }
-        if (into.getAlgorithmProperties() == null) {
-            into.setAlgorithmProperties(source);
-            return;
-        }
+        final AlgorithmProperties source = from == null ? null : from.getAlgorithmProperties();
         final AlgorithmProperties target = into.getAlgorithmProperties();
-        // Only ever written when the union has something in it, so a property neither component
-        // stated is left exactly as it was rather than being replaced by null or an empty list.
-        replaceIfNotEmpty(
-                target::setCryptoFunctions,
-                union(target.getCryptoFunctions(), source.getCryptoFunctions()));
-        replaceIfNotEmpty(
-                target::setCertificationLevel,
-                union(target.getCertificationLevel(), source.getCertificationLevel()));
-    }
-
-    private static <T> void replaceIfNotEmpty(
-            @Nonnull Consumer<List<T>> setter, @Nullable List<T> value) {
-        if (value != null && !value.isEmpty()) {
-            setter.accept(value);
+        final List<CryptoFunction> functions =
+                union(
+                        target == null ? null : target.getCryptoFunctions(),
+                        source == null ? null : source.getCryptoFunctions());
+        if (target == null) {
+            // every single-valued property is cleared, so only the functions are left
+            if (functions != null) {
+                final AlgorithmProperties merged = new AlgorithmProperties();
+                merged.setCryptoFunctions(functions);
+                into.setAlgorithmProperties(merged);
+            }
+            return;
         }
+        target.setCryptoFunctions(functions);
+        target.setPrimitive(agreed(target, source, AlgorithmProperties::getPrimitive));
+        target.setParameterSetIdentifier(
+                agreed(target, source, AlgorithmProperties::getParameterSetIdentifier));
+        target.setCurve(agreed(target, source, AlgorithmProperties::getCurve));
+        target.setExecutionEnvironment(
+                agreed(target, source, AlgorithmProperties::getExecutionEnvironment));
+        target.setImplementationPlatform(
+                agreed(target, source, AlgorithmProperties::getImplementationPlatform));
+        target.setMode(agreed(target, source, AlgorithmProperties::getMode));
+        target.setPadding(agreed(target, source, AlgorithmProperties::getPadding));
+        target.setClassicalSecurityLevel(
+                agreed(target, source, AlgorithmProperties::getClassicalSecurityLevel));
+        target.setNistQuantumSecurityLevel(
+                agreed(target, source, AlgorithmProperties::getNistQuantumSecurityLevel));
     }
 
-    /**
-     * Union of two lists, keeping the order in which values were first seen and dropping repeats.
-     * Returns {@code null} for two empty inputs so that a property nobody stated stays absent from
-     * the CBOM rather than appearing as an empty list.
-     */
+    /** The value both state, or {@code null} if either lacks it or they differ. */
+    @Nullable private static <T> T agreed(
+            @Nonnull AlgorithmProperties target,
+            @Nullable AlgorithmProperties source,
+            @Nonnull Function<AlgorithmProperties, T> property) {
+        if (source == null) {
+            return null;
+        }
+        final T value = property.apply(target);
+        return Objects.equals(value, property.apply(source)) ? value : null;
+    }
+
+    /** Union in order of first appearance; {@code null} if empty, so the field stays absent. */
     @Nullable private static <T> List<T> union(@Nullable List<T> first, @Nullable List<T> second) {
         final List<T> result = new ArrayList<>();
         Stream.concat(
