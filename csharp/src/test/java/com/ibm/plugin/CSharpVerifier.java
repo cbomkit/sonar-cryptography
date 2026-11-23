@@ -93,17 +93,7 @@ public final class CSharpVerifier {
             throws IOException {
         Path filePath = Paths.get(TEST_FILES_ROOT + relativeTestFilePath);
         String content = Files.readString(filePath, StandardCharsets.UTF_8);
-
-        // Same two-attempt conditional handling as CryptoCSharpSensor, so tests exercise the
-        // production parse path: every branch active first, one branch per chain on a parse error.
-        CSharpParser.Compilation_unitContext parseTree =
-                parse(CSharpConditionalDirectives.neutralize(content), filePath);
-        if (parseTree == null) {
-            parseTree = parse(CSharpConditionalDirectives.selectFirstBranch(content), filePath);
-        }
-
-        CSharpTreeConverter converter = new CSharpTreeConverter();
-        List<CSharpBlockTree> methodBodies = converter.extractMethodBodies(parseTree);
+        List<CSharpBlockTree> methodBodies = methodBodies(content, filePath);
 
         Path moduleRoot = Paths.get(".").toAbsolutePath().normalize();
         SensorContextTester sensorContext = SensorContextTester.create(moduleRoot);
@@ -124,5 +114,30 @@ public final class CSharpVerifier {
         for (CSharpBlockTree blockTree : methodBodies) {
             check.scan(scanContext, blockTree);
         }
+    }
+
+    /**
+     * Parses a test file the way {@link #verify} does and returns its method bodies, for tests that
+     * inspect the converted trees directly instead of running the detection engine over them.
+     */
+    @Nonnull
+    public static List<CSharpBlockTree> methodBodies(@Nonnull String relativeTestFilePath)
+            throws IOException {
+        Path filePath = Paths.get(TEST_FILES_ROOT + relativeTestFilePath);
+        return methodBodies(Files.readString(filePath, StandardCharsets.UTF_8), filePath);
+    }
+
+    @Nonnull
+    private static List<CSharpBlockTree> methodBodies(
+            @Nonnull String content, @Nonnull Path filePath) {
+        // Same two-attempt conditional handling as CryptoCSharpSensor, so tests exercise the
+        // production parse path: every branch active first, one branch per chain on a parse error.
+        CSharpParser.Compilation_unitContext parseTree =
+                parse(CSharpConditionalDirectives.neutralize(content), filePath);
+        if (parseTree == null) {
+            parseTree = parse(CSharpConditionalDirectives.selectFirstBranch(content), filePath);
+        }
+
+        return new CSharpTreeConverter().extractMethodBodies(parseTree);
     }
 }

@@ -45,15 +45,16 @@ import javax.annotation.Nonnull;
  * connection rather than continue without it. {@code Auto} and {@code StartTlsWhenAvailable}
  * continue in plaintext when the server does not offer TLS, so whether any cryptography happens is
  * not knowable from the call, and {@code None} states that none does. The mapping lives in {@code
- * CSharpProtocolContextTranslator}, where the closed member set is also what keeps this rule quiet
- * on every unrelated {@code Connect} in a code base.
+ * CSharpProtocolContextTranslator}, where the closed member set is also what keeps this rule from
+ * reporting a value for any unrelated {@code Connect} in a code base; the required parameters (see
+ * {@link #CONNECT}) are what keep it from matching a call that has no option at all.
  *
  * <p>The receiver is {@code ANY}, which it has to be: the client is held in a variable and the C#
  * frontend matches a receiver by its text, not by a variable's declared type. {@code Connect} is
  * about the most common method name there is, so nothing here may state anything from a call's
  * shape alone -- there is no action on the method and no flag is read. The one value this rule can
  * produce is a name that resolves to a member of {@code SecureSocketOptions}, and that is also why
- * MailKit's obsolete {@code Connect(host, port, useSsl)} overload is deliberately not read: a
+ * MailKit's obsolete {@code Connect(host, port, useSsl)} overload is deliberately not matched: a
  * {@code bool} at that position cannot be told from the second argument of any other {@code
  * Connect} in the world.
  */
@@ -70,15 +71,36 @@ public final class MailKit extends DetectionRuleSet<CSharpTree> {
      * overloads it sits one later, and it still binds: the port refuses it there because an {@code
      * int} can never be a {@code SecureSocketOptions}, and it is then the call's only argument of
      * that type.
+     *
+     * <p>{@code host}, {@code port} and {@code options} are required. Declared optional, they let
+     * the rule match every {@code Connect} and {@code ConnectAsync} of an application on any
+     * receiver -- {@code socket.Connect(endPoint)}, {@code tcpClient.Connect(host, port)},
+     * MailKit's own internal calls -- each one a match that can never carry a value, because the
+     * option is the only thing this rule may read (see the class comment). The source engine drops
+     * such a match, a binary scanner, which reports every match, did not. {@code host} and {@code
+     * port} are required with it because a required named parameter has to be declared before the
+     * optional ones. The usual convention, required only if every overload has the parameter, still
+     * holds for the overloads this rule reports: every MailKit overload that takes a {@code
+     * SecureSocketOptions} has all three in its signature. The overloads without it ({@code
+     * Connect(Uri, ...)} and the obsolete {@code useSsl} one) have nothing to report and are no
+     * longer matched; a call is detected only when one of its arguments can be the option, by
+     * keyword, at its position or as the call's only argument of that type. The cost, in source
+     * only, is a call that writes the option by keyword and leaves {@code port} to its default,
+     * {@code Connect(host, options: ...)}: the source binder cannot see defaults and needs a second
+     * rule for that arity, which would detect the three-argument call twice. In a compiled assembly
+     * the compiler has filled in the default, so that call still has every argument.
+     *
+     * <p>{@code useSsl} is never read. It stays declared because it gives the rule its fifth slot:
+     * the socket- and stream-taking overloads with a cancellation token have five arguments.
      */
     private static final IDetectionRule<CSharpTree> CONNECT =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
                     .forObjectTypes(MethodMatcher.ANY)
                     .forMethods("Connect", "ConnectAsync")
-                    .withOptionalNamedMethodParameter("host", MethodMatcher.ANY)
-                    .withOptionalNamedMethodParameter("port", "int")
-                    .withOptionalNamedMethodParameter("options", SECURE_SOCKET_OPTIONS)
+                    .withNamedMethodParameter("host", MethodMatcher.ANY)
+                    .withNamedMethodParameter("port", "int")
+                    .withNamedMethodParameter("options", SECURE_SOCKET_OPTIONS)
                     .shouldBeDetectedAs(new ProtocolFactory<>())
                     .withOptionalNamedMethodParameter("useSsl", "bool")
                     .withOptionalNamedMethodParameter("cancellationToken", MethodMatcher.ANY)

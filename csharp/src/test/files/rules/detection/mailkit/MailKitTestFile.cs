@@ -57,15 +57,26 @@ public class MailKitUsage
         client.Connect("imap.example.org", 993, configured);
     }
 
-    /* Counter-check: an ordinary socket connect. Connect is matched on any receiver. */
+    /* Counter-check: an ordinary socket connect. Without SecureSocketOptions it is not detected. */
     public void UnrelatedConnect(Socket socket, EndPoint endPoint)
     {
         socket.Connect(endPoint);
     }
 
     /*
+     * Counter-check: Connect without SecureSocketOptions, on a MailKit client and on a TcpClient.
+     * The call states nothing about TLS, so it is not even detected.
+     */
+    public void WithoutOptions(ImapClient client, TcpClient tcpClient)
+    {
+        client.Connect("imap.example.org", 993);
+        client.ConnectAsync("imap.example.org", 993);
+        tcpClient.Connect("imap.example.org", 993);
+    }
+
+    /*
      * Counter-check: a bool third argument. MailKit's own obsolete overload writes useSsl there,
-     * but so does any other Connect in the world, so it is deliberately not read.
+     * but so does any other Connect in the world, so it is deliberately not detected.
      */
     public void UnrelatedBoolean(ImapClient client)
     {
