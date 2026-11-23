@@ -37,7 +37,8 @@ public final class SSLDetectionRules extends DetectionRuleSet<Tree> {
                         RuleSets.rulesOf(SSLServerSocketSetEnabledProtocols.class).stream(),
                         RuleSets.rulesOf(SSLSetParameters.class).stream(),
                         RuleSets.rulesOf(SSLContext.class).stream(),
-                        RuleSets.rulesOf(SSLServerSocketSetEnabledCipherSuites.class).stream())
+                        RuleSets.rulesOf(SSLServerSocketSetEnabledCipherSuites.class).stream(),
+                        RuleSets.rulesOf(SSLEnabledSettings.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

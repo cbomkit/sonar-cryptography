@@ -23,6 +23,6 @@ public class Issue297Sha256TestFile {
 
     private static final int initStaticEntropy()
     {
-        return new SecureRandom().nextInt() & 0xff;
+        return new SecureRandom().nextInt() & 0xff; // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
     }
 }
