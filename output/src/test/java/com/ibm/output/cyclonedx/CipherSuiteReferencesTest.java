@@ -22,6 +22,7 @@ package com.ibm.output.cyclonedx;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ibm.engine.rule.IBundle;
+import com.ibm.mapper.mapper.ssl.CipherSuiteMapper;
 import com.ibm.mapper.model.CipherSuite;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyAgreement;
@@ -102,6 +103,71 @@ class CipherSuiteReferencesTest {
                 .containsExactly("TLS_RSA_WITH_AES_128_CBC_SHA");
         assertThat(component.getCryptoProperties().getProtocolProperties().getCryptoRefArray())
                 .doesNotContain(component.getBomRef());
+    }
+
+    /**
+     * {@code TLS_RSA_WITH_...} names RSA for both key exchange and authentication, and the mapper
+     * keeps the suite's MAC/PRF hash under the authentication algorithm. The suite lists each
+     * algorithm once and the hash with them.
+     */
+    @Test
+    void suiteListsEachAlgorithmOnceAndItsHash() {
+        final CBOMOutputFile output = new CBOMOutputFile();
+        output.add(List.of(mapped("TLS_RSA_WITH_AES_128_CBC_SHA")));
+        output.add(List.of(mapped("TLS_RSA_WITH_AES_256_GCM_SHA384")));
+        final Bom bom = output.getBom();
+        assertThat(problems(bom)).isEmpty();
+        final Map<String, List<String>> suites = suiteAlgorithmNames(bom);
+        assertThat(suites.get("TLS_RSA_WITH_AES_128_CBC_SHA"))
+                .containsExactly("RSA", "AES-128-CBC", "SHA-1");
+        assertThat(suites.get("TLS_RSA_WITH_AES_256_GCM_SHA384"))
+                .containsExactly("RSA", "AES-256-GCM", "SHA-384");
+        // absence: no suite lists a ref twice
+        component(bom, "TLS")
+                .getCryptoProperties()
+                .getProtocolProperties()
+                .getCipherSuites()
+                .forEach(suite -> assertThat(suite.getAlgorithms()).doesNotHaveDuplicates());
+    }
+
+    /**
+     * A TLS 1.3 suite has its hash as an asset of its own already; it is not listed twice, and no
+     * hash is taken from the AEAD cipher.
+     */
+    @Test
+    void tls13SuiteListsItsHashOnce() {
+        final CBOMOutputFile output = new CBOMOutputFile();
+        output.add(List.of(mapped("TLS_AES_256_GCM_SHA384")));
+        output.add(List.of(mapped("TLS_CHACHA20_POLY1305_SHA256")));
+        final Bom bom = output.getBom();
+        assertThat(problems(bom)).isEmpty();
+        assertThat(suiteAlgorithmNames(bom).get("TLS_AES_256_GCM_SHA384"))
+                .containsExactly("AES-256-GCM", "SHA-384");
+        // absence: the AEAD's own Poly1305 is part of the cipher, not a suite algorithm
+        assertThat(suiteAlgorithmNames(bom).get("TLS_CHACHA20_POLY1305_SHA256"))
+                .containsExactly("ChaCha20-Poly1305", "SHA-256");
+    }
+
+    @Nonnull
+    private INode mapped(@Nonnull String suiteName) {
+        return new CipherSuiteMapper().parse(suiteName, location).orElseThrow();
+    }
+
+    @Nonnull
+    private static Map<String, List<String>> suiteAlgorithmNames(@Nonnull Bom bom) {
+        final Map<String, String> names = new HashMap<>();
+        bom.getComponents().forEach(c -> names.put(c.getBomRef(), c.getName()));
+        final Map<String, List<String>> result = new HashMap<>();
+        component(bom, "TLS")
+                .getCryptoProperties()
+                .getProtocolProperties()
+                .getCipherSuites()
+                .forEach(
+                        suite ->
+                                result.put(
+                                        suite.getName(),
+                                        suite.getAlgorithms().stream().map(names::get).toList()));
+        return result;
     }
 
     @Nonnull

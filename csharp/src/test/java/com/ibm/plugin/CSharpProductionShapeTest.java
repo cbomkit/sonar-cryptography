@@ -76,8 +76,10 @@ class CSharpProductionShapeTest extends TestBase {
             // new AesGcm(derivedKey, TAG_SIZE_IN_BYTES) inside a fixed block, with the key size
             // from a const field and the tag size from another
             case 0 -> {
-                assertThat(node.asString()).isEqualTo("AES-256");
+                // the class fixes the mode: AesGcm is AES in GCM mode
+                assertThat(node.asString()).isEqualTo("AES-256-GCM");
                 assertChild(node, KeyLength.class, 256);
+                assertChild(node, com.ibm.mapper.model.Mode.class, "GCM");
                 assertChild(node, TagLength.class, 128);
                 INode decrypt = node.getChildren().get(Decrypt.class);
                 assertThat(decrypt).isNotNull();
@@ -124,7 +126,9 @@ class CSharpProductionShapeTest extends TestBase {
             // across its branches. Before the parse fallback this produced nothing at all, because
             // the broken region cost the rest of the file.
             case 5 -> {
-                assertThat(node.asString()).isEqualTo("RSA-4096");
+                // signing with PSS names the key RSA-PSS (CycloneDX has no PSS padding); the key
+                // length stays a child and becomes the CBOM's parameter set
+                assertThat(node.asString()).isEqualTo("RSA-PSS");
                 assertChild(node, KeyLength.class, 4096);
                 INode sign = node.getChildren().get(Sign.class);
                 assertThat(sign).isNotNull();

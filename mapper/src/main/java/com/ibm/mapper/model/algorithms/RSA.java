@@ -58,6 +58,13 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
 
     @Override
     public @Nonnull String asString() {
+        if (hasPssPadding()) {
+            // RSASSA-PSS has no padding value of its own in CycloneDX 1.6 (it is written as
+            // "other"), so the name has to carry it. An RSA key that signs with PSS reads like a
+            // signature that is not linked to a key, which the model names after RSAssaPSS; the
+            // key length stays a child and reaches the CBOM as the parameter set, as for OAEP.
+            return RSAssaPSS.NAME;
+        }
         if (this.is(Signature.class)) {
             // A plain RSA signature (not RSA-PSS, which is RSAssaPSS) is PKCS#1 v1.5.
             final StringBuilder sb = new StringBuilder(this.name).append("-PKCS1-1.5");
@@ -73,6 +80,16 @@ public final class RSA extends Algorithm implements KeyAgreement, Signature, Pub
             }
         }
         return this.name;
+    }
+
+    /**
+     * Whether this RSA carries the plain padding node {@code PSS}, which is how a translator
+     * records a PSS signature padding on an RSA key (see {@code DotNetPaddingNames}).
+     */
+    public boolean hasPssPadding() {
+        return this.hasChildOfType(Padding.class)
+                .map(padding -> RSAssaPSS.PSS_PADDING.equals(padding.asString()))
+                .orElse(false);
     }
 
     public RSA(@Nonnull DetectionLocation detectionLocation) {

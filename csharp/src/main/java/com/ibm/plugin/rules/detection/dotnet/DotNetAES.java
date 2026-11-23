@@ -36,6 +36,7 @@ import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
@@ -61,6 +62,9 @@ import javax.annotation.Nonnull;
  */
 @SuppressWarnings("java:S1192")
 public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
+
+    /** Context property naming the fixed mode of an AEAD class; read by the cipher translator. */
+    private static final String MODE = "mode";
 
     // =========================================================================
     // Property setter rules (synthetic set_X method invocations)
@@ -832,7 +836,16 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(AES_DEPENDING_RULES);
 
-    // new AesGcm(key) — GCM authenticated encryption (byte[] or ReadOnlySpan<Byte>, 1 param)
+    /**
+     * {@code new AesGcm(key)} / {@code new AesGcm(key, tagSizeInBytes)}: GCM authenticated
+     * encryption.
+     *
+     * <p>The mode is the class itself, not an argument, so no parameter could carry a {@code
+     * ModeFactory} (the only parameter every overload has, {@code key}, already carries the key
+     * size). It is stated by the context instead, {@code mode=GCM}, which {@code
+     * CSharpCipherContextTranslator} puts on the AES node; without it the component read as a bare
+     * {@code AES}.
+     */
     private static final IDetectionRule<CSharpTree> AES_GCM =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
@@ -845,11 +858,14 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .withOptionalNamedMethodParameter("tagSizeInBytes", "int")
                     .shouldBeDetectedAs(new TagSizeFactory<>(Size.UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
-                    .buildForContext(new CipherContext())
+                    .buildForContext(new CipherContext(Map.of(MODE, "GCM")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(GCM_OP_RULES);
 
-    // new AesCcm(key) — CCM authenticated encryption (byte[] or ReadOnlySpan<Byte>, 1 param)
+    /**
+     * {@code new AesCcm(key)}: CCM authenticated encryption. The mode is stated by the context, as
+     * for {@link #AES_GCM}.
+     */
     private static final IDetectionRule<CSharpTree> AES_CCM =
             new DetectionRuleBuilder<CSharpTree>()
                     .createDetectionRule()
@@ -859,7 +875,7 @@ public final class DotNetAES extends DetectionRuleSet<CSharpTree> {
                     .withNamedMethodParameter("key", MethodMatcher.ANY)
                     .shouldBeDetectedAs(new KeySizeFactory<>(Size.UnitType.BYTE))
                     .asChildOfParameterWithId(-1)
-                    .buildForContext(new CipherContext())
+                    .buildForContext(new CipherContext(Map.of(MODE, "CCM")))
                     .inBundle(() -> "DotNet")
                     .withDependingDetectionRules(CCM_OP_RULES);
 

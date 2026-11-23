@@ -34,6 +34,7 @@ import com.ibm.engine.model.Mode;
 import com.ibm.engine.model.Padding;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.CipherContext;
+import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.BlockCipher;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
@@ -176,15 +177,20 @@ class DotNetAESComprehensiveTest extends TestBase {
                 assertThat(nodes).hasSize(1);
                 assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
                 assertThat(nodes.get(0).asString()).isEqualTo("AES");
+                // the GCM/CCM mode of the AEAD classes must not leak onto plain AES
+                assertNoChild(nodes.get(0), com.ibm.mapper.model.Mode.class);
             }
 
             // new AesGcm(key) / new AesCcm(key): the key is a byte[32] local, so unlike the
-            // constructors above these two do carry a key length
+            // constructors above these two do carry a key length, and the class fixes the mode
             case 6, 7 -> {
+                final String mode = findingId == 6 ? "GCM" : "CCM";
                 assertThat(nodes).hasSize(1);
-                assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
-                assertThat(nodes.get(0).asString()).isEqualTo("AES-256");
+                // the enricher makes AES with an AEAD mode an authenticated-encryption primitive
+                assertThat(nodes.get(0).getKind()).isEqualTo(AuthenticatedEncryption.class);
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-256-" + mode);
                 assertChild(nodes.get(0), KeyLength.class, 256);
+                assertChild(nodes.get(0), com.ibm.mapper.model.Mode.class, mode);
             }
 
             // -----------------------------------------------------------------
@@ -314,11 +320,11 @@ class DotNetAESComprehensiveTest extends TestBase {
             // parameter layout is used rather than a shared guess.
             // -----------------------------------------------------------------
             case 41 -> {
-                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertEncryptFindings(detectionStore, nodes, "AES-256-GCM");
                 assertAeadLengths(nodes.get(0), Encrypt.class);
             }
             case 42 -> {
-                assertDecryptFindings(detectionStore, nodes, "AES-256");
+                assertDecryptFindings(detectionStore, nodes, "AES-256-GCM");
                 assertAeadLengths(nodes.get(0), Decrypt.class);
             }
 
@@ -326,11 +332,11 @@ class DotNetAESComprehensiveTest extends TestBase {
             // Section 9: AesCcm AEAD operations
             // -----------------------------------------------------------------
             case 43 -> {
-                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertEncryptFindings(detectionStore, nodes, "AES-256-CCM");
                 assertAeadLengths(nodes.get(0), Encrypt.class);
             }
             case 44 -> {
-                assertDecryptFindings(detectionStore, nodes, "AES-256");
+                assertDecryptFindings(detectionStore, nodes, "AES-256-CCM");
                 assertAeadLengths(nodes.get(0), Decrypt.class);
             }
 
@@ -361,7 +367,8 @@ class DotNetAESComprehensiveTest extends TestBase {
                     assertModePaddingFindings(detectionStore, nodes, "ECB", "None", "AES-ECB-None");
             // TestAesGcmFullFlow / TestAesCcmFullFlow: byte[32] key, byte[12] nonce, byte[16] tag
             case 51, 52 -> {
-                assertEncryptFindings(detectionStore, nodes, "AES-256");
+                assertEncryptFindings(
+                        detectionStore, nodes, findingId == 51 ? "AES-256-GCM" : "AES-256-CCM");
                 assertAeadLengths(nodes.get(0), Encrypt.class);
             }
 
@@ -379,20 +386,22 @@ class DotNetAESComprehensiveTest extends TestBase {
             // -----------------------------------------------------------------
             // new AesGcm(new byte[16], 12): a 128-bit key and a 96-bit tag
             case 58 -> {
-                assertThat(nodes.get(0).asString()).isEqualTo("AES-128");
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-128-GCM");
                 assertChild(nodes.get(0), KeyLength.class, 128);
                 assertChild(nodes.get(0), TagLength.class, 96);
             }
             // new AesGcm(tagSizeInBytes: 16, key: new byte[24]): both written as keywords, in the
             // reverse of the declared order, so a positional reading would swap them
             case 59 -> {
-                assertThat(nodes.get(0).asString()).isEqualTo("AES-192");
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-192-GCM");
                 assertChild(nodes.get(0), KeyLength.class, 192);
                 assertChild(nodes.get(0), TagLength.class, 128);
             }
-            // new AesGcm(key) with a key read from the environment: no key length may be reported
+            // new AesGcm(key) with a key read from the environment: no key length may be reported,
+            // the mode still is (it is the class, not an argument)
             case 60 -> {
-                assertThat(nodes.get(0).asString()).isEqualTo("AES");
+                assertThat(nodes.get(0).asString()).isEqualTo("AES-GCM");
+                assertChild(nodes.get(0), com.ibm.mapper.model.Mode.class, "GCM");
                 assertNoChild(nodes.get(0), KeyLength.class);
                 assertNoChild(nodes.get(0), TagLength.class);
             }
@@ -418,7 +427,7 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(modeStore.getDetectionValues().get(0).asString()).isEqualTo(expectedMode);
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
         assertThat(nodes.get(0).getChildren().get(com.ibm.mapper.model.Mode.class)).isNotNull();
     }
@@ -436,7 +445,7 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(keySizeStore.getDetectionValues().get(0).asString()).isEqualTo(expectedKeySize);
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
         assertThat(nodes.get(0).getChildren().get(KeyLength.class)).isNotNull();
         assertThat(nodes.get(0).getChildren().get(KeyLength.class).asString())
@@ -456,7 +465,7 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(paddingStore.getDetectionValues().get(0).asString()).isEqualTo(expectedPadding);
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
     }
 
@@ -467,6 +476,14 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(operationNode).isNotNull();
         assertChild(operationNode, NonceLength.class, 96);
         assertChild(operationNode, TagLength.class, 128);
+    }
+
+    /** AES with GCM or CCM is enriched to an authenticated-encryption primitive. */
+    @Nonnull
+    private static Class<? extends INode> expectedKind(@Nonnull String expectedNodeString) {
+        return expectedNodeString.endsWith("-GCM") || expectedNodeString.endsWith("-CCM")
+                ? AuthenticatedEncryption.class
+                : BlockCipher.class;
     }
 
     private void assertEncryptFindings(
@@ -481,7 +498,7 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(encryptStore.getDetectionValues().get(0).asString()).isEqualTo("ENCRYPT");
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
         assertThat(nodes.get(0).getChildren().get(Encrypt.class)).isNotNull();
     }
@@ -498,7 +515,7 @@ class DotNetAESComprehensiveTest extends TestBase {
         assertThat(decryptStore.getDetectionValues().get(0).asString()).isEqualTo("DECRYPT");
 
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
         assertThat(nodes.get(0).getChildren().get(Decrypt.class)).isNotNull();
     }
@@ -524,7 +541,7 @@ class DotNetAESComprehensiveTest extends TestBase {
 
         // The translated node captures the combined result
         assertThat(nodes).hasSize(1);
-        assertThat(nodes.get(0).getKind()).isEqualTo(BlockCipher.class);
+        assertThat(nodes.get(0).getKind()).isEqualTo(expectedKind(expectedNodeString));
         assertThat(nodes.get(0).asString()).isEqualTo(expectedNodeString);
     }
 }

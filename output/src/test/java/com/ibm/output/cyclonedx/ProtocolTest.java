@@ -146,7 +146,11 @@ class ProtocolTest extends TestBase {
                             assertThat(cipherSuite.getName())
                                     .isEqualTo("TLS_DHE_DSS_WITH_AES_256_CBC_SHA256");
 
-                            assertThat(cipherSuite.getAlgorithms()).hasSize(3);
+                            // FFDH, AES-256-CBC, DSA-SHA-256 and the suite's hash SHA-256, which
+                            // the model keeps under the DSA, each listed once
+                            assertThat(cipherSuite.getAlgorithms())
+                                    .hasSize(4)
+                                    .doesNotHaveDuplicates();
                             assertThat(cipherSuite.getIdentifiers()).contains("0x00", "0x6A");
                         }
                     }
@@ -226,14 +230,19 @@ class ProtocolTest extends TestBase {
                             assertThat(protocolProperties.getCipherSuites()).isNotNull();
                             assertThat(protocolProperties.getCipherSuites()).hasSize(1);
                             assertThat(protocolProperties.getCryptoRefArray()).isNotNull();
-                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(3);
+                            // the suite's hash is now a direct dependency of the protocol too
+                            assertThat(protocolProperties.getCryptoRefArray()).hasSize(4);
 
                             final org.cyclonedx.model.component.crypto.CipherSuite cipherSuite =
                                     protocolProperties.getCipherSuites().get(0);
                             assertThat(cipherSuite.getName())
                                     .isEqualTo("TLS_DHE_DSS_WITH_AES_256_CBC_SHA256");
 
-                            assertThat(cipherSuite.getAlgorithms()).hasSize(3);
+                            // FFDH, AES-256-CBC, DSA-SHA-256 and the suite's hash SHA-256, which
+                            // the model keeps under the DSA, each listed once
+                            assertThat(cipherSuite.getAlgorithms())
+                                    .hasSize(4)
+                                    .doesNotHaveDuplicates();
                             assertThat(cipherSuite.getIdentifiers()).contains("0x00", "0x6A");
                         }
                     }

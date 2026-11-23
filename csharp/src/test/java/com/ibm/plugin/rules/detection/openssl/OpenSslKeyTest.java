@@ -84,7 +84,7 @@ class OpenSslKeyTest extends TestBase {
                         "RSA-OAEP", // set_rsa_padding(RSA_PKCS1_OAEP_PADDING)
                         "RSA", // set_rsa_padding(RSA_PKCS1_PADDING)
                         "RSA", // set_rsa_padding(RSA_NO_PADDING)
-                        "RSA", // set_rsa_padding(RSA_PKCS1_PSS_PADDING)
+                        "RSA-PSS", // set_rsa_padding(RSA_PKCS1_PSS_PADDING)
                         "RSA", // set_rsa_padding(RSA_X931_PADDING)
                         "RSA-OAEP", // RSA_public_encrypt
                         "RSA-OAEP", // RSA_private_decrypt

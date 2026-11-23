@@ -33,6 +33,7 @@ import com.ibm.mapper.model.InitializationVectorLength;
 import com.ibm.mapper.model.Key;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mode;
+import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.model.NonceLength;
 import com.ibm.mapper.model.Oid;
 import com.ibm.mapper.model.Padding;
@@ -182,7 +183,7 @@ public class CBOMOutputFile implements IOutputFile {
                                 Utils.oneOf(
                                         children.get(KeyLength.class),
                                         children.get(DigestSize.class),
-                                        children.get(BlockSize.class),
+                                        notDefault(children.get(BlockSize.class)),
                                         children.get(ParameterSetIdentifier.class)))
                         .padding(Utils.oneOf(children.get(OAEP.class), children.get(Padding.class)))
                         .cryptoFunctions(
@@ -209,6 +210,16 @@ public class CBOMOutputFile implements IOutputFile {
         addComponentAndDependencies(
                 algorithm, optionalId.get(), parentBomRef, node, node.getDetectionContext());
         return this.components.get(optionalId.get()).getBomRef();
+    }
+
+    /**
+     * A block size the model put on an algorithm by default ({@code BlockSize.ofDefault}, e.g. 128
+     * on every {@code AES}) is not a parameter set: CycloneDX readers take {@code
+     * parameterSetIdentifier} as the key size ("128" in AES-128), so an AES whose key length is
+     * unknown read as AES-128. Only a block size that was detected may stand in for it.
+     */
+    @Nullable private static INode notDefault(@Nullable INode node) {
+        return node == null || node.getOrigin() == NodeOrigin.DEFAULT ? null : node;
     }
 
     private void createKeyComponent(@Nullable String parentBomRef, @Nonnull Key node) {
