@@ -22,10 +22,12 @@ package com.ibm.plugin.rules.detection;
 import com.ibm.engine.rule.DetectionRuleSet;
 import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
+import com.ibm.plugin.rules.detection.auth.AuthDetectionRules;
 import com.ibm.plugin.rules.detection.bc.BouncyCastleDetectionRules;
 import com.ibm.plugin.rules.detection.dcm4che.Dcm4cheConnectionTls;
 import com.ibm.plugin.rules.detection.dcm4che.Dcm4cheDicom;
 import com.ibm.plugin.rules.detection.jca.JcaDetectionRules;
+import com.ibm.plugin.rules.detection.random.SecureRandomGetInstance;
 import com.ibm.plugin.rules.detection.ssl.SSLDetectionRules;
 import java.util.List;
 import java.util.stream.Stream;
@@ -42,7 +44,9 @@ public final class JavaDetectionRules extends DetectionRuleSet<Tree> {
                         RuleSets.rulesOf(BouncyCastleDetectionRules.class).stream(),
                         RuleSets.rulesOf(SSLDetectionRules.class).stream(),
                         RuleSets.rulesOf(Dcm4cheConnectionTls.class).stream(),
-                        RuleSets.rulesOf(Dcm4cheDicom.class).stream())
+                        RuleSets.rulesOf(Dcm4cheDicom.class).stream(),
+                        RuleSets.rulesOf(AuthDetectionRules.class).stream(),
+                        RuleSets.rulesOf(SecureRandomGetInstance.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

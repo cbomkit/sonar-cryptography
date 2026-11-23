@@ -8,7 +8,7 @@ public class BcEd25519ctxSignerTestFile {
         // Create signer with a context
         byte[] context = "Example Context".getBytes();
         Ed25519ctxSigner signer = new Ed25519ctxSigner(context); // Noncompliant {{(Signature) Ed25519}}
-        signer.init(true, new Ed25519PrivateKeyParameters(new SecureRandom()));
+        signer.init(true, new Ed25519PrivateKeyParameters(new SecureRandom())); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
 
         // Data to sign
         byte[] data = "Hello, World!".getBytes();

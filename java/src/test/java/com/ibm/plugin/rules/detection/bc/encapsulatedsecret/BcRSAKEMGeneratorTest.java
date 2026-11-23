@@ -27,6 +27,7 @@ import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DigestContext;
 import com.ibm.engine.model.context.KeyContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.INode;
@@ -65,7 +66,13 @@ class BcRSAKEMGeneratorTest extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
-        if (findingId == 0) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
+        if (findingId == 1) {
             /*
              * Detection Store
              */
@@ -110,7 +117,7 @@ class BcRSAKEMGeneratorTest extends TestBase {
             assertThat(digestSizeNode).isNotNull();
             assertThat(digestSizeNode.getChildren()).isEmpty();
             assertThat(digestSizeNode.asString()).isEqualTo("256");
-        } else if (findingId == 1) {
+        } else if (findingId == 2) {
             /*
              * Detection Store
              */
@@ -171,7 +178,7 @@ class BcRSAKEMGeneratorTest extends TestBase {
             assertThat(digestSizeNode).isNotNull();
             assertThat(digestSizeNode.getChildren()).isEmpty();
             assertThat(digestSizeNode.asString()).isEqualTo("256");
-        } else if (findingId == 2) {
+        } else if (findingId == 3) {
             /*
              * Detection Store
              */

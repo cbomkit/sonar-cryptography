@@ -13,7 +13,7 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test1() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         secureRandom.nextBytes(keyBytes);
 
         // Instantiate GCMSIVBlockCipher with constructor
@@ -29,7 +29,7 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test2() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
@@ -48,7 +48,7 @@ public class BcGCMSIVBlockCipherTestFile {
     public static void test3() {
         // Generate a random key (for demonstration purposes)
         byte[] keyBytes = new byte[16];
-        SecureRandom secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
         secureRandom.nextBytes(keyBytes);
 
         // Create a block cipher engine
