@@ -29,6 +29,7 @@ import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.AlgorithmParameterContext;
 import com.ibm.engine.model.context.CipherContext;
 import com.ibm.engine.model.context.MacContext;
+import com.ibm.engine.model.context.PRNGContext;
 import com.ibm.mapper.model.AuthenticatedEncryption;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.Mac;
@@ -62,11 +63,17 @@ class BcChaCha20Poly1305Test extends TestBase {
             int findingId,
             @Nonnull DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> detectionStore,
             @Nonnull List<INode> nodes) {
+        // Restored SecureRandom key-generation scaffolding is now detected as a PRNG
+        // asset and surfaces as its own finding, which this test does not assert on.
+        if (detectionStore.getDetectionValueContext() instanceof PRNGContext) {
+            assertThat(nodes).as("PRNG finding %d should translate", findingId).isNotEmpty();
+            return;
+        }
         /**
          * Optimally, we shouldn't have these direct detections of engines, as they appear in the
          * depending detection rules
          */
-        if (findingId == 2) {
+        if (findingId == 4) {
             return;
         }
         /*
@@ -78,7 +85,7 @@ class BcChaCha20Poly1305Test extends TestBase {
         IValue<Tree> value0 = detectionStore.getDetectionValues().get(0);
         assertThat(value0).isInstanceOf(ValueAction.class);
         assertThat(value0.asString())
-                .isEqualTo(findingId == 0 ? "ChaCha20Poly1305" : "ChaCha20Poly1305[WITH_MAC]");
+                .isEqualTo(findingId == 1 ? "ChaCha20Poly1305" : "ChaCha20Poly1305[WITH_MAC]");
 
         DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_1 =
                 getStoreOfValueType(OperationMode.class, detectionStore.getChildren());
@@ -97,7 +104,7 @@ class BcChaCha20Poly1305Test extends TestBase {
         assertThat(value0_1_1).isInstanceOf(MacSize.class);
         assertThat(value0_1_1.asString()).isEqualTo("128");
 
-        if (findingId == 1) {
+        if (findingId == 3) {
             DetectionStore<JavaCheck, Tree, Symbol, JavaFileScannerContext> store_2 =
                     getStoreOfValueType(ValueAction.class, detectionStore.getChildren());
             assertThat(store_2.getDetectionValues()).hasSize(1);
@@ -116,9 +123,9 @@ class BcChaCha20Poly1305Test extends TestBase {
         // AuthenticatedEncryption
         INode authenticatedEncryptionNode1 = nodes.get(0);
         assertThat(authenticatedEncryptionNode1.getKind()).isEqualTo(AuthenticatedEncryption.class);
-        assertThat(authenticatedEncryptionNode1.getChildren()).hasSize(findingId == 0 ? 3 : 2);
+        assertThat(authenticatedEncryptionNode1.getChildren()).hasSize(findingId == 1 ? 3 : 2);
         assertThat(authenticatedEncryptionNode1.asString())
-                .isEqualTo(findingId == 0 ? "ChaCha20-Poly1305" : "ChaCha20-Poly1305");
+                .isEqualTo(findingId == 1 ? "ChaCha20-Poly1305" : "ChaCha20-Poly1305");
 
         // Encrypt under AuthenticatedEncryption
         INode encryptNode1 = authenticatedEncryptionNode1.getChildren().get(Encrypt.class);
@@ -126,7 +133,7 @@ class BcChaCha20Poly1305Test extends TestBase {
         assertThat(encryptNode1.getChildren()).isEmpty();
         assertThat(encryptNode1.asString()).isEqualTo("ENCRYPT");
 
-        if (findingId == 0) {
+        if (findingId == 1) {
             // MessageDigest under AuthenticatedEncryption
             INode messageDigestNode1 =
                     authenticatedEncryptionNode1.getChildren().get(MessageDigest.class);
@@ -139,7 +146,7 @@ class BcChaCha20Poly1305Test extends TestBase {
             assertThat(tagLengthNode1).isNotNull();
             assertThat(tagLengthNode1.getChildren()).isEmpty();
             assertThat(tagLengthNode1.asString()).isEqualTo("128");
-        } else if (findingId == 1) {
+        } else if (findingId == 3) {
             // Mac under AuthenticatedEncryption
             INode macNode1 = authenticatedEncryptionNode1.getChildren().get(Mac.class);
             assertThat(macNode1).isNotNull();
