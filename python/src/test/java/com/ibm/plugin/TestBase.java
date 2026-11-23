@@ -126,4 +126,12 @@ public abstract class TestBase extends PythonInventoryRule {
                                         .anyMatch(value -> value.getClass().equals(valueType)))
                 .toList();
     }
+
+    /** {@code true} when {@code node} or any of its descendants is of {@code kind}. */
+    public static boolean containsNodeOfKind(
+            @Nonnull INode node, @Nonnull Class<? extends INode> kind) {
+        return kind.isInstance(node)
+                || node.getChildren().values().stream()
+                        .anyMatch(child -> containsNodeOfKind(child, kind));
+    }
 }

@@ -35,6 +35,12 @@ public class DigestSizeFactory<T> extends SizeFactory<T> implements IValueFactor
         super(interpretAsUnitType);
     }
 
+    public DigestSizeFactory(
+            @Nonnull Size.UnitType interpretAsUnitType,
+            @Nonnull StringInterpretation stringInterpretation) {
+        super(interpretAsUnitType, stringInterpretation);
+    }
+
     @Nonnull
     @Override
     public Optional<IValue<T>> apply(@Nonnull ResolvedValue<Object, T> objectTResolvedValue) {

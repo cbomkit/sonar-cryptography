@@ -24,6 +24,7 @@ import com.ibm.mapper.model.BlockSize;
 import com.ibm.mapper.model.DigestSize;
 import com.ibm.mapper.model.IPrimitive;
 import com.ibm.mapper.model.MessageDigest;
+import com.ibm.mapper.model.NodeOrigin;
 import com.ibm.mapper.utils.DetectionLocation;
 import javax.annotation.Nonnull;
 
@@ -55,7 +56,14 @@ public final class MD5 extends Algorithm implements MessageDigest {
     public MD5(
             @Nonnull final Class<? extends IPrimitive> asKind,
             @Nonnull DetectionLocation detectionLocation) {
-        super(NAME, asKind, detectionLocation);
+        this(asKind, detectionLocation, NodeOrigin.DETECTED);
+    }
+
+    public MD5(
+            @Nonnull final Class<? extends IPrimitive> asKind,
+            @Nonnull DetectionLocation detectionLocation,
+            @Nonnull NodeOrigin origin) {
+        super(NAME, asKind, detectionLocation, origin);
         this.put(BlockSize.ofDefault(512, detectionLocation));
         this.put(new DigestSize(128, detectionLocation));
     }
