@@ -71,6 +71,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
@@ -89,6 +90,10 @@ import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Service;
+import org.cyclonedx.model.component.crypto.AlgorithmProperties;
+import org.cyclonedx.model.component.crypto.CryptoProperties;
+import org.cyclonedx.model.component.crypto.enums.AssetType;
+import org.cyclonedx.model.component.crypto.enums.CryptoFunction;
 import org.cyclonedx.model.component.evidence.Occurrence;
 import org.cyclonedx.model.metadata.ToolInformation;
 import org.slf4j.Logger;
@@ -273,6 +278,118 @@ public class CBOMOutputFile implements IOutputFile {
         addComponentAndDependencies(rcm, optionalId.get(), parentBomRef, node);
     }
 
+    /**
+     * Merges the crypto properties of {@code incoming} into {@code kept}, which share a name.
+     *
+     * <p>{@code cryptoFunctions} become the union, since together the occurrences perform every
+     * function any of them performs. A single-valued property is kept only if both state the same
+     * value and is cleared otherwise. A cleared value never comes back, so the result does not
+     * depend on the order of the detections. Nothing is shared with {@code incoming}.
+     */
+    static void mergeCryptoProperties(@Nonnull Component kept, @Nonnull Component incoming) {
+        final CryptoProperties from = incoming.getCryptoProperties();
+        CryptoProperties into = kept.getCryptoProperties();
+        if (into == null) {
+            if (from == null) {
+                return;
+            }
+            into = new CryptoProperties();
+            into.setAssetType(from.getAssetType());
+            kept.setCryptoProperties(into);
+        } else if (from != null && from.getAssetType() != into.getAssetType()) {
+            // different kinds of asset under one name: nothing to compare
+            return;
+        }
+        if (into.getAssetType() != AssetType.ALGORITHM) {
+            return;
+        }
+        into.setOid(
+                from == null || !Objects.equals(into.getOid(), from.getOid())
+                        ? null
+                        : into.getOid());
+
+        final AlgorithmProperties source = from == null ? null : from.getAlgorithmProperties();
+        final AlgorithmProperties target = into.getAlgorithmProperties();
+        final List<CryptoFunction> functions =
+                union(
+                        target == null ? null : target.getCryptoFunctions(),
+                        source == null ? null : source.getCryptoFunctions());
+        if (target == null) {
+            // every single-valued property is cleared, so only the functions are left
+            if (functions != null) {
+                final AlgorithmProperties merged = new AlgorithmProperties();
+                merged.setCryptoFunctions(functions);
+                into.setAlgorithmProperties(merged);
+            }
+            return;
+        }
+        target.setCryptoFunctions(functions);
+        target.setPrimitive(agreed(target, source, AlgorithmProperties::getPrimitive));
+        target.setParameterSetIdentifier(
+                agreed(target, source, AlgorithmProperties::getParameterSetIdentifier));
+        target.setCurve(agreed(target, source, AlgorithmProperties::getCurve));
+        target.setExecutionEnvironment(
+                agreed(target, source, AlgorithmProperties::getExecutionEnvironment));
+        target.setImplementationPlatform(
+                agreed(target, source, AlgorithmProperties::getImplementationPlatform));
+        target.setMode(agreed(target, source, AlgorithmProperties::getMode));
+        target.setPadding(agreed(target, source, AlgorithmProperties::getPadding));
+        target.setClassicalSecurityLevel(
+                agreed(target, source, AlgorithmProperties::getClassicalSecurityLevel));
+        target.setNistQuantumSecurityLevel(
+                agreed(target, source, AlgorithmProperties::getNistQuantumSecurityLevel));
+    }
+
+    /** The value both state, or {@code null} if either lacks it or they differ. */
+    @Nullable private static <T> T agreed(
+            @Nonnull AlgorithmProperties target,
+            @Nullable AlgorithmProperties source,
+            @Nonnull Function<AlgorithmProperties, T> property) {
+        if (source == null) {
+            return null;
+        }
+        final T value = property.apply(target);
+        return Objects.equals(value, property.apply(source)) ? value : null;
+    }
+
+    /** Union in order of first appearance; {@code null} if empty, so the field stays absent. */
+    @Nullable private static <T> List<T> union(@Nullable List<T> first, @Nullable List<T> second) {
+        final List<T> result = new ArrayList<>();
+        Stream.concat(
+                        first == null ? Stream.empty() : first.stream(),
+                        second == null ? Stream.empty() : second.stream())
+                .filter(value -> !result.contains(value))
+                .forEach(result::add);
+        return result.isEmpty() ? null : result;
+    }
+
+    private static void mergeOccurrences(@Nonnull Component kept, @Nonnull Component incoming) {
+        if (incoming.getEvidence() == null) {
+            return;
+        }
+        if (kept.getEvidence() == null) {
+            kept.setEvidence(incoming.getEvidence());
+            return;
+        }
+        final List<Occurrence> merged =
+                Stream.concat(
+                                kept.getEvidence().getOccurrences().stream(),
+                                incoming.getEvidence().getOccurrences().stream())
+                        .filter(
+                                com.ibm.output.cyclondx.builder.Utils.distinctByKey(
+                                        o ->
+                                                o.getLocation()
+                                                        + " "
+                                                        + o.getLine()
+                                                        + " "
+                                                        + o.getOffset()
+                                                        + " "
+                                                        + o.getAdditionalContext()
+                                                        + " "))
+                        .toList();
+        kept.getEvidence().setOccurrences(merged);
+    }
+
     private void addComponentAndDependencies(
             @Nonnull final Component component,
             @Nonnull String componentId,
@@ -283,25 +400,10 @@ public class CBOMOutputFile implements IOutputFile {
         } else {
             this.components.computeIfPresent(
                     componentId,
-                    (id, c) -> {
-                        final List<Occurrence> merge =
-                                Stream.concat(
-                                                c.getEvidence().getOccurrences().stream(),
-                                                component.getEvidence().getOccurrences().stream())
-                                        .filter(
-                                                com.ibm.output.cyclondx.builder.Utils.distinctByKey(
-                                                        o ->
-                                                                o.getLocation()
-                                                                        + " "
-                                                                        + o.getLine()
-                                                                        + " "
-                                                                        + o.getOffset()
-                                                                        + " "
-                                                                        + o.getAdditionalContext()
-                                                                        + " "))
-                                        .toList();
-                        c.getEvidence().setOccurrences(merge);
-                        return c;
+                    (id, kept) -> {
+                        mergeOccurrences(kept, component);
+                        mergeCryptoProperties(kept, component);
+                        return kept;
                     });
         }
 
