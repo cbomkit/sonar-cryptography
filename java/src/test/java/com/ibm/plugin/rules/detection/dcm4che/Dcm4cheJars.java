@@ -36,8 +36,10 @@ import javax.annotation.Nonnull;
  * MIT-style, so carrying its jar costs nothing; dcm4che is MPL 1.1 / GPL 2.0 / LGPL 2.1, and a copy
  * in this Apache-2.0 repository would be redistribution of an MPL-covered binary, which carries a
  * source-availability obligation. {@code java/pom.xml} fetches them from {@code maven.dcm4che.org}
- * into {@code target/test-jars} instead, so the developer and CI obtain them from dcm4che and this
- * project redistributes nothing.
+ * instead, so the developer and CI obtain them from dcm4che and this project redistributes nothing.
+ * The fetch caches them in the local Maven repository ({@code org/dcm4che/<artifactId>/<version>})
+ * and copies them into {@code target/test-jars}, so after one online build they are there for
+ * offline builds and after {@code mvn clean} too.
  *
  * <p>The fetch is deliberately allowed to fail. An offline or network-restricted build skips the
  * download, {@link #available()} then returns {@code false}, and the two dcm4che test classes
@@ -90,7 +92,8 @@ public class Dcm4cheJars {
     @Nonnull
     public static String unavailableReason() {
         return "the dcm4che test jars are not in target/test-jars; run `mvn -pl java"
-                + " generate-test-resources` with network access to fetch them";
+                + " generate-test-resources` once with network access to fetch them into the"
+                + " local Maven repository";
     }
 
     private static boolean isPinnedArtifact(@Nonnull File jar) {
