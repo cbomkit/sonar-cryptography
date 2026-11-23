@@ -26,6 +26,7 @@ import com.ibm.engine.rule.RuleSets;
 import com.ibm.engine.rule.builder.DetectionRuleBuilder;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.sonar.plugins.java.api.tree.Tree;
 
@@ -34,10 +35,23 @@ public final class SSLSetParameters extends DetectionRuleSet<Tree> {
     private static final IDetectionRule<Tree> SSL_PARAMETERS =
             new DetectionRuleBuilder<Tree>()
                     .createDetectionRule()
-                    .forObjectExactTypes("javax.net.ssl.SSLServerSocket")
+                    // All three JSSE endpoints declare setSSLParameters, and the Java frontend
+                    // matches the exact declared type, so naming only the server socket left the
+                    // client socket and the SSLEngine uncovered.
+                    .forObjectExactTypes(
+                            "javax.net.ssl.SSLServerSocket",
+                            "javax.net.ssl.SSLSocket",
+                            "javax.net.ssl.SSLEngine")
                     .forMethods("setSSLParameters")
                     .withMethodParameter("javax.net.ssl.SSLParameters")
-                    .addDependingDetectionRules(RuleSets.rulesOf(SSLParametersSetProtocols.class))
+                    .addDependingDetectionRules(
+                            Stream.of(
+                                            RuleSets.rulesOf(SSLParametersSetProtocols.class)
+                                                    .stream(),
+                                            RuleSets.rulesOf(SSLParametersSetCipherSuites.class)
+                                                    .stream())
+                                    .flatMap(i -> i)
+                                    .toList())
                     .buildForContext(new ProtocolContext(Map.of("kind", "TLS")))
                     .inBundle(() -> "SSL")
                     .withoutDependingDetectionRules();

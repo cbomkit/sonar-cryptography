@@ -21,6 +21,7 @@ package com.ibm.plugin;
 
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.sonar.api.PropertyType;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.config.PropertyDefinition.ConfigScope;
 
@@ -36,6 +37,17 @@ public final class Configuration {
                         .name("CBOM filename")
                         .description("Filename for the generated CBOM")
                         .defaultValue(Constants.CBOM_OUTPUT_NAME_DEFAULT)
+                        .build(),
+                PropertyDefinition.builder(Constants.BEHAVIORS_ENABLED)
+                        .onConfigScopes(ConfigScope.PROJECT)
+                        .subCategory(Constants.SUB_CATEGORY_GENERAL)
+                        .name("Behaviors (experimental)")
+                        .description(
+                                "Include security behavior annotations in the generated CBOM. "
+                                        + "This experimental feature uses a draft CycloneDX taxonomy "
+                                        + "and may change in future versions.")
+                        .type(PropertyType.BOOLEAN)
+                        .defaultValue("false")
                         .build());
     }
 }

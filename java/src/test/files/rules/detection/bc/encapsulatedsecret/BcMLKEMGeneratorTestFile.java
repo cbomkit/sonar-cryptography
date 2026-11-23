@@ -8,7 +8,7 @@ public class BcMLKEMGeneratorTestFile {
 
     public static void test() {
         // Create a SecureRandom instance
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = new SecureRandom(); // Noncompliant {{(PseudorandomNumberGenerator) PRNG}}
 
         // Specify Kyber parameters
         MLKEMKeyParameters params = new MLKEMKeyParameters(true, MLKEMParameters.ml_kem_1024);

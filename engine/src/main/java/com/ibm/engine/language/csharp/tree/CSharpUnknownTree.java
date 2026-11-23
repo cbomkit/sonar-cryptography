@@ -31,17 +31,33 @@ import javax.annotation.Nonnull;
  * the RSA detection from firing at all — losing the algorithm, not just the key size. Resolution
  * simply has no branch for this node, so it yields no value, and {@code CSharpTypeInference} infers
  * no type for it, so it never blocks a rule that declares a concrete parameter type.
+ *
+ * <p>One fact about such an argument is still known without its value: a target-typed creation
+ * ({@code new()}, {@code new(args)}) certainly produces an object, although the converter cannot
+ * name its type. {@link #isObjectCreation()} carries that, for a presence-based parameter that asks
+ * only whether an instance is passed (see {@code IValueFactory#isPresenceBased}).
  */
 public final class CSharpUnknownTree implements CSharpTree {
 
     private final int line;
     private final int column;
     @Nonnull private final String text;
+    private final boolean objectCreation;
 
     public CSharpUnknownTree(int line, int column, @Nonnull String text) {
+        this(line, column, text, false);
+    }
+
+    public CSharpUnknownTree(int line, int column, @Nonnull String text, boolean objectCreation) {
         this.line = line;
         this.column = column;
         this.text = text;
+        this.objectCreation = objectCreation;
+    }
+
+    /** Whether this is a target-typed creation ({@code new()}, {@code new(args)}). */
+    public boolean isObjectCreation() {
+        return objectCreation;
     }
 
     @Override
