@@ -15,6 +15,15 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- dcm4che publishes to its own repository; the whole org/dcm4che group is a 404 on
+             Maven Central. Declared as a plain URL for the antrun fetch below rather than as a
+             <repository>, so Maven's dependency resolution never depends on this host. The fetch
+             caches the jars in the local Maven repository; see the plugin below. -->
+        <dcm4che.version>5.35.2</dcm4che.version>
+        <dcm4che.repository>https://maven.dcm4che.org</dcm4che.repository>
+        <!-- SHA-256 of the published artifacts, the same pins as Dcm4cheJars.DIGESTS. -->
+        <dcm4che-net.sha256>40d17b06339e08a2341b2d9785014fdc047b79bb04d25f8f7267df58cff85bd6</dcm4che-net.sha256>
+        <dcm4che-core.sha256>f660d2aa8dbcabda1d0051431d9c39ff39453de9e7541b227de8aa1a900441a8</dcm4che-core.sha256>
     </properties>
 
     <dependencies>
@@ -66,5 +75,117 @@
             <version>33.7.1-jre</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <!-- Not required by the analyzer (it uses the pinned jar in test-jars via
+                 AuthInterfaceJars); kept only to enable IDE linting in auth detection test files -->
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- Not required by the analyzer (it uses the pinned jar in test-jars via
+                 AuthInterfaceJars); kept only to enable IDE linting in auth detection test files -->
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- The dcm4che jars the Dcm4che* tests need on the verifier classpath. They are
+                     fetched rather than checked in: dcm4che is MPL 1.1 / GPL 2.0 / LGPL 2.1, and
+                     carrying the binary in this Apache-2.0 repository would be redistributing it,
+                     which brings a source-availability obligation with it. Downloading it here
+                     means the developer and CI obtain it from dcm4che directly and this project
+                     redistributes nothing.
+
+                     Each jar is cached in the local Maven repository at its standard path,
+                     ${settings.localRepository}/org/dcm4che/<artifactId>/<version>/, and copied
+                     from there into target/test-jars. It is downloaded only when the cached copy is
+                     missing or does not match its pinned SHA-256; a download goes to a .part file
+                     and is moved into the cache only once its digest matches, so the cache never
+                     holds a partial or substituted jar. After one online build, `mvn clean` and
+                     offline builds (-o) run the dcm4che tests instead of skipping them.
+
+                     This is antrun rather than dependency:get/copy on purpose. Declaring
+                     maven.dcm4che.org as a <repository> would make every dependency resolution of
+                     the build consult it; dependency:get can take the repository for one execution
+                     only, but it fails the build when it cannot download (offline, blocked host,
+                     a settings.xml mirror-of-* proxy that lacks dcm4che), and it checks only the
+                     repository's own .sha1, not a pinned digest.
+
+                     ignoreerrors keeps an offline or blocked build green: with no cached copy the
+                     download is skipped, Dcm4cheJars.available() returns false, and the two
+                     dcm4che test classes report as skipped rather than failing. Dcm4cheJars checks
+                     the same digests again on the copies in target/test-jars. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>fetch-dcm4che-test-jars</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target xmlns:if="ant:if" xmlns:unless="ant:unless">
+                                <macrodef name="dcm4che-test-jar">
+                                    <attribute name="artifact"/>
+                                    <attribute name="sha256"/>
+                                    <sequential>
+                                        <local name="dcm.dir"/>
+                                        <local name="dcm.jar"/>
+                                        <local name="dcm.cached"/>
+                                        <local name="dcm.fetched"/>
+                                        <property name="dcm.dir"
+                                                  value="${settings.localRepository}/org/dcm4che/@{artifact}/${dcm4che.version}"/>
+                                        <property name="dcm.jar"
+                                                  value="${dcm.dir}/@{artifact}-${dcm4che.version}.jar"/>
+                                        <condition property="dcm.cached">
+                                            <and>
+                                                <available file="${dcm.jar}"/>
+                                                <checksum file="${dcm.jar}" algorithm="SHA-256"
+                                                          property="@{sha256}"/>
+                                            </and>
+                                        </condition>
+                                        <sequential unless:set="dcm.cached">
+                                            <mkdir dir="${dcm.dir}"/>
+                                            <delete file="${dcm.jar}.part" quiet="true"/>
+                                            <get src="${dcm4che.repository}/org/dcm4che/@{artifact}/${dcm4che.version}/@{artifact}-${dcm4che.version}.jar"
+                                                 dest="${dcm.jar}.part"
+                                                 ignoreerrors="true" maxtime="60" retries="3"/>
+                                            <condition property="dcm.fetched">
+                                                <and>
+                                                    <available file="${dcm.jar}.part"/>
+                                                    <checksum file="${dcm.jar}.part" algorithm="SHA-256"
+                                                              property="@{sha256}"/>
+                                                </and>
+                                            </condition>
+                                            <move file="${dcm.jar}.part" tofile="${dcm.jar}"
+                                                  overwrite="true" if:set="dcm.fetched"/>
+                                            <delete file="${dcm.jar}.part" quiet="true"/>
+                                            <echo level="warning" unless:set="dcm.fetched"
+                                                  message="@{artifact} ${dcm4che.version} is not cached and could not be fetched; its tests will be skipped"/>
+                                        </sequential>
+                                        <copy todir="${project.build.directory}/test-jars"
+                                              failonerror="false" quiet="true">
+                                            <fileset file="${dcm.jar}"/>
+                                        </copy>
+                                    </sequential>
+                                </macrodef>
+                                <mkdir dir="${project.build.directory}/test-jars"/>
+                                <dcm4che-test-jar artifact="dcm4che-net" sha256="${dcm4che-net.sha256}"/>
+                                <dcm4che-test-jar artifact="dcm4che-core" sha256="${dcm4che-core.sha256}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

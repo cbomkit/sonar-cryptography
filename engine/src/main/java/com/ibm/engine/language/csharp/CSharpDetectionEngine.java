@@ -37,6 +37,7 @@ import com.ibm.engine.language.csharp.tree.CSharpMethodInvocationTree;
 import com.ibm.engine.language.csharp.tree.CSharpObjectCreationTree;
 import com.ibm.engine.language.csharp.tree.CSharpScope;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
+import com.ibm.engine.language.csharp.tree.CSharpUnknownTree;
 import com.ibm.engine.language.csharp.tree.CSharpVariable;
 import com.ibm.engine.model.factory.IValueFactory;
 import com.ibm.engine.model.factory.SizeFactory;
@@ -44,6 +45,7 @@ import com.ibm.engine.rule.DetectableParameter;
 import com.ibm.engine.rule.DetectionRule;
 import com.ibm.engine.rule.MethodDetectionRule;
 import com.ibm.engine.rule.Parameter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -292,6 +294,25 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         if (parameter.is(DetectableParameter.class)) {
             DetectableParameter<CSharpTree> detectable =
                     (DetectableParameter<CSharpTree>) parameter;
+            if (detectable.getiValueFactory().isPresenceBased()) {
+                // The parameter says something by holding an object rather than by its value, so
+                // the factory is called once for the bound expression -- but only when the
+                // expression certainly is an object. For fo-dicom's TLS handlers null is precisely
+                // the argument that means the opposite, and it arrives in more shapes than a
+                // written literal: `default`, a local holding null, a parameter or call result that
+                // may be null. None of those is a statement, and reading one as TLS would be a
+                // guess. The value is not resolved first: a member access resolves to its own name
+                // and would otherwise reach the factory as a "value".
+                if (isCreatedObject(expression)) {
+                    final ResolvedValue<Object, CSharpTree> presence =
+                            new ResolvedValue<>(expression, expression);
+                    detectionStore.onReceivingNewDetection(
+                            new ValueDetection<>(presence, detectable, parentTree, parentTree));
+                } else if (!parameter.getDetectionRules().isEmpty()) {
+                    dispatchDependingParameter(parameter, expression);
+                }
+                return;
+            }
             List<ResolvedValue<Object, CSharpTree>> resolved =
                     resolveValuesInInnerScope(
                             Object.class, expression, detectable.getiValueFactory());
@@ -316,6 +337,39 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         } else if (!parameter.getDetectionRules().isEmpty()) {
             dispatchDependingParameter(parameter, expression);
         }
+    }
+
+    /**
+     * Whether an argument certainly holds an object, which is what a presence-based parameter (see
+     * {@link IValueFactory#isPresenceBased}) needs before it may report anything: an object
+     * creation ({@code new T(...)}, also cast or parenthesised, and the target-typed {@code
+     * new()}), or a local variable assigned exactly once, from such a creation.
+     *
+     * <p>Everything else may be null and so says nothing: a {@code null} or {@code default}
+     * literal, a local initialised with one, a reassigned local, a method parameter, a field, a
+     * call result, a conditional. A parameter that every call site in the file fills with a
+     * creation is still refused -- the converter records the agreed argument as its initializer,
+     * but a caller outside the file is invisible here.
+     */
+    private static boolean isCreatedObject(@Nonnull CSharpTree expression) {
+        if (isCreationExpression(expression)) {
+            return true;
+        }
+        if (!(expression instanceof CSharpIdentifierTree identifier)
+                || identifier.getScope() == null) {
+            return false;
+        }
+        final CSharpVariable variable = identifier.getScope().lookup(identifier.getName());
+        return variable != null
+                && variable.kind() == CSharpVariable.Kind.LOCAL
+                && variable.assignmentCount() == 1
+                && variable.initializer() != null
+                && isCreationExpression(variable.initializer());
+    }
+
+    private static boolean isCreationExpression(@Nonnull CSharpTree expression) {
+        return expression instanceof CSharpObjectCreationTree
+                || (expression instanceof CSharpUnknownTree unknown && unknown.isObjectCreation());
     }
 
     private void dispatchDependingParameter(
@@ -383,17 +437,31 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
         }
 
         if (tree instanceof CSharpArrayCreationTree arrayCreation) {
-            // Mirrors the Java engine's NEW_ARRAY handling: an array's length/element-count is
-            // resolved as an Integer regardless of which factory asked — G2 (above) is what stops a
-            // SizeFactory from ever seeing a String, and every other factory either wants an
-            // Integer
-            // too or simply ignores an argument it did not ask for (e.g. a constant-valued
-            // ModeFactory("CBC") does not look at the resolved value at all).
-            return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            // Mirrors the Java engine's NEW_ARRAY handling, which branches on the asking factory:
+            // a SizeFactory wants the array's length, everything else wants the values in it.
+            //
+            // Returning the length to every factory, as this did before, meant a collection
+            // argument could never be read -- `new[] { TlsCipherSuite.TLS_AES_256_GCM_SHA384, ...
+            // }`
+            // resolved to the Integer 2. That is why the C# side had no rule able to read a list of
+            // cipher suites while the Java side has had `setEnabledCipherSuites(String[])` all
+            // along.
+            if (valueFactory instanceof SizeFactory<?>) {
+                return resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving);
+            }
+            final List<ResolvedValue<O, CSharpTree>> elements = new ArrayList<>();
+            for (CSharpTree element : arrayCreation.getElements()) {
+                elements.addAll(resolveValues(clazz, element, valueFactory, resolving));
+            }
+            // An array with no readable elements falls back to the length, so a factory that does
+            // want a count still gets one from `new byte[32]`.
+            return elements.isEmpty()
+                    ? resolveArrayCreationSize(clazz, arrayCreation, valueFactory, resolving)
+                    : elements;
         }
 
         if (tree instanceof CSharpBinaryExpressionTree binary) {
-            return resolveBinaryExpression(clazz, binary, resolving);
+            return resolveBinaryExpression(clazz, binary, valueFactory, resolving);
         }
 
         if (tree instanceof CSharpMethodInvocationTree invocation
@@ -511,7 +579,20 @@ public final class CSharpDetectionEngine implements IDetectionEngine<CSharpTree,
     private <O> List<ResolvedValue<O, CSharpTree>> resolveBinaryExpression(
             @Nonnull Class<O> clazz,
             @Nonnull CSharpBinaryExpressionTree binary,
+            @Nullable IValueFactory<CSharpTree> valueFactory,
             @Nonnull Set<Object> resolving) {
+        if ("|".equals(binary.getOperator())) {
+            // A flags enum written as `A | B` is a set, not a sum: `SslProtocols.Tls12 |
+            // SslProtocols.Tls13` offers both versions and has to arrive as both values. The
+            // arithmetic below cannot say that -- it folds two numbers into one -- and `|` was
+            // never among the operators it folds, so nothing that resolved before changes.
+            final List<ResolvedValue<O, CSharpTree>> members = new ArrayList<>();
+            members.addAll(resolveValues(clazz, binary.getLeft(), valueFactory, resolving));
+            members.addAll(resolveValues(clazz, binary.getRight(), valueFactory, resolving));
+            if (!members.isEmpty()) {
+                return members;
+            }
+        }
         Optional<Integer> left = resolveIntOperand(binary.getLeft(), resolving);
         Optional<Integer> right = resolveIntOperand(binary.getRight(), resolving);
         if (left.isEmpty() || right.isEmpty()) {

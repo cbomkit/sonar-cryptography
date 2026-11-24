@@ -22,6 +22,7 @@ package com.ibm.plugin.translation.translator.contexts;
 import com.ibm.engine.language.csharp.tree.CSharpTree;
 import com.ibm.engine.model.Algorithm;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.IterationCount;
 import com.ibm.engine.model.KeySize;
 import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
@@ -30,6 +31,7 @@ import com.ibm.mapper.IContextTranslation;
 import com.ibm.mapper.model.INode;
 import com.ibm.mapper.model.KeyLength;
 import com.ibm.mapper.model.Mac;
+import com.ibm.mapper.model.NumberOfIterations;
 import com.ibm.mapper.model.algorithms.DESede;
 import com.ibm.mapper.model.algorithms.HMAC;
 import com.ibm.mapper.model.algorithms.KMAC;
@@ -82,6 +84,11 @@ public final class CSharpMacContextTranslator implements IContextTranslation<CSh
             // The key length of an HMAC, KMAC or MACTripleDES constructed from a byte array whose
             // length the engine can read (see DotNetHMAC and DotNetKMAC).
             return Optional.of(new KeyLength(keySize.getValue(), detectionLocation));
+        } else if (value instanceof IterationCount<?> iterationCount) {
+            // Pkcs12Builder.SealWithMac: the count belongs to the PKCS#12 key derivation, which the
+            // model has no node for, so it is recorded on the MAC.
+            return Optional.of(
+                    new NumberOfIterations(iterationCount.getValue(), detectionLocation));
         } else if (value instanceof Algorithm<?>) {
             // KeyedHashAlgorithm.Create(string) / HMAC.Create(string) — both methods document the
             // identical string table, verified against the official API reference

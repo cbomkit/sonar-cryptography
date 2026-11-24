@@ -77,6 +77,36 @@ final class CSharpTypeInference {
     private static final Set<String> KNOWN_NAMED_TYPES =
             Set.of(
                     "HashAlgorithmName",
+                    // fo-dicom's TLS handlers. They are named here so that a string argument
+                    // cannot bind to the tlsInitiator parameter of
+                    // DicomClientFactory.Create(host, port, ITlsInitiator, callingAe, calledAe):
+                    // its sibling overload puts a bool in that position and the two AE titles
+                    // after it, so without this the first AE title binds to the initiator and the
+                    // connection reads as TLS when it is not.
+                    // The concrete classes are named beside the interfaces because the
+                    // overload is told apart by position: the bool of the sibling overload sits
+                    // where the initiator does, and only a name in this set makes the binder
+                    // refuse a DefaultTlsInitiator for a bool. A consumer's own implementation
+                    // need not be listed -- it binds at the initiator's own position, and the
+                    // only thing this set has to rule out is the bool going there instead.
+                    "ITlsInitiator",
+                    "ITlsAcceptor",
+                    "DefaultTlsInitiator",
+                    "DefaultTlsAcceptor",
+                    // .NET's TLS version enums. Named here so that the strict side of the type
+                    // check can refuse a string or a number for a parameter declared as one:
+                    // properties called Protocols or Version exist on all sorts of classes, and
+                    // without this a `config.Version = "1.0"` would be reported as a protocol.
+                    "SslProtocols",
+                    "SecurityProtocolType",
+                    // The library-level transport-security switches. MailKit decides TLS with a
+                    // SecureSocketOptions argument to Connect and the database drivers with an
+                    // SslMode property, and both rules match on an ANY receiver because the client
+                    // is held in a variable. Naming the types here is what makes the binder refuse
+                    // the bool of MailKit's obsolete Connect overload, and refuse a string for the
+                    // SslMode of some unrelated class.
+                    "SecureSocketOptions",
+                    "SslMode",
                     "ECCurve",
                     "ECParameters",
                     "RSAParameters",
@@ -111,6 +141,64 @@ final class CSharpTypeInference {
                     "ECDsa",
                     "ECDiffieHellman");
 
+    /**
+     * The concrete classes whose interface is known, for the one place that needs a
+     * <em>positive</em> answer about a non-primitive type.
+     *
+     * <p>{@link #isDefinitelyAssignable} otherwise only ever says yes to a type name equal to the
+     * declared one or to a primitive of the same category, because there is no semantic model to
+     * ask about subtyping. That is enough wherever a parameter binds at its own position, but not
+     * where {@link CSharpNamedArgumentBinder} has to search the call for the argument that supplies
+     * a parameter -- and the fo-dicom server factory is exactly that case. Its three {@code Create}
+     * overloads put {@code ITlsAcceptor} at three different positions, so the acceptor can only be
+     * found by type, and the argument written there is a {@code DefaultTlsAcceptor}.
+     *
+     * <p>Only relations that hold by declaration in the library belong here, and only for
+     * interfaces a rule declares as a parameter type, so this can widen the search for nothing
+     * else. It cannot cause a wrong binding: the search still requires the match to be unique among
+     * the call's arguments.
+     */
+    @Nonnull
+    private static final Map<String, String> KNOWN_IMPLEMENTATIONS =
+            Map.of(
+                    "DefaultTlsInitiator", "ITlsInitiator",
+                    "DefaultTlsAcceptor", "ITlsAcceptor");
+
+    /**
+     * The enums and structs of {@link #KNOWN_NAMED_TYPES}, which cannot be subtypes of each other.
+     * Two different names from this set are never compatible, for example {@code
+     * RSASignaturePadding} and {@code HashAlgorithmName}. The class types ({@code RSA}, {@code
+     * AsymmetricAlgorithm}, ...) are left out because one can be a subtype of another.
+     */
+    @Nonnull
+    private static final Set<String> DISJOINT_VALUE_TYPES =
+            Set.of(
+                    "HashAlgorithmName",
+                    "ECCurve",
+                    "ECParameters",
+                    "RSAParameters",
+                    "DSAParameters",
+                    "RSASignaturePadding",
+                    "RSAEncryptionPadding",
+                    "RSASignaturePaddingMode",
+                    "RSAEncryptionPaddingMode",
+                    "PaddingMode",
+                    "CipherMode",
+                    "DataProtectionScope",
+                    "MemoryProtectionScope",
+                    "CngAlgorithm",
+                    "CngKeyBlobFormat",
+                    "CngKeyCreationParameters",
+                    "CspParameters",
+                    "DSASignatureFormat",
+                    "CngKey",
+                    "MLKemAlgorithm",
+                    "MLDsaAlgorithm",
+                    "SlhDsaAlgorithm",
+                    "CompositeMLDsaAlgorithm",
+                    "KeyDerivationPrf",
+                    "ECDiffieHellmanPublicKey");
+
     private CSharpTypeInference() {
         // utility
     }
@@ -128,8 +216,9 @@ final class CSharpTypeInference {
      * rule set is built to avoid — so this side may be stricter.
      *
      * <p>Strictness is nonetheless confined to pairs where both sides are recognized: a primitive
-     * category against a different primitive category, or a primitive category against a name in
-     * {@link #KNOWN_NAMED_TYPES}. Everything else is reported as possibly compatible.
+     * category against a different primitive category, a primitive category against a name in
+     * {@link #KNOWN_NAMED_TYPES}, or two different names in {@link #DISJOINT_VALUE_TYPES}.
+     * Everything else is reported as possibly compatible.
      */
     static boolean isDefinitelyIncompatible(@Nonnull String actual, @Nonnull String expected) {
         String a = normalize(actual);
@@ -138,6 +227,9 @@ final class CSharpTypeInference {
             return false;
         }
         if (!isAssignable(a, e)) {
+            return true;
+        }
+        if (DISJOINT_VALUE_TYPES.contains(a) && DISJOINT_VALUE_TYPES.contains(e)) {
             return true;
         }
         boolean aPrimitive = isPrimitiveCategory(a);
@@ -167,6 +259,9 @@ final class CSharpTypeInference {
         String a = normalize(actual);
         String e = normalize(expected);
         if (a.equals(e)) {
+            return true;
+        }
+        if (e.equals(KNOWN_IMPLEMENTATIONS.get(a))) {
             return true;
         }
         return sameCategory(a, e);
@@ -210,7 +305,14 @@ final class CSharpTypeInference {
         if (tree instanceof CSharpMemberAccessTree memberAccess) {
             return memberAccess.getRootType();
         }
-        if (tree instanceof CSharpBinaryExpressionTree) {
+        if (tree instanceof CSharpBinaryExpressionTree binary) {
+            if ("|".equals(binary.getOperator())) {
+                // A flags combination has the type of its members, not of the number behind them:
+                // `SslProtocols.Tls12 | SslProtocols.Tls13` is an SslProtocols. Reporting int here
+                // would make the strict check refuse the very form these enums are written in.
+                String left = infer(binary.getLeft());
+                return left != null ? left : infer(binary.getRight());
+            }
             return "int"; // only integer arithmetic is folded today
         }
         if (tree instanceof CSharpIdentifierTree identifier) {
@@ -233,9 +335,9 @@ final class CSharpTypeInference {
             return null;
         }
         if (variable.declaredType() != null) {
-            return variable.declaredType(); // explicit `Type x = ...` (or a parameter/const)
+            return variable.declaredType();
         }
-        return infer(variable.initializer()); // `var x = ...` — infer from the initializer
+        return infer(variable.initializer());
     }
 
     /**
@@ -266,13 +368,10 @@ final class CSharpTypeInference {
                 isIntLike(a) || isStringLike(a) || isByteSpanLike(a) || isBoolLike(a);
         boolean eKnownCategory =
                 isIntLike(e) || isStringLike(e) || isByteSpanLike(e) || isBoolLike(e);
-        if (aKnownCategory && eKnownCategory) {
-            return false;
-        }
         // At least one side is an unrecognized (likely enum/struct/class) type name — different
         // spellings could still be the same type via `using` aliases or nesting we cannot see, so
         // stay permissive rather than risk a false negative.
-        return true;
+        return !aKnownCategory || !eKnownCategory;
     }
 
     @Nonnull

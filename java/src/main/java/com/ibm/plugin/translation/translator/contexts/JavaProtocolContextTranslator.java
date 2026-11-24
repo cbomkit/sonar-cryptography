@@ -21,6 +21,7 @@ package com.ibm.plugin.translation.translator.contexts;
 
 import com.ibm.engine.model.CipherSuite;
 import com.ibm.engine.model.IValue;
+import com.ibm.engine.model.ValueAction;
 import com.ibm.engine.model.context.DetectionContext;
 import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.rule.IBundle;
@@ -45,11 +46,25 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
             @Nonnull IValue<Tree> value,
             @Nonnull DetectionContext detectionContext,
             @Nonnull DetectionLocation detectionLocation) {
-        if (!bundleIdentifier.getIdentifier().equals("SSL")) {
+        // Dcm4che joins SSL here because a DICOM association is TLS underneath: its cipher suites
+        // and protocol versions are the same strings the JSSE setters take, and are read by the
+        // same mappers. The "kind" of the context tells the two apart below.
+        if (!"SSL".equals(bundleIdentifier.getIdentifier())
+                && !"Dcm4che".equals(bundleIdentifier.getIdentifier())) {
             return Optional.empty();
         }
 
         final String kind = ((ProtocolContext) detectionContext).get("kind").orElse("");
+        if (value instanceof ValueAction<Tree> valueAction) {
+            // The DICOM rules state the protocol from the call itself: an ApplicationEntity or an
+            // association is DICOM, with no argument to read.
+            return "DICOM".equals(kind)
+                    ? Optional.of(new Protocol(valueAction.asString(), detectionLocation))
+                    : Optional.empty();
+        }
+        if (value instanceof com.ibm.engine.model.Protocol<Tree> protocol && "DICOM".equals(kind)) {
+            return dcm4cheProtocol(protocol.asString(), detectionLocation);
+        }
         if (value instanceof com.ibm.engine.model.Protocol<Tree> protocol) {
             return switch (kind) {
                 case "TLS" ->
@@ -83,5 +98,35 @@ public final class JavaProtocolContextTranslator implements IContextTranslation<
         }
 
         return Optional.of(new Unknown(detectionLocation));
+    }
+
+    /**
+     * The six members of {@code org.dcm4che3.net.Connection.Protocol}, and nothing else.
+     *
+     * <p>{@code setProtocol} is the only dcm4che call that can name a protocol other than DICOM, so
+     * it is read by name -- and a name is only accepted when it is a member of that enum.
+     * Everything else a call site can write there (a variable, {@code Protocol.valueOf(...)}, a
+     * value read from LDAP) resolves to a name this does not know, and reports nothing rather than
+     * a protocol component called after a field.
+     *
+     * <p>{@code SYSLOG_TLS} is the one member that carries more than a name: it is syslog over TLS,
+     * so the TLS is reported beneath it. {@code HL7_MLLP2} is HL7 over MLLP release 2 -- a framing
+     * of the same protocol, so it is reported as HL7.
+     */
+    @Nonnull
+    private static Optional<INode> dcm4cheProtocol(
+            @Nonnull String member, @Nonnull DetectionLocation detectionLocation) {
+        return switch (member) {
+            case "DICOM" -> Optional.of(new Protocol("DICOM", detectionLocation));
+            case "HL7", "HL7_MLLP2" -> Optional.of(new Protocol("HL7", detectionLocation));
+            case "SYSLOG_UDP" -> Optional.of(new Protocol("Syslog", detectionLocation));
+            case "SYSLOG_TLS" -> {
+                final Protocol syslog = new Protocol("Syslog", detectionLocation);
+                syslog.put(new TLS(detectionLocation));
+                yield Optional.of(syslog);
+            }
+            case "HTTP" -> Optional.of(new Protocol("HTTP", detectionLocation));
+            default -> Optional.empty();
+        };
     }
 }

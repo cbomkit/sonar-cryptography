@@ -25,9 +25,13 @@ import com.ibm.engine.rule.IDetectionRule;
 import com.ibm.engine.rule.RuleSets;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetAlgorithmFactory;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateHash;
 import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateKeys;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCertificateRequest;
 import com.ibm.plugin.rules.detection.dotnet.DotNetChaCha20Poly1305;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCipherSuites;
 import com.ibm.plugin.rules.detection.dotnet.DotNetCngKey;
+import com.ibm.plugin.rules.detection.dotnet.DotNetCose;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetDSA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetECDiffieHellman;
@@ -39,6 +43,8 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetKeyDerivation;
 import com.ibm.plugin.rules.detection.dotnet.DotNetLegacyFormatters;
 import com.ibm.plugin.rules.detection.dotnet.DotNetMLDsa;
 import com.ibm.plugin.rules.detection.dotnet.DotNetMLKem;
+import com.ibm.plugin.rules.detection.dotnet.DotNetPbeParameters;
+import com.ibm.plugin.rules.detection.dotnet.DotNetPkcs;
 import com.ibm.plugin.rules.detection.dotnet.DotNetProtectedData;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRC2;
 import com.ibm.plugin.rules.detection.dotnet.DotNetRSA;
@@ -47,8 +53,15 @@ import com.ibm.plugin.rules.detection.dotnet.DotNetRfc2898DeriveBytes;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSHA;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSHA3;
 import com.ibm.plugin.rules.detection.dotnet.DotNetSlhDsa;
+import com.ibm.plugin.rules.detection.dotnet.DotNetTls;
 import com.ibm.plugin.rules.detection.dotnet.DotNetTripleDES;
 import com.ibm.plugin.rules.detection.dotnet.DotNetX25519DiffieHellman;
+import com.ibm.plugin.rules.detection.dotnet.DotNetXml;
+import com.ibm.plugin.rules.detection.fodicom.FoDicom;
+import com.ibm.plugin.rules.detection.mailkit.MailKit;
+import com.ibm.plugin.rules.detection.npgsql.Npgsql;
+import com.ibm.plugin.rules.detection.openssl.OpenSslDetectionRules;
+import com.ibm.plugin.rules.detection.schannel.Schannel;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -79,13 +92,26 @@ public final class CSharpDetectionRules extends DetectionRuleSet<CSharpTree> {
                         RuleSets.rulesOf(DotNetHMAC.class).stream(),
                         RuleSets.rulesOf(DotNetKMAC.class).stream(),
                         RuleSets.rulesOf(DotNetRfc2898DeriveBytes.class).stream(),
+                        RuleSets.rulesOf(DotNetPbeParameters.class).stream(),
+                        RuleSets.rulesOf(DotNetCertificateRequest.class).stream(),
+                        RuleSets.rulesOf(DotNetCertificateHash.class).stream(),
+                        RuleSets.rulesOf(DotNetPkcs.class).stream(),
+                        RuleSets.rulesOf(DotNetXml.class).stream(),
+                        RuleSets.rulesOf(DotNetCose.class).stream(),
                         RuleSets.rulesOf(DotNetKeyDerivation.class).stream(),
                         RuleSets.rulesOf(DotNetRandomNumberGenerator.class).stream(),
                         RuleSets.rulesOf(DotNetProtectedData.class).stream(),
                         RuleSets.rulesOf(DotNetAlgorithmFactory.class).stream(),
                         RuleSets.rulesOf(DotNetCertificateKeys.class).stream(),
                         RuleSets.rulesOf(DotNetIncrementalHash.class).stream(),
-                        RuleSets.rulesOf(DotNetCngKey.class).stream())
+                        RuleSets.rulesOf(DotNetCngKey.class).stream(),
+                        RuleSets.rulesOf(DotNetTls.class).stream(),
+                        RuleSets.rulesOf(DotNetCipherSuites.class).stream(),
+                        RuleSets.rulesOf(MailKit.class).stream(),
+                        RuleSets.rulesOf(Npgsql.class).stream(),
+                        RuleSets.rulesOf(Schannel.class).stream(),
+                        RuleSets.rulesOf(FoDicom.class).stream(),
+                        RuleSets.rulesOf(OpenSslDetectionRules.class).stream())
                 .flatMap(i -> i)
                 .toList();
     }

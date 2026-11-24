@@ -26,9 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.sonar.api.Plugin;
+import org.sonar.api.PropertyType;
 import org.sonar.api.SonarEdition;
 import org.sonar.api.SonarQubeSide;
 import org.sonar.api.SonarRuntime;
+import org.sonar.api.config.PropertyDefinition;
+import org.sonar.api.config.PropertyDefinition.ConfigScope;
 import org.sonar.api.internal.PluginContextImpl;
 import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
@@ -76,5 +79,28 @@ class PluginTest {
                         CSharpScannerRuleDefinition.class,
                         CryptoCSharpSensor.class,
                         OutputFileJob.class);
+    }
+
+    @Test
+    void exposesTheBehaviorsSwitchInGlobalAndProjectSettings() {
+        SonarRuntime runtime =
+                SonarRuntimeImpl.forSonarQube(
+                        Version.create(9, 5), SonarQubeSide.SCANNER, SonarEdition.COMMUNITY);
+        Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
+        new CryptographyPlugin().define(context);
+
+        List<?> extensions = context.getExtensions();
+        PropertyDefinition behaviors =
+                extensions.stream()
+                        .filter(PropertyDefinition.class::isInstance)
+                        .map(PropertyDefinition.class::cast)
+                        .filter(property -> property.key().equals(Constants.BEHAVIORS_ENABLED))
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(behaviors.name()).isEqualTo("Behaviors (experimental)");
+        assertThat(behaviors.type()).isEqualTo(PropertyType.BOOLEAN);
+        assertThat(behaviors.defaultValue()).isEqualTo("false");
+        assertThat(behaviors.global()).isTrue();
+        assertThat(behaviors.configScopes()).containsExactly(ConfigScope.PROJECT);
     }
 }

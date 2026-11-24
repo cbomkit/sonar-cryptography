@@ -59,8 +59,12 @@ public final class CSharpSignatureContextTranslator implements IContextTranslati
                 case VERIFY -> Optional.of(new Verify(detectionLocation));
             };
         } else if (value instanceof Algorithm<?>) {
-            // The HashAlgorithmName argument of SignData/VerifyData/SignHash/VerifyHash.
-            return DotNetHashAlgorithmNames.parseAsNode(value.asString(), detectionLocation);
+            // A SignatureMethod URI (DotNetXml), or the HashAlgorithmName of SignData and similar.
+            return DotNetXmlAlgorithmUris.signature(value.asString(), detectionLocation)
+                    .or(
+                            () ->
+                                    DotNetHashAlgorithmNames.parseAsNode(
+                                            value.asString(), detectionLocation));
         } else if (value instanceof Padding<?>) {
             // RSASignaturePadding.Pkcs1 / .Pss, resolved to the bare member name.
             return DotNetPaddingNames.parse(value.asString(), detectionLocation);
