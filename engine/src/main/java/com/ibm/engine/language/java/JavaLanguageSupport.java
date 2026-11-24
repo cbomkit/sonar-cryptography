@@ -40,7 +40,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.java.model.ExpressionUtils;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.semantic.Symbol;
@@ -98,7 +97,7 @@ public final class JavaLanguageSupport
     @Override
     public Optional<Tree> getEnclosingMethod(@Nonnull Tree expression) {
         if (expression instanceof ExpressionTree expressionTree) {
-            return Optional.ofNullable(ExpressionUtils.getEnclosingMethod(expressionTree));
+            return Optional.ofNullable(JavaTreeUtils.getEnclosingMethod(expressionTree));
         }
         return Optional.empty();
     }

@@ -60,7 +60,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.java.model.ExpressionUtils;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.plugins.java.api.JavaCheck;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.location.Position;
@@ -183,13 +183,12 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             arguments.add(new ArgSnapshot(i, snapshots));
         }
 
-        final JavaDetachedIssueReporter issueReporter =
-                scanContext instanceof JavaScanContext javaScanContext
-                        ? JavaDetachedIssueReporter.create(javaScanContext.javaFileScannerContext())
-                        : null;
+        final InputFile inputFile = scanContext.getInputFile();
         final DetachedScanContext<JavaCheck, Tree> detachedScanContext =
                 new DetachedScanContext<>(
-                        scanContext.getInputFile(), scanContext.getFilePath(), issueReporter);
+                        inputFile,
+                        scanContext.getFilePath(),
+                        new JavaDetachedIssueReporter(inputFile));
         return new DetachedCall<>(
                 invokedType.get(), name.get(), parameterTypes, arguments, detachedScanContext);
     }
@@ -531,7 +530,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     public void resolveValuesInOuterScope(
             @Nonnull final Tree expression, @Nonnull final Parameter<Tree> parameter) {
         if (expression instanceof ExpressionTree expressionTree) {
-            MethodTree methodTree = ExpressionUtils.getEnclosingMethod(expressionTree);
+            MethodTree methodTree = JavaTreeUtils.getEnclosingMethod(expressionTree);
             if (methodTree == null) {
                 return;
             }
@@ -835,7 +834,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
     public Optional<TraceSymbol<Symbol>> getAssignedSymbol(@Nonnull Tree expression) {
         if (expression instanceof ExpressionTree expressionTree) {
             // try to get the variable symbol
-            return ExpressionUtils.getAssignedSymbol(expressionTree).map(TraceSymbol::createFrom);
+            return JavaTreeUtils.getAssignedSymbol(expressionTree).map(TraceSymbol::createFrom);
         }
         return Optional.empty();
     }
@@ -874,7 +873,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             }
 
             Optional<Symbol> symbolOptional =
-                    ExpressionUtils.extractIdentifierSymbol(
+                    JavaTreeUtils.extractIdentifierSymbol(
                             ((MemberSelectExpressionTree) methodSelect).expression());
             if (symbolOptional.isEmpty()) {
                 return false;
@@ -897,7 +896,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             }
 
             Symbol variable = variableSymbol.getSymbol();
-            Optional<Symbol> symbolOptional = ExpressionUtils.getAssignedSymbol(newClassTree);
+            Optional<Symbol> symbolOptional = JavaTreeUtils.getAssignedSymbol(newClassTree);
             if (symbolOptional.isEmpty()) {
                 return false;
             }
@@ -961,7 +960,7 @@ public final class JavaDetectionEngine implements IDetectionEngine<Tree, Symbol>
             return;
         }
 
-        Optional<Symbol> assignedSymbol = ExpressionUtils.getAssignedSymbol(expressionTree);
+        Optional<Symbol> assignedSymbol = JavaTreeUtils.getAssignedSymbol(expressionTree);
         // Check if the variable symbols for the method (if applicable) are connected
         if (traceSymbol.is(TraceSymbol.State.DIFFERENT)
                 ||

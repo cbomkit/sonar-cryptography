@@ -101,8 +101,7 @@
                      carrying the binary in this Apache-2.0 repository would be redistributing it,
                      which brings a source-availability obligation with it. Downloading it here
                      means the developer and CI obtain it from dcm4che directly and this project
-                     redistributes nothing. The same pattern already fetches the pinned sonar-go
-                     release tree in sonar-cryptography-plugin/pom.xml.
+                     redistributes nothing.
 
                      Each jar is cached in the local Maven repository at its standard path,
                      ${settings.localRepository}/org/dcm4che/<artifactId>/<version>/, and copied

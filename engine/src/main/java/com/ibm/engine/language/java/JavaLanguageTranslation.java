@@ -30,7 +30,6 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.java.model.ExpressionUtils;
 import org.sonar.plugins.java.api.tree.Arguments;
 import org.sonar.plugins.java.api.tree.ClassTree;
 import org.sonar.plugins.java.api.tree.ExpressionTree;
@@ -49,7 +48,7 @@ public class JavaLanguageTranslation implements ILanguageTranslation<Tree> {
     public Optional<String> getMethodName(
             @Nonnull MatchContext matchContext, @Nonnull Tree methodInvocation) {
         if (methodInvocation instanceof MethodInvocationTree methodInvocationTree) {
-            return Optional.of(ExpressionUtils.methodName(methodInvocationTree).name());
+            return Optional.of(JavaTreeUtils.methodName(methodInvocationTree).name());
         } else if (methodInvocation instanceof NewClassTree) {
             return Optional.of("<init>");
         }

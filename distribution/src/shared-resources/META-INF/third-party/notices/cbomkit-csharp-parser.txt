@@ -1,0 +1,19 @@
+cbomkit-csharp-parser ${cbomkit.csharp.parser.version}
+
+  A pre-built ANTLR lexer and parser for C#, used by the C# detection rules.
+  Maven coordinate: io.github.fynnth:cbomkit-csharp-parser:${cbomkit.csharp.parser.version}
+  Project: https://github.com/fynnth/cbomkit-csharp-parser
+
+  The parser is made available under the Eclipse Public License 2.0
+  (EPL-2.0); the licence text is in META-INF/third-party/EPL-2.0.txt. This JAR
+  contains it in object code form only, combined with the plugin by the Maven
+  Shade plugin; it is not modified.
+
+  Source code: the parser's source code is available from
+    https://github.com/fynnth/cbomkit-csharp-parser
+  and as the sources JAR published on Maven Central:
+    https://repo.maven.apache.org/maven2/io/github/fynnth/cbomkit-csharp-parser/${cbomkit.csharp.parser.version}/cbomkit-csharp-parser-${cbomkit.csharp.parser.version}-sources.jar
+
+  Any provisions in the EPL-2.0 that differ from the licence of this plugin are
+  offered by the parser's contributors alone, not by the other contributors to
+  this plugin.

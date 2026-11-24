@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ibm</groupId>
+        <artifactId>distribution</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- The library (profile lib), for embedding in another tool. It bundles the last
+         LGPL-3.0 releases of sonar-java and sonar-python (root pom) instead of using the analyzers
+         installed in SonarQube, and has no Go. It is a plain JAR, not a SonarQube plugin: it has
+         no plugin manifest entries and no CryptographyPlugin. -->
+    <artifactId>sonar-cryptography-lib</artifactId>
+    <packaging>jar</packaging>
+    <description>The Sonar Cryptography library with the LGPL-3.0 Java and Python analyzers bundled</description>
+
+    <properties>
+        <!-- jdt-package (EPL-2.0) is in group org.sonarsource.java. -->
+        <sonar.analyzer.groups>org.sonarsource.java,org.sonarsource.python,org.sonarsource.analyzer-commons,org.sonarsource.sslr</sonar.analyzer.groups>
+        <crypto.lgplResources>${project.basedir}/../src/lgpl-resources</crypto.lgplResources>
+        <!-- The Apache Tomcat that sonar-java-plugin ${sonar.java.version} embeds (java-jsp
+             depends on it; org/apache/catalina/util/ServerInfo.properties in the plugin JAR).
+             Update with sonar.java.version. -->
+        <tomcat.embedded.version>9.0.96</tomcat.embedded.version>
+        <!-- The committed BOMs describe the default plugin variant only. -->
+        <cyclonedx.skip>true</cyclonedx.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>plugin-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Bundled: compile scope instead of the root pom's 'provided'. -->
+        <dependency>
+            <groupId>org.sonarsource.java</groupId>
+            <artifactId>sonar-java-plugin</artifactId>
+            <version>${sonar.java.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.sonarsource.python</groupId>
+            <artifactId>sonar-python-plugin</artifactId>
+            <version>${sonar.python.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- No plugin class: the library is not installed in SonarQube. -->
+                    <execution>
+                        <id>unpack-plugin-core</id>
+                        <configuration>
+                            <excludes>META-INF/maven/**,META-INF/MANIFEST.MF,com/ibm/plugin/CryptographyPlugin*.class</excludes>
+                        </configuration>
+                    </execution>
+                    <!-- sonar-java-plugin embeds Apache Tomcat classes and the Java EE schemas
+                         that come with Tomcat (CDDL-1.0), but not Tomcat's LICENSE and NOTICE.
+                         The Tomcat artifacts are excluded as dependencies (the classes are
+                         already in the plugin JAR), so their legal files are taken from the
+                         artifacts themselves. -->
+                    <execution>
+                        <id>preserve-embedded-tomcat-notices</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-core</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-core-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-el</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-el-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.tomcat.embed</groupId>
+                                    <artifactId>tomcat-embed-jasper</artifactId>
+                                    <version>${tomcat.embedded.version}</version>
+                                    <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers/tomcat-embed-jasper-${tomcat.embedded.version}-jar</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>META-INF/LICENSE,META-INF/NOTICE</includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- An embedding tool brings its own Jackson, and CycloneDX is part
+                                 of this library's API (org.cyclonedx.model.Bom). Bundling them
+                                 unrelocated shadows the tool's versions (NoSuchMethodError in
+                                 Jackson); relocating them would change the API and strip the
+                                 model's Jackson annotations. So CycloneDX and its dependency
+                                 subtree stay regular Maven dependencies of the published POM. -->
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.cyclonedx:cyclonedx-core-java</exclude>
+                                    <exclude>org.apache.commons:commons-collections4</exclude>
+                                    <exclude>com.github.package-url:packageurl-java</exclude>
+                                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                                    <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                                    <exclude>com.networknt:json-schema-validator</exclude>
+                                    <exclude>com.ethlo.time:itu</exclude>
+                                    <exclude>org.yaml:snakeyaml</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <!-- Keep the bundled analyzers whole. Our code uses only their public
+                                 API, so minimizeJar would drop nearly all of their implementation
+                                 (parsers, semantic model, sensors), which an embedding tool needs
+                                 to run an analysis. A specifically included class is kept together
+                                 with everything it references, so their third-party dependencies
+                                 stay as far as the analyzers use them. -->
+                            <filters combine.children="append">
+                                <filter>
+                                    <artifact>org.sonarsource.java:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- sonar-python-plugin embeds Jackson, which its POM also declares;
+                                     the embedded copy is dropped for the reason given above. -->
+                                <filter>
+                                    <artifact>org.sonarsource.python:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>com/fasterxml/jackson/**</exclude>
+                                        <exclude>META-INF/versions/*/com/fasterxml/jackson/**</exclude>
+                                        <exclude>META-INF/services/com.fasterxml.jackson.*</exclude>
+                                        <exclude>META-INF/maven/com.fasterxml.jackson.*/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.sonarsource.analyzer-commons:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.sonarsource.sslr:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- sonar-java-plugin and spring-core, spring-jcl and
+                                     spring-expression (its dependencies) each have
+                                     META-INF/license.txt. At the top level it would clash with our
+                                     META-INF/LICENSE.txt on case-insensitive file systems. All
+                                     four copies are byte-identical (Apache-2.0 plus the Spring
+                                     subcomponent licences), and the dependency plugin keeps that
+                                     text under
+                                     META-INF/third-party/analyzers/sonar-java-plugin-*-jar/META-INF/.
+                                     Their notice.txt files are merged into META-INF/NOTICE by
+                                     the ApacheNoticeResourceTransformer. -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/license.txt</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

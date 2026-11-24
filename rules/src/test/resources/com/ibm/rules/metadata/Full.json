@@ -1,0 +1,25 @@
+{
+  "title": "Full rule",
+  "type": "Vulnerability",
+  "code": {
+    "impacts": {
+      "SECURITY": "INFO"
+    },
+    "attribute": "TRUSTWORTHY"
+  },
+  "status": "ready",
+  "remediation": {
+    "func": "Constant\/Issue",
+    "constantCost": "5mn"
+  },
+  "tags": [
+    "cryptography",
+    "cbom"
+  ],
+  "securityStandards": {
+    "CWE": [327, 328]
+  },
+  "defaultSeverity": "Critical",
+  "scope": "Tests",
+  "sqKey": "Full"
+}

@@ -20,7 +20,7 @@
 package com.ibm.plugin;
 
 import com.ibm.engine.language.ILanguageSupport;
-import com.ibm.engine.language.LanguageSupporter;
+import com.ibm.engine.language.go.GoLanguageSupport;
 import com.ibm.engine.language.go.GoScanContext;
 import com.ibm.mapper.model.INode;
 import com.ibm.output.IAggregator;
@@ -35,7 +35,7 @@ import org.sonar.plugins.go.api.checks.GoCheck;
 public final class GoAggregator implements IAggregator {
 
     private static ILanguageSupport<GoCheck, Tree, Symbol, GoScanContext> goLanguageSupport =
-            LanguageSupporter.goLanguageSupporter();
+            new GoLanguageSupport();
     private static List<INode> detectedNodes = new ArrayList<>();
 
     private GoAggregator() {
@@ -58,7 +58,7 @@ public final class GoAggregator implements IAggregator {
     }
 
     public static void reset() {
-        goLanguageSupport = LanguageSupporter.goLanguageSupporter();
+        goLanguageSupport = new GoLanguageSupport();
         detectedNodes = new ArrayList<>();
     }
 }

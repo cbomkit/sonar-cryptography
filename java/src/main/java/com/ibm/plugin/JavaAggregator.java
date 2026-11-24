@@ -21,6 +21,7 @@ package com.ibm.plugin;
 
 import com.ibm.engine.language.ILanguageSupport;
 import com.ibm.engine.language.LanguageSupporter;
+import com.ibm.engine.language.java.JavaDetachedIssueQueue;
 import com.ibm.mapper.model.INode;
 import com.ibm.output.IAggregator;
 import java.util.ArrayList;
@@ -61,5 +62,6 @@ public final class JavaAggregator implements IAggregator {
     public static void reset() {
         javaLanguageSupport = LanguageSupporter.javaLanguageSupporter();
         detectedNodes = new ArrayList<>();
+        JavaDetachedIssueQueue.reset();
     }
 }

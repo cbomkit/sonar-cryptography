@@ -15,6 +15,9 @@
       <maven.compiler.source>17</maven.compiler.source>
       <maven.compiler.target>17</maven.compiler.target>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <!-- Depends on SSALv1-licensed sonar-go and is only built with -Pwith-go: never deployed or
+           published. -->
+      <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 
   <dependencies>
@@ -38,6 +41,13 @@
           <artifactId>rules</artifactId>
           <version>2.0.0-SNAPSHOT</version>
           <scope>compile</scope>
+      </dependency>
+      <!-- sonar-go is SSALv1-licensed. This module uses its internals, which SonarQube does not
+           export to other plugins, so a plugin with Go support must bundle it. Only this module
+           declares it; no other module may depend on it. -->
+      <dependency>
+          <groupId>org.sonarsource.go</groupId>
+          <artifactId>sonar-go-plugin</artifactId>
       </dependency>
       <dependency>
           <groupId>org.sonarsource.analyzer-commons</groupId>

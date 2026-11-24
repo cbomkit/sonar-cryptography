@@ -23,9 +23,9 @@ import javax.annotation.Nonnull;
 
 /**
  * Raises a SonarQube issue for a detached (tree-free) cross-file detection, at the location
- * captured in the {@link DetachedSyntaxToken}. Implemented per language over a shared,
- * non-AST-pinning reporting channel (for Java, {@code SonarComponents} + the file's {@code
- * InputFile}), so a detached record can report an issue without retaining the file's AST.
+ * captured in the {@link DetachedSyntaxToken}. Implemented per language over a non-AST-pinning
+ * reporting channel (for Java, a scan-scoped queue flushed by a project sensor through the public
+ * sensor API), so a detached record can report an issue without retaining the file's AST.
  *
  * @param <R> the language's rule/check type
  */

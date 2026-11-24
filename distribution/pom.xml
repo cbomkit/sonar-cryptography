@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ibm</groupId>
+        <artifactId>sonar-cryptography</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- Shared packaging configuration of the three variants. The variants are its children:
+         distribution/plugin (profile plugin), distribution/plugin-with-go (profile with-go) and
+         distribution/library (profile lib). They contain no code: each one shades plugin-core and
+         the language modules into one JAR and adds its own legal files. The two plugin variants
+         are SonarQube plugin JARs with plugin key crypto, so only one can be installed at a time;
+         the library is a plain JAR without the plugin class. -->
+    <artifactId>distribution</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <!-- Set by each variant. -->
+        <crypto.pluginName>Sonar Crypto Plugin</crypto.pluginName>
+        <!-- All file extensions the plugin must run for. -->
+        <crypto.requiredForLanguages>java,jsp,py,ipynb,cs</crypto.requiredForLanguages>
+        <!-- The SonarSource groups whose legal files are bundled. Their sources are not bundled:
+             the notices link to them. Only the variants that bundle an analyzer use the
+             dependency plugin; an empty value would select every group. -->
+        <sonar.analyzer.groups />
+
+        <!-- The LGPL-3.0 and GPL-3.0 texts, for the variants that bundle LGPL-3.0 code (library
+             and plugin-with-go). They set it to ${project.basedir}/../src/lgpl-resources; the
+             default names a directory that does not exist, so nothing is added. -->
+        <crypto.lgplResources>${project.basedir}/src/no-lgpl-resources</crypto.lgplResources>
+
+        <sonar.jreMinVersion>17</sonar.jreMinVersion>
+    </properties>
+
+    <build>
+        <resources>
+            <!-- The variant's own legal files. -->
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+            <!-- Legal files of the bundled analyzers, see the dependency plugin. -->
+            <resource>
+                <directory>${project.build.directory}/analyzer-resources</directory>
+            </resource>
+            <!-- Legal files every variant needs: the EPL-2.0 text and the notice of the EPL-2.0
+                 C# parser, which every variant bundles. -->
+            <resource>
+                <directory>${project.basedir}/../src/shared-resources</directory>
+                <excludes>
+                    <exclude>META-INF/third-party/notices/**</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/../src/shared-resources</directory>
+                <includes>
+                    <include>META-INF/third-party/notices/**</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${crypto.lgplResources}</directory>
+            </resource>
+            <resource>
+                <directory>${maven.multiModuleProjectDirectory}</directory>
+                <includes>
+                    <include>LICENSE.txt</include>
+                </includes>
+                <targetPath>META-INF</targetPath>
+            </resource>
+        </resources>
+
+        <pluginManagement>
+            <plugins>
+                <!-- The sonar-plugin lifecycle runs the compiler without a version; there are no
+                     sources, but the plugin must resolve offline. Same as plugin-core. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                    <configuration>
+                        <release>17</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <executions>
+                        <!-- sonar-packaging requires the plugin class in this module's own
+                             classes directory (it checks the file). So plugin-core is unpacked
+                             there: the variant JAR is built from it, and minimizeJar keeps its
+                             classes and everything they reference, exactly as for a module
+                             with its own code. The shade filter below keeps plugin-core from
+                             being added a second time. -->
+                        <execution>
+                            <id>unpack-plugin-core</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>unpack-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <includeGroupIds>com.ibm</includeGroupIds>
+                                <includeArtifactIds>plugin-core</includeArtifactIds>
+                                <excludes>META-INF/maven/**,META-INF/MANIFEST.MF</excludes>
+                                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            </configuration>
+                        </execution>
+                        <!-- The artifacts the shade plugin can bundle, with their files. Read by
+                             distribution/src/test/python/verify_analyzer_packaging.py, which
+                             checks that every bundled artifact under a licence other than
+                             Apache, MIT or BSD is named in the notices with its licence text. -->
+                        <execution>
+                            <id>list-bundled-dependencies</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>list</goal>
+                            </goals>
+                            <configuration>
+                                <includeScope>runtime</includeScope>
+                                <outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+                                <outputFile>${project.build.directory}/bundled-dependencies.txt</outputFile>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>preserve-analyzer-notices</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>unpack-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <includeGroupIds>${sonar.analyzer.groups}</includeGroupIds>
+                                <includeScope>runtime</includeScope>
+                                <!-- Keep each artifact's files separate: Shade otherwise keeps only
+                                     one copy of shared paths such as licenses/LICENSE.txt. -->
+                                <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+                                <includes>**/*LICENSE*,**/*NOTICE*,**/*license*,**/*notice*,**/license/**,**/licenses/**,about_files/**,about.html</includes>
+                                <outputDirectory>${project.build.directory}/analyzer-resources/META-INF/third-party/analyzers</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
+                    <artifactId>sonar-packaging-maven-plugin</artifactId>
+                    <version>1.25.1.3002</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <pluginKey>sonar-crypto-plugin</pluginKey>
+                        <pluginName>${crypto.pluginName}</pluginName>
+                        <!-- In plugin-core, unpacked into this module's classes. -->
+                        <pluginClass>com.ibm.plugin.CryptographyPlugin</pluginClass>
+                        <requiredForLanguages>${crypto.requiredForLanguages}</requiredForLanguages>
+                        <pluginApiMinVersion>${sonar.minVersion}</pluginApiMinVersion>
+                        <sonarLintSupported>true</sonarLintSupported>
+                        <skipDependenciesPackaging>true</skipDependenciesPackaging>
+                        <jreMinVersion>17</jreMinVersion>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.2</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                            <configuration>
+                                <shadedArtifactAttached>false</shadedArtifactAttached>
+                                <!-- The published POM must not list what the JAR already
+                                     contains. Written to target/, not to the source tree. -->
+                                <createDependencyReducedPom>true</createDependencyReducedPom>
+                                <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                                <minimizeJar>true</minimizeJar>
+                                <filters>
+                                    <filter>
+                                        <artifact>*:*</artifact>
+                                        <excludes>
+                                            <exclude>META-INF/*.RSA</exclude>
+                                            <exclude>META-INF/*.SF</exclude>
+                                        </excludes>
+                                    </filter>
+                                    <!-- Unpacked into this module's classes (see the dependency
+                                         plugin); excluding its entries here avoids duplicates.
+                                         It still counts as shaded, so the dependency-reduced
+                                         POM does not list it. -->
+                                    <filter>
+                                        <artifact>com.ibm:plugin-core</artifact>
+                                        <excludes>
+                                            <exclude>**</exclude>
+                                        </excludes>
+                                    </filter>
+                                </filters>
+                                <transformers>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                                    <!-- Merge the language modules'
+                                         META-INF/services/com.ibm.output.ILanguageModule files;
+                                         without it the JAR keeps only one language. -->
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                </transformers>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Used by the lifecycle for the resources above; pinned so that it resolves
+                     offline. Same version as before. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <executions>
+                        <!-- Copies the plugin into the directory docker-compose.yaml mounts into
+                             SonarQube. Only the SonarQube variants declare this plugin, after the
+                             shade plugin (same phase, so declaration order applies). The other
+                             variants' JARs are removed first: they share the plugin key, and
+                             SonarQube does not start with two plugins of the same key. -->
+                        <execution>
+                            <id>copy-to-sonarqube</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <mkdir dir="${maven.multiModuleProjectDirectory}/.SonarQube/plugins"/>
+                                    <delete>
+                                        <fileset dir="${maven.multiModuleProjectDirectory}/.SonarQube/plugins"
+                                                 includes="sonar-cryptography-*.jar"/>
+                                    </delete>
+                                    <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                                          todir="${maven.multiModuleProjectDirectory}/.SonarQube/plugins"/>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>sonar-jre-defined</id>
+            <activation>
+                <property>
+                    <name>env.SONAR_JRE</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- Override only if necessary -->
+                <sonar.jreMinVersion>${env.SONAR_JRE}</sonar.jreMinVersion>
+            </properties>
+        </profile>
+        <profile>
+            <id>sonar-jre-undefined</id>
+            <activation>
+                <property>
+                    <name>!env.SONAR_JRE</name>
+                </property>
+            </activation>
+            <properties>
+                <sonar.jreMinVersion>17</sonar.jreMinVersion>
+            </properties>
+        </profile>
+    </profiles>
+</project>

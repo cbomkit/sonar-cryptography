@@ -59,3 +59,7 @@ venv/
 /.worktree/
 
 .integration-test-workdir
+
+### Python bytecode ###
+__pycache__/
+*.pyc

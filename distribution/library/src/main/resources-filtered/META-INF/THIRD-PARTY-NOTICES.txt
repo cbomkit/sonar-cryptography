@@ -1,0 +1,121 @@
+Sonar Cryptography Plugin ${project.version}
+
+The Sonar Cryptography Plugin code is licensed under the Apache License 2.0.
+See META-INF/LICENSE.txt. The third-party components listed below keep their
+own licences; the Apache License does not relicense them.
+
+Bundled third-party components
+
+The following SonarSource components are licensed under the GNU Lesser General
+Public License, version 3 (LGPL-3.0):
+
+sonar-java ${sonar.java.version}
+  Project: https://github.com/SonarSource/sonar-java
+  Release source tree: https://github.com/SonarSource/sonar-java/tree/${sonar.java.version}
+  Modules (group org.sonarsource.java, version ${sonar.java.version}):
+    sonar-java-plugin, java-frontend, java-checks, java-checks-common,
+    java-checks-aws, check-list, external-reports, java-jsp, java-surefire
+  Sources JARs (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/sonar-java-plugin/${sonar.java.version}/sonar-java-plugin-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-frontend/${sonar.java.version}/java-frontend-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-checks/${sonar.java.version}/java-checks-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-checks-common/${sonar.java.version}/java-checks-common-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-checks-aws/${sonar.java.version}/java-checks-aws-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/check-list/${sonar.java.version}/check-list-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/external-reports/${sonar.java.version}/external-reports-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-jsp/${sonar.java.version}/java-jsp-${sonar.java.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/java-surefire/${sonar.java.version}/java-surefire-${sonar.java.version}-sources.jar
+
+sonar-python ${sonar.python.version}
+  Project: https://github.com/SonarSource/sonar-python
+  Release source tree: https://github.com/SonarSource/sonar-python/tree/${sonar.python.version}
+  Modules (group org.sonarsource.python, version ${sonar.python.version}):
+    sonar-python-plugin, python-frontend, python-checks
+  Sources JARs (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/python/sonar-python-plugin/${sonar.python.version}/sonar-python-plugin-${sonar.python.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/python/python-frontend/${sonar.python.version}/python-frontend-${sonar.python.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/python/python-checks/${sonar.python.version}/python-checks-${sonar.python.version}-sources.jar
+
+sonar-analyzer-commons ${sonar.analyzer-commons.version}
+  Project: https://github.com/SonarSource/sonar-analyzer-commons
+  Release source tree: https://github.com/SonarSource/sonar-analyzer-commons/tree/${sonar.analyzer-commons.version}
+  Modules (group org.sonarsource.analyzer-commons, version ${sonar.analyzer-commons.version}):
+    sonar-analyzer-commons, sonar-analyzer-recognizers, sonar-performance-measure,
+    sonar-regex-parsing, sonar-xml-parsing
+  Sources JARs (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-analyzer-commons/${sonar.analyzer-commons.version}/sonar-analyzer-commons-${sonar.analyzer-commons.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-analyzer-recognizers/${sonar.analyzer-commons.version}/sonar-analyzer-recognizers-${sonar.analyzer-commons.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-performance-measure/${sonar.analyzer-commons.version}/sonar-performance-measure-${sonar.analyzer-commons.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-regex-parsing/${sonar.analyzer-commons.version}/sonar-regex-parsing-${sonar.analyzer-commons.version}-sources.jar
+    https://repo.maven.apache.org/maven2/org/sonarsource/analyzer-commons/sonar-xml-parsing/${sonar.analyzer-commons.version}/sonar-xml-parsing-${sonar.analyzer-commons.version}-sources.jar
+
+sslr 1.24.0.633
+  Project: https://github.com/SonarSource/sslr
+  Release source tree: https://github.com/SonarSource/sslr/tree/1.24.0.633
+  Modules (group org.sonarsource.sslr, version 1.24.0.633):
+    sslr-core
+  Sources JAR (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/sslr/sslr-core/1.24.0.633/sslr-core-1.24.0.633-sources.jar
+
+The following component is licensed under the Eclipse Public License 2.0
+(EPL-2.0):
+
+jdt-package 1.3.0.89
+  A repackaging of the Eclipse JDT compiler used by sonar-java.
+  Modules (group org.sonarsource.java, version 1.3.0.89):
+    jdt-package
+  Sources JAR (Maven Central):
+    https://repo.maven.apache.org/maven2/org/sonarsource/java/jdt-package/1.3.0.89/jdt-package-1.3.0.89-sources.jar
+
+Embedded in sonar-java-plugin
+
+sonar-java-plugin ${sonar.java.version} contains classes of Apache Tomcat
+${tomcat.embedded.version} (tomcat-embed-core, tomcat-embed-el, tomcat-embed-jasper; used by
+java-jsp), licensed under the Apache License 2.0. With them come the Java EE
+deployment descriptor schemas under javax/servlet/resources/, which Tomcat
+distributes under the Common Development and Distribution License (CDDL) 1.0.
+Tomcat's LICENSE (with the CDDL text) and NOTICE are kept unchanged under
+META-INF/third-party/analyzers/tomcat-embed-<module>-${tomcat.embedded.version}-jar/META-INF/.
+
+  Project: https://tomcat.apache.org/
+  Release source: https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.embedded.version}/src/
+
+Bundled in object code form
+
+The following component is licensed under the Eclipse Public License 2.0
+(EPL-2.0). See META-INF/third-party/notices/cbomkit-csharp-parser.txt for its
+version, its source code and the terms under which it is distributed.
+
+  cbomkit-csharp-parser ${cbomkit.csharp.parser.version}
+
+Licence texts
+
+  LGPL-3.0: META-INF/third-party/LGPL-3.0.txt
+  GPL-3.0:  META-INF/third-party/GPL-3.0.txt (LGPL-3.0 adds permissions to it)
+  EPL-2.0:  META-INF/third-party/EPL-2.0.txt
+
+The original legal files of each component (licences, notices and the
+licences of components they embed) are kept unchanged under
+META-INF/third-party/analyzers/<module>-<version>-jar/. Individual files may
+have other licences; their original notices apply.
+
+Corresponding source
+
+The sources are not included in this JAR. The unmodified sources JAR of every
+module listed above under "Bundled third-party components" can be downloaded
+from Maven Central at the URL given with the module. The complete source of
+each sonar-java, sonar-python, sonar-analyzer-commons and sslr release is
+available from its release source tree.
+
+Packaging
+
+The modules above are combined with this library using the Maven Shade plugin.
+The SonarSource modules are included whole and unmodified, with one exception:
+their embedded copy of Jackson is left out. Jackson and CycloneDX core are not
+bundled; they are Maven dependencies of this library. Package names are not
+relocated.
+The build configuration is distribution/library/pom.xml and
+distribution/pom.xml in the matching release at
+https://github.com/cbomkit/sonar-cryptography. To use a modified version of an
+LGPL-3.0 component, rebuild the library from that source with the modified
+component.

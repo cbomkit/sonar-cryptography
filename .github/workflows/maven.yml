@@ -8,9 +8,11 @@
 
 name: Java CI with Maven
 
+# Build and verify only. Nothing in this workflow publishes packages or uploads
+# a plugin JAR: publishing is disabled for now (see maven-publish.yml).
+# contents: write is needed only by the dependency submission.
 permissions:
   contents: write
-  packages: write
 
 on:
   push:
@@ -20,7 +22,21 @@ on:
 
 jobs:
   build:
+    name: build (${{ matrix.profile }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: plugin
+            variant: plugin
+            jar: distribution/plugin/target/sonar-cryptography-plugin-*.jar
+          - profile: with-go
+            variant: plugin-with-go
+            jar: distribution/plugin-with-go/target/sonar-cryptography-plugin-with-go-*.jar
+          - profile: lib
+            variant: library
+            jar: distribution/library/target/sonar-cryptography-lib-*.jar
     steps:
     - uses: actions/checkout@v7
     - name: Set up JDK 17
@@ -30,9 +46,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B clean package
+      run: mvn -B clean package -P${{ matrix.profile }}
     - name: Verify analyzer redistribution materials
-      run: python3 sonar-cryptography-plugin/src/test/python/verify_analyzer_packaging.py sonar-cryptography-plugin/target/sonar-cryptography-plugin-*.jar
+      run: python3 distribution/src/test/python/verify_analyzer_packaging.py --variant ${{ matrix.variant }} ${{ matrix.jar }}
     # The build must not write into the source tree. It used to: the mapper
     # module regenerated ciphersuites.json and JsonCipherSuites.java from a live
     # API on every compile. Fail here if that ever comes back.
@@ -43,15 +59,16 @@ jobs:
           git diff --stat
           exit 1
         fi
-    # Uploads the full, resolved dependency graph to GitHub. Without this,
-    # GitHub guesses the graph by parsing the pom.xml files and reports
-    # Dependabot alerts for versions we do not actually build with.
+    # Uploads the full, resolved dependency graph to GitHub (not packages).
+    # Without this, GitHub guesses the graph by parsing the pom.xml files and
+    # reports Dependabot alerts for versions we do not actually build with.
+    # Default variant only.
     # This has to run before the CBOM step. That step is a Docker action and
     # runs as root, so it leaves root-owned temp folders in the workspace. This
     # action walks the whole workspace and would then stop with EACCES.
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v5
-      if: github.event_name != 'pull_request'
+      if: github.event_name != 'pull_request' && matrix.profile == 'plugin'
     # TEMPORARIIY DISABLED
     # - name: Create CBOM
     #   uses: cbomkit/cbomkit-action@v2.2.0
@@ -64,3 +81,23 @@ jobs:
     #     name: "CBOM"
     #     path: ${{ steps.cbom.outputs.pattern }}
     #     if-no-files-found: warn
+
+  # The main code uses only the public analyzer API, so it must also build and
+  # pass its tests against the analyzer versions the server ships (newer than
+  # the LGPL compile baseline in pom.xml).
+  test-newer-analyzers:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 17
+      uses: actions/setup-java@v6
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Test against sonar-java 8.22, sonar-python 5.29, analyzer-commons 2.30
+      run: >-
+        mvn -B test
+        -Dsonar.java.version=8.22.0.41895
+        -Dsonar.python.version=5.29.0.35837
+        -Dsonar.analyzer-commons.version=2.30.0.5193

@@ -33,7 +33,7 @@
         <dependency>
             <groupId>io.github.fynnth</groupId>
             <artifactId>cbomkit-csharp-parser</artifactId>
-            <version>0.1.3</version>
+            <version>${cbomkit.csharp.parser.version}</version>
         </dependency>
     </dependencies>
 

@@ -20,17 +20,23 @@
 package com.ibm.plugin.rules.detection.crossfile;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.ibm.engine.detection.DetectionStore;
+import com.ibm.engine.language.java.JavaDetachedIssueQueue;
 import com.ibm.engine.model.IValue;
 import com.ibm.mapper.model.INode;
 import com.ibm.plugin.TestBase;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
@@ -53,7 +59,11 @@ import org.sonar.plugins.java.api.tree.Tree;
  * <p>This guards the AST-detach work across its three branches: a literal argument and a
  * field-constant argument are detached (asserted via the resolved CBOM values, since a detached
  * cross-file detection produces a node but no tree-based SonarQube issue), while a {@code new
- * byte[]} argument stays on the retained-tree path (asserted via its Noncompliant issue).
+ * byte[]} argument stays on the retained-tree path (asserted via its issue on the caller).
+ *
+ * <p>The test does not depend on how the sonar-java test kit collects issues across files (8.6
+ * checks only the last analysed file, 8.22 all of them): the rule's file context is wrapped so that
+ * its issues are recorded here instead of reaching the verifier, which therefore sees none.
  */
 class CrossFileHookDetachTest extends TestBase {
 
@@ -64,18 +74,87 @@ class CrossFileHookDetachTest extends TestBase {
 
     private static final List<String> resolvedValues = new ArrayList<>();
 
+    /** An issue reported directly on a file context: file name, line and message. */
+    private record ReportedIssue(@Nonnull String file, int line, @Nonnull String message) {}
+
+    private final List<ReportedIssue> reportedIssues = new ArrayList<>();
+
     @Test
     void crossFileDetectionAcrossDetachedAndRetainedPaths() throws Exception {
         resolvedValues.clear();
+        reportedIssues.clear();
         File classes = compileToClasspath(WRAPPER, CALLER);
         CheckVerifier.newVerifier()
                 .onFiles(CALLER, WRAPPER)
                 .withClassPath(List.of(classes))
                 .withChecks(this)
-                .verifyIssues();
+                .verifyNoIssues();
 
         // All three algorithms resolve cross-file into the CBOM, regardless of detach vs retain:
         assertThat(resolvedValues).contains("AES", "Blowfish", "DES");
+
+        // Only the retained-tree call (new byte[]) reports directly, at its call site.
+        assertThat(reportedIssues)
+                .extracting(ReportedIssue::file, ReportedIssue::line, ReportedIssue::message)
+                .containsExactly(tuple("KeyGeneratorCaller.java", 25, "(SecretKey) DES"));
+
+        // The detached (AES, Blowfish) issues are queued on the caller for JavaDetachedIssueSensor
+        // (covered by JavaDetachedIssueSensorTest; CheckVerifier's InputFile cannot be saved
+        // through SensorContextTester). The retained DES call reports directly.
+        final List<JavaDetachedIssueQueue.Issue> queued = JavaDetachedIssueQueue.drain();
+        assertThat(queued)
+                .extracting(JavaDetachedIssueQueue.Issue::message)
+                .anySatisfy(message -> assertThat(message).contains("AES"))
+                .anySatisfy(message -> assertThat(message).contains("Blowfish"))
+                .noneSatisfy(message -> assertThat(message).contains("DES"));
+        assertThat(queued)
+                .allSatisfy(
+                        issue -> {
+                            assertThat(issue.rule()).isSameAs(this);
+                            assertThat(issue.inputFile().filename())
+                                    .isEqualTo("KeyGeneratorCaller.java");
+                        });
+    }
+
+    @Override
+    public void setContext(@Nullable JavaFileScannerContext context) {
+        super.setContext(context == null ? null : recording(context));
+    }
+
+    /** Wraps {@code delegate} so that its {@code reportIssue*} calls are recorded, not reported. */
+    @Nonnull
+    private JavaFileScannerContext recording(@Nonnull JavaFileScannerContext delegate) {
+        return (JavaFileScannerContext)
+                Proxy.newProxyInstance(
+                        JavaFileScannerContext.class.getClassLoader(),
+                        new Class<?>[] {JavaFileScannerContext.class},
+                        (proxy, method, args) -> {
+                            if (method.getName().startsWith("reportIssue")) {
+                                reportedIssues.add(issueOf(delegate, args));
+                                return null;
+                            }
+                            try {
+                                return method.invoke(delegate, args);
+                            } catch (InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        });
+    }
+
+    @Nonnull
+    private static ReportedIssue issueOf(
+            @Nonnull JavaFileScannerContext context, @Nonnull Object[] args) {
+        final int line =
+                args[1] instanceof Tree tree && tree.firstToken() != null
+                        ? tree.firstToken().range().start().line()
+                        : -1;
+        final String message =
+                Arrays.stream(args)
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .findFirst()
+                        .orElse("");
+        return new ReportedIssue(context.getInputFile().filename(), line, message);
     }
 
     @Override

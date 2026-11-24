@@ -20,8 +20,8 @@ public class KeyGeneratorCaller {
     }
 
     // NEW_ARRAY argument -> non-detachable, resolves via the retained-tree fallback path, which keeps
-    // the live scan context and therefore still raises the SonarQube issue.
+    // the live scan context and therefore still raises the SonarQube issue (asserted in the test).
     public SecretKey callWithArray() throws NoSuchAlgorithmException {
-        return KeyGeneratorWrapper.generateWithIv("DES", 56, new byte[8]); // Noncompliant {{(SecretKey) DES}}
+        return KeyGeneratorWrapper.generateWithIv("DES", 56, new byte[8]); // issue: (SecretKey) DES
     }
 }
