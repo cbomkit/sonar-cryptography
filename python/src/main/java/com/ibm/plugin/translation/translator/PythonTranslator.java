@@ -28,6 +28,7 @@ import com.ibm.engine.model.context.KeyContext;
 import com.ibm.engine.model.context.KeyDerivationFunctionContext;
 import com.ibm.engine.model.context.MacContext;
 import com.ibm.engine.model.context.PrivateKeyContext;
+import com.ibm.engine.model.context.ProtocolContext;
 import com.ibm.engine.model.context.PublicKeyContext;
 import com.ibm.engine.model.context.SecretKeyContext;
 import com.ibm.engine.model.context.SignatureContext;
@@ -45,6 +46,7 @@ import com.ibm.plugin.translation.translator.contexts.PycaPublicKeyContextTransl
 import com.ibm.plugin.translation.translator.contexts.PycaSecretContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaSecretKeyContextTranslator;
 import com.ibm.plugin.translation.translator.contexts.PycaSignatureContextTranslator;
+import com.ibm.plugin.translation.translator.contexts.PythonProtocolContextTranslator;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -126,6 +128,9 @@ public class PythonTranslator extends ITranslator<PythonCheck, Tree, Symbol, Pyt
                     new PycaMacContextTranslator();
             return pycaMacContextTranslator.translate(
                     bundleIdentifier, value, detectionValueContext, detectionLocation);
+        } else if (detectionValueContext.is(ProtocolContext.class)) {
+            return new PythonProtocolContextTranslator()
+                    .translate(bundleIdentifier, value, detectionValueContext, detectionLocation);
         }
         return Optional.empty();
     }

@@ -50,9 +50,9 @@ import org.sonar.plugins.python.api.tree.Tree;
  * {@code TLS} protocol beneath it where the call hands over a TLS configuration. A call without it
  * is reported as DICOM with nothing beneath, which are the call sites a reader is looking for. TLS
  * is only reported when the argument certainly is an object (a call, a tuple, or a local bound once
- * to one); {@code None}, parameters and attributes may be None and report nothing. No version or
- * cipher suite is invented -- they are configured on the {@code ssl.SSLContext}, not in these
- * calls.
+ * to one); {@code None}, parameters and attributes may be None and report nothing. The TLS version
+ * is added only where the code states it on the {@code ssl.SSLContext} (a version specific protocol
+ * constant or {@code minimum_version}); no version or cipher suite is invented.
  *
  * <p>pydicom has no cryptography to detect: it reads and writes datasets, and the DICOM security
  * profile tags it exposes ({@code MACAlgorithm}, {@code EncryptedAttributesSequence}) are
