@@ -83,3 +83,11 @@ def call_inside_branch(connect):
     ae = AE()
     if connect:
         return ae.associate("127.0.0.1", 11112, tls_args=(ctx, "localhost"))  # Noncompliant {{(Protocol) DICOM}}
+
+
+def rebound_context():
+    ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
+    ctx = ssl.create_default_context()
+    ae = AE()
+    return ae.associate("127.0.0.1", 11112, tls_args=(ctx, "localhost"))  # Noncompliant {{(Protocol) DICOM}}

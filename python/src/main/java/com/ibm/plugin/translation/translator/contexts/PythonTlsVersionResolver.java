@@ -50,8 +50,8 @@ import org.sonar.plugins.python.api.tree.Tuple;
  * </ul>
  *
  * <p>Nothing else is read. {@code create_default_context()}, {@code PROTOCOL_TLS_SERVER}, a {@code
- * maximum_version} alone, a computed value, a conditional assignment or contradicting assignments
- * leave the version unknown, because the one negotiated then depends on the platform.
+ * maximum_version} alone, a computed value, a conditional assignment, contradicting assignments or
+ * a reassigned context variable leave the version unknown.
  */
 final class PythonTlsVersionResolver {
 
@@ -75,7 +75,7 @@ final class PythonTlsVersionResolver {
             }
             contextSymbol = name.symbol();
             context = assignedValue(Objects.requireNonNull(contextSymbol));
-            if (context == null || !(context instanceof Tuple || context instanceof Name)) {
+            if (!(context instanceof Tuple || context instanceof Name)) {
                 break;
             }
         }
@@ -137,6 +137,10 @@ final class PythonTlsVersionResolver {
     @Nonnull
     private static Optional<String> fromMinimumVersion(
             @Nonnull Symbol context, @Nonnull Tree argument) {
+        // a rebound name may hold another object than the one the version was set on
+        if (context.usages().stream().filter(Usage::isBindingUsage).count() > 1) {
+            return Optional.empty();
+        }
         final int callLine = argument.firstToken().line();
         final List<String> assigned =
                 context.usages().stream()

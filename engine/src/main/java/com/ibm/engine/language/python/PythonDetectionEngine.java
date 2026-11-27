@@ -495,8 +495,7 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
                 // so the factory is called once for the bound expression, but only when that
                 // expression certainly holds an object: None is precisely the argument that
                 // means the opposite. The value is located at the argument, not at the call, so
-                // that the
-                // translation can read the configuration it refers to.
+                // that the translation can read the configuration it refers to.
                 if (isCreatedObject(expression)) {
                     final ResolvedValue<Object, Tree> presence =
                             new ResolvedValue<>(expression, expression);

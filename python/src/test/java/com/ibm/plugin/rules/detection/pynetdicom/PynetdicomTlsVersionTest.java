@@ -1,6 +1,6 @@
 /*
  * Sonar Cryptography Plugin
- * Copyright (C) 2024 PQCA
+ * Copyright (C) 2026 PQCA
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -41,7 +41,7 @@ class PynetdicomTlsVersionTest extends TestBase {
     private static final List<String> EXPECTED =
             List.of(
                     "TLSv1.2", "TLSv1.1", "TLSv1.3", "TLSv1.2", "TLSv1.2", "TLSv1.0", "TLS", "TLS",
-                    "TLS", "TLS", "TLS", "TLSv1.2");
+                    "TLS", "TLS", "TLS", "TLSv1.2", "TLS");
 
     @Test
     void test() {
