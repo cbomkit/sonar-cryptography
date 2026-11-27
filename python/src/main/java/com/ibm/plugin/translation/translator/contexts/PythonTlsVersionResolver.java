@@ -123,7 +123,10 @@ final class PythonTlsVersionResolver {
                 .filter(
                         a ->
                                 a.keywordArgument() == null
-                                        || "protocol".equals(a.keywordArgument().name()))
+                                        || "protocol"
+                                                .equals(
+                                                        Objects.requireNonNull(a.keywordArgument())
+                                                                .name()))
                 .findFirst()
                 .map(a -> lastName(a.expression()))
                 .filter(n -> n.startsWith(PROTOCOL_PREFIX))
@@ -145,7 +148,7 @@ final class PythonTlsVersionResolver {
                                                         .equals(attribute.name().name()))
                         .filter(attribute -> attribute.firstToken().line() < callLine)
                         .map(PythonTlsVersionResolver::assignmentOf)
-                        .filter(assignment -> assignment != null)
+                        .filter(Objects::nonNull)
                         .map(
                                 assignment ->
                                         alwaysRunsBefore(assignment, argument)

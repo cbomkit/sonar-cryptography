@@ -552,7 +552,9 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             return false;
         }
         final List<Usage> bindings =
-                Objects.requireNonNull(name.symbol()).usages().stream().filter(Usage::isBindingUsage).toList();
+                Objects.requireNonNull(name.symbol()).usages().stream()
+                        .filter(Usage::isBindingUsage)
+                        .toList();
         if (bindings.size() != 1 || bindings.get(0).kind() != Usage.Kind.ASSIGNMENT_LHS) {
             return false;
         }
