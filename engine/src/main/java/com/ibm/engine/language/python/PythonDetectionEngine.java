@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import org.sonar.plugins.python.api.PythonCheck;
 import org.sonar.plugins.python.api.PythonVisitorContext;
 import org.sonar.plugins.python.api.symbols.Symbol;
+import org.sonar.plugins.python.api.symbols.Usage;
 import org.sonar.plugins.python.api.tree.*;
 
 public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
@@ -489,6 +490,21 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             @Nonnull CallExpression expressionTree) {
         if (parameter.is(DetectableParameter.class)) {
             DetectableParameter<Tree> detectableParameter = (DetectableParameter<Tree>) parameter;
+            if (detectableParameter.getiValueFactory().isPresenceBased()) {
+                // The argument states something by being there (e.g. pynetdicom's ssl_context),
+                // so the factory is called once for the bound expression, but only when that
+                // expression certainly holds an object: None is precisely the argument that
+                // means the opposite. The value is located at the argument, not at the call, so
+                // that the translation can read the configuration it refers to.
+                if (isCreatedObject(expression)) {
+                    final ResolvedValue<Object, Tree> presence =
+                            new ResolvedValue<>(expression, expression);
+                    detectionStore.onReceivingNewDetection(
+                            new ValueDetection<>(
+                                    presence, detectableParameter, expressionTree, expression));
+                }
+                return;
+            }
             // try to resolve value in inner scope
             List<ResolvedValue<Object, Tree>> resolvedValues =
                     resolveValuesInInnerScope(
@@ -518,6 +534,42 @@ public class PythonDetectionEngine implements IDetectionEngine<Tree, Symbol> {
             detectionStore.onDetectedDependingParameter(
                     parameter, expression, DetectionStore.Scope.EXPRESSION);
         }
+    }
+
+    /**
+     * Whether an argument certainly holds an object, which is what a presence-based parameter (see
+     * {@link IValueFactory#isPresenceBased}) needs before it may report anything: a call (a
+     * constructor or factory such as {@code ssl.create_default_context()}), a non-empty tuple, or a
+     * local name bound exactly once, to one of those. {@code None}, a parameter, an attribute, a
+     * name that is rebound or that holds anything else may be None and say nothing.
+     */
+    private static boolean isCreatedObject(@Nonnull Tree expression) {
+        if (isCreationExpression(expression)) {
+            return true;
+        }
+        if (!(expression instanceof Name name) || name.symbol() == null) {
+            return false;
+        }
+        final List<Usage> bindings =
+                Objects.requireNonNull(name.symbol()).usages().stream()
+                        .filter(Usage::isBindingUsage)
+                        .toList();
+        if (bindings.size() != 1 || bindings.get(0).kind() != Usage.Kind.ASSIGNMENT_LHS) {
+            return false;
+        }
+        Tree parent = bindings.get(0).tree().parent();
+        if (parent != null && parent.is(Tree.Kind.EXPRESSION_LIST)) {
+            parent = parent.parent();
+        }
+        return parent instanceof AssignmentStatement assignment
+                && assignment.lhsExpressions().size() == 1
+                && assignment.lhsExpressions().get(0).expressions().size() == 1
+                && isCreationExpression(assignment.assignedValue());
+    }
+
+    private static boolean isCreationExpression(@Nonnull Tree expression) {
+        return expression.is(Tree.Kind.CALL_EXPR)
+                || (expression instanceof Tuple tuple && !tuple.elements().isEmpty());
     }
 
     private boolean checkCurrentIndexState(
